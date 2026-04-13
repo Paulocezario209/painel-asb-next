@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -208,9 +209,14 @@ export function LeadsTable({
                 <tr key={lead.phone} className="hover:bg-gray-50 transition-colors">
                   {/* Lead name / phone */}
                   <td className="px-4 py-3">
-                    <p className="font-medium text-gray-900 truncate max-w-[140px]">
-                      {lead.name || "—"}
-                    </p>
+                    <Link
+                      href={`/dashboard/leads/${encodeURIComponent(lead.phone)}`}
+                      className="hover:underline"
+                    >
+                      <p className="font-medium text-gray-900 truncate max-w-[140px]">
+                        {lead.name || "—"}
+                      </p>
+                    </Link>
                     <p className="text-xs text-gray-400">{lead.phone}</p>
                   </td>
 
