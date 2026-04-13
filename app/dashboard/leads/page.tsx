@@ -11,7 +11,7 @@ export default async function LeadsPage() {
   const { data: leads } = await supabase
     .from("ai_sdr_leads")
     .select(
-      "phone, name, city, segment, weekly_volume_kg, lead_temperature, lead_status, routing_team, qual_stage, handoff_at, handoff_confirmed, handoff_confirmed_at, first_order_at, ai_active, created_at, followup_count, pain_point"
+      "phone, name, city, segment, weekly_volume_kg, lead_temperature, lead_status, routing_team, qual_stage, handoff_at, handoff_confirmed, handoff_confirmed_at, first_order_at, ai_active, created_at, followup_count, pain_point, product_groups"
     )
     .order("created_at", { ascending: false });
 

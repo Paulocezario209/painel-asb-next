@@ -15,6 +15,7 @@ import {
   Clock,
 } from "lucide-react";
 import { LeadActions } from "@/components/leads/lead-actions";
+import { ProductGroupSelector } from "@/components/leads/product-group-selector";
 
 const TEMP_CONFIG: Record<string, { label: string; className: string }> = {
   HOT:          { label: "HOT",   className: "bg-red-100 text-red-700 border-red-200" },
@@ -196,6 +197,14 @@ export default async function LeadDetailPage({
                   </div>
                 </div>
               )}
+
+              <div className="col-span-2">
+                <p className="text-xs text-gray-400 uppercase tracking-wide mb-2">Grupos de produto</p>
+                <ProductGroupSelector
+                  phone={lead.phone}
+                  initial={(lead.product_groups as string[] | null) ?? []}
+                />
+              </div>
             </CardContent>
           </Card>
 

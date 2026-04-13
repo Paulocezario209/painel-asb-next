@@ -35,6 +35,7 @@ type Lead = {
   created_at: string;
   followup_count: number | null;
   pain_point: string | null;
+  product_groups: string[] | null;
 };
 
 const TEMP_CONFIG: Record<string, { label: string; className: string }> = {
@@ -45,17 +46,41 @@ const TEMP_CONFIG: Record<string, { label: string; className: string }> = {
 };
 
 const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
-  new:       { label: "Novo",       className: "bg-gray-100 text-gray-600 border-gray-200" },
+  new:       { label: "Novo",        className: "bg-gray-100 text-gray-600 border-gray-200" },
   qualified: { label: "Qualificado", className: "bg-green-100 text-green-700 border-green-200" },
-  converted: { label: "Convertido", className: "bg-yellow-100 text-yellow-800 border-yellow-300" },
-  optout:    { label: "Opt-out",    className: "bg-red-900/10 text-red-900 border-red-300" },
+  converted: { label: "Convertido",  className: "bg-yellow-100 text-yellow-800 border-yellow-300" },
+  optout:    { label: "Opt-out",     className: "bg-red-900/10 text-red-900 border-red-300" },
+};
+
+const ABC_CONFIG: Record<"A" | "B" | "C", { label: string; className: string }> = {
+  A: { label: "A", className: "bg-red-100 text-red-700 border-red-200 font-bold" },
+  B: { label: "B", className: "bg-yellow-100 text-yellow-700 border-yellow-200 font-bold" },
+  C: { label: "C", className: "bg-blue-100 text-blue-700 border-blue-200 font-bold" },
 };
 
 const VENDOR_LABELS: Record<string, string> = {
-  ana_paula:   "Ana Paula",
-  alan:        "Alan",
-  setor_cuit:  "CUIT",
+  ana_paula:  "Ana Paula",
+  alan:       "Alan",
+  setor_cuit: "CUIT",
 };
+
+const PRODUCT_LABELS: Record<string, string> = {
+  hamburguer:       "Hambúrguer",
+  espeto:           "Espeto",
+  boteco:           "Boteco",
+  cortes_especiais: "Cortes Especiais",
+  mercearia:        "Mercearia",
+  molhos:           "Molhos",
+  defumados:        "Defumados",
+  paes:             "Pães",
+  embalagens:       "Embalagens",
+};
+
+function abcCurve(vol: number | null): "A" | "B" | "C" {
+  if ((vol ?? 0) >= 300) return "A";
+  if ((vol ?? 0) >= 100) return "B";
+  return "C";
+}
 
 function derivedStatus(lead: Lead): string {
   if (lead.lead_status === "optout") return "optout";
@@ -76,6 +101,8 @@ export function LeadsTable({
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [vendorFilter, setVendorFilter] = useState("all");
+  const [abcFilter, setAbcFilter] = useState("all");
+  const [productFilter, setProductFilter] = useState("all");
   const [isPending, startTransition] = useTransition();
 
   const filtered = leads.filter((l) => {
@@ -86,27 +113,26 @@ export function LeadsTable({
       l.phone.includes(q) ||
       (l.city ?? "").toLowerCase().includes(q);
 
-    const matchStatus =
-      statusFilter === "all" || derivedStatus(l) === statusFilter;
+    const matchStatus = statusFilter === "all" || derivedStatus(l) === statusFilter;
+    const matchVendor = vendorFilter === "all" || l.routing_team === vendorFilter;
+    const matchAbc    = abcFilter === "all" || abcCurve(l.weekly_volume_kg) === abcFilter;
+    const matchProduct =
+      productFilter === "all" ||
+      (l.product_groups ?? []).includes(productFilter);
 
-    const matchVendor =
-      vendorFilter === "all" || l.routing_team === vendorFilter;
-
-    return matchSearch && matchStatus && matchVendor;
+    return matchSearch && matchStatus && matchVendor && matchAbc && matchProduct;
   });
 
   async function confirmHandoff(phone: string) {
     const supabase = createClient();
+    const now = new Date().toISOString();
     await supabase
       .from("ai_sdr_leads")
-      .update({ handoff_confirmed: true, handoff_confirmed_at: new Date().toISOString() })
+      .update({ handoff_confirmed: true, handoff_confirmed_at: now })
       .eq("phone", phone);
-
     setLeads((prev) =>
       prev.map((l) =>
-        l.phone === phone
-          ? { ...l, handoff_confirmed: true, handoff_confirmed_at: new Date().toISOString() }
-          : l
+        l.phone === phone ? { ...l, handoff_confirmed: true, handoff_confirmed_at: now } : l
       )
     );
   }
@@ -118,7 +144,6 @@ export function LeadsTable({
       .from("ai_sdr_leads")
       .update({ first_order_at: now })
       .eq("phone", phone);
-
     setLeads((prev) =>
       prev.map((l) => (l.phone === phone ? { ...l, first_order_at: now } : l))
     );
@@ -130,9 +155,9 @@ export function LeadsTable({
 
   return (
     <div className="space-y-4">
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1 max-w-sm">
+      {/* Filters row 1 */}
+      <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
+        <div className="relative flex-1 min-w-[200px] max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <Input
             placeholder="Buscar por nome, telefone, cidade..."
@@ -164,6 +189,28 @@ export function LeadsTable({
             <SelectItem value="setor_cuit">CUIT</SelectItem>
           </SelectContent>
         </Select>
+        <Select value={abcFilter} onValueChange={(v) => setAbcFilter(v ?? "all")}>
+          <SelectTrigger className="w-36">
+            <SelectValue placeholder="Curva ABC" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Curva ABC</SelectItem>
+            <SelectItem value="A">Tier A (≥300 kg)</SelectItem>
+            <SelectItem value="B">Tier B (≥100 kg)</SelectItem>
+            <SelectItem value="C">Tier C (&lt;100 kg)</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={productFilter} onValueChange={(v) => setProductFilter(v ?? "all")}>
+          <SelectTrigger className="w-44">
+            <SelectValue placeholder="Grupo produto" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os grupos</SelectItem>
+            {Object.entries(PRODUCT_LABELS).map(([k, label]) => (
+              <SelectItem key={k} value={k}>{label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <Button variant="outline" size="sm" onClick={refreshData} disabled={isPending}>
           {isPending ? "Atualizando..." : "Atualizar"}
         </Button>
@@ -180,6 +227,7 @@ export function LeadsTable({
               <th className="text-left px-4 py-3 font-medium text-gray-600">Cidade</th>
               <th className="text-left px-4 py-3 font-medium text-gray-600">Segmento</th>
               <th className="text-left px-4 py-3 font-medium text-gray-600">Volume</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">ABC</th>
               <th className="text-left px-4 py-3 font-medium text-gray-600">Temp.</th>
               <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
               <th className="text-left px-4 py-3 font-medium text-gray-600">Vendedor</th>
@@ -191,19 +239,19 @@ export function LeadsTable({
           <tbody className="divide-y divide-gray-100">
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={10} className="px-4 py-8 text-center text-gray-400">
+                <td colSpan={11} className="px-4 py-8 text-center text-gray-400">
                   Nenhum lead encontrado
                 </td>
               </tr>
             )}
             {filtered.map((lead) => {
               const status = derivedStatus(lead);
+              const abc = abcCurve(lead.weekly_volume_kg);
+              const abcCfg = ABC_CONFIG[abc];
               const tempCfg = TEMP_CONFIG[lead.lead_temperature ?? ""] ?? TEMP_CONFIG.COLD;
               const statusCfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.new;
-              const showConfirm =
-                !!lead.handoff_at && lead.handoff_confirmed === false;
-              const showConvert =
-                (lead.qual_stage ?? 0) >= 7 && !lead.first_order_at;
+              const showConfirm = !!lead.handoff_at && lead.handoff_confirmed === false;
+              const showConvert = (lead.qual_stage ?? 0) >= 7 && !lead.first_order_at;
 
               return (
                 <tr key={lead.phone} className="hover:bg-gray-50 transition-colors">
@@ -224,6 +272,13 @@ export function LeadsTable({
                   <td className="px-4 py-3 text-gray-700 capitalize">{lead.segment || "—"}</td>
                   <td className="px-4 py-3 text-gray-700">
                     {lead.weekly_volume_kg ? `${lead.weekly_volume_kg} kg` : "—"}
+                  </td>
+
+                  {/* ABC badge */}
+                  <td className="px-4 py-3">
+                    <Badge variant="outline" className={cn("text-xs w-7 justify-center", abcCfg.className)}>
+                      {abcCfg.label}
+                    </Badge>
                   </td>
 
                   {/* Temperature badge */}
@@ -264,22 +319,14 @@ export function LeadsTable({
                   {/* Actions */}
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1">
-                      {/* WhatsApp */}
-                      <a
-                        href={`https://wa.me/${lead.phone}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
+                      <a href={`https://wa.me/${lead.phone}`} target="_blank" rel="noopener noreferrer">
                         <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-green-600 hover:text-green-700 hover:bg-green-50">
                           <MessageCircle className="w-4 h-4" />
                         </Button>
                       </a>
-
-                      {/* Confirmar handoff */}
                       {showConfirm && (
                         <Button
-                          variant="ghost"
-                          size="sm"
+                          variant="ghost" size="sm"
                           className="h-7 w-7 p-0 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
                           onClick={() => confirmHandoff(lead.phone)}
                           title="Confirmar atendimento"
@@ -287,12 +334,9 @@ export function LeadsTable({
                           <CheckCircle className="w-4 h-4" />
                         </Button>
                       )}
-
-                      {/* Converter */}
                       {showConvert && (
                         <Button
-                          variant="ghost"
-                          size="sm"
+                          variant="ghost" size="sm"
                           className="h-7 w-7 p-0 text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50"
                           onClick={() => convertLead(lead.phone)}
                           title="Marcar como convertido"
