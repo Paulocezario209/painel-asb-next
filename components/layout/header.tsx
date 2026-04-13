@@ -2,8 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Button } from "@/components/ui/button";
-import { LogOut, User } from "lucide-react";
 
 export function Header({ email }: { email: string }) {
   const router = useRouter();
@@ -16,17 +14,44 @@ export function Header({ email }: { email: string }) {
   }
 
   return (
-    <header className="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-6">
+    <header
+      className="h-12 flex items-center justify-between px-6 shrink-0"
+      style={{
+        background: "#161b22",
+        borderBottom: "1px solid #21262d",
+      }}
+    >
       <div />
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2 text-sm text-gray-600">
-          <User className="w-4 h-4" />
-          <span>{email}</span>
-        </div>
-        <Button variant="ghost" size="sm" onClick={handleLogout} className="text-gray-500 hover:text-gray-900">
-          <LogOut className="w-4 h-4 mr-1" />
-          Sair
-        </Button>
+      <div className="flex items-center gap-4">
+        <span style={{ color: "#8b949e", fontSize: 11, fontFamily: "'Courier New', monospace" }}>
+          <span style={{ color: "#58a6ff" }}>$</span> {email}
+        </span>
+        <button
+          onClick={handleLogout}
+          style={{
+            background: "transparent",
+            border: "1px solid #30363d",
+            color: "#8b949e",
+            fontSize: 9,
+            letterSpacing: ".14em",
+            textTransform: "uppercase",
+            padding: "4px 10px",
+            borderRadius: 3,
+            cursor: "pointer",
+            fontFamily: "'Courier New', monospace",
+            transition: "all .15s",
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.borderColor = "#f85149";
+            (e.currentTarget as HTMLButtonElement).style.color = "#f85149";
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.borderColor = "#30363d";
+            (e.currentTarget as HTMLButtonElement).style.color = "#8b949e";
+          }}
+        >
+          logout
+        </button>
       </div>
     </header>
   );

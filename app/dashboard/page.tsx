@@ -1,7 +1,4 @@
 import { createClient } from "@/lib/supabase/server";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Users, PhoneCall, CheckCircle, Clock, Zap, MapPin, Package } from "lucide-react";
 import {
   QualificationFunnel,
   WeeklyConversions,
@@ -9,6 +6,16 @@ import {
 } from "@/components/dashboard/charts";
 
 export const dynamic = "force-dynamic";
+
+// ── Design tokens ───────────────────────────────────────────────────────────
+const S = {
+  card:    { background: "#161b22", border: "1px solid #30363d", borderRadius: 6 } as React.CSSProperties,
+  label:   { fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase" as const, color: "#8b949e", fontFamily: "'Courier New', monospace" },
+  value:   { fontSize: 22, fontWeight: 700, color: "#e6edf3", fontFamily: "'Inter', system-ui, sans-serif", lineHeight: 1 },
+  section: { fontSize: 10, letterSpacing: ".14em", textTransform: "uppercase" as const, color: "#8b949e", fontFamily: "'Courier New', monospace", marginBottom: 12 } as React.CSSProperties,
+  text:    { color: "#c9d1d9", fontSize: 12, fontFamily: "'Courier New', monospace" } as React.CSSProperties,
+  muted:   { color: "#8b949e", fontSize: 11, fontFamily: "'Courier New', monospace" } as React.CSSProperties,
+};
 
 function getWeekLabel(date: Date): string {
   const d = new Date(date);
@@ -23,15 +30,9 @@ function abcCurve(vol: number | null): "A" | "B" | "C" {
 }
 
 const PRODUCT_LABELS: Record<string, string> = {
-  hamburguer:      "Hambúrguer",
-  espeto:          "Espeto",
-  boteco:          "Boteco",
-  cortes_especiais:"Cortes Especiais",
-  mercearia:       "Mercearia",
-  molhos:          "Molhos",
-  defumados:       "Defumados",
-  paes:            "Pães",
-  embalagens:      "Embalagens",
+  hamburguer: "Hambúrguer", espeto: "Espeto", boteco: "Boteco",
+  cortes_especiais: "Cortes Especiais", mercearia: "Mercearia",
+  molhos: "Molhos", defumados: "Defumados", paes: "Pães", embalagens: "Embalagens",
 };
 
 export default async function DashboardPage() {
@@ -44,56 +45,32 @@ export default async function DashboardPage() {
     { data: allLeads },
   ] = await Promise.all([
     supabase.from("ai_sdr_leads").select("*", { count: "exact", head: true }),
-    supabase
-      .from("ai_sdr_leads")
-      .select("*", { count: "exact", head: true })
-      .not("handoff_at", "is", null)
-      .eq("handoff_confirmed", false),
-    supabase
-      .from("ai_sdr_leads")
-      .select("*", { count: "exact", head: true })
-      .gte("qual_stage", 7),
-    supabase
-      .from("ai_sdr_leads")
-      .select(
-        "qual_stage, first_order_at, routing_team, handoff_at, handoff_confirmed, weekly_volume_kg, city, product_groups"
-      ),
+    supabase.from("ai_sdr_leads").select("*", { count: "exact", head: true }).not("handoff_at", "is", null).eq("handoff_confirmed", false),
+    supabase.from("ai_sdr_leads").select("*", { count: "exact", head: true }).gte("qual_stage", 7),
+    supabase.from("ai_sdr_leads").select("qual_stage, first_order_at, routing_team, handoff_at, handoff_confirmed, weekly_volume_kg, city, product_groups"),
   ]);
 
   const leads = allLeads ?? [];
 
-  // ── Curva ABC ────────────────────────────────────────────────────────────
+  // ABC
   const abcCount = { A: 0, B: 0, C: 0 };
   for (const l of leads) abcCount[abcCurve(l.weekly_volume_kg)]++;
+  const urgentA = leads.filter(l => abcCurve(l.weekly_volume_kg) === "A" && l.handoff_at && !l.handoff_confirmed).length;
 
-  // Leads Tier A sem handoff confirmado → ação imediata
-  const urgentA = leads.filter(
-    (l) => abcCurve(l.weekly_volume_kg) === "A" && l.handoff_at && !l.handoff_confirmed
-  ).length;
-
-  // ── Top 5 cidades com leads qualificados ─────────────────────────────────
+  // Top cidades
   const cityMap: Record<string, number> = {};
   for (const l of leads) {
     if ((l.qual_stage ?? 0) < 7 || !l.city) continue;
     cityMap[l.city] = (cityMap[l.city] ?? 0) + 1;
   }
-  const topCities = Object.entries(cityMap)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5);
+  const topCities = Object.entries(cityMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
 
-  // ── Distribuição de grupos de produto ────────────────────────────────────
+  // Product groups
   const groupCount: Record<string, number> = {};
-  for (const l of leads) {
-    for (const g of (l.product_groups as string[] | null) ?? []) {
-      groupCount[g] = (groupCount[g] ?? 0) + 1;
-    }
-  }
-  const hasProductData = Object.keys(groupCount).length > 0;
-  const topGroups = Object.entries(groupCount)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5);
+  for (const l of leads) for (const g of (l.product_groups as string[] | null) ?? []) groupCount[g] = (groupCount[g] ?? 0) + 1;
+  const topGroups = Object.entries(groupCount).sort((a, b) => b[1] - a[1]).slice(0, 5);
 
-  // ── Qualification funnel ─────────────────────────────────────────────────
+  // Funnel
   const stageBuckets: Record<string, number> = { "0-2": 0, "3-4": 0, "5-6": 0, "7-8": 0, "9": 0 };
   for (const l of leads) {
     const s = l.qual_stage ?? 0;
@@ -105,7 +82,7 @@ export default async function DashboardPage() {
   }
   const funnelData = Object.entries(stageBuckets).map(([label, count]) => ({ label, count }));
 
-  // ── Weekly conversions ───────────────────────────────────────────────────
+  // Weekly
   const now = new Date();
   const weekMap: Record<string, number> = {};
   for (let i = 3; i >= 0; i--) {
@@ -120,7 +97,7 @@ export default async function DashboardPage() {
   }
   const weeklyData = Object.entries(weekMap).map(([week, count]) => ({ week, count }));
 
-  // ── Vendor performance ───────────────────────────────────────────────────
+  // Vendor
   const VENDORS: Record<string, string> = { ana_paula: "Ana Paula", alan: "Alan", setor_cuit: "CUIT" };
   const vendorMap: Record<string, { handoffs: number; confirmed: number; converted: number }> = {};
   for (const key of Object.keys(VENDORS)) vendorMap[key] = { handoffs: 0, confirmed: 0, converted: 0 };
@@ -133,164 +110,163 @@ export default async function DashboardPage() {
   }
   const vendorData = Object.entries(vendorMap).map(([key, vals]) => ({ label: VENDORS[key], ...vals }));
 
-  const stats = [
-    { title: "Total Leads",         value: totalLeads ?? 0,                              icon: Users,        color: "text-blue-600" },
-    { title: "Qualificados",        value: qualifiedLeads ?? 0,                          icon: CheckCircle,  color: "text-green-600" },
-    { title: "Handoffs Pendentes",  value: handoffPending ?? 0,                          icon: Clock,        color: "text-orange-600" },
-    { title: "Convertidos",         value: leads.filter((l) => l.first_order_at).length, icon: PhoneCall,    color: "text-purple-600" },
+  const convertidos = leads.filter(l => l.first_order_at).length;
+
+  const kpis = [
+    { label: "Total Leads",       value: totalLeads ?? 0,    accent: "#58a6ff" },
+    { label: "Qualificados",      value: qualifiedLeads ?? 0, accent: "#3fb950" },
+    { label: "Handoffs Pendentes",value: handoffPending ?? 0, accent: "#f0b429" },
+    { label: "Convertidos",       value: convertidos,          accent: "#f85149" },
   ];
 
   return (
-    <div className="space-y-6">
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-sm text-gray-500 mt-1">Visão geral do pipeline SDR</p>
+        <h1 style={{ color: "#e6edf3", fontSize: 18, fontWeight: 700, fontFamily: "'Inter', system-ui, sans-serif", marginBottom: 2 }}>
+          Dashboard
+        </h1>
+        <p style={S.muted}>Visão geral do pipeline SDR</p>
       </div>
 
       {/* KPI cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((stat) => (
-          <Card key={stat.title}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600" translate="no">{stat.title}</CardTitle>
-              <stat.icon className={`w-4 h-4 ${stat.color}`} />
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">{stat.value}</p>
-            </CardContent>
-          </Card>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+        {kpis.map(({ label, value, accent }) => (
+          <div key={label} style={{ ...S.card, padding: "16px 20px" }}>
+            <p style={S.label} translate="no">{label}</p>
+            <p style={{ ...S.value, color: accent, marginTop: 10 }}>{value}</p>
+          </div>
         ))}
       </div>
 
-      {/* ── Onde Focar Agora ─────────────────────────────────────────────── */}
-      <Card>
-        <CardHeader className="flex flex-row items-center gap-2 pb-3">
-          <Zap className="w-4 h-4 text-yellow-500" />
-          <CardTitle className="text-base">Onde Focar Agora</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-5">
-          {/* Curva ABC */}
-          <div>
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Curva ABC</p>
-            <div className="grid grid-cols-3 gap-3">
-              <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-center">
-                <p className="text-2xl font-bold text-red-700">{abcCount.A}</p>
-                <p className="text-xs font-semibold text-red-600 mt-0.5">Tier A</p>
-                <p className="text-xs text-red-400">≥ 300 kg/sem</p>
-                <Badge variant="outline" className="mt-1.5 text-xs bg-red-100 text-red-700 border-red-200">urgente</Badge>
-              </div>
-              <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-center">
-                <p className="text-2xl font-bold text-yellow-700">{abcCount.B}</p>
-                <p className="text-xs font-semibold text-yellow-600 mt-0.5">Tier B</p>
-                <p className="text-xs text-yellow-400">100–299 kg/sem</p>
-                <Badge variant="outline" className="mt-1.5 text-xs bg-yellow-100 text-yellow-700 border-yellow-200">médio prazo</Badge>
-              </div>
-              <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-center">
-                <p className="text-2xl font-bold text-blue-700">{abcCount.C}</p>
-                <p className="text-xs font-semibold text-blue-600 mt-0.5">Tier C</p>
-                <p className="text-xs text-blue-400">&lt; 100 kg/sem</p>
-                <Badge variant="outline" className="mt-1.5 text-xs bg-blue-100 text-blue-700 border-blue-200">longo prazo</Badge>
-              </div>
+      {/* Onde Focar Agora */}
+      <div style={{ ...S.card, padding: "20px 24px" }}>
+        <p style={{ ...S.section }}>
+          <span style={{ color: "#f0b429", marginRight: 6 }}>▲</span>
+          Onde Focar Agora
+        </p>
+
+        {/* ABC */}
+        <p style={{ ...S.label, marginBottom: 8 }}>curva abc</p>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 16 }}>
+          {([
+            { tier: "A", count: abcCount.A, color: "#f85149", bg: "rgba(248,81,73,.08)", border: "rgba(248,81,73,.3)", tag: "urgente", desc: "≥ 300 kg/sem" },
+            { tier: "B", count: abcCount.B, color: "#f0b429", bg: "rgba(240,180,41,.08)", border: "rgba(240,180,41,.3)", tag: "médio", desc: "100–299 kg/sem" },
+            { tier: "C", count: abcCount.C, color: "#58a6ff", bg: "rgba(88,166,255,.08)", border: "rgba(88,166,255,.3)", tag: "longo prazo", desc: "< 100 kg/sem" },
+          ] as const).map(({ tier, count, color, bg, border, tag, desc }) => (
+            <div key={tier} style={{ background: bg, border: `1px solid ${border}`, borderRadius: 5, padding: "14px 16px", textAlign: "center" }}>
+              <p style={{ color, fontSize: 26, fontWeight: 700, fontFamily: "'Inter', system-ui, sans-serif", lineHeight: 1 }}>{count}</p>
+              <p style={{ color, fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase", marginTop: 4, fontFamily: "'Courier New', monospace", fontWeight: 700 }}>
+                Tier {tier}
+              </p>
+              <p style={{ color: "#8b949e", fontSize: 9, fontFamily: "'Courier New', monospace", marginTop: 2 }}>{desc}</p>
+              <span style={{
+                display: "inline-block", marginTop: 8, padding: "2px 6px",
+                border: `1px solid ${border}`, borderRadius: 3, color, fontSize: 9,
+                letterSpacing: ".10em", textTransform: "uppercase", fontFamily: "'Courier New', monospace",
+              }}>{tag}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Alert urgente Tier A */}
+        {urgentA > 0 && (
+          <div style={{
+            borderLeft: "3px solid #f85149",
+            background: "rgba(248,81,73,.06)",
+            padding: "10px 14px",
+            borderRadius: "0 4px 4px 0",
+            marginBottom: 16,
+          }}>
+            <p style={{ color: "#f85149", fontSize: 11, fontFamily: "'Courier New', monospace", fontWeight: 700 }}>
+              ⚡ {urgentA} lead{urgentA > 1 ? "s" : ""} Tier A aguardando confirmação de handoff
+            </p>
+            <p style={{ color: "#8b949e", fontSize: 10, fontFamily: "'Courier New', monospace", marginTop: 2 }}>
+              ação imediata — alto volume, handoff não confirmado
+            </p>
+          </div>
+        )}
+
+        {/* Top cidades */}
+        {topCities.length > 0 && (
+          <div style={{ marginBottom: 16 }}>
+            <p style={{ ...S.label, marginBottom: 8 }}>top cidades — leads qualificados</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {topCities.map(([city, count], i) => (
+                <div key={city} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <span style={{ color: "#c9d1d9", fontSize: 11, fontFamily: "'Courier New', monospace" }}>
+                    <span style={{ color: "#8b949e", marginRight: 6 }}>#{i + 1}</span>{city}
+                  </span>
+                  <span style={{
+                    background: "rgba(63,185,80,.1)", border: "1px solid rgba(63,185,80,.25)",
+                    color: "#3fb950", fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase",
+                    padding: "2px 7px", borderRadius: 3, fontFamily: "'Courier New', monospace",
+                  }}>{count} leads</span>
+                </div>
+              ))}
             </div>
           </div>
+        )}
 
-          {/* Indicador de energia */}
-          {urgentA > 0 && (
-            <div className="flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3">
-              <Zap className="w-5 h-5 text-red-500 shrink-0" />
-              <div>
-                <p className="text-sm font-semibold text-red-700">
-                  {urgentA} lead{urgentA > 1 ? "s" : ""} Tier A aguardando confirmação de handoff
-                </p>
-                <p className="text-xs text-red-500">Ação imediata — alto volume, handoff não confirmado</p>
-              </div>
+        {/* Grupos de produto */}
+        {topGroups.length > 0 && (
+          <div>
+            <p style={{ ...S.label, marginBottom: 8 }}>grupos de produto</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {topGroups.map(([group, count]) => (
+                <div key={group} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <span style={{ color: "#c9d1d9", fontSize: 11, fontFamily: "'Courier New', monospace" }}>
+                    {PRODUCT_LABELS[group] ?? group}
+                  </span>
+                  <span style={{
+                    border: "1px solid #30363d", color: "#8b949e", fontSize: 9,
+                    padding: "2px 7px", borderRadius: 3, fontFamily: "'Courier New', monospace",
+                  }}>{count}</span>
+                </div>
+              ))}
             </div>
-          )}
-
-          {/* Top cidades */}
-          {topCities.length > 0 && (
-            <div>
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1">
-                <MapPin className="w-3 h-3" /> Top cidades — leads qualificados
-              </p>
-              <div className="space-y-1.5">
-                {topCities.map(([city, count], i) => (
-                  <div key={city} className="flex items-center justify-between text-sm">
-                    <span className="text-gray-700">
-                      <span className="text-xs text-gray-400 mr-1">#{i + 1}</span>
-                      {city}
-                    </span>
-                    <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
-                      {count} leads
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Grupos de produto */}
-          {hasProductData && (
-            <div>
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1">
-                <Package className="w-3 h-3" /> Grupos de produto
-              </p>
-              <div className="space-y-1.5">
-                {topGroups.map(([group, count]) => (
-                  <div key={group} className="flex items-center justify-between text-sm">
-                    <span className="text-gray-700">{PRODUCT_LABELS[group] ?? group}</span>
-                    <Badge variant="outline" className="text-xs">{count}</Badge>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Charts row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Funil de Qualificação</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <QualificationFunnel data={funnelData} />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Conversões por Semana</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <WeeklyConversions data={weeklyData} />
-          </CardContent>
-        </Card>
+          </div>
+        )}
       </div>
 
-      {/* Vendor performance */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Performance por Vendedor</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <VendorPerformance data={vendorData} />
-        </CardContent>
-      </Card>
+      {/* Charts row */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        <div style={{ ...S.card, padding: "20px 24px" }}>
+          <p style={S.section}>Funil de Qualificação</p>
+          <QualificationFunnel data={funnelData} />
+        </div>
+        <div style={{ ...S.card, padding: "20px 24px" }}>
+          <p style={S.section}>Conversões por Semana</p>
+          <WeeklyConversions data={weeklyData} />
+        </div>
+      </div>
 
-      {/* Pipeline status */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Status do Pipeline</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-2 flex-wrap">
-            <Badge variant="outline">SDR Ativo</Badge>
-            <Badge variant="outline" className="text-green-600 border-green-200">RAG Online</Badge>
-            <Badge variant="outline" className="text-blue-600 border-blue-200">Follow-up Engine Ativo</Badge>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Vendor */}
+      <div style={{ ...S.card, padding: "20px 24px" }}>
+        <p style={S.section}>Performance por Vendedor</p>
+        <VendorPerformance data={vendorData} />
+      </div>
+
+      {/* Status */}
+      <div style={{ ...S.card, padding: "16px 24px", display: "flex", alignItems: "center", gap: 12 }}>
+        <p style={{ ...S.label, margin: 0 }}>status</p>
+        {[
+          { label: "SDR Ativo",            color: "#3fb950" },
+          { label: "RAG Online",           color: "#58a6ff" },
+          { label: "Follow-up Engine",     color: "#f0b429" },
+        ].map(({ label, color }) => (
+          <span key={label} style={{
+            border: `1px solid ${color}30`,
+            background: `${color}10`,
+            color,
+            fontSize: 9,
+            letterSpacing: ".10em",
+            textTransform: "uppercase",
+            padding: "3px 8px",
+            borderRadius: 3,
+            fontFamily: "'Courier New', monospace",
+          }} translate="no">● {label}</span>
+        ))}
+      </div>
     </div>
   );
 }

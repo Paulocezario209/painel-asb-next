@@ -4,18 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { MessageCircle, CheckCircle, TrendingUp, Search } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { MessageCircle, CheckCircle, TrendingUp } from "lucide-react";
 
 type Lead = {
   phone: string;
@@ -38,42 +27,40 @@ type Lead = {
   product_groups: string[] | null;
 };
 
-const TEMP_CONFIG: Record<string, { label: string; className: string }> = {
-  HOT:          { label: "HOT",  className: "bg-red-100 text-red-700 border-red-200" },
-  WARM:         { label: "WARM", className: "bg-yellow-100 text-yellow-700 border-yellow-200" },
-  COLD:         { label: "COLD", className: "bg-blue-100 text-blue-700 border-blue-200" },
-  READY_TO_BUY: { label: "READY", className: "bg-purple-100 text-purple-700 border-purple-200" },
+// ── Design tokens ───────────────────────────────────────────────
+const C = { bg: "#161b22", border: "#21262d", border2: "#30363d", text: "#c9d1d9", muted: "#8b949e", blue: "#58a6ff", green: "#3fb950", amber: "#f0b429", red: "#f85149" };
+
+const LABEL: React.CSSProperties = { fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase", color: C.muted, fontFamily: "'Courier New', monospace" };
+
+// ── Badge configs ────────────────────────────────────────────────
+type BadgeCfg = { label: string; color: string; bg: string; border: string };
+
+const TEMP_CFG: Record<string, BadgeCfg> = {
+  HOT:          { label: "HOT",   color: C.red,   bg: "rgba(248,81,73,.1)",   border: "rgba(248,81,73,.3)" },
+  WARM:         { label: "WARM",  color: C.amber, bg: "rgba(240,180,41,.1)",  border: "rgba(240,180,41,.3)" },
+  COLD:         { label: "COLD",  color: C.blue,  bg: "rgba(88,166,255,.1)",  border: "rgba(88,166,255,.3)" },
+  READY_TO_BUY: { label: "READY", color: "#c084fc", bg: "rgba(192,132,252,.1)", border: "rgba(192,132,252,.3)" },
 };
 
-const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
-  new:       { label: "Novo",        className: "bg-gray-100 text-gray-600 border-gray-200" },
-  qualified: { label: "Qualificado", className: "bg-green-100 text-green-700 border-green-200" },
-  converted: { label: "Convertido",  className: "bg-yellow-100 text-yellow-800 border-yellow-300" },
-  optout:    { label: "Opt-out",     className: "bg-red-900/10 text-red-900 border-red-300" },
+const STATUS_CFG: Record<string, BadgeCfg> = {
+  new:       { label: "Novo",         color: C.muted, bg: "rgba(139,148,158,.1)", border: "rgba(139,148,158,.25)" },
+  qualified: { label: "Qualificado",  color: C.green, bg: "rgba(63,185,80,.1)",   border: "rgba(63,185,80,.3)" },
+  converted: { label: "Convertido",   color: C.amber, bg: "rgba(240,180,41,.1)",  border: "rgba(240,180,41,.3)" },
+  optout:    { label: "Opt-out",      color: C.red,   bg: "rgba(248,81,73,.08)",  border: "rgba(248,81,73,.25)" },
 };
 
-const ABC_CONFIG: Record<"A" | "B" | "C", { label: string; className: string }> = {
-  A: { label: "A", className: "bg-red-100 text-red-700 border-red-200 font-bold" },
-  B: { label: "B", className: "bg-yellow-100 text-yellow-700 border-yellow-200 font-bold" },
-  C: { label: "C", className: "bg-blue-100 text-blue-700 border-blue-200 font-bold" },
+const ABC_CFG: Record<"A" | "B" | "C", BadgeCfg> = {
+  A: { label: "A", color: C.red,   bg: "rgba(248,81,73,.1)",  border: "rgba(248,81,73,.3)" },
+  B: { label: "B", color: C.amber, bg: "rgba(240,180,41,.1)", border: "rgba(240,180,41,.3)" },
+  C: { label: "C", color: C.blue,  bg: "rgba(88,166,255,.1)", border: "rgba(88,166,255,.3)" },
 };
 
-const VENDOR_LABELS: Record<string, string> = {
-  ana_paula:  "Ana Paula",
-  alan:       "Alan",
-  setor_cuit: "CUIT",
-};
+const VENDOR_LABELS: Record<string, string> = { ana_paula: "Ana Paula", alan: "Alan", setor_cuit: "CUIT" };
 
 const PRODUCT_LABELS: Record<string, string> = {
-  hamburguer:       "Hambúrguer",
-  espeto:           "Espeto",
-  boteco:           "Boteco",
-  cortes_especiais: "Cortes Especiais",
-  mercearia:        "Mercearia",
-  molhos:           "Molhos",
-  defumados:        "Defumados",
-  paes:             "Pães",
-  embalagens:       "Embalagens",
+  hamburguer: "Hambúrguer", espeto: "Espeto", boteco: "Boteco",
+  cortes_especiais: "Cortes Esp.", mercearia: "Mercearia",
+  molhos: "Molhos", defumados: "Defumados", paes: "Pães", embalagens: "Embalagens",
 };
 
 function abcCurve(vol: number | null): "A" | "B" | "C" {
@@ -89,13 +76,34 @@ function derivedStatus(lead: Lead): string {
   return lead.lead_status ?? "new";
 }
 
-export function LeadsTable({
-  leads: initialLeads,
-  userEmail,
-}: {
-  leads: Lead[];
-  userEmail: string;
-}) {
+function Badge({ cfg }: { cfg: BadgeCfg }) {
+  return (
+    <span style={{
+      display: "inline-block", padding: "2px 5px", borderRadius: 3,
+      fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase",
+      fontFamily: "'Courier New', monospace", fontWeight: 700,
+      color: cfg.color, background: cfg.bg, border: `1px solid ${cfg.border}`,
+    }}>{cfg.label}</span>
+  );
+}
+
+function Select({ value, onChange, children }: { value: string; onChange: (v: string) => void; children: React.ReactNode }) {
+  return (
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      style={{
+        background: C.bg, border: `1px solid ${C.border2}`, borderRadius: 4,
+        color: C.muted, fontSize: 10, letterSpacing: ".10em", textTransform: "uppercase",
+        padding: "5px 10px", fontFamily: "'Courier New', monospace", cursor: "pointer", outline: "none",
+      }}
+    >
+      {children}
+    </select>
+  );
+}
+
+export function LeadsTable({ leads: initialLeads, userEmail }: { leads: Lead[]; userEmail: string }) {
   const router = useRouter();
   const [leads, setLeads] = useState<Lead[]>(initialLeads);
   const [search, setSearch] = useState("");
@@ -107,242 +115,154 @@ export function LeadsTable({
 
   const filtered = leads.filter((l) => {
     const q = search.toLowerCase();
-    const matchSearch =
-      !q ||
-      (l.name ?? "").toLowerCase().includes(q) ||
-      l.phone.includes(q) ||
-      (l.city ?? "").toLowerCase().includes(q);
-
-    const matchStatus = statusFilter === "all" || derivedStatus(l) === statusFilter;
-    const matchVendor = vendorFilter === "all" || l.routing_team === vendorFilter;
-    const matchAbc    = abcFilter === "all" || abcCurve(l.weekly_volume_kg) === abcFilter;
-    const matchProduct =
-      productFilter === "all" ||
-      (l.product_groups ?? []).includes(productFilter);
-
+    const matchSearch = !q || (l.name ?? "").toLowerCase().includes(q) || l.phone.includes(q) || (l.city ?? "").toLowerCase().includes(q);
+    const matchStatus  = statusFilter === "all" || derivedStatus(l) === statusFilter;
+    const matchVendor  = vendorFilter === "all" || l.routing_team === vendorFilter;
+    const matchAbc     = abcFilter === "all" || abcCurve(l.weekly_volume_kg) === abcFilter;
+    const matchProduct = productFilter === "all" || (l.product_groups ?? []).includes(productFilter);
     return matchSearch && matchStatus && matchVendor && matchAbc && matchProduct;
   });
 
   async function confirmHandoff(phone: string) {
-    const supabase = createClient();
     const now = new Date().toISOString();
-    await supabase
-      .from("ai_sdr_leads")
-      .update({ handoff_confirmed: true, handoff_confirmed_at: now })
-      .eq("phone", phone);
-    setLeads((prev) =>
-      prev.map((l) =>
-        l.phone === phone ? { ...l, handoff_confirmed: true, handoff_confirmed_at: now } : l
-      )
-    );
+    await createClient().from("ai_sdr_leads").update({ handoff_confirmed: true, handoff_confirmed_at: now }).eq("phone", phone);
+    setLeads(prev => prev.map(l => l.phone === phone ? { ...l, handoff_confirmed: true, handoff_confirmed_at: now } : l));
   }
 
   async function convertLead(phone: string) {
-    const supabase = createClient();
     const now = new Date().toISOString();
-    await supabase
-      .from("ai_sdr_leads")
-      .update({ first_order_at: now })
-      .eq("phone", phone);
-    setLeads((prev) =>
-      prev.map((l) => (l.phone === phone ? { ...l, first_order_at: now } : l))
-    );
+    await createClient().from("ai_sdr_leads").update({ first_order_at: now }).eq("phone", phone);
+    setLeads(prev => prev.map(l => l.phone === phone ? { ...l, first_order_at: now } : l));
   }
 
-  function refreshData() {
-    startTransition(() => router.refresh());
-  }
+  const TH: React.CSSProperties = { ...LABEL, padding: "10px 14px", textAlign: "left", borderBottom: `1px solid ${C.border}`, whiteSpace: "nowrap" };
+  const TD: React.CSSProperties = { padding: "10px 14px", color: C.text, fontSize: 11, fontFamily: "'Courier New', monospace", borderBottom: `1px solid ${C.border}`, whiteSpace: "nowrap" };
 
   return (
-    <div className="space-y-4">
-      {/* Filters row 1 */}
-      <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
-        <div className="relative flex-1 min-w-[200px] max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <Input
-            placeholder="Buscar por nome, telefone, cidade..."
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      {/* Filters */}
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+        <div style={{ position: "relative", flex: 1, minWidth: 200, maxWidth: 280 }}>
+          <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: C.muted, fontSize: 12 }}>›</span>
+          <input
+            type="text"
+            placeholder="buscar nome, tel, cidade..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
+            style={{
+              width: "100%", background: C.bg, border: `1px solid ${C.border2}`, borderRadius: 4,
+              color: C.text, fontSize: 11, padding: "5px 10px 5px 24px",
+              fontFamily: "'Courier New', monospace", outline: "none", boxSizing: "border-box",
+            }}
           />
         </div>
-        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v ?? "all")}>
-          <SelectTrigger className="w-44">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos os status</SelectItem>
-            <SelectItem value="new">Novo</SelectItem>
-            <SelectItem value="qualified">Qualificado</SelectItem>
-            <SelectItem value="converted">Convertido</SelectItem>
-            <SelectItem value="optout">Opt-out</SelectItem>
-          </SelectContent>
+        <Select value={statusFilter} onChange={setStatusFilter}>
+          <option value="all">status: todos</option>
+          <option value="new">novo</option>
+          <option value="qualified">qualificado</option>
+          <option value="converted">convertido</option>
+          <option value="optout">opt-out</option>
         </Select>
-        <Select value={vendorFilter} onValueChange={(v) => setVendorFilter(v ?? "all")}>
-          <SelectTrigger className="w-44">
-            <SelectValue placeholder="Vendedor" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos os vendedores</SelectItem>
-            <SelectItem value="ana_paula">Ana Paula</SelectItem>
-            <SelectItem value="alan">Alan</SelectItem>
-            <SelectItem value="setor_cuit">CUIT</SelectItem>
-          </SelectContent>
+        <Select value={vendorFilter} onChange={setVendorFilter}>
+          <option value="all">vendedor: todos</option>
+          <option value="ana_paula">Ana Paula</option>
+          <option value="alan">Alan</option>
+          <option value="setor_cuit">CUIT</option>
         </Select>
-        <Select value={abcFilter} onValueChange={(v) => setAbcFilter(v ?? "all")}>
-          <SelectTrigger className="w-36">
-            <SelectValue placeholder="Curva ABC" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Curva ABC</SelectItem>
-            <SelectItem value="A">Tier A (≥300 kg)</SelectItem>
-            <SelectItem value="B">Tier B (≥100 kg)</SelectItem>
-            <SelectItem value="C">Tier C (&lt;100 kg)</SelectItem>
-          </SelectContent>
+        <Select value={abcFilter} onChange={setAbcFilter}>
+          <option value="all">ABC: todos</option>
+          <option value="A">Tier A ≥300 kg</option>
+          <option value="B">Tier B ≥100 kg</option>
+          <option value="C">Tier C &lt;100 kg</option>
         </Select>
-        <Select value={productFilter} onValueChange={(v) => setProductFilter(v ?? "all")}>
-          <SelectTrigger className="w-44">
-            <SelectValue placeholder="Grupo produto" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos os grupos</SelectItem>
-            {Object.entries(PRODUCT_LABELS).map(([k, label]) => (
-              <SelectItem key={k} value={k}>{label}</SelectItem>
-            ))}
-          </SelectContent>
+        <Select value={productFilter} onChange={setProductFilter}>
+          <option value="all">produto: todos</option>
+          {Object.entries(PRODUCT_LABELS).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
         </Select>
-        <Button variant="outline" size="sm" onClick={refreshData} disabled={isPending}>
-          {isPending ? "Atualizando..." : "Atualizar"}
-        </Button>
+        <button
+          onClick={() => startTransition(() => router.refresh())}
+          disabled={isPending}
+          style={{
+            background: "transparent", border: `1px solid ${C.border2}`, borderRadius: 4,
+            color: C.muted, fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase",
+            padding: "5px 12px", cursor: "pointer", fontFamily: "'Courier New', monospace",
+          }}
+        >
+          {isPending ? "..." : "↺ atualizar"}
+        </button>
       </div>
 
-      <p className="text-sm text-gray-500">{filtered.length} leads</p>
+      <p style={{ ...LABEL, margin: 0 }}>{filtered.length} leads</p>
 
       {/* Table */}
-      <div className="rounded-lg border border-gray-200 bg-white overflow-x-auto">
-        <table className="w-full text-sm">
+      <div style={{ background: C.bg, border: `1px solid ${C.border2}`, borderRadius: 6, overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
-            <tr className="border-b border-gray-100 bg-gray-50">
-              <th className="text-left px-4 py-3 font-medium text-gray-600">Lead</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">Cidade</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">Segmento</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">Volume</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">ABC</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">Temp.</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">Vendedor</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">Etapa</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">Handoff</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">Ações</th>
+            <tr style={{ background: "#0d1117" }}>
+              {["Lead", "Cidade", "Segmento", "Volume", "ABC", "Temp.", "Status", "Vendedor", "Etapa", "Handoff", "Ações"].map(h => (
+                <th key={h} style={TH}>{h}</th>
+              ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody>
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={11} className="px-4 py-8 text-center text-gray-400">
-                  Nenhum lead encontrado
+                <td colSpan={11} style={{ ...TD, textAlign: "center", color: C.muted, padding: "32px 0" }}>
+                  nenhum lead encontrado
                 </td>
               </tr>
             )}
-            {filtered.map((lead) => {
+            {filtered.map((lead, i) => {
               const status = derivedStatus(lead);
-              const abc = abcCurve(lead.weekly_volume_kg);
-              const abcCfg = ABC_CONFIG[abc];
-              const tempCfg = TEMP_CONFIG[lead.lead_temperature ?? ""] ?? TEMP_CONFIG.COLD;
-              const statusCfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.new;
+              const abc    = abcCurve(lead.weekly_volume_kg);
               const showConfirm = !!lead.handoff_at && lead.handoff_confirmed === false;
               const showConvert = (lead.qual_stage ?? 0) >= 7 && !lead.first_order_at;
+              const rowBg = i % 2 === 0 ? C.bg : "#0d1117";
 
               return (
-                <tr key={lead.phone} className="hover:bg-gray-50 transition-colors">
-                  {/* Lead name / phone */}
-                  <td className="px-4 py-3">
-                    <Link
-                      href={`/dashboard/leads/${encodeURIComponent(lead.phone)}`}
-                      className="hover:underline"
-                    >
-                      <p className="font-medium text-gray-900 truncate max-w-[140px]">
-                        {lead.name || "—"}
-                      </p>
+                <tr key={lead.phone} style={{ background: rowBg }} onMouseEnter={e => (e.currentTarget.style.background = "#21262d")} onMouseLeave={e => (e.currentTarget.style.background = rowBg)}>
+                  <td style={TD}>
+                    <Link href={`/dashboard/leads/${encodeURIComponent(lead.phone)}`} style={{ color: C.blue, textDecoration: "none", fontWeight: 600 }}>
+                      {lead.name || "—"}
                     </Link>
-                    <p className="text-xs text-gray-400">{lead.phone}</p>
+                    <br />
+                    <span style={{ color: C.muted, fontSize: 10 }}>{lead.phone}</span>
                   </td>
-
-                  <td className="px-4 py-3 text-gray-700">{lead.city || "—"}</td>
-                  <td className="px-4 py-3 text-gray-700 capitalize">{lead.segment || "—"}</td>
-                  <td className="px-4 py-3 text-gray-700">
-                    {lead.weekly_volume_kg ? `${lead.weekly_volume_kg} kg` : "—"}
-                  </td>
-
-                  {/* ABC badge */}
-                  <td className="px-4 py-3">
-                    <Badge variant="outline" className={cn("text-xs w-7 justify-center", abcCfg.className)}>
-                      {abcCfg.label}
-                    </Badge>
-                  </td>
-
-                  {/* Temperature badge */}
-                  <td className="px-4 py-3">
-                    <Badge variant="outline" className={cn("text-xs font-semibold", tempCfg.className)}>
-                      {tempCfg.label}
-                    </Badge>
-                  </td>
-
-                  {/* Status badge */}
-                  <td className="px-4 py-3">
-                    <Badge variant="outline" className={cn("text-xs", statusCfg.className)}>
-                      {statusCfg.label}
-                    </Badge>
-                  </td>
-
-                  {/* Vendor */}
-                  <td className="px-4 py-3 text-gray-700">
-                    {VENDOR_LABELS[lead.routing_team ?? ""] ?? lead.routing_team ?? "—"}
-                  </td>
-
-                  {/* qual_stage */}
-                  <td className="px-4 py-3">
-                    <span className="text-xs font-mono bg-gray-100 px-2 py-0.5 rounded">
+                  <td style={TD}>{lead.city || "—"}</td>
+                  <td style={{ ...TD, textTransform: "capitalize" }}>{lead.segment || "—"}</td>
+                  <td style={TD}>{lead.weekly_volume_kg ? `${lead.weekly_volume_kg} kg` : "—"}</td>
+                  <td style={TD}><Badge cfg={ABC_CFG[abc]} /></td>
+                  <td style={TD}><Badge cfg={TEMP_CFG[lead.lead_temperature ?? ""] ?? TEMP_CFG.COLD} /></td>
+                  <td style={TD}><Badge cfg={STATUS_CFG[status] ?? STATUS_CFG.new} /></td>
+                  <td style={TD}>{VENDOR_LABELS[lead.routing_team ?? ""] ?? lead.routing_team ?? "—"}</td>
+                  <td style={TD}>
+                    <span style={{ fontFamily: "'Courier New', monospace", color: C.muted, fontSize: 10 }}>
                       {lead.qual_stage ?? 0}/9
                     </span>
                   </td>
-
-                  {/* handoff_at */}
-                  <td className="px-4 py-3 text-xs text-gray-500">
+                  <td style={TD}>
                     {lead.handoff_at
                       ? lead.handoff_confirmed
-                        ? <span className="text-green-600 font-medium">✓ Confirmado</span>
-                        : new Date(lead.handoff_at).toLocaleDateString("pt-BR")
-                      : "—"}
+                        ? <span style={{ color: C.green, fontSize: 10 }}>✓ confirmado</span>
+                        : <span style={{ color: C.amber, fontSize: 10 }}>{new Date(lead.handoff_at).toLocaleDateString("pt-BR")}</span>
+                      : <span style={{ color: C.muted }}>—</span>}
                   </td>
-
-                  {/* Actions */}
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-1">
+                  <td style={TD}>
+                    <div style={{ display: "flex", gap: 4 }}>
                       <a href={`https://wa.me/${lead.phone}`} target="_blank" rel="noopener noreferrer">
-                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-green-600 hover:text-green-700 hover:bg-green-50">
-                          <MessageCircle className="w-4 h-4" />
-                        </Button>
+                        <button style={{ background: "transparent", border: "none", color: C.green, cursor: "pointer", padding: 3 }} title="WhatsApp">
+                          <MessageCircle size={14} />
+                        </button>
                       </a>
                       {showConfirm && (
-                        <Button
-                          variant="ghost" size="sm"
-                          className="h-7 w-7 p-0 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
-                          onClick={() => confirmHandoff(lead.phone)}
-                          title="Confirmar atendimento"
-                        >
-                          <CheckCircle className="w-4 h-4" />
-                        </Button>
+                        <button onClick={() => confirmHandoff(lead.phone)} style={{ background: "transparent", border: "none", color: C.amber, cursor: "pointer", padding: 3 }} title="Confirmar handoff">
+                          <CheckCircle size={14} />
+                        </button>
                       )}
                       {showConvert && (
-                        <Button
-                          variant="ghost" size="sm"
-                          className="h-7 w-7 p-0 text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50"
-                          onClick={() => convertLead(lead.phone)}
-                          title="Marcar como convertido"
-                        >
-                          <TrendingUp className="w-4 h-4" />
-                        </Button>
+                        <button onClick={() => convertLead(lead.phone)} style={{ background: "transparent", border: "none", color: C.blue, cursor: "pointer", padding: 3 }} title="Marcar convertido">
+                          <TrendingUp size={14} />
+                        </button>
                       )}
                     </div>
                   </td>

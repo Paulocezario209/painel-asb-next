@@ -16,11 +16,13 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen" style={{ background: "#0d1117" }}>
       <Sidebar />
       <div className="flex flex-col flex-1 overflow-hidden">
         <Header email={user.email ?? ""} />
-        <main className="flex-1 overflow-auto p-6">{children}</main>
+        <main className="flex-1 overflow-auto p-6" style={{ background: "#0d1117" }}>
+          {children}
+        </main>
       </div>
     </div>
   );

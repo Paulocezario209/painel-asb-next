@@ -3,10 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -19,63 +15,144 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-
     if (error) {
       setError(error.message);
       setLoading(false);
       return;
     }
-
     router.push("/dashboard");
     router.refresh();
   }
 
+  const inputStyle: React.CSSProperties = {
+    width: "100%",
+    background: "#0d1117",
+    border: "1px solid #30363d",
+    borderRadius: 4,
+    color: "#e6edf3",
+    fontSize: 12,
+    padding: "8px 12px",
+    fontFamily: "'Courier New', monospace",
+    outline: "none",
+    boxSizing: "border-box",
+  };
+
+  const labelStyle: React.CSSProperties = {
+    fontSize: 9,
+    letterSpacing: ".14em",
+    textTransform: "uppercase",
+    color: "#8b949e",
+    fontFamily: "'Courier New', monospace",
+    display: "block",
+    marginBottom: 6,
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-4 w-12 h-12 bg-red-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-lg">A</span>
+    <div
+      className="min-h-screen flex items-center justify-center"
+      style={{ background: "#0d1117" }}
+    >
+      <div
+        style={{
+          background: "#161b22",
+          border: "1px solid #30363d",
+          borderRadius: 8,
+          padding: "32px 28px",
+          width: "100%",
+          maxWidth: 380,
+        }}
+      >
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div
+            className="mx-auto mb-4 flex items-center justify-center"
+            style={{
+              width: 40,
+              height: 40,
+              background: "#C8102E",
+              borderRadius: 6,
+            }}
+          >
+            <span style={{ color: "#fff", fontWeight: 700, fontSize: 16 }}>A</span>
           </div>
-          <CardTitle className="text-2xl">American Steak Brasil</CardTitle>
-          <CardDescription>Painel de Vendas — acesso restrito</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="seu@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
+          <p style={{ color: "#e6edf3", fontWeight: 700, fontSize: 16, fontFamily: "'Courier New', monospace" }}>
+            ASB
+          </p>
+          <p style={{ color: "#8b949e", fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase", marginTop: 4 }}>
+            Painel de Vendas — acesso restrito
+          </p>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div>
+            <label htmlFor="email" style={labelStyle}>e-mail</label>
+            <input
+              id="email"
+              type="email"
+              placeholder="seu@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              style={inputStyle}
+              onFocus={(e) => (e.currentTarget.style.borderColor = "#58a6ff")}
+              onBlur={(e) => (e.currentTarget.style.borderColor = "#30363d")}
+            />
+          </div>
+          <div>
+            <label htmlFor="password" style={labelStyle}>senha</label>
+            <input
+              id="password"
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              style={inputStyle}
+              onFocus={(e) => (e.currentTarget.style.borderColor = "#58a6ff")}
+              onBlur={(e) => (e.currentTarget.style.borderColor = "#30363d")}
+            />
+          </div>
+
+          {error && (
+            <div style={{
+              background: "rgba(248,81,73,.1)",
+              border: "1px solid rgba(248,81,73,.3)",
+              borderRadius: 4,
+              padding: "8px 12px",
+              color: "#f85149",
+              fontSize: 11,
+              fontFamily: "'Courier New', monospace",
+            }}>
+              {error}
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-            {error && (
-              <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-md">{error}</p>
-            )}
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Entrando..." : "Entrar"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              background: loading ? "#8b949e" : "#C8102E",
+              border: "none",
+              borderRadius: 4,
+              color: "#fff",
+              fontSize: 10,
+              letterSpacing: ".14em",
+              textTransform: "uppercase",
+              padding: "10px 0",
+              cursor: loading ? "not-allowed" : "pointer",
+              fontFamily: "'Courier New', monospace",
+              fontWeight: 700,
+              marginTop: 4,
+              transition: "background .15s",
+            }}
+          >
+            {loading ? "aguarde..." : "entrar"}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
