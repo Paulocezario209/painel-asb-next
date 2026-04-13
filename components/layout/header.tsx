@@ -2,8 +2,15 @@
 
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { Menu } from "lucide-react";
 
-export function Header({ email }: { email: string }) {
+export function Header({
+  email,
+  onMenuToggle,
+}: {
+  email: string;
+  onMenuToggle?: () => void;
+}) {
   const router = useRouter();
 
   async function handleLogout() {
@@ -15,16 +22,61 @@ export function Header({ email }: { email: string }) {
 
   return (
     <header
-      className="h-12 flex items-center justify-between px-6 shrink-0"
+      className="h-12 flex items-center justify-between px-4 shrink-0"
       style={{
         background: "#161b22",
         borderBottom: "1px solid #21262d",
       }}
     >
-      <div />
-      <div className="flex items-center gap-4">
-        <span style={{ color: "#8b949e", fontSize: 11, fontFamily: "'Courier New', monospace" }}>
+      {/* Left: hamburger (mobile) + logo (mobile) */}
+      <div className="flex items-center gap-3">
+        {/* Hamburger — visible on mobile only */}
+        <button
+          onClick={onMenuToggle}
+          className="sm:hidden"
+          style={{
+            background: "transparent",
+            border: "none",
+            color: "#8b949e",
+            cursor: "pointer",
+            padding: 4,
+            display: "flex",
+            alignItems: "center",
+          }}
+          aria-label="Menu"
+        >
+          <Menu size={18} />
+        </button>
+
+        {/* ASB logo — mobile only (sidebar hidden) */}
+        <span
+          className="sm:hidden"
+          style={{
+            color: "#e6edf3",
+            fontSize: 13,
+            fontWeight: 700,
+            fontFamily: "'Courier New', monospace",
+          }}
+          translate="no"
+        >
+          ASB
+        </span>
+      </div>
+
+      {/* Right: email + logout */}
+      <div className="flex items-center gap-3">
+        <span
+          className="hidden sm:inline"
+          style={{ color: "#8b949e", fontSize: 11, fontFamily: "'Courier New', monospace" }}
+        >
           <span style={{ color: "#58a6ff" }}>$</span> {email}
+        </span>
+        {/* Compact email on mobile */}
+        <span
+          className="sm:hidden"
+          style={{ color: "#8b949e", fontSize: 10, fontFamily: "'Courier New', monospace", maxWidth: 130, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+        >
+          {email.split("@")[0]}
         </span>
         <button
           onClick={handleLogout}

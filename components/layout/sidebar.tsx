@@ -10,12 +10,18 @@ const navItems = [
   { href: "/dashboard/followups", label: "Follow-ups", icon: Bell },
 ];
 
-export function Sidebar() {
+export function Sidebar({
+  isOpen = false,
+  onClose,
+}: {
+  isOpen?: boolean;
+  onClose?: () => void;
+}) {
   const pathname = usePathname();
 
   return (
     <aside
-      className="w-52 flex flex-col shrink-0"
+      className={`w-52 flex flex-col shrink-0 asb-sidebar-drawer ${isOpen ? "open" : ""}`}
       style={{
         background: "#0d1117",
         borderRight: "1px solid #21262d",
@@ -50,6 +56,7 @@ export function Sidebar() {
             <Link
               key={href}
               href={href}
+              onClick={onClose}
               style={{
                 display: "flex",
                 alignItems: "center",

@@ -28,7 +28,7 @@ type Lead = {
 };
 
 // ── Design tokens ───────────────────────────────────────────────
-const C = { bg: "#161b22", border: "#21262d", border2: "#30363d", text: "#c9d1d9", muted: "#8b949e", blue: "#58a6ff", green: "#3fb950", amber: "#f0b429", red: "#f85149" };
+const C = { bg: "#161b22", bg2: "#0d1117", border: "#21262d", border2: "#30363d", text: "#c9d1d9", muted: "#8b949e", blue: "#58a6ff", green: "#3fb950", amber: "#f0b429", red: "#f85149" };
 
 const LABEL: React.CSSProperties = { fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase", color: C.muted, fontFamily: "'Courier New', monospace" };
 
@@ -93,9 +93,10 @@ function Select({ value, onChange, children }: { value: string; onChange: (v: st
       value={value}
       onChange={(e) => onChange(e.target.value)}
       style={{
-        background: C.bg, border: `1px solid ${C.border2}`, borderRadius: 4,
+        background: C.bg2, border: `1px solid ${C.border2}`, borderRadius: 4,
         color: C.muted, fontSize: 10, letterSpacing: ".10em", textTransform: "uppercase",
         padding: "5px 10px", fontFamily: "'Courier New', monospace", cursor: "pointer", outline: "none",
+        flexShrink: 0,
       }}
     >
       {children}
@@ -140,17 +141,17 @@ export function LeadsTable({ leads: initialLeads, userEmail }: { leads: Lead[]; 
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-      {/* Filters */}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
-        <div style={{ position: "relative", flex: 1, minWidth: 200, maxWidth: 280 }}>
+      {/* Filters — horizontal scroll on mobile */}
+      <div className="asb-filters-bar">
+        <div style={{ position: "relative", minWidth: 160, flexShrink: 0 }}>
           <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: C.muted, fontSize: 12 }}>›</span>
           <input
             type="text"
-            placeholder="buscar nome, tel, cidade..."
+            placeholder="buscar..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             style={{
-              width: "100%", background: C.bg, border: `1px solid ${C.border2}`, borderRadius: 4,
+              width: "100%", background: C.bg2, border: `1px solid ${C.border2}`, borderRadius: 4,
               color: C.text, fontSize: 11, padding: "5px 10px 5px 24px",
               fontFamily: "'Courier New', monospace", outline: "none", boxSizing: "border-box",
             }}
@@ -185,7 +186,7 @@ export function LeadsTable({ leads: initialLeads, userEmail }: { leads: Lead[]; 
           style={{
             background: "transparent", border: `1px solid ${C.border2}`, borderRadius: 4,
             color: C.muted, fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase",
-            padding: "5px 12px", cursor: "pointer", fontFamily: "'Courier New', monospace",
+            padding: "5px 12px", cursor: "pointer", fontFamily: "'Courier New', monospace", flexShrink: 0,
           }}
         >
           {isPending ? "..." : "↺ atualizar"}
@@ -194,8 +195,96 @@ export function LeadsTable({ leads: initialLeads, userEmail }: { leads: Lead[]; 
 
       <p style={{ ...LABEL, margin: 0 }}>{filtered.length} leads</p>
 
-      {/* Table */}
-      <div style={{ background: C.bg, border: `1px solid ${C.border2}`, borderRadius: 6, overflowX: "auto" }}>
+      {/* ── Mobile cards ─────────────────────────────────────── */}
+      <div className="asb-mobile-only" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {filtered.length === 0 && (
+          <div style={{ ...LABEL, textAlign: "center", padding: "32px 0", color: C.muted }}>
+            nenhum lead encontrado
+          </div>
+        )}
+        {filtered.map((lead) => {
+          const status = derivedStatus(lead);
+          const abc    = abcCurve(lead.weekly_volume_kg);
+          const showConfirm = !!lead.handoff_at && lead.handoff_confirmed === false;
+          const showConvert = (lead.qual_stage ?? 0) >= 7 && !lead.first_order_at;
+
+          return (
+            <div
+              key={lead.phone}
+              style={{
+                background: C.bg,
+                border: `1px solid ${C.border2}`,
+                borderRadius: 6,
+                padding: "12px 14px",
+                display: "flex",
+                flexDirection: "column",
+                gap: 8,
+              }}
+            >
+              {/* Name + phone */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div>
+                  <Link
+                    href={`/dashboard/leads/${encodeURIComponent(lead.phone)}`}
+                    style={{ color: C.blue, textDecoration: "none", fontWeight: 600, fontSize: 12, fontFamily: "'Courier New', monospace" }}
+                  >
+                    {lead.name || "—"}
+                  </Link>
+                  <div style={{ color: C.muted, fontSize: 10, fontFamily: "'Courier New', monospace", marginTop: 1 }}>
+                    {lead.phone}
+                  </div>
+                </div>
+                {/* Action buttons */}
+                <div style={{ display: "flex", gap: 6 }}>
+                  <a href={`https://wa.me/${lead.phone}`} target="_blank" rel="noopener noreferrer">
+                    <button style={{ background: "transparent", border: "none", color: C.green, cursor: "pointer", padding: 4 }} title="WhatsApp">
+                      <MessageCircle size={16} />
+                    </button>
+                  </a>
+                  {showConfirm && (
+                    <button onClick={() => confirmHandoff(lead.phone)} style={{ background: "transparent", border: "none", color: C.amber, cursor: "pointer", padding: 4 }} title="Confirmar handoff">
+                      <CheckCircle size={16} />
+                    </button>
+                  )}
+                  {showConvert && (
+                    <button onClick={() => convertLead(lead.phone)} style={{ background: "transparent", border: "none", color: C.blue, cursor: "pointer", padding: 4 }} title="Marcar convertido">
+                      <TrendingUp size={16} />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Badges row */}
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+                <Badge cfg={ABC_CFG[abc]} />
+                <Badge cfg={TEMP_CFG[lead.lead_temperature ?? ""] ?? TEMP_CFG.COLD} />
+                <Badge cfg={STATUS_CFG[status] ?? STATUS_CFG.new} />
+                {lead.city && (
+                  <span style={{ color: C.muted, fontSize: 9, fontFamily: "'Courier New', monospace" }}>
+                    {lead.city}
+                  </span>
+                )}
+              </div>
+
+              {/* Volume + vendor */}
+              <div style={{ display: "flex", gap: 16 }}>
+                <span style={{ color: C.muted, fontSize: 9, fontFamily: "'Courier New', monospace", letterSpacing: ".10em" }}>
+                  {lead.weekly_volume_kg ? `${lead.weekly_volume_kg} kg/sem` : "vol: —"}
+                </span>
+                <span style={{ color: C.muted, fontSize: 9, fontFamily: "'Courier New', monospace", letterSpacing: ".10em" }}>
+                  {VENDOR_LABELS[lead.routing_team ?? ""] ?? lead.routing_team ?? "—"}
+                </span>
+                <span style={{ color: C.muted, fontSize: 9, fontFamily: "'Courier New', monospace" }}>
+                  etapa {lead.qual_stage ?? 0}/9
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* ── Desktop table ────────────────────────────────────── */}
+      <div className="asb-desktop-only" style={{ background: C.bg, border: `1px solid ${C.border2}`, borderRadius: 6, overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ background: "#0d1117" }}>

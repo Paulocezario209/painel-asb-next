@@ -129,7 +129,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* KPI cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+      <div className="asb-grid-kpi">
         {kpis.map(({ label, value, accent }) => (
           <div key={label} style={{ ...S.card, padding: "16px 20px" }}>
             <p style={S.label} translate="no">{label}</p>
@@ -229,7 +229,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Charts row */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+      <div className="asb-grid-charts">
         <div style={{ ...S.card, padding: "20px 24px" }}>
           <p style={S.section}>Funil de Qualificação</p>
           <QualificationFunnel data={funnelData} />

@@ -49,9 +49,10 @@ function NativeSelect({ value, onChange, children }: { value: string; onChange: 
       value={value}
       onChange={e => onChange(e.target.value)}
       style={{
-        background: C.bg, border: `1px solid ${C.border2}`, borderRadius: 4,
+        background: C.bg2, border: `1px solid ${C.border2}`, borderRadius: 4,
         color: C.muted, fontSize: 10, letterSpacing: ".10em", textTransform: "uppercase",
         padding: "5px 10px", fontFamily: "'Courier New', monospace", cursor: "pointer", outline: "none",
+        flexShrink: 0,
       }}
     >
       {children}
@@ -95,17 +96,17 @@ export function FollowupsTable({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-      {/* Filters */}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
-        <div style={{ position: "relative", flex: 1, minWidth: 180, maxWidth: 260 }}>
+      {/* Filters — horizontal scroll on mobile */}
+      <div className="asb-filters-bar">
+        <div style={{ position: "relative", minWidth: 160, flexShrink: 0 }}>
           <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: C.muted, fontSize: 12 }}>›</span>
           <input
             type="text"
-            placeholder="buscar nome, tel, cidade..."
+            placeholder="buscar..."
             value={search}
             onChange={e => setSearch(e.target.value)}
             style={{
-              width: "100%", background: C.bg, border: `1px solid ${C.border2}`, borderRadius: 4,
+              width: "100%", background: C.bg2, border: `1px solid ${C.border2}`, borderRadius: 4,
               color: C.text, fontSize: 11, padding: "5px 10px 5px 24px",
               fontFamily: "'Courier New', monospace", outline: "none", boxSizing: "border-box",
             }}
@@ -138,8 +139,96 @@ export function FollowupsTable({
 
       <p style={{ ...LABEL, margin: 0 }}>{filtered.length} registros</p>
 
-      {/* Table */}
-      <div style={{ background: C.bg, border: `1px solid ${C.border2}`, borderRadius: 6, overflowX: "auto" }}>
+      {/* ── Mobile cards ─────────────────────────────────────── */}
+      <div className="asb-mobile-only" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {filtered.length === 0 && (
+          <div style={{ ...LABEL, textAlign: "center", padding: "32px 0", color: C.muted }}>
+            nenhum registro encontrado
+          </div>
+        )}
+        {filtered.map((row, i) => {
+          const phaseCfg = {
+            active:    { color: C.green,  bg: "rgba(63,185,80,.1)",    border: "rgba(63,185,80,.3)" },
+            monthly:   { color: C.amber,  bg: "rgba(240,180,41,.1)",   border: "rgba(240,180,41,.3)" },
+            semestral: { color: C.purple, bg: "rgba(192,132,252,.1)",  border: "rgba(192,132,252,.3)" },
+          }[row.phase ?? ""] ?? { color: C.muted, bg: "rgba(139,148,158,.1)", border: "rgba(139,148,158,.25)" };
+
+          const angleColor = {
+            retomada:         C.blue,
+            dor:              C.red,
+            prova_social:     C.green,
+            valor:            C.amber,
+            reposicionamento: C.purple,
+          }[row.angle ?? ""] ?? C.muted;
+
+          return (
+            <div
+              key={`${row.phone}-${row.followup_sequence}-${i}`}
+              style={{
+                background: C.bg,
+                border: `1px solid ${C.border2}`,
+                borderRadius: 6,
+                padding: "12px 14px",
+                display: "flex",
+                flexDirection: "column",
+                gap: 8,
+              }}
+            >
+              {/* Name + phone */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div>
+                  <Link
+                    href={`/dashboard/leads/${encodeURIComponent(row.phone)}`}
+                    style={{ color: C.blue, textDecoration: "none", fontWeight: 600, fontSize: 12, fontFamily: "'Courier New', monospace" }}
+                  >
+                    {row.name || "—"}
+                  </Link>
+                  <div style={{ color: C.muted, fontSize: 10, fontFamily: "'Courier New', monospace", marginTop: 1 }}>
+                    {row.phone}
+                    {row.city && <span style={{ marginLeft: 8 }}>{row.city}</span>}
+                  </div>
+                </div>
+                {/* Responded badge */}
+                {row.responded
+                  ? <span style={{ display: "inline-block", padding: "2px 6px", borderRadius: 3, fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase", fontFamily: "'Courier New', monospace", fontWeight: 700, color: C.green, background: "rgba(63,185,80,.1)", border: "1px solid rgba(63,185,80,.3)" }}>sim</span>
+                  : <span style={{ display: "inline-block", padding: "2px 6px", borderRadius: 3, fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase", fontFamily: "'Courier New', monospace", fontWeight: 700, color: C.red, background: "rgba(248,81,73,.1)", border: "1px solid rgba(248,81,73,.3)" }}>não</span>
+                }
+              </div>
+
+              {/* Phase + angle + sequence */}
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+                <span style={{
+                  display: "inline-block", padding: "2px 6px", borderRadius: 3,
+                  fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase",
+                  fontFamily: "'Courier New', monospace", fontWeight: 700,
+                  color: phaseCfg.color, background: phaseCfg.bg, border: `1px solid ${phaseCfg.border}`,
+                }}>
+                  {phaseLabels[row.phase ?? ""] ?? row.phase ?? "—"}
+                </span>
+                <span style={{ color: angleColor, fontSize: 10, fontFamily: "'Courier New', monospace" }}>
+                  {angleLabels[row.angle ?? ""] ?? row.angle ?? "—"}
+                </span>
+                <span style={{ color: C.muted, fontSize: 10, fontFamily: "'Courier New', monospace" }}>
+                  #{row.followup_sequence ?? "?"}
+                </span>
+              </div>
+
+              {/* Date + vendor */}
+              <div style={{ display: "flex", gap: 16 }}>
+                <span style={{ color: C.muted, fontSize: 9, fontFamily: "'Courier New', monospace" }}>
+                  {fmt(row.sent_at)}
+                </span>
+                <span style={{ color: C.muted, fontSize: 9, fontFamily: "'Courier New', monospace" }}>
+                  {VENDOR_LABELS[row.routing_team ?? ""] ?? row.routing_team ?? "—"}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* ── Desktop table ────────────────────────────────────── */}
+      <div className="asb-desktop-only" style={{ background: C.bg, border: `1px solid ${C.border2}`, borderRadius: 6, overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ background: C.bg2 }}>
@@ -179,7 +268,6 @@ export function FollowupsTable({
                   onMouseEnter={e => (e.currentTarget.style.background = "#21262d")}
                   onMouseLeave={e => (e.currentTarget.style.background = rowBg)}
                 >
-                  {/* Lead */}
                   <td style={TD}>
                     <Link
                       href={`/dashboard/leads/${encodeURIComponent(row.phone)}`}
@@ -190,11 +278,7 @@ export function FollowupsTable({
                     <br />
                     <span style={{ color: C.muted, fontSize: 10 }}>{row.phone}</span>
                   </td>
-
-                  {/* Cidade */}
                   <td style={TD}>{row.city || "—"}</td>
-
-                  {/* Fase */}
                   <td style={TD}>
                     <span style={{
                       display: "inline-block", padding: "2px 6px", borderRadius: 3,
@@ -205,51 +289,25 @@ export function FollowupsTable({
                       {phaseLabels[row.phase ?? ""] ?? row.phase ?? "—"}
                     </span>
                   </td>
-
-                  {/* Ângulo */}
                   <td style={TD}>
-                    <span style={{
-                      color: angleCfg.color, fontSize: 10,
-                      fontFamily: "'Courier New', monospace",
-                    }}>
+                    <span style={{ color: angleCfg.color, fontSize: 10, fontFamily: "'Courier New', monospace" }}>
                       {angleLabels[row.angle ?? ""] ?? row.angle ?? "—"}
                     </span>
                   </td>
-
-                  {/* Sequência */}
                   <td style={TD}>
                     <span style={{ color: C.muted, fontFamily: "'Courier New', monospace", fontSize: 10 }}>
                       #{row.followup_sequence ?? "?"}
                     </span>
                   </td>
-
-                  {/* Enviado em */}
                   <td style={{ ...TD, color: C.muted, fontSize: 10 }}>
                     {fmt(row.sent_at)}
                   </td>
-
-                  {/* Respondeu */}
                   <td style={TD}>
                     {row.responded
-                      ? (
-                        <span style={{
-                          display: "inline-block", padding: "2px 6px", borderRadius: 3,
-                          fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase",
-                          fontFamily: "'Courier New', monospace", fontWeight: 700,
-                          color: C.green, background: "rgba(63,185,80,.1)", border: "1px solid rgba(63,185,80,.3)",
-                        }}>sim</span>
-                      ) : (
-                        <span style={{
-                          display: "inline-block", padding: "2px 6px", borderRadius: 3,
-                          fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase",
-                          fontFamily: "'Courier New', monospace", fontWeight: 700,
-                          color: C.red, background: "rgba(248,81,73,.1)", border: "1px solid rgba(248,81,73,.3)",
-                        }}>não</span>
-                      )
+                      ? <span style={{ display: "inline-block", padding: "2px 6px", borderRadius: 3, fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase", fontFamily: "'Courier New', monospace", fontWeight: 700, color: C.green, background: "rgba(63,185,80,.1)", border: "1px solid rgba(63,185,80,.3)" }}>sim</span>
+                      : <span style={{ display: "inline-block", padding: "2px 6px", borderRadius: 3, fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase", fontFamily: "'Courier New', monospace", fontWeight: 700, color: C.red, background: "rgba(248,81,73,.1)", border: "1px solid rgba(248,81,73,.3)" }}>não</span>
                     }
                   </td>
-
-                  {/* Vendedor */}
                   <td style={{ ...TD, color: C.muted }}>
                     {VENDOR_LABELS[row.routing_team ?? ""] ?? row.routing_team ?? "—"}
                   </td>

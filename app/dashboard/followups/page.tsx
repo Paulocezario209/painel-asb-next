@@ -83,7 +83,7 @@ export default async function FollowupsPage() {
       </div>
 
       {/* KPI cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+      <div className="asb-grid-kpi">
         {kpis.map(({ label, value, accent, suffix, isText }) => (
           <div key={label} style={{ ...S.card, padding: "16px 20px" }}>
             <p style={S.label}>{label}</p>
