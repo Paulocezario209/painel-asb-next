@@ -6,9 +6,9 @@ import { LayoutDashboard, Users, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/dashboard/leads", label: "Leads", icon: Users },
-  { href: "/dashboard/followups", label: "Follow-ups", icon: Bell },
+  { href: "/dashboard",          label: "Dashboard",  icon: LayoutDashboard },
+  { href: "/dashboard/leads",    label: "Leads",      icon: Users },
+  { href: "/dashboard/followups",label: "Follow-ups", icon: Bell },
 ];
 
 export function Sidebar() {
@@ -22,7 +22,7 @@ export function Sidebar() {
             <span className="text-white font-bold text-sm">A</span>
           </div>
           <div>
-            <p className="text-sm font-semibold text-gray-900 leading-tight">American Steak</p>
+            <p className="text-sm font-semibold text-gray-900 leading-tight" translate="no">ASB</p>
             <p className="text-xs text-gray-400">Painel SDR</p>
           </div>
         </div>
@@ -41,7 +41,7 @@ export function Sidebar() {
             )}
           >
             <Icon className="w-4 h-4" />
-            {label}
+            <span translate="no">{label}</span>
           </Link>
         ))}
       </nav>
