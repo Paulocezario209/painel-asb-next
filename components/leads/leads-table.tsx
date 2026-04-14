@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { MessageCircle, CheckCircle, TrendingUp } from "lucide-react";
+import { MessageCircle, CheckCircle, TrendingUp, AlertTriangle } from "lucide-react";
 
 type Lead = {
   phone: string;
@@ -21,10 +21,12 @@ type Lead = {
   handoff_confirmed_at: string | null;
   first_order_at: string | null;
   ai_active: boolean | null;
+  human_active: boolean | null;
   created_at: string;
   followup_count: number | null;
   pain_point: string | null;
   product_groups: string[] | null;
+  scheduled_at: string | null;
 };
 
 // ── Design tokens ───────────────────────────────────────────────
@@ -207,13 +209,18 @@ export function LeadsTable({ leads: initialLeads, userEmail }: { leads: Lead[]; 
           const abc    = abcCurve(lead.weekly_volume_kg);
           const showConfirm = !!lead.handoff_at && lead.handoff_confirmed === false;
           const showConvert = (lead.qual_stage ?? 0) >= 7 && !lead.first_order_at;
+          const _now = new Date();
+          const alertLevel =
+            lead.scheduled_at && !lead.handoff_confirmed && new Date(lead.scheduled_at) < _now ? 'red' :
+            lead.handoff_at && !lead.handoff_confirmed && !lead.scheduled_at && (_now.getTime() - new Date(lead.handoff_at).getTime()) > 4 * 3600000 ? 'amber' :
+            null;
 
           return (
             <div
               key={lead.phone}
               style={{
                 background: C.bg,
-                border: `1px solid ${C.border2}`,
+                border: `1px solid ${alertLevel === 'red' ? C.red : alertLevel === 'amber' ? C.amber : C.border2}`,
                 borderRadius: 6,
                 padding: "12px 14px",
                 display: "flex",
@@ -307,13 +314,23 @@ export function LeadsTable({ leads: initialLeads, userEmail }: { leads: Lead[]; 
               const showConfirm = !!lead.handoff_at && lead.handoff_confirmed === false;
               const showConvert = (lead.qual_stage ?? 0) >= 7 && !lead.first_order_at;
               const rowBg = i % 2 === 0 ? C.bg : "#0d1117";
+              const _now2 = new Date();
+              const alertLevel =
+                lead.scheduled_at && !lead.handoff_confirmed && new Date(lead.scheduled_at) < _now2 ? 'red' :
+                lead.handoff_at && !lead.handoff_confirmed && !lead.scheduled_at && (_now2.getTime() - new Date(lead.handoff_at).getTime()) > 4 * 3600000 ? 'amber' :
+                null;
 
               return (
-                <tr key={lead.phone} style={{ background: rowBg }} onMouseEnter={e => (e.currentTarget.style.background = "#21262d")} onMouseLeave={e => (e.currentTarget.style.background = rowBg)}>
+                <tr key={lead.phone} style={{ background: rowBg, borderLeft: alertLevel ? `3px solid ${alertLevel === 'red' ? C.red : C.amber}` : undefined }} onMouseEnter={e => (e.currentTarget.style.background = "#21262d")} onMouseLeave={e => (e.currentTarget.style.background = rowBg)}>
                   <td style={TD}>
-                    <Link href={`/dashboard/leads/${encodeURIComponent(lead.phone)}`} style={{ color: C.blue, textDecoration: "none", fontWeight: 600 }}>
-                      {lead.name || "—"}
-                    </Link>
+                    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                      {alertLevel && (
+                        <AlertTriangle size={12} style={{ color: alertLevel === 'red' ? C.red : C.amber, flexShrink: 0 }} />
+                      )}
+                      <Link href={`/dashboard/leads/${encodeURIComponent(lead.phone)}`} style={{ color: C.blue, textDecoration: "none", fontWeight: 600 }}>
+                        {lead.name || "—"}
+                      </Link>
+                    </div>
                     <br />
                     <span style={{ color: C.muted, fontSize: 10 }}>{lead.phone}</span>
                   </td>
