@@ -9,11 +9,11 @@ export const dynamic = "force-dynamic";
 
 // ── Design tokens — ASB brand ───────────────────────────────────────────────
 const S = {
-  card:    { background: "#111f11", border: "1px solid #1a2e1a", borderRadius: 4 } as React.CSSProperties,
-  label:   { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#4a6a4a", fontFamily: "'Courier New', monospace" },
-  value:   { fontSize: 28, fontWeight: 700, color: "#F5F5F5", fontFamily: "'Inter', system-ui, sans-serif", lineHeight: 1 },
-  section: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#4a6a4a", fontFamily: "'Courier New', monospace", marginBottom: 12 } as React.CSSProperties,
-  text:    { color: "#C8D8C8", fontSize: 12, fontFamily: "'Courier New', monospace" } as React.CSSProperties,
+  card:    { background: "#0f150f", border: "1px solid #1a2e1a", borderRadius: 4 } as React.CSSProperties,
+  label:   { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#00C853", fontFamily: "'Courier New', monospace" },
+  value:   { fontSize: 28, fontWeight: 700, color: "#F0F0F0", fontFamily: "'Inter', system-ui, sans-serif", lineHeight: 1 },
+  section: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#e0e0e0", fontFamily: "'Courier New', monospace", marginBottom: 12 } as React.CSSProperties,
+  text:    { color: "#d0d0d0", fontSize: 12, fontFamily: "'Courier New', monospace" } as React.CSSProperties,
   muted:   { color: "#7a9a7a", fontSize: 11, fontFamily: "'Courier New', monospace" } as React.CSSProperties,
 };
 
@@ -122,7 +122,7 @@ export default async function DashboardPage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div>
-        <h1 style={{ color: "#F5F5F5", fontSize: 16, fontWeight: 700, fontFamily: "'Courier New', monospace", letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
+        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: "'Courier New', monospace", letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
           Dashboard
         </h1>
         <p style={S.muted}>Visão geral do pipeline SDR</p>
@@ -132,8 +132,8 @@ export default async function DashboardPage() {
       <div className="asb-grid-kpi">
         {kpis.map(({ label, value, accent }) => (
           <div key={label} style={{ ...S.card, padding: "20px 20px", borderTop: `2px solid ${accent}` }}>
-            <p style={S.label} translate="no">{label}</p>
-            <p style={{ ...S.value, color: accent, marginTop: 12 }}>{value}</p>
+            <p style={{ ...S.label, color: accent }} translate="no">{label}</p>
+            <p style={{ ...S.value, marginTop: 12 }}>{value}</p>
           </div>
         ))}
       </div>
@@ -193,8 +193,8 @@ export default async function DashboardPage() {
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               {topCities.map(([city, count], i) => (
                 <div key={city} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <span style={{ color: "#c9d1d9", fontSize: 11, fontFamily: "'Courier New', monospace" }}>
-                    <span style={{ color: "#8b949e", marginRight: 6 }}>#{i + 1}</span>{city}
+                  <span style={{ color: "#e0e0e0", fontSize: 11, fontFamily: "'Courier New', monospace" }}>
+                    <span style={{ color: "#7a9a7a", marginRight: 6 }}>#{i + 1}</span>{city}
                   </span>
                   <span style={{
                     background: "rgba(0,200,83,.08)", border: "1px solid rgba(0,200,83,.25)",
@@ -214,7 +214,7 @@ export default async function DashboardPage() {
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               {topGroups.map(([group, count]) => (
                 <div key={group} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <span style={{ color: "#c9d1d9", fontSize: 11, fontFamily: "'Courier New', monospace" }}>
+                  <span style={{ color: "#e0e0e0", fontSize: 11, fontFamily: "'Courier New', monospace" }}>
                     {PRODUCT_LABELS[group] ?? group}
                   </span>
                   <span style={{

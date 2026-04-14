@@ -50,15 +50,15 @@
 
 /* ASB Design System — americansteakbrasil.com.br */
 :root {
-  --asb-bg:          #0a0f0a;
-  --asb-surface:     #0d1a0d;
-  --asb-card:        #111f11;
+  --asb-bg:          #080d08;
+  --asb-surface:     #080d08;
+  --asb-card:        #0f150f;
   --asb-border:      #1a2e1a;
   --asb-border2:     #243824;
-  --asb-text:        #F5F5F5;
-  --asb-text2:       #C8D8C8;
+  --asb-text:        #F0F0F0;
+  --asb-text2:       #c8c8c8;
   --asb-muted:       #7a9a7a;
-  --asb-label:       #4a6a4a;
+  --asb-label:       #00C853;
   --asb-green:       #00C853;
   --asb-green-neon:  #00E676;
   --asb-green-dark:  #1B5E20;
@@ -66,10 +66,10 @@
   --asb-amber:       #f59e0b;
   --asb-danger:      #ef4444;
 
-  --background:   #0a0f0a;
-  --foreground:   #F5F5F5;
-  --card:         #111f11;
-  --card-foreground: #F5F5F5;
+  --background:   #080d08;
+  --foreground:   #F0F0F0;
+  --card:         #0f150f;
+  --card-foreground: #F0F0F0;
   --popover:      #111f11;
   --popover-foreground: #F5F5F5;
   --primary:      #00C853;
@@ -85,8 +85,8 @@
   --input:        #1a2e1a;
   --ring:         #00C853;
   --radius:       0.375rem;
-  --sidebar:      #0a0f0a;
-  --sidebar-foreground: #F5F5F5;
+  --sidebar:      #080d08;
+  --sidebar-foreground: #c0c0c0;
   --sidebar-primary: #00C853;
   --sidebar-primary-foreground: #0a0f0a;
   --sidebar-accent: #111f11;
@@ -129,19 +129,19 @@
   font-size: 28px;
   font-weight: 700;
   font-family: 'Inter', 'system-ui', sans-serif;
-  color: var(--asb-green-neon);
+  color: #F0F0F0;
   line-height: 1;
 }
 
 .asb-card {
-  background: var(--asb-card);
-  border: 1px solid var(--asb-border);
+  background: #0f150f;
+  border: 1px solid #1a2e1a;
   border-radius: 4px;
   transition: border-color .2s, box-shadow .2s;
 }
 .asb-card:hover {
-  border-color: var(--asb-green);
-  box-shadow: 0 0 0 1px rgba(0,200,83,.1), 0 4px 20px rgba(0,200,83,.06);
+  border-color: #00C853;
+  box-shadow: 0 0 0 1px rgba(0,200,83,.12), 0 4px 20px rgba(0,200,83,.08);
 }
 
 .asb-badge {

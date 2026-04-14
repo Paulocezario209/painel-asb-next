@@ -22,7 +22,7 @@ export function Sidebar({
   return (
     <aside
       className={`w-52 flex flex-col shrink-0 asb-sidebar-drawer ${isOpen ? "open" : ""}`}
-      style={{ background: "#0a0f0a", borderRight: "1px solid #1a2e1a" }}
+      style={{ background: "#080d08", borderRight: "1px solid #1a2e1a" }}
     >
       {/* Logo */}
       <div
@@ -47,21 +47,21 @@ export function Sidebar({
                 padding: "7px 10px", borderRadius: 3,
                 borderLeft: isActive ? "3px solid #00C853" : "3px solid transparent",
                 background: isActive ? "rgba(0,200,83,.08)" : "transparent",
-                color: isActive ? "#00E676" : "#4a6a4a",
+                color: isActive ? "#00C853" : "#c0c0c0",
                 fontSize: 10, letterSpacing: ".14em", textTransform: "uppercase",
                 fontFamily: "'Courier New', monospace", fontWeight: 600,
                 transition: "all .15s", textDecoration: "none",
               }}
               onMouseEnter={(e) => {
                 if (!isActive) {
-                  (e.currentTarget as HTMLAnchorElement).style.background = "#111f11";
-                  (e.currentTarget as HTMLAnchorElement).style.color = "#7a9a7a";
+                  (e.currentTarget as HTMLAnchorElement).style.background = "#0f150f";
+                  (e.currentTarget as HTMLAnchorElement).style.color = "#e0e0e0";
                 }
               }}
               onMouseLeave={(e) => {
                 if (!isActive) {
                   (e.currentTarget as HTMLAnchorElement).style.background = "transparent";
-                  (e.currentTarget as HTMLAnchorElement).style.color = "#4a6a4a";
+                  (e.currentTarget as HTMLAnchorElement).style.color = "#c0c0c0";
                 }
               }}
             >

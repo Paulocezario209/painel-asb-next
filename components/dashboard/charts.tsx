@@ -10,7 +10,7 @@ type WeekPoint   = { week: string; count: number };
 type VendorRow   = { label: string; handoffs: number; confirmed: number; converted: number };
 
 const GRID  = "#1a2e1a";
-const TEXT  = "#4a6a4a";
+const TEXT  = "#8a9e8a";
 const GREEN = "#00C853";
 const NEON  = "#00E676";
 const AMBER = "#f59e0b";

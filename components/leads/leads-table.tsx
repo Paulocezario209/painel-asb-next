@@ -31,13 +31,13 @@ type Lead = {
 
 // ── Design tokens — ASB brand ────────────────────────────────────
 const C = {
-  bg:     "#111f11",
-  bg2:    "#0d1a0d",
+  bg:     "#0f150f",
+  bg2:    "#080d08",
   border: "#1a2e1a",
-  border2:"#243824",
-  text:   "#C8D8C8",
+  border2:"#1e301e",
+  text:   "#e0e0e0",
   muted:  "#7a9a7a",
-  label:  "#4a6a4a",
+  label:  "#00C853",
   red:    "#00C853",
   redBright: "#00E676",
   gold:   "#00E676",
@@ -246,7 +246,7 @@ export function LeadsTable({ leads: initialLeads, userEmail }: { leads: Lead[]; 
                 <div>
                   <Link
                     href={`/dashboard/leads/${encodeURIComponent(lead.phone)}`}
-                    style={{ color: C.red, textDecoration: "none", fontWeight: 600, fontSize: 12, fontFamily: "'Courier New', monospace" }}
+                    style={{ color: "#FFFFFF", textDecoration: "none", fontWeight: 600, fontSize: 12, fontFamily: "'Courier New', monospace" }}
                   >
                     {lead.name || "—"}
                   </Link>
@@ -340,7 +340,7 @@ export function LeadsTable({ leads: initialLeads, userEmail }: { leads: Lead[]; 
                       {alertLevel && (
                         <AlertTriangle size={12} style={{ color: alertLevel === 'red' ? C.red : C.amber, flexShrink: 0 }} />
                       )}
-                      <Link href={`/dashboard/leads/${encodeURIComponent(lead.phone)}`} style={{ color: C.red, textDecoration: "none", fontWeight: 600 }}>
+                      <Link href={`/dashboard/leads/${encodeURIComponent(lead.phone)}`} style={{ color: "#FFFFFF", textDecoration: "none", fontWeight: 600 }}>
                         {lead.name || "—"}
                       </Link>
                     </div>
