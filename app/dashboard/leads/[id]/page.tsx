@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowLeft, MapPin, Package, Thermometer, User, Calendar, Clock, MessageCircle } from "lucide-react";
 import { LeadActions } from "@/components/leads/lead-actions";
 import { ProductGroupSelector } from "@/components/leads/product-group-selector";
+import { ConversationWithFeedback } from "@/components/leads/conversation-with-feedback";
 
 // ── Design tokens ────────────────────────────────────────────────
 const C = {
@@ -60,7 +61,13 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
 
   const [{ data: lead }, { data: convRows }] = await Promise.all([
     supabase.from("ai_sdr_leads").select("*").eq("phone", phone).single(),
-    supabase.from("conversas_sdr").select("role, content, created_at").eq("phone", phone).order("created_at", { ascending: true }).limit(100),
+    supabase
+      .from("conversas_sdr")
+      .select("id, source, message_text, response, rag_domain, request_id, created_at")
+      .eq("phone", phone)
+      .neq("source", "customer_paused")   // exclui eventos internos sem conteúdo útil
+      .order("created_at", { ascending: true })
+      .limit(100),
   ]);
 
   if (!lead) notFound();
@@ -145,33 +152,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
           {/* Conversation card */}
           <div style={{ ...CARD, padding: "20px 24px" }}>
             <p style={{ ...LABEL, marginBottom: 16 }}>Conversa</p>
-            {!convRows || convRows.length === 0 ? (
-              <p style={{ color: C.muted, fontSize: 11, fontFamily: "'Courier New', monospace" }}>Nenhuma mensagem registrada.</p>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 10, maxHeight: 480, overflowY: "auto", paddingRight: 4 }}>
-                {convRows.map((msg, i) => (
-                  <div
-                    key={i}
-                    style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-start" : "flex-end" }}
-                  >
-                    <div style={{
-                      maxWidth: "85%",
-                      borderRadius: 8,
-                      padding: "8px 12px",
-                      background: msg.role === "user" ? C.bg2 : "rgba(88,166,255,.15)",
-                      border: `1px solid ${msg.role === "user" ? C.border : "rgba(88,166,255,.3)"}`,
-                    }}>
-                      <p style={{ color: msg.role === "user" ? C.text : C.blue, fontSize: 11, fontFamily: "'Courier New', monospace", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
-                        {msg.content}
-                      </p>
-                      <p style={{ color: C.muted, fontSize: 9, fontFamily: "'Courier New', monospace", marginTop: 4, letterSpacing: ".08em" }}>
-                        {fmt(msg.created_at)}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+            <ConversationWithFeedback rows={convRows ?? []} phone={phone} />
           </div>
         </div>
 
