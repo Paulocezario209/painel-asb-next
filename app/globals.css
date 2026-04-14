@@ -48,59 +48,57 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* ASB Design System — marca American Steak Brasil */
+/* ASB Design System — americansteakbrasil.com.br */
 :root {
-  --asb-bg:        #0a0a0a;
-  --asb-surface:   #111111;
-  --asb-card:      #1a1a1a;
-  --asb-border:    #2a2a2a;
-  --asb-border2:   #333333;
-  --asb-text:      #F5F5F5;
-  --asb-text2:     #CCCCCC;
-  --asb-muted:     #888888;
-  --asb-label:     #666666;
-  --asb-red:       #C8102E;
-  --asb-red-bright:#E8192E;
-  --asb-gold:      #B8860B;
-  --asb-gold-light:#D4A017;
-  --asb-green:     #22c55e;
-  --asb-amber:     #f59e0b;
-  --asb-danger:    #C8102E;
+  --asb-bg:          #0a0f0a;
+  --asb-surface:     #0d1a0d;
+  --asb-card:        #111f11;
+  --asb-border:      #1a2e1a;
+  --asb-border2:     #243824;
+  --asb-text:        #F5F5F5;
+  --asb-text2:       #C8D8C8;
+  --asb-muted:       #7a9a7a;
+  --asb-label:       #4a6a4a;
+  --asb-green:       #00C853;
+  --asb-green-neon:  #00E676;
+  --asb-green-dark:  #1B5E20;
+  --asb-green-mid:   #2E7D32;
+  --asb-amber:       #f59e0b;
+  --asb-danger:      #ef4444;
 
-  --background:   #0a0a0a;
+  --background:   #0a0f0a;
   --foreground:   #F5F5F5;
-  --card:         #1a1a1a;
+  --card:         #111f11;
   --card-foreground: #F5F5F5;
-  --popover:      #1a1a1a;
+  --popover:      #111f11;
   --popover-foreground: #F5F5F5;
-  --primary:      #C8102E;
-  --primary-foreground: #F5F5F5;
-  --secondary:    #2a2a2a;
-  --secondary-foreground: #CCCCCC;
-  --muted:        #2a2a2a;
-  --muted-foreground: #888888;
-  --accent:       #2a2a2a;
+  --primary:      #00C853;
+  --primary-foreground: #0a0f0a;
+  --secondary:    #1a2e1a;
+  --secondary-foreground: #C8D8C8;
+  --muted:        #1a2e1a;
+  --muted-foreground: #7a9a7a;
+  --accent:       #1a2e1a;
   --accent-foreground: #F5F5F5;
-  --destructive:  #C8102E;
-  --border:       #2a2a2a;
-  --input:        #2a2a2a;
-  --ring:         #C8102E;
+  --destructive:  #ef4444;
+  --border:       #1a2e1a;
+  --input:        #1a2e1a;
+  --ring:         #00C853;
   --radius:       0.375rem;
-  --sidebar:      #0a0a0a;
+  --sidebar:      #0a0f0a;
   --sidebar-foreground: #F5F5F5;
-  --sidebar-primary: #C8102E;
-  --sidebar-primary-foreground: #F5F5F5;
-  --sidebar-accent: #1a1a1a;
+  --sidebar-primary: #00C853;
+  --sidebar-primary-foreground: #0a0f0a;
+  --sidebar-accent: #111f11;
   --sidebar-accent-foreground: #F5F5F5;
-  --sidebar-border: #2a2a2a;
-  --sidebar-ring: #C8102E;
+  --sidebar-border: #1a2e1a;
+  --sidebar-ring: #00C853;
 
-  /* chart colors */
-  --chart-1: #C8102E;
-  --chart-2: #B8860B;
-  --chart-3: #22c55e;
-  --chart-4: #f59e0b;
-  --chart-5: #888888;
+  --chart-1: #00C853;
+  --chart-2: #00E676;
+  --chart-3: #f59e0b;
+  --chart-4: #2E7D32;
+  --chart-5: #4a6a4a;
 }
 
 @layer base {
@@ -131,7 +129,7 @@
   font-size: 28px;
   font-weight: 700;
   font-family: 'Inter', 'system-ui', sans-serif;
-  color: var(--asb-text);
+  color: var(--asb-green-neon);
   line-height: 1;
 }
 
@@ -139,10 +137,11 @@
   background: var(--asb-card);
   border: 1px solid var(--asb-border);
   border-radius: 4px;
-  transition: box-shadow .2s;
+  transition: border-color .2s, box-shadow .2s;
 }
 .asb-card:hover {
-  box-shadow: 0 0 0 1px rgba(200,16,46,.15), 0 4px 16px rgba(200,16,46,.06);
+  border-color: var(--asb-green);
+  box-shadow: 0 0 0 1px rgba(0,200,83,.1), 0 4px 20px rgba(0,200,83,.06);
 }
 
 .asb-badge {
@@ -159,7 +158,6 @@
 
 /* ── Responsive layout ──────────────────────────────────────────────────── */
 
-/* KPI grid: 2 cols mobile → 4 cols sm+ */
 .asb-grid-kpi {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -169,7 +167,6 @@
   .asb-grid-kpi { grid-template-columns: repeat(4, 1fr); }
 }
 
-/* Charts grid: 1 col mobile → 2 cols sm+ */
 .asb-grid-charts {
   display: grid;
   grid-template-columns: 1fr;
@@ -179,12 +176,11 @@
   .asb-grid-charts { grid-template-columns: 1fr 1fr; }
 }
 
-/* Sidebar overlay (mobile only) */
 .asb-overlay {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, .75);
+  background: rgba(0, 0, 0, .8);
   z-index: 40;
 }
 .asb-overlay.open { display: block; }
@@ -192,7 +188,6 @@
   .asb-overlay { display: none !important; }
 }
 
-/* Sidebar drawer (mobile) */
 @media (max-width: 639px) {
   .asb-sidebar-drawer {
     position: fixed !important;
@@ -206,7 +201,6 @@
   .asb-sidebar-drawer.open { left: 0; }
 }
 
-/* Table/cards toggle */
 .asb-mobile-only  { display: block; }
 .asb-desktop-only { display: none;  }
 @media (min-width: 640px) {
@@ -214,7 +208,6 @@
   .asb-desktop-only { display: block; }
 }
 
-/* Filters bar: horizontal scroll on mobile */
 .asb-filters-bar {
   display: flex;
   gap: 8px;
@@ -226,21 +219,10 @@
 }
 .asb-filters-bar::-webkit-scrollbar { display: none; }
 @media (min-width: 640px) {
-  .asb-filters-bar {
-    flex-wrap: wrap;
-    overflow-x: visible;
-  }
+  .asb-filters-bar { flex-wrap: wrap; overflow-x: visible; }
 }
 
-/* Main content padding: tighter on mobile */
-.asb-main-pad {
-  padding: 16px;
-}
+.asb-main-pad { padding: 16px; }
 @media (min-width: 640px) {
   .asb-main-pad { padding: 24px; }
-}
-
-/* Red divider line — used in sidebar active state */
-.asb-active-line {
-  border-left: 2px solid #C8102E;
 }
