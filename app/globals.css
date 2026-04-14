@@ -48,48 +48,59 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* ASB Design System — dark theme tokens */
+/* ASB Design System — marca American Steak Brasil */
 :root {
-  --asb-bg:       #0d1117;
-  --asb-surface:  #161b22;
-  --asb-border:   #21262d;
-  --asb-border2:  #30363d;
-  --asb-text:     #e6edf3;
-  --asb-text2:    #c9d1d9;
-  --asb-muted:    #8b949e;
-  --asb-blue:     #58a6ff;
-  --asb-green:    #3fb950;
-  --asb-amber:    #f0b429;
-  --asb-red:      #f85149;
-  --asb-brand:    #C8102E;
+  --asb-bg:        #0a0a0a;
+  --asb-surface:   #111111;
+  --asb-card:      #1a1a1a;
+  --asb-border:    #2a2a2a;
+  --asb-border2:   #333333;
+  --asb-text:      #F5F5F5;
+  --asb-text2:     #CCCCCC;
+  --asb-muted:     #888888;
+  --asb-label:     #666666;
+  --asb-red:       #C8102E;
+  --asb-red-bright:#E8192E;
+  --asb-gold:      #B8860B;
+  --asb-gold-light:#D4A017;
+  --asb-green:     #22c55e;
+  --asb-amber:     #f59e0b;
+  --asb-danger:    #C8102E;
 
-  --background:   #0d1117;
-  --foreground:   #e6edf3;
-  --card:         #161b22;
-  --card-foreground: #e6edf3;
-  --popover:      #161b22;
-  --popover-foreground: #e6edf3;
-  --primary:      #58a6ff;
-  --primary-foreground: #0d1117;
-  --secondary:    #21262d;
-  --secondary-foreground: #c9d1d9;
-  --muted:        #21262d;
-  --muted-foreground: #8b949e;
-  --accent:       #21262d;
-  --accent-foreground: #e6edf3;
-  --destructive:  #f85149;
-  --border:       #21262d;
-  --input:        #21262d;
-  --ring:         #58a6ff;
+  --background:   #0a0a0a;
+  --foreground:   #F5F5F5;
+  --card:         #1a1a1a;
+  --card-foreground: #F5F5F5;
+  --popover:      #1a1a1a;
+  --popover-foreground: #F5F5F5;
+  --primary:      #C8102E;
+  --primary-foreground: #F5F5F5;
+  --secondary:    #2a2a2a;
+  --secondary-foreground: #CCCCCC;
+  --muted:        #2a2a2a;
+  --muted-foreground: #888888;
+  --accent:       #2a2a2a;
+  --accent-foreground: #F5F5F5;
+  --destructive:  #C8102E;
+  --border:       #2a2a2a;
+  --input:        #2a2a2a;
+  --ring:         #C8102E;
   --radius:       0.375rem;
-  --sidebar:      #0d1117;
-  --sidebar-foreground: #e6edf3;
-  --sidebar-primary: #58a6ff;
-  --sidebar-primary-foreground: #0d1117;
-  --sidebar-accent: #21262d;
-  --sidebar-accent-foreground: #e6edf3;
-  --sidebar-border: #21262d;
-  --sidebar-ring: #58a6ff;
+  --sidebar:      #0a0a0a;
+  --sidebar-foreground: #F5F5F5;
+  --sidebar-primary: #C8102E;
+  --sidebar-primary-foreground: #F5F5F5;
+  --sidebar-accent: #1a1a1a;
+  --sidebar-accent-foreground: #F5F5F5;
+  --sidebar-border: #2a2a2a;
+  --sidebar-ring: #C8102E;
+
+  /* chart colors */
+  --chart-1: #C8102E;
+  --chart-2: #B8860B;
+  --chart-3: #22c55e;
+  --chart-4: #f59e0b;
+  --chart-5: #888888;
 }
 
 @layer base {
@@ -107,17 +118,17 @@
   }
 }
 
-/* Utility classes for the design system */
+/* Utility classes */
 .asb-label {
   font-size: 9px;
-  letter-spacing: .14em;
+  letter-spacing: .15em;
   text-transform: uppercase;
-  color: var(--asb-muted);
+  color: var(--asb-label);
   font-family: 'Courier New', monospace;
 }
 
 .asb-value {
-  font-size: 22px;
+  font-size: 28px;
   font-weight: 700;
   font-family: 'Inter', 'system-ui', sans-serif;
   color: var(--asb-text);
@@ -125,9 +136,13 @@
 }
 
 .asb-card {
-  background: var(--asb-surface);
-  border: 1px solid var(--asb-border2);
-  border-radius: 6px;
+  background: var(--asb-card);
+  border: 1px solid var(--asb-border);
+  border-radius: 4px;
+  transition: box-shadow .2s;
+}
+.asb-card:hover {
+  box-shadow: 0 0 0 1px rgba(200,16,46,.15), 0 4px 16px rgba(200,16,46,.06);
 }
 
 .asb-badge {
@@ -135,7 +150,7 @@
   letter-spacing: .10em;
   text-transform: uppercase;
   padding: 2px 6px;
-  border-radius: 3px;
+  border-radius: 2px;
   font-family: 'Courier New', monospace;
   font-weight: 600;
   border: 1px solid;
@@ -169,7 +184,7 @@
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, .6);
+  background: rgba(0, 0, 0, .75);
   z-index: 40;
 }
 .asb-overlay.open { display: block; }
@@ -223,4 +238,9 @@
 }
 @media (min-width: 640px) {
   .asb-main-pad { padding: 24px; }
+}
+
+/* Red divider line — used in sidebar active state */
+.asb-active-line {
+  border-left: 2px solid #C8102E;
 }

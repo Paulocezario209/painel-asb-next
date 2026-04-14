@@ -23,26 +23,35 @@ export function Sidebar({
     <aside
       className={`w-52 flex flex-col shrink-0 asb-sidebar-drawer ${isOpen ? "open" : ""}`}
       style={{
-        background: "#0d1117",
-        borderRight: "1px solid #21262d",
+        background: "#0a0a0a",
+        borderRight: "1px solid #2a2a2a",
       }}
     >
       {/* Logo */}
       <div
-        className="flex items-center gap-2.5 px-4 py-4"
-        style={{ borderBottom: "1px solid #21262d" }}
+        className="flex items-center gap-3 px-4 py-4"
+        style={{ borderBottom: "1px solid #2a2a2a" }}
       >
+        {/* Brand mark — red square with A */}
         <div
-          className="w-7 h-7 flex items-center justify-center rounded"
-          style={{ background: "#C8102E" }}
+          style={{
+            width: 30,
+            height: 30,
+            background: "#C8102E",
+            borderRadius: 3,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+          }}
         >
-          <span className="text-white font-bold text-xs" translate="no">A</span>
+          <span style={{ color: "#fff", fontWeight: 700, fontSize: 14, fontFamily: "'Inter', sans-serif", letterSpacing: "-0.02em" }} translate="no">A</span>
         </div>
         <div>
-          <p className="font-bold leading-tight" style={{ color: "#e6edf3", fontSize: 13 }} translate="no">
+          <p style={{ color: "#F5F5F5", fontSize: 13, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'Courier New', monospace", lineHeight: 1.1 }} translate="no">
             ASB
           </p>
-          <p style={{ color: "#8b949e", fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase" }}>
+          <p style={{ color: "#666666", fontSize: 8, letterSpacing: ".15em", textTransform: "uppercase", fontFamily: "'Courier New', monospace", marginTop: 2 }}>
             Painel SDR
           </p>
         </div>
@@ -62,10 +71,10 @@ export function Sidebar({
                 alignItems: "center",
                 gap: 10,
                 padding: "7px 10px",
-                borderRadius: 4,
-                borderLeft: isActive ? "2px solid #58a6ff" : "2px solid transparent",
-                background: isActive ? "rgba(88,166,255,.08)" : "transparent",
-                color: isActive ? "#58a6ff" : "#8b949e",
+                borderRadius: 3,
+                borderLeft: isActive ? "2px solid #C8102E" : "2px solid transparent",
+                background: isActive ? "rgba(200,16,46,.1)" : "transparent",
+                color: isActive ? "#E8192E" : "#666666",
                 fontSize: 10,
                 letterSpacing: ".14em",
                 textTransform: "uppercase",
@@ -76,18 +85,18 @@ export function Sidebar({
               }}
               onMouseEnter={(e) => {
                 if (!isActive) {
-                  (e.currentTarget as HTMLAnchorElement).style.background = "#21262d";
-                  (e.currentTarget as HTMLAnchorElement).style.color = "#c9d1d9";
+                  (e.currentTarget as HTMLAnchorElement).style.background = "#1a1a1a";
+                  (e.currentTarget as HTMLAnchorElement).style.color = "#F5F5F5";
                 }
               }}
               onMouseLeave={(e) => {
                 if (!isActive) {
                   (e.currentTarget as HTMLAnchorElement).style.background = "transparent";
-                  (e.currentTarget as HTMLAnchorElement).style.color = "#8b949e";
+                  (e.currentTarget as HTMLAnchorElement).style.color = "#666666";
                 }
               }}
             >
-              <Icon style={{ width: 14, height: 14, flexShrink: 0 }} />
+              <Icon style={{ width: 13, height: 13, flexShrink: 0 }} />
               <span translate="no">{label}</span>
             </Link>
           );
@@ -95,10 +104,13 @@ export function Sidebar({
       </nav>
 
       {/* Footer */}
-      <div className="px-4 py-3" style={{ borderTop: "1px solid #21262d" }}>
-        <p style={{ color: "#8b949e", fontSize: 9, letterSpacing: ".12em", textTransform: "uppercase" }}>
-          v1.0 · SDR System
-        </p>
+      <div className="px-4 py-3" style={{ borderTop: "1px solid #2a2a2a" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#C8102E" }} />
+          <p style={{ color: "#444444", fontSize: 9, letterSpacing: ".12em", textTransform: "uppercase", fontFamily: "'Courier New', monospace" }}>
+            v1.0 · SDR System
+          </p>
+        </div>
       </div>
     </aside>
   );

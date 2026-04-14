@@ -29,32 +29,45 @@ type Lead = {
   scheduled_at: string | null;
 };
 
-// ── Design tokens ───────────────────────────────────────────────
-const C = { bg: "#161b22", bg2: "#0d1117", border: "#21262d", border2: "#30363d", text: "#c9d1d9", muted: "#8b949e", blue: "#58a6ff", green: "#3fb950", amber: "#f0b429", red: "#f85149" };
+// ── Design tokens — ASB brand ────────────────────────────────────
+const C = {
+  bg:     "#1a1a1a",
+  bg2:    "#111111",
+  border: "#2a2a2a",
+  border2:"#333333",
+  text:   "#CCCCCC",
+  muted:  "#888888",
+  label:  "#666666",
+  red:    "#C8102E",
+  redBright: "#E8192E",
+  gold:   "#B8860B",
+  amber:  "#f59e0b",
+  green:  "#22c55e",
+};
 
-const LABEL: React.CSSProperties = { fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase", color: C.muted, fontFamily: "'Courier New', monospace" };
+const LABEL: React.CSSProperties = { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", color: C.label, fontFamily: "'Courier New', monospace" };
 
 // ── Badge configs ────────────────────────────────────────────────
 type BadgeCfg = { label: string; color: string; bg: string; border: string };
 
 const TEMP_CFG: Record<string, BadgeCfg> = {
-  HOT:          { label: "HOT",   color: C.red,   bg: "rgba(248,81,73,.1)",   border: "rgba(248,81,73,.3)" },
-  WARM:         { label: "WARM",  color: C.amber, bg: "rgba(240,180,41,.1)",  border: "rgba(240,180,41,.3)" },
-  COLD:         { label: "COLD",  color: C.blue,  bg: "rgba(88,166,255,.1)",  border: "rgba(88,166,255,.3)" },
-  READY_TO_BUY: { label: "READY", color: "#c084fc", bg: "rgba(192,132,252,.1)", border: "rgba(192,132,252,.3)" },
+  HOT:          { label: "HOT",   color: C.red,   bg: "rgba(200,16,46,.1)",   border: "rgba(200,16,46,.35)" },
+  WARM:         { label: "WARM",  color: C.amber, bg: "rgba(245,158,11,.1)",  border: "rgba(245,158,11,.35)" },
+  COLD:         { label: "COLD",  color: C.muted, bg: "rgba(136,136,136,.08)", border: "rgba(136,136,136,.2)" },
+  READY_TO_BUY: { label: "READY", color: C.gold,  bg: "rgba(184,134,11,.1)",  border: "rgba(184,134,11,.35)" },
 };
 
 const STATUS_CFG: Record<string, BadgeCfg> = {
-  new:       { label: "Novo",         color: C.muted, bg: "rgba(139,148,158,.1)", border: "rgba(139,148,158,.25)" },
-  qualified: { label: "Qualificado",  color: C.green, bg: "rgba(63,185,80,.1)",   border: "rgba(63,185,80,.3)" },
-  converted: { label: "Convertido",   color: C.amber, bg: "rgba(240,180,41,.1)",  border: "rgba(240,180,41,.3)" },
-  optout:    { label: "Opt-out",      color: C.red,   bg: "rgba(248,81,73,.08)",  border: "rgba(248,81,73,.25)" },
+  new:       { label: "Novo",        color: C.label, bg: "rgba(102,102,102,.08)", border: "rgba(102,102,102,.2)" },
+  qualified: { label: "Qualificado", color: C.gold,  bg: "rgba(184,134,11,.1)",   border: "rgba(184,134,11,.35)" },
+  converted: { label: "Convertido",  color: C.green, bg: "rgba(34,197,94,.1)",    border: "rgba(34,197,94,.3)" },
+  optout:    { label: "Opt-out",     color: C.muted, bg: "rgba(136,136,136,.06)", border: "rgba(136,136,136,.2)" },
 };
 
 const ABC_CFG: Record<"A" | "B" | "C", BadgeCfg> = {
-  A: { label: "A", color: C.red,   bg: "rgba(248,81,73,.1)",  border: "rgba(248,81,73,.3)" },
-  B: { label: "B", color: C.amber, bg: "rgba(240,180,41,.1)", border: "rgba(240,180,41,.3)" },
-  C: { label: "C", color: C.blue,  bg: "rgba(88,166,255,.1)", border: "rgba(88,166,255,.3)" },
+  A: { label: "A", color: C.red,   bg: "rgba(200,16,46,.1)",   border: "rgba(200,16,46,.35)" },
+  B: { label: "B", color: C.gold,  bg: "rgba(184,134,11,.1)",  border: "rgba(184,134,11,.35)" },
+  C: { label: "C", color: C.muted, bg: "rgba(136,136,136,.08)", border: "rgba(136,136,136,.2)" },
 };
 
 const VENDOR_LABELS: Record<string, string> = { ana_paula: "Ana Paula", alan: "Alan", setor_cuit: "CUIT" };
@@ -233,7 +246,7 @@ export function LeadsTable({ leads: initialLeads, userEmail }: { leads: Lead[]; 
                 <div>
                   <Link
                     href={`/dashboard/leads/${encodeURIComponent(lead.phone)}`}
-                    style={{ color: C.blue, textDecoration: "none", fontWeight: 600, fontSize: 12, fontFamily: "'Courier New', monospace" }}
+                    style={{ color: C.red, textDecoration: "none", fontWeight: 600, fontSize: 12, fontFamily: "'Courier New', monospace" }}
                   >
                     {lead.name || "—"}
                   </Link>
@@ -244,7 +257,7 @@ export function LeadsTable({ leads: initialLeads, userEmail }: { leads: Lead[]; 
                 {/* Action buttons */}
                 <div style={{ display: "flex", gap: 6 }}>
                   <Link href={`/dashboard/leads/${encodeURIComponent(lead.phone)}`}>
-                    <button style={{ background: "transparent", border: "none", color: C.green, cursor: "pointer", padding: 4 }} title="Ver conversa">
+                    <button style={{ background: "transparent", border: "none", color: C.muted, cursor: "pointer", padding: 4 }} title="Ver conversa">
                       <MessageCircle size={16} />
                     </button>
                   </Link>
@@ -254,7 +267,7 @@ export function LeadsTable({ leads: initialLeads, userEmail }: { leads: Lead[]; 
                     </button>
                   )}
                   {showConvert && (
-                    <button onClick={() => convertLead(lead.phone)} style={{ background: "transparent", border: "none", color: C.blue, cursor: "pointer", padding: 4 }} title="Marcar convertido">
+                    <button onClick={() => convertLead(lead.phone)} style={{ background: "transparent", border: "none", color: C.gold, cursor: "pointer", padding: 4 }} title="Marcar convertido">
                       <TrendingUp size={16} />
                     </button>
                   )}
@@ -291,10 +304,10 @@ export function LeadsTable({ leads: initialLeads, userEmail }: { leads: Lead[]; 
       </div>
 
       {/* ── Desktop table ────────────────────────────────────── */}
-      <div className="asb-desktop-only" style={{ background: C.bg, border: `1px solid ${C.border2}`, borderRadius: 6, overflowX: "auto" }}>
+      <div className="asb-desktop-only" style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 4, overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
-            <tr style={{ background: "#0d1117" }}>
+            <tr style={{ background: "#0a0a0a" }}>
               {["Lead", "Cidade", "Segmento", "Volume", "ABC", "Temp.", "Status", "Vendedor", "Etapa", "Handoff", "Ações"].map(h => (
                 <th key={h} style={TH}>{h}</th>
               ))}
@@ -313,7 +326,7 @@ export function LeadsTable({ leads: initialLeads, userEmail }: { leads: Lead[]; 
               const abc    = abcCurve(lead.weekly_volume_kg);
               const showConfirm = !!lead.handoff_at && lead.handoff_confirmed === false;
               const showConvert = (lead.qual_stage ?? 0) >= 7 && !lead.first_order_at;
-              const rowBg = i % 2 === 0 ? C.bg : "#0d1117";
+              const rowBg = i % 2 === 0 ? C.bg : "#111111";
               const _now2 = new Date();
               const alertLevel =
                 lead.scheduled_at && !lead.handoff_confirmed && new Date(lead.scheduled_at) < _now2 ? 'red' :
@@ -321,13 +334,13 @@ export function LeadsTable({ leads: initialLeads, userEmail }: { leads: Lead[]; 
                 null;
 
               return (
-                <tr key={lead.phone} style={{ background: rowBg, borderLeft: alertLevel ? `3px solid ${alertLevel === 'red' ? C.red : C.amber}` : undefined }} onMouseEnter={e => (e.currentTarget.style.background = "#21262d")} onMouseLeave={e => (e.currentTarget.style.background = rowBg)}>
+                <tr key={lead.phone} style={{ background: rowBg, borderLeft: alertLevel ? `3px solid ${alertLevel === 'red' ? C.red : C.amber}` : undefined }} onMouseEnter={e => (e.currentTarget.style.background = "#222222")} onMouseLeave={e => (e.currentTarget.style.background = rowBg)}>
                   <td style={TD}>
                     <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                       {alertLevel && (
                         <AlertTriangle size={12} style={{ color: alertLevel === 'red' ? C.red : C.amber, flexShrink: 0 }} />
                       )}
-                      <Link href={`/dashboard/leads/${encodeURIComponent(lead.phone)}`} style={{ color: C.blue, textDecoration: "none", fontWeight: 600 }}>
+                      <Link href={`/dashboard/leads/${encodeURIComponent(lead.phone)}`} style={{ color: C.red, textDecoration: "none", fontWeight: 600 }}>
                         {lead.name || "—"}
                       </Link>
                     </div>
@@ -349,14 +362,14 @@ export function LeadsTable({ leads: initialLeads, userEmail }: { leads: Lead[]; 
                   <td style={TD}>
                     {lead.handoff_at
                       ? lead.handoff_confirmed
-                        ? <span style={{ color: C.green, fontSize: 10 }}>✓ confirmado</span>
+                        ? <span style={{ color: "#22c55e", fontSize: 10 }}>✓ confirmado</span>
                         : <span style={{ color: C.amber, fontSize: 10 }}>{new Date(lead.handoff_at).toLocaleDateString("pt-BR")}</span>
                       : <span style={{ color: C.muted }}>—</span>}
                   </td>
                   <td style={TD}>
                     <div style={{ display: "flex", gap: 4 }}>
                       <Link href={`/dashboard/leads/${encodeURIComponent(lead.phone)}`}>
-                        <button style={{ background: "transparent", border: "none", color: C.green, cursor: "pointer", padding: 3 }} title="Ver conversa">
+                        <button style={{ background: "transparent", border: "none", color: C.muted, cursor: "pointer", padding: 3 }} title="Ver conversa">
                           <MessageCircle size={14} />
                         </button>
                       </Link>
@@ -366,7 +379,7 @@ export function LeadsTable({ leads: initialLeads, userEmail }: { leads: Lead[]; 
                         </button>
                       )}
                       {showConvert && (
-                        <button onClick={() => convertLead(lead.phone)} style={{ background: "transparent", border: "none", color: C.blue, cursor: "pointer", padding: 3 }} title="Marcar convertido">
+                        <button onClick={() => convertLead(lead.phone)} style={{ background: "transparent", border: "none", color: C.gold, cursor: "pointer", padding: 3 }} title="Marcar convertido">
                           <TrendingUp size={14} />
                         </button>
                       )}

@@ -7,14 +7,14 @@ import {
 
 export const dynamic = "force-dynamic";
 
-// ── Design tokens ───────────────────────────────────────────────────────────
+// ── Design tokens — ASB brand ───────────────────────────────────────────────
 const S = {
-  card:    { background: "#161b22", border: "1px solid #30363d", borderRadius: 6 } as React.CSSProperties,
-  label:   { fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase" as const, color: "#8b949e", fontFamily: "'Courier New', monospace" },
-  value:   { fontSize: 22, fontWeight: 700, color: "#e6edf3", fontFamily: "'Inter', system-ui, sans-serif", lineHeight: 1 },
-  section: { fontSize: 10, letterSpacing: ".14em", textTransform: "uppercase" as const, color: "#8b949e", fontFamily: "'Courier New', monospace", marginBottom: 12 } as React.CSSProperties,
-  text:    { color: "#c9d1d9", fontSize: 12, fontFamily: "'Courier New', monospace" } as React.CSSProperties,
-  muted:   { color: "#8b949e", fontSize: 11, fontFamily: "'Courier New', monospace" } as React.CSSProperties,
+  card:    { background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 4 } as React.CSSProperties,
+  label:   { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#666666", fontFamily: "'Courier New', monospace" },
+  value:   { fontSize: 28, fontWeight: 700, color: "#F5F5F5", fontFamily: "'Inter', system-ui, sans-serif", lineHeight: 1 },
+  section: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#666666", fontFamily: "'Courier New', monospace", marginBottom: 12 } as React.CSSProperties,
+  text:    { color: "#CCCCCC", fontSize: 12, fontFamily: "'Courier New', monospace" } as React.CSSProperties,
+  muted:   { color: "#888888", fontSize: 11, fontFamily: "'Courier New', monospace" } as React.CSSProperties,
 };
 
 function getWeekLabel(date: Date): string {
@@ -113,16 +113,16 @@ export default async function DashboardPage() {
   const convertidos = leads.filter(l => l.first_order_at).length;
 
   const kpis = [
-    { label: "Total Leads",       value: totalLeads ?? 0,    accent: "#58a6ff" },
-    { label: "Qualificados",      value: qualifiedLeads ?? 0, accent: "#3fb950" },
-    { label: "Handoffs Pendentes",value: handoffPending ?? 0, accent: "#f0b429" },
-    { label: "Convertidos",       value: convertidos,          accent: "#f85149" },
+    { label: "Total Leads",        value: totalLeads ?? 0,    accent: "#F5F5F5" },
+    { label: "Qualificados",       value: qualifiedLeads ?? 0, accent: "#B8860B" },
+    { label: "Handoffs Pendentes", value: handoffPending ?? 0, accent: "#f59e0b" },
+    { label: "Convertidos",        value: convertidos,          accent: "#C8102E" },
   ];
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div>
-        <h1 style={{ color: "#e6edf3", fontSize: 18, fontWeight: 700, fontFamily: "'Inter', system-ui, sans-serif", marginBottom: 2 }}>
+        <h1 style={{ color: "#F5F5F5", fontSize: 16, fontWeight: 700, fontFamily: "'Courier New', monospace", letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
           Dashboard
         </h1>
         <p style={S.muted}>Visão geral do pipeline SDR</p>
@@ -131,9 +131,9 @@ export default async function DashboardPage() {
       {/* KPI cards */}
       <div className="asb-grid-kpi">
         {kpis.map(({ label, value, accent }) => (
-          <div key={label} style={{ ...S.card, padding: "16px 20px" }}>
+          <div key={label} style={{ ...S.card, padding: "20px 20px", borderTop: `2px solid ${accent}` }}>
             <p style={S.label} translate="no">{label}</p>
-            <p style={{ ...S.value, color: accent, marginTop: 10 }}>{value}</p>
+            <p style={{ ...S.value, color: accent, marginTop: 12 }}>{value}</p>
           </div>
         ))}
       </div>
@@ -141,7 +141,7 @@ export default async function DashboardPage() {
       {/* Onde Focar Agora */}
       <div style={{ ...S.card, padding: "20px 24px" }}>
         <p style={{ ...S.section }}>
-          <span style={{ color: "#f0b429", marginRight: 6 }}>▲</span>
+          <span style={{ color: "#C8102E", marginRight: 6 }}>▲</span>
           Onde Focar Agora
         </p>
 
@@ -149,9 +149,9 @@ export default async function DashboardPage() {
         <p style={{ ...S.label, marginBottom: 8 }}>curva abc</p>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 16 }}>
           {([
-            { tier: "A", count: abcCount.A, color: "#f85149", bg: "rgba(248,81,73,.08)", border: "rgba(248,81,73,.3)", tag: "urgente", desc: "≥ 300 kg/sem" },
-            { tier: "B", count: abcCount.B, color: "#f0b429", bg: "rgba(240,180,41,.08)", border: "rgba(240,180,41,.3)", tag: "médio", desc: "100–299 kg/sem" },
-            { tier: "C", count: abcCount.C, color: "#58a6ff", bg: "rgba(88,166,255,.08)", border: "rgba(88,166,255,.3)", tag: "longo prazo", desc: "< 100 kg/sem" },
+            { tier: "A", count: abcCount.A, color: "#C8102E", bg: "rgba(200,16,46,.08)", border: "rgba(200,16,46,.3)", tag: "urgente", desc: "≥ 300 kg/sem" },
+            { tier: "B", count: abcCount.B, color: "#B8860B", bg: "rgba(184,134,11,.08)", border: "rgba(184,134,11,.3)", tag: "médio", desc: "100–299 kg/sem" },
+            { tier: "C", count: abcCount.C, color: "#888888", bg: "rgba(136,136,136,.06)", border: "rgba(136,136,136,.2)", tag: "longo prazo", desc: "< 100 kg/sem" },
           ] as const).map(({ tier, count, color, bg, border, tag, desc }) => (
             <div key={tier} style={{ background: bg, border: `1px solid ${border}`, borderRadius: 5, padding: "14px 16px", textAlign: "center" }}>
               <p style={{ color, fontSize: 26, fontWeight: 700, fontFamily: "'Inter', system-ui, sans-serif", lineHeight: 1 }}>{count}</p>
@@ -177,10 +177,10 @@ export default async function DashboardPage() {
             borderRadius: "0 4px 4px 0",
             marginBottom: 16,
           }}>
-            <p style={{ color: "#f85149", fontSize: 11, fontFamily: "'Courier New', monospace", fontWeight: 700 }}>
+            <p style={{ color: "#E8192E", fontSize: 11, fontFamily: "'Courier New', monospace", fontWeight: 700 }}>
               ⚡ {urgentA} lead{urgentA > 1 ? "s" : ""} Tier A aguardando confirmação de handoff
             </p>
-            <p style={{ color: "#8b949e", fontSize: 10, fontFamily: "'Courier New', monospace", marginTop: 2 }}>
+            <p style={{ color: "#888888", fontSize: 10, fontFamily: "'Courier New', monospace", marginTop: 2 }}>
               ação imediata — alto volume, handoff não confirmado
             </p>
           </div>
@@ -197,9 +197,9 @@ export default async function DashboardPage() {
                     <span style={{ color: "#8b949e", marginRight: 6 }}>#{i + 1}</span>{city}
                   </span>
                   <span style={{
-                    background: "rgba(63,185,80,.1)", border: "1px solid rgba(63,185,80,.25)",
-                    color: "#3fb950", fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase",
-                    padding: "2px 7px", borderRadius: 3, fontFamily: "'Courier New', monospace",
+                    background: "rgba(200,16,46,.08)", border: "1px solid rgba(200,16,46,.25)",
+                    color: "#C8102E", fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase",
+                    padding: "2px 7px", borderRadius: 2, fontFamily: "'Courier New', monospace",
                   }}>{count} leads</span>
                 </div>
               ))}
@@ -218,8 +218,8 @@ export default async function DashboardPage() {
                     {PRODUCT_LABELS[group] ?? group}
                   </span>
                   <span style={{
-                    border: "1px solid #30363d", color: "#8b949e", fontSize: 9,
-                    padding: "2px 7px", borderRadius: 3, fontFamily: "'Courier New', monospace",
+                    border: "1px solid #2a2a2a", color: "#666666", fontSize: 9,
+                    padding: "2px 7px", borderRadius: 2, fontFamily: "'Courier New', monospace",
                   }}>{count}</span>
                 </div>
               ))}
@@ -250,9 +250,9 @@ export default async function DashboardPage() {
       <div style={{ ...S.card, padding: "16px 24px", display: "flex", alignItems: "center", gap: 12 }}>
         <p style={{ ...S.label, margin: 0 }}>status</p>
         {[
-          { label: "SDR Ativo",            color: "#3fb950" },
-          { label: "RAG Online",           color: "#58a6ff" },
-          { label: "Follow-up Engine",     color: "#f0b429" },
+          { label: "SDR Ativo",        color: "#22c55e" },
+          { label: "RAG Online",       color: "#C8102E" },
+          { label: "Follow-up Engine", color: "#B8860B" },
         ].map(({ label, color }) => (
           <span key={label} style={{
             border: `1px solid ${color}30`,
