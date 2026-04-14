@@ -26,26 +26,11 @@ export function Sidebar({
     >
       {/* Logo */}
       <div
-        className="flex items-center gap-3 px-4 py-4"
+        className="flex items-center justify-center px-4 py-3"
         style={{ borderBottom: "1px solid #1a2e1a" }}
       >
-        <div style={{
-          width: 30, height: 30,
-          background: "#1B5E20",
-          border: "1px solid #00C853",
-          borderRadius: 3,
-          display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-        }}>
-          <span style={{ color: "#00E676", fontWeight: 700, fontSize: 14, fontFamily: "'Inter', sans-serif" }} translate="no">A</span>
-        </div>
-        <div>
-          <p style={{ color: "#00C853", fontSize: 13, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'Courier New', monospace", lineHeight: 1.1 }} translate="no">
-            ASB
-          </p>
-          <p style={{ color: "#4a6a4a", fontSize: 8, letterSpacing: ".15em", textTransform: "uppercase", fontFamily: "'Courier New', monospace", marginTop: 2 }}>
-            Painel SDR
-          </p>
-        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/asb_logo.svg" alt="American Steak Brasil" style={{ width: 130, height: "auto" }} />
       </div>
 
       {/* Nav */}

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" fill="none">
+  <!-- outer circle -->
+  <circle cx="120" cy="115" r="102" fill="#0d1a0d" stroke="#00C853" stroke-width="3"/>
+  <!-- inner ring -->
+  <circle cx="120" cy="115" r="96"  fill="none"   stroke="#1a2e1a" stroke-width="0.8"/>
+  <!-- top deco line -->
+  <line x1="90" y1="27" x2="150" y2="27" stroke="#1a2e1a" stroke-width="1"/>
+  <!-- white star — left side -->
+  <polygon points="55,68 58.5,77.1 68.3,77.7 60.7,83.9 63.2,93.3 55,88 46.8,93.3 49.3,83.9 41.7,77.7 51.5,77.1" fill="#FFFFFF"/>
+  <!-- A — verde #00C853 -->
+  <text x="90" y="145" font-family="Georgia,'Times New Roman',serif" font-size="72" font-weight="900" fill="#00C853" text-anchor="middle">A</text>
+  <!-- S — neon #00E676 -->
+  <text x="162" y="145" font-family="Georgia,'Times New Roman',serif" font-size="72" font-weight="900" fill="#00E676" text-anchor="middle">S</text>
+  <!-- separator -->
+  <line x1="45" y1="163" x2="195" y2="163" stroke="#1a2e1a" stroke-width="1.5"/>
+  <!-- AMERICAN STEAK -->
+  <text x="120" y="181" font-family="'Courier New',Courier,monospace" font-size="10.5" font-weight="700" fill="#F5F5F5" text-anchor="middle" letter-spacing="2.5">AMERICAN STEAK</text>
+  <!-- burguer e espetos artesanais -->
+  <text x="120" y="196" font-family="Georgia,'Times New Roman',serif" font-size="8" font-style="italic" fill="#7a9a7a" text-anchor="middle" letter-spacing="-0.3">burguer e espetos artesanais</text>
+</svg>

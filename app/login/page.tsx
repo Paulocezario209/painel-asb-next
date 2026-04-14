@@ -52,15 +52,9 @@ export default function LoginPage() {
         <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: "#00C853", borderRadius: "6px 6px 0 0" }} />
 
         <div className="text-center mb-8">
-          <div className="mx-auto mb-5 flex items-center justify-center" style={{
-            width: 48, height: 48, background: "#1B5E20", border: "1px solid #00C853", borderRadius: 4,
-          }}>
-            <span style={{ color: "#00E676", fontWeight: 700, fontSize: 20, fontFamily: "'Inter', sans-serif" }}>A</span>
-          </div>
-          <p style={{ color: "#00C853", fontWeight: 700, fontSize: 14, fontFamily: "'Courier New', monospace", letterSpacing: ".1em", textTransform: "uppercase" }}>
-            AMERICAN STEAK BRASIL
-          </p>
-          <p style={{ color: "#4a6a4a", fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", marginTop: 5, fontFamily: "'Courier New', monospace" }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/asb_logo.svg" alt="American Steak Brasil" style={{ width: 160, height: "auto", margin: "0 auto 12px" }} />
+          <p style={{ color: "#4a6a4a", fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", fontFamily: "'Courier New', monospace" }}>
             Painel de Vendas — acesso restrito
           </p>
         </div>
