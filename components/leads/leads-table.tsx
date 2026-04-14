@@ -236,11 +236,11 @@ export function LeadsTable({ leads: initialLeads, userEmail }: { leads: Lead[]; 
                 </div>
                 {/* Action buttons */}
                 <div style={{ display: "flex", gap: 6 }}>
-                  <a href={`https://wa.me/${lead.phone}`} target="_blank" rel="noopener noreferrer">
-                    <button style={{ background: "transparent", border: "none", color: C.green, cursor: "pointer", padding: 4 }} title="WhatsApp">
+                  <Link href={`/dashboard/leads/${encodeURIComponent(lead.phone)}`}>
+                    <button style={{ background: "transparent", border: "none", color: C.green, cursor: "pointer", padding: 4 }} title="Ver conversa">
                       <MessageCircle size={16} />
                     </button>
-                  </a>
+                  </Link>
                   {showConfirm && (
                     <button onClick={() => confirmHandoff(lead.phone)} style={{ background: "transparent", border: "none", color: C.amber, cursor: "pointer", padding: 4 }} title="Confirmar handoff">
                       <CheckCircle size={16} />
@@ -338,11 +338,11 @@ export function LeadsTable({ leads: initialLeads, userEmail }: { leads: Lead[]; 
                   </td>
                   <td style={TD}>
                     <div style={{ display: "flex", gap: 4 }}>
-                      <a href={`https://wa.me/${lead.phone}`} target="_blank" rel="noopener noreferrer">
-                        <button style={{ background: "transparent", border: "none", color: C.green, cursor: "pointer", padding: 3 }} title="WhatsApp">
+                      <Link href={`/dashboard/leads/${encodeURIComponent(lead.phone)}`}>
+                        <button style={{ background: "transparent", border: "none", color: C.green, cursor: "pointer", padding: 3 }} title="Ver conversa">
                           <MessageCircle size={14} />
                         </button>
-                      </a>
+                      </Link>
                       {showConfirm && (
                         <button onClick={() => confirmHandoff(lead.phone)} style={{ background: "transparent", border: "none", color: C.amber, cursor: "pointer", padding: 3 }} title="Confirmar handoff">
                           <CheckCircle size={14} />
