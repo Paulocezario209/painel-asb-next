@@ -5,10 +5,10 @@ export const dynamic = "force-dynamic";
 
 // ── Design tokens ────────────────────────────────────────────────────────────
 const S = {
-  card:    { background: "#161b22", border: "1px solid #30363d", borderRadius: 6 } as React.CSSProperties,
-  label:   { fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase" as const, color: "#8b949e", fontFamily: "'Courier New', monospace" },
+  card:    { background: "#0f1428", border: "1px solid #1B2A6B", borderRadius: 4 } as React.CSSProperties,
+  label:   { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#556677", fontFamily: "'Courier New', monospace" },
   value:   { fontSize: 22, fontWeight: 700, fontFamily: "'Inter', system-ui, sans-serif", lineHeight: 1 } as React.CSSProperties,
-  muted:   { color: "#8b949e", fontSize: 11, fontFamily: "'Courier New', monospace" } as React.CSSProperties,
+  muted:   { color: "#8899aa", fontSize: 11, fontFamily: "'Courier New', monospace" } as React.CSSProperties,
 };
 
 const ANGLE_LABELS: Record<string, string> = {
@@ -58,10 +58,10 @@ export default async function FollowupsPage() {
   const topAngleLabel = topAngle ? (ANGLE_LABELS[topAngle[0]] ?? topAngle[0]) : "—";
 
   const kpis = [
-    { label: "Total Enviados",     value: total,          accent: "#58a6ff", suffix: "" },
-    { label: "Taxa de Resposta",   value: responseRate,   accent: "#3fb950", suffix: "%" },
-    { label: "Convertidos Após",   value: converted,      accent: "#f0b429", suffix: "" },
-    { label: "Ângulo Top",         value: topAngleLabel,  accent: "#c084fc", suffix: "", isText: true },
+    { label: "Total Enviados",     value: total,          accent: "#FFFFFF",  suffix: "" },
+    { label: "Taxa de Resposta",   value: responseRate,   accent: "#22c55e",  suffix: "%" },
+    { label: "Convertidos Após",   value: converted,      accent: "#f59e0b",  suffix: "" },
+    { label: "Ângulo Top",         value: topAngleLabel,  accent: "#C8102E",  suffix: "", isText: true },
   ];
 
   // Enrich rows with lead data for the table
@@ -76,7 +76,7 @@ export default async function FollowupsPage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div>
-        <h1 style={{ color: "#e6edf3", fontSize: 18, fontWeight: 700, fontFamily: "'Inter', system-ui, sans-serif", marginBottom: 2 }}>
+        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: "'Courier New', monospace", letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
           Follow-ups
         </h1>
         <p style={S.muted}>Histórico de follow-ups automáticos</p>
@@ -85,9 +85,9 @@ export default async function FollowupsPage() {
       {/* KPI cards */}
       <div className="asb-grid-kpi">
         {kpis.map(({ label, value, accent, suffix, isText }) => (
-          <div key={label} style={{ ...S.card, padding: "16px 20px" }}>
-            <p style={S.label}>{label}</p>
-            <p style={{ ...S.value, color: accent, marginTop: 10, fontSize: isText ? 14 : 22 }}>
+          <div key={label} style={{ ...S.card, padding: "20px 20px", borderTop: `2px solid ${accent}` }}>
+            <p style={{ ...S.label, color: accent }}>{label}</p>
+            <p style={{ ...S.value, color: accent, marginTop: 12, fontSize: isText ? 14 : 28 }}>
               {value}{suffix}
             </p>
           </div>

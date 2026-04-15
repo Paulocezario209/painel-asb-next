@@ -21,9 +21,9 @@ type Row = {
 
 // ── Design tokens ────────────────────────────────────────────────────────────
 const C = {
-  bg: "#161b22", bg2: "#0d1117", border: "#21262d", border2: "#30363d",
-  text: "#c9d1d9", muted: "#8b949e", blue: "#58a6ff", green: "#3fb950",
-  amber: "#f0b429", red: "#f85149", purple: "#c084fc",
+  bg: "#0f1428", bg2: "#080b14", border: "#1B2A6B", border2: "#1B2A6B",
+  text: "#FFFFFF", muted: "#8899aa", link: "#c0c8d8", green: "#22c55e",
+  amber: "#f59e0b", red: "#C8102E", blue: "#2A3F8F",
 };
 
 const LABEL: React.CSSProperties = {
@@ -150,15 +150,15 @@ export function FollowupsTable({
           const phaseCfg = {
             active:    { color: C.green,  bg: "rgba(63,185,80,.1)",    border: "rgba(63,185,80,.3)" },
             monthly:   { color: C.amber,  bg: "rgba(240,180,41,.1)",   border: "rgba(240,180,41,.3)" },
-            semestral: { color: C.purple, bg: "rgba(192,132,252,.1)",  border: "rgba(192,132,252,.3)" },
+            semestral: { color: C.muted, bg: "rgba(136,153,170,.08)", border: "rgba(136,153,170,.25)" },
           }[row.phase ?? ""] ?? { color: C.muted, bg: "rgba(139,148,158,.1)", border: "rgba(139,148,158,.25)" };
 
           const angleColor = {
-            retomada:         C.blue,
+            retomada:         C.link,
             dor:              C.red,
             prova_social:     C.green,
             valor:            C.amber,
-            reposicionamento: C.purple,
+            reposicionamento: C.muted,
           }[row.angle ?? ""] ?? C.muted;
 
           return (
@@ -179,7 +179,7 @@ export function FollowupsTable({
                 <div>
                   <Link
                     href={`/dashboard/leads/${encodeURIComponent(row.phone)}`}
-                    style={{ color: C.blue, textDecoration: "none", fontWeight: 600, fontSize: 12, fontFamily: "'Courier New', monospace" }}
+                    style={{ color: C.link, textDecoration: "none", fontWeight: 600, fontSize: 12, fontFamily: "'Courier New', monospace" }}
                   >
                     {row.name || "—"}
                   </Link>
@@ -250,28 +250,28 @@ export function FollowupsTable({
               const phaseCfg = {
                 active:    { color: C.green,  bg: "rgba(63,185,80,.1)",    border: "rgba(63,185,80,.3)" },
                 monthly:   { color: C.amber,  bg: "rgba(240,180,41,.1)",   border: "rgba(240,180,41,.3)" },
-                semestral: { color: C.purple, bg: "rgba(192,132,252,.1)",  border: "rgba(192,132,252,.3)" },
+                semestral: { color: C.muted, bg: "rgba(136,153,170,.08)", border: "rgba(136,153,170,.25)" },
               }[row.phase ?? ""] ?? { color: C.muted, bg: "rgba(139,148,158,.1)", border: "rgba(139,148,158,.25)" };
 
               const angleCfg = {
-                retomada:         { color: C.blue },
+                retomada:         { color: C.link },
                 dor:              { color: C.red },
                 prova_social:     { color: C.green },
                 valor:            { color: C.amber },
-                reposicionamento: { color: C.purple },
+                reposicionamento: { color: C.muted },
               }[row.angle ?? ""] ?? { color: C.muted };
 
               return (
                 <tr
                   key={`${row.phone}-${row.followup_sequence}-${i}`}
                   style={{ background: rowBg }}
-                  onMouseEnter={e => (e.currentTarget.style.background = "#21262d")}
+                  onMouseEnter={e => (e.currentTarget.style.background = "#131a2e")}
                   onMouseLeave={e => (e.currentTarget.style.background = rowBg)}
                 >
                   <td style={TD}>
                     <Link
                       href={`/dashboard/leads/${encodeURIComponent(row.phone)}`}
-                      style={{ color: C.blue, textDecoration: "none", fontWeight: 600 }}
+                      style={{ color: C.link, textDecoration: "none", fontWeight: 600 }}
                     >
                       {row.name || "—"}
                     </Link>
