@@ -26,9 +26,12 @@ export function Sidebar({
     >
       {/* Logo */}
       <div style={{ textAlign: "center", padding: "20px 12px 16px", borderBottom: "1px solid #1B2A6B" }}>
-        <div style={{ fontFamily: "Georgia, serif", fontSize: 14, fontWeight: 700, color: "#FFFFFF", letterSpacing: "3px", lineHeight: 1.2 }}>AMERICAN STEAK</div>
-        <div style={{ fontFamily: "Georgia, serif", fontSize: 9, color: "#C8102E", letterSpacing: "5px", margin: "4px 0" }}>BRASIL</div>
-        <div style={{ color: "#FFFFFF", fontSize: 12, letterSpacing: "4px", marginTop: "2px" }}>★★★★★</div>
+        <div style={{ display: "inline-flex", alignItems: "center", gap: 0 }}>
+          <span style={{ fontFamily: "Georgia, serif", fontSize: 42, fontWeight: 900, color: "#1B2A6B", lineHeight: 1 }}>A</span>
+          <span style={{ fontFamily: "Georgia, serif", fontSize: 42, fontWeight: 900, color: "#C8102E", lineHeight: 1 }}>S</span>
+          <span style={{ fontFamily: "Georgia, serif", fontSize: 42, fontWeight: 900, color: "#FFFFFF", lineHeight: 1 }}>B</span>
+        </div>
+        <div style={{ color: "#C8102E", fontSize: 11, letterSpacing: "4px", marginTop: 4 }}>★★★★★</div>
       </div>
 
       {/* Nav */}
