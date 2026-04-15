@@ -60,7 +60,7 @@ export default function LoginPage() {
 
         <div className="text-center mb-8">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/asb_logo.png" alt="American Steak Brasil" style={{ height: 80, width: "auto", margin: "0 auto 12px" }} />
+          <img src="/asb_logo.png" alt="American Steak Brasil" style={{ height: 100, width: "auto", margin: "0 auto 12px" }} />
           <p style={{ color: "#556677", fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", fontFamily: "'Courier New', monospace" }}>
             Painel de Vendas — acesso restrito
           </p>
