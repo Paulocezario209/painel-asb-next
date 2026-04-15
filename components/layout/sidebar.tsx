@@ -30,7 +30,7 @@ export function Sidebar({
         style={{ borderBottom: "1px solid #1B2A6B" }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/asb_logo.png" alt="American Steak Brasil" style={{ width: 130, height: "auto" }} />
+        <img src="/asb_logo.png" alt="American Steak Brasil" style={{ height: 48, width: "auto" }} />
       </div>
 
       {/* Nav */}
