@@ -29,8 +29,11 @@ export function Sidebar({
         className="flex items-center justify-center px-4 py-3"
         style={{ borderBottom: "1px solid #1B2A6B" }}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/asb_logo.png" alt="American Steak Brasil" style={{ height: 56, width: "auto" }} />
+        <div style={{ textAlign: "center", padding: "8px 0" }}>
+          <div style={{ fontFamily: "Georgia, serif", fontSize: 14, fontWeight: 700, color: "#FFFFFF", letterSpacing: "2px" }}>AMERICAN STEAK</div>
+          <div style={{ fontFamily: "Georgia, serif", fontSize: 10, color: "#C8102E", letterSpacing: "4px", margin: "2px 0" }}>BRASIL</div>
+          <div style={{ color: "#FFFFFF", fontSize: 12, letterSpacing: "3px" }}>★★★★★</div>
+        </div>
       </div>
 
       {/* Nav */}
