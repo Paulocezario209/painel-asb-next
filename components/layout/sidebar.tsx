@@ -22,15 +22,15 @@ export function Sidebar({
   return (
     <aside
       className={`w-52 flex flex-col shrink-0 asb-sidebar-drawer ${isOpen ? "open" : ""}`}
-      style={{ background: "#080d08", borderRight: "1px solid #1a2e1a" }}
+      style={{ background: "#080b14", borderRight: "1px solid #1B2A6B" }}
     >
       {/* Logo */}
       <div
         className="flex items-center justify-center px-4 py-3"
-        style={{ borderBottom: "1px solid #1a2e1a" }}
+        style={{ borderBottom: "1px solid #1B2A6B" }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/asb_logo.png" alt="American Steak Brasil" style={{ width: 130, height: "auto" }} />
+        <img src="/asb_logo_white.svg" alt="American Steak Brasil" style={{ width: 130, height: "auto" }} />
       </div>
 
       {/* Nav */}
@@ -45,23 +45,23 @@ export function Sidebar({
               style={{
                 display: "flex", alignItems: "center", gap: 10,
                 padding: "7px 10px", borderRadius: 3,
-                borderLeft: isActive ? "3px solid #00C853" : "3px solid transparent",
-                background: isActive ? "rgba(0,200,83,.08)" : "transparent",
-                color: isActive ? "#00C853" : "#c0c0c0",
+                borderLeft: isActive ? "3px solid #C8102E" : "3px solid transparent",
+                background: isActive ? "#1B2A6B" : "transparent",
+                color: isActive ? "#FFFFFF" : "#8899aa",
                 fontSize: 10, letterSpacing: ".14em", textTransform: "uppercase",
                 fontFamily: "'Courier New', monospace", fontWeight: 600,
                 transition: "all .15s", textDecoration: "none",
               }}
               onMouseEnter={(e) => {
                 if (!isActive) {
-                  (e.currentTarget as HTMLAnchorElement).style.background = "#0f150f";
-                  (e.currentTarget as HTMLAnchorElement).style.color = "#e0e0e0";
+                  (e.currentTarget as HTMLAnchorElement).style.background = "rgba(27,42,107,.22)";
+                  (e.currentTarget as HTMLAnchorElement).style.color = "#c0c8d8";
                 }
               }}
               onMouseLeave={(e) => {
                 if (!isActive) {
                   (e.currentTarget as HTMLAnchorElement).style.background = "transparent";
-                  (e.currentTarget as HTMLAnchorElement).style.color = "#c0c0c0";
+                  (e.currentTarget as HTMLAnchorElement).style.color = "#8899aa";
                 }
               }}
             >
@@ -73,10 +73,10 @@ export function Sidebar({
       </nav>
 
       {/* Footer */}
-      <div className="px-4 py-3" style={{ borderTop: "1px solid #1a2e1a" }}>
+      <div className="px-4 py-3" style={{ borderTop: "1px solid #1B2A6B" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#00C853", boxShadow: "0 0 6px #00C853" }} />
-          <p style={{ color: "#4a6a4a", fontSize: 9, letterSpacing: ".12em", textTransform: "uppercase", fontFamily: "'Courier New', monospace" }}>
+          <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#22c55e", boxShadow: "0 0 6px #22c55e" }} />
+          <p style={{ color: "#556677", fontSize: 9, letterSpacing: ".12em", textTransform: "uppercase", fontFamily: "'Courier New', monospace" }}>
             v1.0 · SDR System
           </p>
         </div>

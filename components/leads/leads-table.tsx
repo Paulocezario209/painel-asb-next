@@ -31,18 +31,18 @@ type Lead = {
 
 // ── Design tokens — ASB brand ────────────────────────────────────
 const C = {
-  bg:     "#0f150f",
-  bg2:    "#080d08",
-  border: "#1a2e1a",
-  border2:"#1e301e",
-  text:   "#e0e0e0",
-  muted:  "#7a9a7a",
-  label:  "#00C853",
-  red:    "#00C853",
-  redBright: "#00E676",
-  gold:   "#00E676",
+  bg:     "#0f1428",
+  bg2:    "#080b14",
+  border: "#1B2A6B",
+  border2:"#2A3F8F",
+  text:   "#FFFFFF",
+  muted:  "#8899aa",
+  label:  "#556677",
+  red:    "#C8102E",
+  redBright: "#e8253f",
+  gold:   "#22c55e",
   amber:  "#f59e0b",
-  green:  "#00C853",
+  green:  "#22c55e",
 };
 
 const LABEL: React.CSSProperties = { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", color: C.label, fontFamily: "'Courier New', monospace" };
@@ -51,23 +51,23 @@ const LABEL: React.CSSProperties = { fontSize: 9, letterSpacing: ".15em", textTr
 type BadgeCfg = { label: string; color: string; bg: string; border: string };
 
 const TEMP_CFG: Record<string, BadgeCfg> = {
-  HOT:          { label: "HOT",   color: C.red,   bg: "rgba(0,200,83,.1)",   border: "rgba(0,200,83,.35)" },
-  WARM:         { label: "WARM",  color: C.amber, bg: "rgba(245,158,11,.1)",  border: "rgba(245,158,11,.35)" },
-  COLD:         { label: "COLD",  color: C.muted, bg: "rgba(136,136,136,.08)", border: "rgba(136,136,136,.2)" },
-  READY_TO_BUY: { label: "READY", color: C.gold,  bg: "rgba(0,230,118,.1)",  border: "rgba(0,230,118,.35)" },
+  HOT:          { label: "HOT",   color: "#C8102E", bg: "rgba(200,16,46,.12)",   border: "rgba(200,16,46,.45)" },
+  WARM:         { label: "WARM",  color: C.amber,   bg: "rgba(245,158,11,.1)",   border: "rgba(245,158,11,.35)" },
+  COLD:         { label: "COLD",  color: C.muted,   bg: "rgba(136,153,170,.08)", border: "rgba(136,153,170,.2)" },
+  READY_TO_BUY: { label: "READY", color: "#22c55e", bg: "rgba(34,197,94,.1)",    border: "rgba(34,197,94,.35)" },
 };
 
 const STATUS_CFG: Record<string, BadgeCfg> = {
-  new:       { label: "Novo",        color: C.label, bg: "rgba(102,102,102,.08)", border: "rgba(102,102,102,.2)" },
-  qualified: { label: "Qualificado", color: C.gold,  bg: "rgba(0,230,118,.1)",   border: "rgba(0,230,118,.35)" },
-  converted: { label: "Convertido",  color: C.green, bg: "rgba(34,197,94,.1)",    border: "rgba(34,197,94,.3)" },
-  optout:    { label: "Opt-out",     color: C.muted, bg: "rgba(136,136,136,.06)", border: "rgba(136,136,136,.2)" },
+  new:       { label: "Novo",        color: "#8899bb", bg: "rgba(27,42,107,.27)",  border: "#1B2A6B" },
+  qualified: { label: "Qualificado", color: "#C8102E", bg: "rgba(200,16,46,.13)",  border: "rgba(200,16,46,.5)" },
+  converted: { label: "Convertido",  color: "#22c55e", bg: "rgba(34,197,94,.1)",   border: "rgba(34,197,94,.3)" },
+  optout:    { label: "Opt-out",     color: C.muted,   bg: "rgba(136,153,170,.06)", border: "rgba(136,153,170,.2)" },
 };
 
 const ABC_CFG: Record<"A" | "B" | "C", BadgeCfg> = {
-  A: { label: "A", color: C.red,   bg: "rgba(0,200,83,.1)",   border: "rgba(0,200,83,.35)" },
-  B: { label: "B", color: C.gold,  bg: "rgba(0,230,118,.1)",  border: "rgba(0,230,118,.35)" },
-  C: { label: "C", color: C.muted, bg: "rgba(136,136,136,.08)", border: "rgba(136,136,136,.2)" },
+  A: { label: "A", color: "#C8102E", bg: "rgba(200,16,46,.12)",   border: "rgba(200,16,46,.45)" },
+  B: { label: "B", color: C.amber,   bg: "rgba(245,158,11,.1)",   border: "rgba(245,158,11,.35)" },
+  C: { label: "C", color: C.muted,   bg: "rgba(136,153,170,.08)", border: "rgba(136,153,170,.2)" },
 };
 
 const VENDOR_LABELS: Record<string, string> = { ana_paula: "Ana Paula", alan: "Alan", setor_cuit: "CUIT" };
@@ -307,7 +307,7 @@ export function LeadsTable({ leads: initialLeads, userEmail }: { leads: Lead[]; 
       <div className="asb-desktop-only" style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 4, overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
-            <tr style={{ background: "#0a0f0a" }}>
+            <tr style={{ background: "#080b14" }}>
               {["Lead", "Cidade", "Segmento", "Volume", "ABC", "Temp.", "Status", "Vendedor", "Etapa", "Handoff", "Ações"].map(h => (
                 <th key={h} style={TH}>{h}</th>
               ))}
@@ -326,7 +326,7 @@ export function LeadsTable({ leads: initialLeads, userEmail }: { leads: Lead[]; 
               const abc    = abcCurve(lead.weekly_volume_kg);
               const showConfirm = !!lead.handoff_at && lead.handoff_confirmed === false;
               const showConvert = (lead.qual_stage ?? 0) >= 7 && !lead.first_order_at;
-              const rowBg = i % 2 === 0 ? C.bg : "#0d1a0d";
+              const rowBg = i % 2 === 0 ? C.bg : "#0a0d1a";
               const _now2 = new Date();
               const alertLevel =
                 lead.scheduled_at && !lead.handoff_confirmed && new Date(lead.scheduled_at) < _now2 ? 'red' :
@@ -334,7 +334,7 @@ export function LeadsTable({ leads: initialLeads, userEmail }: { leads: Lead[]; 
                 null;
 
               return (
-                <tr key={lead.phone} style={{ background: rowBg, borderLeft: alertLevel ? `3px solid ${alertLevel === 'red' ? C.red : C.amber}` : undefined }} onMouseEnter={e => (e.currentTarget.style.background = "#222222")} onMouseLeave={e => (e.currentTarget.style.background = rowBg)}>
+                <tr key={lead.phone} style={{ background: rowBg, borderLeft: alertLevel ? `3px solid ${alertLevel === 'red' ? C.red : C.amber}` : undefined }} onMouseEnter={e => (e.currentTarget.style.background = "#131a2e")} onMouseLeave={e => (e.currentTarget.style.background = rowBg)}>
                   <td style={TD}>
                     <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                       {alertLevel && (
@@ -362,7 +362,7 @@ export function LeadsTable({ leads: initialLeads, userEmail }: { leads: Lead[]; 
                   <td style={TD}>
                     {lead.handoff_at
                       ? lead.handoff_confirmed
-                        ? <span style={{ color: "#00C853", fontSize: 10 }}>✓ confirmado</span>
+                        ? <span style={{ color: "#22c55e", fontSize: 10 }}>✓ confirmado</span>
                         : <span style={{ color: C.amber, fontSize: 10 }}>{new Date(lead.handoff_at).toLocaleDateString("pt-BR")}</span>
                       : <span style={{ color: C.muted }}>—</span>}
                   </td>

@@ -9,12 +9,12 @@ export const dynamic = "force-dynamic";
 
 // ── Design tokens — ASB brand ───────────────────────────────────────────────
 const S = {
-  card:    { background: "#0f150f", border: "1px solid #1a2e1a", borderRadius: 4 } as React.CSSProperties,
-  label:   { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#00C853", fontFamily: "'Courier New', monospace" },
-  value:   { fontSize: 28, fontWeight: 700, color: "#F0F0F0", fontFamily: "'Inter', system-ui, sans-serif", lineHeight: 1 },
-  section: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#e0e0e0", fontFamily: "'Courier New', monospace", marginBottom: 12 } as React.CSSProperties,
-  text:    { color: "#d0d0d0", fontSize: 12, fontFamily: "'Courier New', monospace" } as React.CSSProperties,
-  muted:   { color: "#7a9a7a", fontSize: 11, fontFamily: "'Courier New', monospace" } as React.CSSProperties,
+  card:    { background: "#0f1428", border: "1px solid #1B2A6B", borderRadius: 4 } as React.CSSProperties,
+  label:   { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#556677", fontFamily: "'Courier New', monospace" },
+  value:   { fontSize: 28, fontWeight: 700, color: "#FFFFFF", fontFamily: "'Inter', system-ui, sans-serif", lineHeight: 1 },
+  section: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#c0c8d8", fontFamily: "'Courier New', monospace", marginBottom: 12 } as React.CSSProperties,
+  text:    { color: "#c8d8e8", fontSize: 12, fontFamily: "'Courier New', monospace" } as React.CSSProperties,
+  muted:   { color: "#8899aa", fontSize: 11, fontFamily: "'Courier New', monospace" } as React.CSSProperties,
 };
 
 function getWeekLabel(date: Date): string {
@@ -113,10 +113,10 @@ export default async function DashboardPage() {
   const convertidos = leads.filter(l => l.first_order_at).length;
 
   const kpis = [
-    { label: "Total Leads",        value: totalLeads ?? 0,    accent: "#F5F5F5" },
-    { label: "Qualificados",       value: qualifiedLeads ?? 0, accent: "#00E676" },
+    { label: "Total Leads",        value: totalLeads ?? 0,    accent: "#FFFFFF" },
+    { label: "Qualificados",       value: qualifiedLeads ?? 0, accent: "#C8102E" },
     { label: "Handoffs Pendentes", value: handoffPending ?? 0, accent: "#f59e0b" },
-    { label: "Convertidos",        value: convertidos,          accent: "#00C853" },
+    { label: "Convertidos",        value: convertidos,          accent: "#22c55e" },
   ];
 
   return (
@@ -141,7 +141,7 @@ export default async function DashboardPage() {
       {/* Onde Focar Agora */}
       <div style={{ ...S.card, padding: "20px 24px" }}>
         <p style={{ ...S.section }}>
-          <span style={{ color: "#00C853", marginRight: 6 }}>▲</span>
+          <span style={{ color: "#C8102E", marginRight: 6 }}>▲</span>
           Onde Focar Agora
         </p>
 
@@ -149,9 +149,9 @@ export default async function DashboardPage() {
         <p style={{ ...S.label, marginBottom: 8 }}>curva abc</p>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 16 }}>
           {([
-            { tier: "A", count: abcCount.A, color: "#00C853", bg: "rgba(0,200,83,.08)", border: "rgba(0,200,83,.3)", tag: "urgente", desc: "≥ 300 kg/sem" },
-            { tier: "B", count: abcCount.B, color: "#00E676", bg: "rgba(0,230,118,.08)", border: "rgba(0,230,118,.3)", tag: "médio", desc: "100–299 kg/sem" },
-            { tier: "C", count: abcCount.C, color: "#7a9a7a", bg: "rgba(136,136,136,.06)", border: "rgba(136,136,136,.2)", tag: "longo prazo", desc: "< 100 kg/sem" },
+            { tier: "A", count: abcCount.A, color: "#C8102E", bg: "rgba(200,16,46,.08)", border: "rgba(200,16,46,.3)", tag: "urgente", desc: "≥ 300 kg/sem" },
+            { tier: "B", count: abcCount.B, color: "#f59e0b", bg: "rgba(245,158,11,.08)", border: "rgba(245,158,11,.3)", tag: "médio", desc: "100–299 kg/sem" },
+            { tier: "C", count: abcCount.C, color: "#8899aa", bg: "rgba(136,153,170,.06)", border: "rgba(136,153,170,.2)", tag: "longo prazo", desc: "< 100 kg/sem" },
           ] as const).map(({ tier, count, color, bg, border, tag, desc }) => (
             <div key={tier} style={{ background: bg, border: `1px solid ${border}`, borderRadius: 5, padding: "14px 16px", textAlign: "center" }}>
               <p style={{ color, fontSize: 26, fontWeight: 700, fontFamily: "'Inter', system-ui, sans-serif", lineHeight: 1 }}>{count}</p>
@@ -171,16 +171,16 @@ export default async function DashboardPage() {
         {/* Alert urgente Tier A */}
         {urgentA > 0 && (
           <div style={{
-            borderLeft: "3px solid #f85149",
-            background: "rgba(248,81,73,.06)",
+            borderLeft: "3px solid #C8102E",
+            background: "rgba(200,16,46,.06)",
             padding: "10px 14px",
             borderRadius: "0 4px 4px 0",
             marginBottom: 16,
           }}>
-            <p style={{ color: "#00E676", fontSize: 11, fontFamily: "'Courier New', monospace", fontWeight: 700 }}>
+            <p style={{ color: "#FFFFFF", fontSize: 11, fontFamily: "'Courier New', monospace", fontWeight: 700 }}>
               ⚡ {urgentA} lead{urgentA > 1 ? "s" : ""} Tier A aguardando confirmação de handoff
             </p>
-            <p style={{ color: "#7a9a7a", fontSize: 10, fontFamily: "'Courier New', monospace", marginTop: 2 }}>
+            <p style={{ color: "#8899aa", fontSize: 10, fontFamily: "'Courier New', monospace", marginTop: 2 }}>
               ação imediata — alto volume, handoff não confirmado
             </p>
           </div>
@@ -197,8 +197,8 @@ export default async function DashboardPage() {
                     <span style={{ color: "#7a9a7a", marginRight: 6 }}>#{i + 1}</span>{city}
                   </span>
                   <span style={{
-                    background: "rgba(0,200,83,.08)", border: "1px solid rgba(0,200,83,.25)",
-                    color: "#00C853", fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase",
+                    background: "rgba(200,16,46,.08)", border: "1px solid rgba(200,16,46,.25)",
+                    color: "#C8102E", fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase",
                     padding: "2px 7px", borderRadius: 2, fontFamily: "'Courier New', monospace",
                   }}>{count} leads</span>
                 </div>
@@ -218,7 +218,7 @@ export default async function DashboardPage() {
                     {PRODUCT_LABELS[group] ?? group}
                   </span>
                   <span style={{
-                    border: "1px solid #1a2e1a", color: "#4a6a4a", fontSize: 9,
+                    border: "1px solid #1B2A6B", color: "#8899aa", fontSize: 9,
                     padding: "2px 7px", borderRadius: 2, fontFamily: "'Courier New', monospace",
                   }}>{count}</span>
                 </div>
@@ -250,9 +250,9 @@ export default async function DashboardPage() {
       <div style={{ ...S.card, padding: "16px 24px", display: "flex", alignItems: "center", gap: 12 }}>
         <p style={{ ...S.label, margin: 0 }}>status</p>
         {[
-          { label: "SDR Ativo",        color: "#00C853" },
-          { label: "RAG Online",       color: "#00C853" },
-          { label: "Follow-up Engine", color: "#00E676" },
+          { label: "SDR Ativo",        color: "#22c55e" },
+          { label: "RAG Online",       color: "#22c55e" },
+          { label: "Follow-up Engine", color: "#f59e0b" },
         ].map(({ label, color }) => (
           <span key={label} style={{
             border: `1px solid ${color}30`,

@@ -48,57 +48,57 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* ASB Design System — americansteakbrasil.com.br */
+/* ASB Design System — identidade oficial American Steak Brasil */
 :root {
-  --asb-bg:          #080d08;
-  --asb-surface:     #080d08;
-  --asb-card:        #0f150f;
-  --asb-border:      #1a2e1a;
-  --asb-border2:     #243824;
-  --asb-text:        #F0F0F0;
-  --asb-text2:       #c8c8c8;
-  --asb-muted:       #7a9a7a;
-  --asb-label:       #00C853;
-  --asb-green:       #00C853;
-  --asb-green-neon:  #00E676;
-  --asb-green-dark:  #1B5E20;
-  --asb-green-mid:   #2E7D32;
-  --asb-amber:       #f59e0b;
-  --asb-danger:      #ef4444;
+  --asb-bg:         #0a0d1a;
+  --asb-surface:    #0f1428;
+  --asb-card:       #0f1428;
+  --asb-border:     #1B2A6B;
+  --asb-border2:    #2A3F8F;
+  --asb-text:       #FFFFFF;
+  --asb-text2:      #c8d8e8;
+  --asb-muted:      #8899aa;
+  --asb-label:      #556677;
+  --asb-red:        #C8102E;
+  --asb-blue:       #1B2A6B;
+  --asb-blue-mid:   #2A3F8F;
+  --asb-amber:      #f59e0b;
+  --asb-success:    #22c55e;
+  --asb-danger:     #C8102E;
 
-  --background:   #080d08;
-  --foreground:   #F0F0F0;
-  --card:         #0f150f;
-  --card-foreground: #F0F0F0;
-  --popover:      #111f11;
-  --popover-foreground: #F5F5F5;
-  --primary:      #00C853;
-  --primary-foreground: #0a0f0a;
-  --secondary:    #1a2e1a;
-  --secondary-foreground: #C8D8C8;
-  --muted:        #1a2e1a;
-  --muted-foreground: #7a9a7a;
-  --accent:       #1a2e1a;
-  --accent-foreground: #F5F5F5;
-  --destructive:  #ef4444;
-  --border:       #1a2e1a;
-  --input:        #1a2e1a;
-  --ring:         #00C853;
+  --background:   #0a0d1a;
+  --foreground:   #FFFFFF;
+  --card:         #0f1428;
+  --card-foreground: #FFFFFF;
+  --popover:      #0f1428;
+  --popover-foreground: #FFFFFF;
+  --primary:      #C8102E;
+  --primary-foreground: #FFFFFF;
+  --secondary:    #1B2A6B;
+  --secondary-foreground: #FFFFFF;
+  --muted:        #1B2A6B;
+  --muted-foreground: #8899aa;
+  --accent:       #1B2A6B;
+  --accent-foreground: #FFFFFF;
+  --destructive:  #C8102E;
+  --border:       #1B2A6B;
+  --input:        #1B2A6B;
+  --ring:         #C8102E;
   --radius:       0.375rem;
-  --sidebar:      #080d08;
-  --sidebar-foreground: #c0c0c0;
-  --sidebar-primary: #00C853;
-  --sidebar-primary-foreground: #0a0f0a;
-  --sidebar-accent: #111f11;
-  --sidebar-accent-foreground: #F5F5F5;
-  --sidebar-border: #1a2e1a;
-  --sidebar-ring: #00C853;
+  --sidebar:      #080b14;
+  --sidebar-foreground: #FFFFFF;
+  --sidebar-primary: #C8102E;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #1B2A6B;
+  --sidebar-accent-foreground: #FFFFFF;
+  --sidebar-border: #1B2A6B;
+  --sidebar-ring: #C8102E;
 
-  --chart-1: #00C853;
-  --chart-2: #00E676;
+  --chart-1: #C8102E;
+  --chart-2: #1B2A6B;
   --chart-3: #f59e0b;
-  --chart-4: #2E7D32;
-  --chart-5: #4a6a4a;
+  --chart-4: #2A3F8F;
+  --chart-5: #556677;
 }
 
 @layer base {
@@ -106,8 +106,8 @@
     @apply border-border outline-ring/50;
   }
   body {
-    background-color: var(--asb-bg);
-    color: var(--asb-text);
+    background-color: #0a0d1a;
+    color: #FFFFFF;
     font-family: 'Courier New', 'Courier', monospace;
     font-size: 13px;
   }
@@ -121,7 +121,7 @@
   font-size: 9px;
   letter-spacing: .15em;
   text-transform: uppercase;
-  color: var(--asb-label);
+  color: #556677;
   font-family: 'Courier New', monospace;
 }
 
@@ -129,19 +129,19 @@
   font-size: 28px;
   font-weight: 700;
   font-family: 'Inter', 'system-ui', sans-serif;
-  color: #F0F0F0;
+  color: #FFFFFF;
   line-height: 1;
 }
 
 .asb-card {
-  background: #0f150f;
-  border: 1px solid #1a2e1a;
+  background: #0f1428;
+  border: 1px solid #1B2A6B;
   border-radius: 4px;
   transition: border-color .2s, box-shadow .2s;
 }
 .asb-card:hover {
-  border-color: #00C853;
-  box-shadow: 0 0 0 1px rgba(0,200,83,.12), 0 4px 20px rgba(0,200,83,.08);
+  border-color: #2A3F8F;
+  box-shadow: 0 0 0 1px rgba(27,42,107,.3), 0 4px 20px rgba(200,16,46,.06);
 }
 
 .asb-badge {

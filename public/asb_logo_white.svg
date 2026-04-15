@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" fill="none">
+  <circle cx="120" cy="115" r="102" fill="none" stroke="#FFFFFF" stroke-width="3"/>
+  <circle cx="120" cy="115" r="96"  fill="none" stroke="rgba(255,255,255,.12)" stroke-width="0.8"/>
+  <line x1="90" y1="27" x2="150" y2="27" stroke="rgba(255,255,255,.18)" stroke-width="1"/>
+  <polygon points="55,68 58.5,77.1 68.3,77.7 60.7,83.9 63.2,93.3 55,88 46.8,93.3 49.3,83.9 41.7,77.7 51.5,77.1" fill="#FFFFFF"/>
+  <text x="90"  y="145" font-family="Georgia,'Times New Roman',serif" font-size="72" font-weight="900" fill="#FFFFFF" text-anchor="middle">A</text>
+  <text x="162" y="145" font-family="Georgia,'Times New Roman',serif" font-size="72" font-weight="900" fill="rgba(255,255,255,.88)" text-anchor="middle">S</text>
+  <line x1="45" y1="163" x2="195" y2="163" stroke="rgba(255,255,255,.2)" stroke-width="1.5"/>
+  <text x="120" y="181" font-family="'Courier New',Courier,monospace" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle" letter-spacing="2.5">AMERICAN STEAK</text>
+  <text x="120" y="196" font-family="Georgia,'Times New Roman',serif" font-size="8" font-style="italic" fill="rgba(255,255,255,.65)" text-anchor="middle" letter-spacing="-0.3">burguer e espetos artesanais</text>
+</svg>
