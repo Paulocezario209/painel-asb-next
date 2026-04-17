@@ -138,25 +138,17 @@ export async function POST(req: NextRequest) {
 
   const agent = DOMAIN_TO_AGENT[config.rag_domain] ?? "qualification";
 
-  // Profile turn — injected as a conversational Lead: line so the CP extraction layer
-  // treats it as conversation content (not metadata). Bracket format like
-  // [PERFIL DO LEAD: ...] was being ignored by GPT-4o-mini during entity extraction.
-  const profileSentences: string[] = [];
-  if (config.city)             profileSentences.push(`Fico em ${config.city}`);
-  if (config.segment)          profileSentences.push(config.segment);
-  if (config.weekly_volume_kg) profileSentences.push(`uso cerca de ${config.weekly_volume_kg} kg por semana`);
-  if (config.current_supplier) {
-    const sMap: Record<string, string> = {
-      acougue_local: "compro de açougue local",
-      frigorifico:   "trabalho com frigorífico",
-      distribuidor:  "uso um distribuidor",
-      outro:         "tenho fornecedor próprio",
-    };
-    profileSentences.push(sMap[config.current_supplier] ?? "tenho um fornecedor");
-  }
+  // Profile turn — key=value format mirrors the exact field names the CP extraction
+  // layer looks for, making GPT-4o-mini extraction deterministic regardless of
+  // the current message content.
+  const profileKV: string[] = [];
+  if (config.city)             profileKV.push(`city=${config.city}`);
+  if (config.segment)          profileKV.push(`segment=${config.segment}`);
+  if (config.weekly_volume_kg) profileKV.push(`weekly_volume_kg=${config.weekly_volume_kg}`);
+  if (config.current_supplier) profileKV.push(`current_supplier=${config.current_supplier}`);
   // "SDR: ... \n Lead: ..." — looks like a real exchange to the extraction GPT call
-  const profileTurnLines = profileSentences.length
-    ? `SDR: Pode me informar seus dados para começarmos?\nLead: ${profileSentences.join(", ")}.`
+  const profileTurnLines = profileKV.length
+    ? `SDR: Confirme os dados do seu estabelecimento.\nLead: ${profileKV.join("; ")}.`
     : "";
 
   // Build full conversation context:
