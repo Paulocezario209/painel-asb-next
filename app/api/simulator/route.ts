@@ -143,7 +143,7 @@ export async function POST(req: NextRequest) {
   // [PERFIL DO LEAD: ...] was being ignored by GPT-4o-mini during entity extraction.
   const profileSentences: string[] = [];
   if (config.city)             profileSentences.push(`Fico em ${config.city}`);
-  if (config.segment)          profileSentences.push(`tenho um(a) ${config.segment}`);
+  if (config.segment)          profileSentences.push(config.segment);
   if (config.weekly_volume_kg) profileSentences.push(`uso cerca de ${config.weekly_volume_kg} kg por semana`);
   if (config.current_supplier) {
     const sMap: Record<string, string> = {
