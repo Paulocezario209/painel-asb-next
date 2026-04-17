@@ -138,20 +138,29 @@ export async function POST(req: NextRequest) {
 
   const agent = DOMAIN_TO_AGENT[config.rag_domain] ?? "qualification";
 
-  // Profile preamble — always injected as first line of conversation_history.
-  // Ensures city/segment/volume/supplier reach the CP extraction layer
-  // regardless of current_etapa (buildFakeHistory is empty when current_etapa=1).
-  const profileParts: string[] = [];
-  if (config.city)             profileParts.push(`cidade: ${config.city}`);
-  if (config.segment)          profileParts.push(`segmento: ${config.segment}`);
-  if (config.weekly_volume_kg) profileParts.push(`volume: ${config.weekly_volume_kg} kg/semana`);
-  if (config.current_supplier) profileParts.push(`fornecedor: ${config.current_supplier}`);
-  const profilePrefix = profileParts.length
-    ? `[PERFIL DO LEAD: ${profileParts.join(" | ")}]\n`
+  // Profile turn — injected as a conversational Lead: line so the CP extraction layer
+  // treats it as conversation content (not metadata). Bracket format like
+  // [PERFIL DO LEAD: ...] was being ignored by GPT-4o-mini during entity extraction.
+  const profileSentences: string[] = [];
+  if (config.city)             profileSentences.push(`Fico em ${config.city}`);
+  if (config.segment)          profileSentences.push(`tenho um(a) ${config.segment}`);
+  if (config.weekly_volume_kg) profileSentences.push(`uso cerca de ${config.weekly_volume_kg} kg por semana`);
+  if (config.current_supplier) {
+    const sMap: Record<string, string> = {
+      acougue_local: "compro de açougue local",
+      frigorifico:   "trabalho com frigorífico",
+      distribuidor:  "uso um distribuidor",
+      outro:         "tenho fornecedor próprio",
+    };
+    profileSentences.push(sMap[config.current_supplier] ?? "tenho um fornecedor");
+  }
+  // "SDR: ... \n Lead: ..." — looks like a real exchange to the extraction GPT call
+  const profileTurnLines = profileSentences.length
+    ? `SDR: Pode me informar seus dados para começarmos?\nLead: ${profileSentences.join(", ")}.`
     : "";
 
   // Build full conversation context:
-  // 1. Profile preamble — config fields always present at top
+  // 1. Profile turn — config fields always present as Lead: line
   // 2. Fake history — synthetic SDR/lead turns simulating completed etapas
   // 3. Real session history — actual back-and-forth from this simulation session
   const fakeHistory  = buildFakeHistory(config);
@@ -159,7 +168,8 @@ export async function POST(req: NextRequest) {
   const historyLines = allTurns.length
     ? allTurns.map(t => `${t.role === "user" ? "Lead" : "SDR"}: ${t.content}`).join("\n")
     : "";
-  const conversationHistory = (profilePrefix + historyLines).trim() || undefined;
+  const parts = [profileTurnLines, historyLines].filter(Boolean);
+  const conversationHistory = parts.length ? parts.join("\n") : undefined;
 
   const payload = {
     agent,
