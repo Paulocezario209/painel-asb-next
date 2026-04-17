@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, Bell, BarChart2 } from "lucide-react";
+import { LayoutDashboard, Users, Bell, BarChart2, PhoneCall } from "lucide-react";
 
 const navItems = [
   { href: "/dashboard",            label: "Dashboard",   icon: LayoutDashboard },
   { href: "/dashboard/leads",      label: "Leads",       icon: Users },
+  { href: "/dashboard/handoffs",   label: "Handoffs",    icon: PhoneCall },
   { href: "/dashboard/followups",  label: "Follow-ups",  icon: Bell },
   { href: "/dashboard/insights",   label: "Inteligência", icon: BarChart2 },
 ];
