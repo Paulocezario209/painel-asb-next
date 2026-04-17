@@ -138,14 +138,28 @@ export async function POST(req: NextRequest) {
 
   const agent = DOMAIN_TO_AGENT[config.rag_domain] ?? "qualification";
 
+  // Profile preamble — always injected as first line of conversation_history.
+  // Ensures city/segment/volume/supplier reach the CP extraction layer
+  // regardless of current_etapa (buildFakeHistory is empty when current_etapa=1).
+  const profileParts: string[] = [];
+  if (config.city)             profileParts.push(`cidade: ${config.city}`);
+  if (config.segment)          profileParts.push(`segmento: ${config.segment}`);
+  if (config.weekly_volume_kg) profileParts.push(`volume: ${config.weekly_volume_kg} kg/semana`);
+  if (config.current_supplier) profileParts.push(`fornecedor: ${config.current_supplier}`);
+  const profilePrefix = profileParts.length
+    ? `[PERFIL DO LEAD: ${profileParts.join(" | ")}]\n`
+    : "";
+
   // Build full conversation context:
-  // 1. Fake history — synthetic SDR/lead turns simulating completed etapas
-  // 2. Real session history — actual back-and-forth from this simulation session
+  // 1. Profile preamble — config fields always present at top
+  // 2. Fake history — synthetic SDR/lead turns simulating completed etapas
+  // 3. Real session history — actual back-and-forth from this simulation session
   const fakeHistory  = buildFakeHistory(config);
   const allTurns     = [...fakeHistory, ...history];
-  const conversationHistory = allTurns.length
+  const historyLines = allTurns.length
     ? allTurns.map(t => `${t.role === "user" ? "Lead" : "SDR"}: ${t.content}`).join("\n")
-    : undefined;
+    : "";
+  const conversationHistory = (profilePrefix + historyLines).trim() || undefined;
 
   const payload = {
     agent,
