@@ -5,7 +5,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const DOMAIN_TO_AGENT: Record<string, string> = {
-  auto:                    "qualification",
   product_rag:             "product",
   logistics_rag:           "logistics",
   objection_rag:           "objection",
@@ -14,6 +13,21 @@ const DOMAIN_TO_AGENT: Record<string, string> = {
   market_pain_rag:         "market_pain",
   lead_qualification_rag:  "qualification",
 };
+
+/**
+ * Keyword-based agent resolver for rag_domain="auto".
+ * Mirrors the intent detection in classify.py so the simulator
+ * routes to the correct RAG domain without a separate classify call.
+ */
+function resolveAgent(message: string, configDomain: string): string {
+  if (configDomain !== "auto") return DOMAIN_TO_AGENT[configDomain] ?? "qualification";
+  const m = message.toLowerCase();
+  if (/portf[oó]lio|blend|gramagem|produto|cat[aá]logo|corte|op[cç][aã]|hambur[gq]|variedade|linha de produto/.test(m)) return "product";
+  if (/entrega|frete|prazo|cobertura|pedido m[ií]n|frequência de entrega/.test(m))                                    return "logistics";
+  if (/caro|pre[cç]o alto|já tenho fornecedor|ja tenho fornecedor|não preciso|nao preciso/.test(m))                    return "objection";
+  if (/concorrente|friboi|jbs|swift|minerva|outro fornecedor/.test(m))                                                return "competitor";
+  return "qualification";
+}
 
 // ── Fake history — simulates lead answers for etapas already completed ─────────
 // Index 0 = etapa 1, index 1 = etapa 2, etc.
@@ -136,7 +150,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "message required" }, { status: 400 });
   }
 
-  const agent = DOMAIN_TO_AGENT[config.rag_domain] ?? "qualification";
+  const agent = resolveAgent(message, config.rag_domain);
 
   // Profile turn — key=value format mirrors the exact field names the CP extraction
   // layer looks for, making GPT-4o-mini extraction deterministic regardless of
