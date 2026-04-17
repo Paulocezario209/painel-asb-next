@@ -5,6 +5,22 @@ import { SupplierBar }  from "@/components/insights/supplier-bar";
 
 export const dynamic = "force-dynamic";
 
+// ── Lead shape (subset dos campos usados nesta página) ────────────────────────
+interface Lead {
+  segment:          string | null;
+  city:             string | null;
+  pain_point:       string | null;
+  current_supplier: string | null;
+  weekly_volume_kg: number | null;
+  lead_temperature: string | null;
+  lead_status:      string | null;
+  routing_team:     string | null;
+  qual_stage:       number | null;
+  handoff_at:       string | null;
+  first_order_at:   string | null;
+  created_at:       string | null;
+}
+
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const S = {
   card:    { background: "#0f1428", border: "1px solid #1B2A6B", borderRadius: 4 } as React.CSSProperties,
@@ -54,14 +70,15 @@ const TEMP_META: Record<string, { color: string; bg: string; border: string; lab
 export default async function InsightsPage() {
   const supabase = await createClient();
 
-  const { data: raw } = await supabase
+  const { data: raw, error } = await supabase
     .from("ai_sdr_leads")
     .select(
       "segment, city, pain_point, current_supplier, weekly_volume_kg, lead_temperature, " +
       "lead_status, routing_team, qual_stage, handoff_at, first_order_at, created_at"
     );
 
-  const leads = raw ?? [];
+  if (error) throw new Error(error.message);
+  const leads = (raw ?? []) as Lead[];
   const total = leads.length;
 
   // ── KPIs ─────────────────────────────────────────────────────────────────────
@@ -71,7 +88,7 @@ export default async function InsightsPage() {
 
   const volumeLeads = leads.filter(l => l.weekly_volume_kg != null);
   const avgVolume = volumeLeads.length
-    ? Math.round(volumeLeads.reduce((s, l) => s + (l.weekly_volume_kg as number), 0) / volumeLeads.length)
+    ? Math.round(volumeLeads.reduce((s, l) => s + (l.weekly_volume_kg ?? 0), 0) / volumeLeads.length)
     : null;
 
   const taxaQual = total > 0 ? Math.round((qualified / total) * 100) : 0;
@@ -80,32 +97,31 @@ export default async function InsightsPage() {
   // Avg days to handoff
   const handoffDelays = leads
     .filter(l => l.handoff_at && l.created_at)
-    .map(l => (new Date(l.handoff_at as string).getTime() - new Date(l.created_at as string).getTime()) / 86400000);
+    .map(l => (new Date(l.handoff_at!).getTime() - new Date(l.created_at!).getTime()) / 86400000);
   const avgHandoffDays = handoffDelays.length
     ? +(handoffDelays.reduce((s, v) => s + v, 0) / handoffDelays.length).toFixed(1)
     : null;
 
   // ── Charts data ──────────────────────────────────────────────────────────────
-  const segmentData = countBy(leads, l => {
-    const s = l.segment as string | null;
-    return s ? (SEG_LABELS[s] ?? s) : null;
-  });
+  const segmentData = countBy(leads, l =>
+    l.segment ? (SEG_LABELS[l.segment] ?? l.segment) : null
+  );
 
-  const painData = countBy(leads, l => l.pain_point as string | null);
+  const painData = countBy(leads, l => l.pain_point);
 
-  const supplierData = countBy(leads, l => l.current_supplier as string | null);
+  const supplierData = countBy(leads, l => l.current_supplier);
 
   // ── Temperature carteira ─────────────────────────────────────────────────────
   const tempCount: Record<string, number> = { hot: 0, warm: 0, cold: 0 };
   for (const l of leads) {
-    const t = (l.lead_temperature as string | null)?.toLowerCase();
+    const t = l.lead_temperature?.toLowerCase();
     if (t && t in tempCount) tempCount[t]++;
   }
 
   // ── Funil por segmento (qualificados >= 7) ───────────────────────────────────
   const funnelSeg: Record<string, { total: number; qual: number }> = {};
   for (const l of leads) {
-    const s = l.segment as string | null;
+    const s = l.segment;
     if (!s) continue;
     const label = SEG_LABELS[s] ?? s;
     if (!funnelSeg[label]) funnelSeg[label] = { total: 0, qual: 0 };
@@ -117,7 +133,7 @@ export default async function InsightsPage() {
     .slice(0, 8);
 
   // ── Top 10 cidades ────────────────────────────────────────────────────────────
-  const topCities = countBy(leads, l => l.city as string | null, 10);
+  const topCities = countBy(leads, l => l.city, 10);
 
   // ── Distribuição por vendedor ─────────────────────────────────────────────────
   const VENDOR_LABELS: Record<string, string> = {
@@ -127,7 +143,7 @@ export default async function InsightsPage() {
   };
   const vendorDist: Record<string, number> = {};
   for (const l of leads) {
-    const v = l.routing_team as string | null;
+    const v = l.routing_team;
     if (!v) continue;
     vendorDist[v] = (vendorDist[v] ?? 0) + 1;
   }
