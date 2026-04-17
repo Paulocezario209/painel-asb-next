@@ -78,7 +78,7 @@ export default async function InsightsPage() {
     );
 
   if (error) throw new Error(error.message);
-  const leads = (raw ?? []) as Lead[];
+  const leads = (raw ?? []) as unknown as Lead[];
   const total = leads.length;
 
   // ── KPIs ─────────────────────────────────────────────────────────────────────
