@@ -160,7 +160,16 @@ export async function POST(req: NextRequest) {
   const historyLines = allTurns.length
     ? allTurns.map(t => `${t.role === "user" ? "Lead" : "SDR"}: ${t.content}`).join("\n")
     : "";
-  const parts = [profileTurnLines, historyLines].filter(Boolean);
+  // Bridge: if both profile turn and session history are present, insert an SDR
+  // acknowledgment line to break consecutive Lead: turns.
+  // Two consecutive Lead: lines (profile Lead + first session Lead) caused
+  // non-deterministic entity extraction in GPT-4o-mini.
+  const parts: string[] = [];
+  if (profileTurnLines) parts.push(profileTurnLines);
+  if (historyLines) {
+    if (profileTurnLines) parts.push("SDR: Certo, seus dados foram registrados.");
+    parts.push(historyLines);
+  }
   const conversationHistory = parts.length ? parts.join("\n") : undefined;
 
   const payload = {
