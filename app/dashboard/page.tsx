@@ -47,10 +47,46 @@ export default async function DashboardPage() {
     supabase.from("ai_sdr_leads").select("*", { count: "exact", head: true }),
     supabase.from("ai_sdr_leads").select("*", { count: "exact", head: true }).not("handoff_at", "is", null).eq("handoff_confirmed", false),
     supabase.from("ai_sdr_leads").select("*", { count: "exact", head: true }).gte("qual_stage", 7),
-    supabase.from("ai_sdr_leads").select("qual_stage, first_order_at, routing_team, handoff_at, handoff_confirmed, weekly_volume_kg, city, product_groups"),
+    supabase.from("ai_sdr_leads").select("qual_stage, first_order_at, routing_team, handoff_at, handoff_confirmed, weekly_volume_kg, city, product_groups, human_active, followup_eligible, next_followup_at"),
   ]);
 
   const leads = allLeads ?? [];
+
+  // ── Alertas operacionais ─────────────────────────────────────────────────────
+  const _now        = new Date();
+  const _4hAgo      = new Date(_now.getTime() - 4 * 60 * 60 * 1000);
+  const _7dAgo      = new Date(_now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const _todayStart = new Date(_now.getFullYear(), _now.getMonth(), _now.getDate());
+
+  const alertTierA = leads.filter(l =>
+    (l.weekly_volume_kg ?? 0) >= 300 &&
+    l.human_active === true &&
+    l.handoff_confirmed === false &&
+    l.handoff_at !== null &&
+    new Date(l.handoff_at as string) < _4hAgo
+  ).length;
+
+  const alertMissedHandoff = leads.filter(l =>
+    l.qual_stage === 9 &&
+    l.handoff_at === null &&
+    l.human_active === false
+  ).length;
+
+  const alertFollowupStale = leads.filter(l =>
+    l.followup_eligible === true &&
+    l.human_active === false &&
+    l.next_followup_at !== null &&
+    new Date(l.next_followup_at as string) < _7dAgo
+  ).length;
+
+  const alertHandoffsToday = leads.filter(l =>
+    l.handoff_confirmed === false &&
+    l.human_active === true &&
+    l.handoff_at !== null &&
+    new Date(l.handoff_at as string) >= _todayStart
+  ).length;
+
+  const totalAlerts = alertTierA + alertMissedHandoff + alertFollowupStale + alertHandoffsToday;
 
   // ABC
   const abcCount = { A: 0, B: 0, C: 0 };
@@ -126,6 +162,88 @@ export default async function DashboardPage() {
           Dashboard
         </h1>
         <p style={S.muted}>Visão geral do pipeline SDR</p>
+      </div>
+
+      {/* ⚡ Alertas Operacionais */}
+      <div style={{ ...S.card, padding: "20px 24px", borderTop: totalAlerts > 0 ? "2px solid #C8102E" : "2px solid #22c55e" }}>
+        <p style={{ ...S.section, marginBottom: totalAlerts > 0 ? 14 : 0 }}>
+          <span style={{ marginRight: 6 }}>⚡</span>
+          Atenção Agora
+        </p>
+
+        {totalAlerts === 0 ? (
+          <p style={{ color: "#22c55e", fontSize: 11, fontFamily: "'Courier New', monospace" }}>
+            ✅ Nenhum alerta crítico no momento
+          </p>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {[
+              {
+                count: alertTierA,
+                label: "lead",
+                desc: "Tier A sem confirmação de handoff há mais de 4h",
+                level: "critical" as const,
+              },
+              {
+                count: alertMissedHandoff,
+                label: "lead",
+                desc: "Qualificado (etapa 9) sem handoff disparado — verificar bug",
+                level: "critical" as const,
+              },
+              {
+                count: alertFollowupStale,
+                label: "lead",
+                desc: "Follow-up elegível parado há mais de 7 dias",
+                level: "warn" as const,
+              },
+              {
+                count: alertHandoffsToday,
+                label: "handoff",
+                desc: "Pendente de confirmação hoje",
+                level: "warn" as const,
+              },
+            ]
+              .filter(a => a.count > 0)
+              .map(({ count, label, desc, level }) => {
+                const color  = level === "critical" ? "#C8102E" : "#f59e0b";
+                const bg     = level === "critical" ? "rgba(200,16,46,.06)" : "rgba(245,158,11,.06)";
+                const border = level === "critical" ? "#C8102E" : "#f59e0b";
+                return (
+                  <div
+                    key={desc}
+                    style={{
+                      borderLeft: `3px solid ${border}`,
+                      background: bg,
+                      padding: "10px 14px",
+                      borderRadius: "0 4px 4px 0",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 12,
+                    }}
+                  >
+                    <p style={{ color: "#c8d8e8", fontSize: 11, fontFamily: "'Courier New', monospace", margin: 0 }}>
+                      {desc}
+                    </p>
+                    <span style={{
+                      flexShrink: 0,
+                      background: `${color}18`,
+                      border: `1px solid ${color}50`,
+                      color,
+                      fontSize: 11,
+                      fontWeight: 700,
+                      fontFamily: "'Courier New', monospace",
+                      padding: "3px 10px",
+                      borderRadius: 3,
+                      whiteSpace: "nowrap",
+                    }}>
+                      {count} {label}{count > 1 ? "s" : ""}
+                    </span>
+                  </div>
+                );
+              })}
+          </div>
+        )}
       </div>
 
       {/* KPI cards */}
