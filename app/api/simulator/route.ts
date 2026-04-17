@@ -48,25 +48,29 @@ export async function POST(req: NextRequest) {
 
   const agent = DOMAIN_TO_AGENT[config.rag_domain] ?? "qualification";
 
-  // Build conversation_history string for context
-  const historyText = history.length
+  // Bug 1 fix: CP ignores a `lead` field — inject profile as preamble in conversation_history
+  const profileLines = [
+    "[PERFIL DO LEAD SIMULADO]",
+    config.segment          ? `Segmento: ${config.segment}`                        : null,
+    config.city             ? `Cidade: ${config.city}`                             : null,
+    config.weekly_volume_kg ? `Volume semanal: ${config.weekly_volume_kg} kg/sem`  : null,
+    config.current_supplier ? `Fornecedor atual: ${config.current_supplier}`       : null,
+    `Etapa de qualificação: ${config.current_etapa}`,
+  ].filter(Boolean).join("\n");
+
+  const historyLines = history.length
     ? history.map(t => `${t.role === "user" ? "Lead" : "SDR"}: ${t.content}`).join("\n")
-    : undefined;
+    : null;
+
+  const conversationHistory = [profileLines, historyLines].filter(Boolean).join("\n\n");
 
   const payload = {
     agent,
     message,
-    phone:       "simulator",
-    company_id:  "00000000-0000-0000-0000-000000000001",
-    current_etapa: config.current_etapa,
-    conversation_history: historyText,
-    lead: {
-      segment:          config.segment || null,
-      city:             config.city    || null,
-      weekly_volume_kg: config.weekly_volume_kg ?? null,
-      current_supplier: config.current_supplier || null,
-      qual_stage:       config.current_etapa,
-    },
+    phone:                "simulator",
+    company_id:           "00000000-0000-0000-0000-000000000001",
+    current_etapa:        config.current_etapa,
+    conversation_history: conversationHistory,
   };
 
   try {

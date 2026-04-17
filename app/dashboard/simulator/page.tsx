@@ -135,8 +135,9 @@ export default function SimulatorPage() {
     if (!message.trim() || loading) return;
     setLoading(true);
 
-    // Build history for context (last 4 turns, reversed for API)
+    // Build history for context — Bug 2 fix: filter error entries before mapping
     const historyForApi = history
+      .filter(h => !h.error && !!h.response)
       .slice(0, 4)
       .reverse()
       .flatMap(h => [
