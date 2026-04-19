@@ -135,10 +135,10 @@ export default function SimulatorPage() {
     if (!message.trim() || loading) return;
     setLoading(true);
 
-    // Build history for context — Bug 2 fix: filter error entries before mapping
+    // Build history for context — send full session (qualification needs 7+ turns)
     const historyForApi = history
       .filter(h => !h.error && !!h.response)
-      .slice(0, 4)
+      .slice(0, 20)
       .reverse()
       .flatMap(h => [
         { role: "user"      as const, content: h.message  },
