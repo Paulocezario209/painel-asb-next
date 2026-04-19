@@ -22,7 +22,7 @@ const DOMAIN_TO_AGENT: Record<string, string> = {
 function resolveAgent(message: string, configDomain: string): string {
   if (configDomain !== "auto") return DOMAIN_TO_AGENT[configDomain] ?? "qualification";
   const m = message.toLowerCase();
-  if (/portf[oó]lio|blend|gramagem|produto|cat[aá]logo|corte|op[cç][aã]|hambur[gq]|variedade|linha de produto/.test(m)) return "product";
+  if (/portf[oó]lio|blend|gramagem|gramatura|cat[aá]logo|corte|angus|nelore|wagyu|smash|steak burger|variedade|linha de produto/.test(m)) return "product";
   if (/entrega|frete|prazo|cobertura|pedido m[ií]n|frequência de entrega/.test(m))                                    return "logistics";
   if (/caro|pre[cç]o alto|já tenho fornecedor|ja tenho fornecedor|não preciso|nao preciso/.test(m))                    return "objection";
   if (/concorrente|friboi|jbs|swift|minerva|outro fornecedor/.test(m))                                                return "competitor";
