@@ -246,9 +246,8 @@ export async function POST(req: NextRequest) {
       rows_updated:   results.rows_updated,
       rows_skipped:   results.rows_skipped,
       status:         batchStatus,
-      started_at:     startedAt,
-      finished_at:    new Date().toISOString(),
-      errors_json:    results.errors.length > 0 ? results.errors : null,
+      uploaded_at:    startedAt,
+      errors:         results.errors.length > 0 ? results.errors : null,
     });
   } catch (logErr) {
     // Não falhar o request por erro de log
