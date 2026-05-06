@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, Bell, BarChart2, PhoneCall, FlaskConical } from "lucide-react";
+import { LayoutDashboard, Users, Bell, BarChart2, PhoneCall, FlaskConical, Upload } from "lucide-react";
 
 const navItems = [
   { href: "/dashboard",            label: "Dashboard",   icon: LayoutDashboard },
@@ -11,6 +11,7 @@ const navItems = [
   { href: "/dashboard/followups",  label: "Follow-ups",  icon: Bell },
   { href: "/dashboard/insights",   label: "Inteligência", icon: BarChart2 },
   { href: "/dashboard/simulator",  label: "Simulador",   icon: FlaskConical },
+  { href: "/dashboard/uploads",    label: "Uploads",     icon: Upload },
 ];
 
 export function Sidebar({
