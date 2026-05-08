@@ -225,7 +225,7 @@ export function HotLeadsTable({ leads }: { leads: HotLead[] }) {
                   {/* Stage */}
                   <td style={{ padding: "7px 10px", textAlign: "center" }}>
                     <span style={{ color: C.muted, fontSize: 10 }}>
-                      {lead.qual_stage != null ? `${lead.qual_stage}/7` : "—"}
+                      {lead.qual_stage != null ? `${lead.qual_stage}/9` : "—"}
                     </span>
                   </td>
 
