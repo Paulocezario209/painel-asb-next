@@ -137,9 +137,9 @@ export default async function InsightsPage() {
 
   // ── Distribuição por vendedor ─────────────────────────────────────────────────
   const VENDOR_LABELS: Record<string, string> = {
-    ana_paula:   "Ana Paula",
-    alan:        "Alan",
-    setor_cuit:  "CUIT",
+    SETOR_SOROCABA_SAO_PAULO: "Ana Paula",
+    SETOR_CAMPINAS_JUNDIAI:   "Alan",
+    SETOR_CUIT:               "CUIT",
   };
   const vendorDist: Record<string, number> = {};
   for (const l of leads) {

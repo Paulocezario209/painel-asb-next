@@ -70,7 +70,7 @@ const ABC_CFG: Record<"A" | "B" | "C", BadgeCfg> = {
   C: { label: "C", color: C.muted,   bg: "rgba(136,153,170,.08)", border: "rgba(136,153,170,.2)" },
 };
 
-const VENDOR_LABELS: Record<string, string> = { ana_paula: "Ana Paula", alan: "Alan", setor_cuit: "CUIT" };
+const VENDOR_LABELS: Record<string, string> = { SETOR_SOROCABA_SAO_PAULO: "Ana Paula", SETOR_CAMPINAS_JUNDIAI: "Alan", SETOR_CUIT: "CUIT" };
 
 const PRODUCT_LABELS: Record<string, string> = {
   hamburguer: "Hambúrguer", espeto: "Espeto", boteco: "Boteco",
@@ -181,9 +181,9 @@ export function LeadsTable({ leads: initialLeads, userEmail }: { leads: Lead[]; 
         </Select>
         <Select value={vendorFilter} onChange={setVendorFilter}>
           <option value="all">vendedor: todos</option>
-          <option value="ana_paula">Ana Paula</option>
-          <option value="alan">Alan</option>
-          <option value="setor_cuit">CUIT</option>
+          <option value="SETOR_SOROCABA_SAO_PAULO">Ana Paula</option>
+          <option value="SETOR_CAMPINAS_JUNDIAI">Alan</option>
+          <option value="SETOR_CUIT">CUIT</option>
         </Select>
         <Select value={abcFilter} onChange={setAbcFilter}>
           <option value="all">ABC: todos</option>

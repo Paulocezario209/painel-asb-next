@@ -29,7 +29,7 @@ const STATUS_CFG: Record<string, { label: string; color: string; bg: string; bor
   optout:    { label: "Opt-out",     color: C.red,   bg: "rgba(248,81,73,.08)",  border: "rgba(248,81,73,.25)" },
 };
 
-const VENDOR_LABELS: Record<string, string> = { ana_paula: "Ana Paula", alan: "Alan", setor_cuit: "CUIT" };
+const VENDOR_LABELS: Record<string, string> = { SETOR_SOROCABA_SAO_PAULO: "Ana Paula", SETOR_CAMPINAS_JUNDIAI: "Alan", SETOR_CUIT: "CUIT" };
 
 function derivedStatus(lead: { lead_status: string | null; first_order_at: string | null; qual_stage: number | null }): string {
   if (lead.lead_status === "optout") return "optout";

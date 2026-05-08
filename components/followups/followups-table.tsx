@@ -32,7 +32,7 @@ const LABEL: React.CSSProperties = {
 };
 
 const VENDOR_LABELS: Record<string, string> = {
-  ana_paula: "Ana Paula", alan: "Alan", setor_cuit: "CUIT",
+  SETOR_SOROCABA_SAO_PAULO: "Ana Paula", SETOR_CAMPINAS_JUNDIAI: "Alan", SETOR_CUIT: "CUIT",
 };
 
 function fmt(iso: string | null) {
@@ -125,9 +125,9 @@ export function FollowupsTable({
 
         <NativeSelect value={vendorFilter} onChange={setVendorFilter}>
           <option value="all">vendedor: todos</option>
-          <option value="ana_paula">Ana Paula</option>
-          <option value="alan">Alan</option>
-          <option value="setor_cuit">CUIT</option>
+          <option value="SETOR_SOROCABA_SAO_PAULO">Ana Paula</option>
+          <option value="SETOR_CAMPINAS_JUNDIAI">Alan</option>
+          <option value="SETOR_CUIT">CUIT</option>
         </NativeSelect>
 
         <NativeSelect value={respondFilter} onChange={setRespondFilter}>

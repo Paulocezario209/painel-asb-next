@@ -18,9 +18,9 @@ export interface Handoff {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const VENDOR_LABELS: Record<string, string> = {
-  ana_paula:  "Ana Paula",
-  alan:       "Alan",
-  setor_cuit: "CUIT",
+  SETOR_SOROCABA_SAO_PAULO: "Ana Paula",
+  SETOR_CAMPINAS_JUNDIAI:   "Alan",
+  SETOR_CUIT:               "CUIT",
 };
 
 const SEG_LABELS: Record<string, string> = {
@@ -133,7 +133,7 @@ export function HandoffsTable({ initial }: { initial: Handoff[] }) {
       {/* Filters */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
         <span style={S.label}>Vendedor:</span>
-        {["todos", "ana_paula", "alan", "setor_cuit"].map(v => (
+        {["todos", "SETOR_SOROCABA_SAO_PAULO", "SETOR_CAMPINAS_JUNDIAI", "SETOR_CUIT"].map(v => (
           <button key={v} style={btnFilter(vendorFilter === v)} onClick={() => setVendor(v)}>
             {v === "todos" ? "Todos" : VENDOR_LABELS[v]}
           </button>

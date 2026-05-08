@@ -134,7 +134,7 @@ export default async function DashboardPage() {
   const weeklyData = Object.entries(weekMap).map(([week, count]) => ({ week, count }));
 
   // Vendor
-  const VENDORS: Record<string, string> = { ana_paula: "Ana Paula", alan: "Alan", setor_cuit: "CUIT" };
+  const VENDORS: Record<string, string> = { SETOR_SOROCABA_SAO_PAULO: "Ana Paula", SETOR_CAMPINAS_JUNDIAI: "Alan", SETOR_CUIT: "CUIT" };
   const vendorMap: Record<string, { handoffs: number; confirmed: number; converted: number }> = {};
   for (const key of Object.keys(VENDORS)) vendorMap[key] = { handoffs: 0, confirmed: 0, converted: 0 };
   for (const l of leads) {
