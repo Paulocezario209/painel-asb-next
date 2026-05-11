@@ -1,10 +1,15 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, MapPin, Package, Thermometer, User, Calendar, Clock, MessageCircle } from "lucide-react";
+import { ArrowLeft, MapPin, Package, Thermometer, User, MessageCircle } from "lucide-react";
 import { LeadActions } from "@/components/leads/lead-actions";
 import { ProductGroupSelector } from "@/components/leads/product-group-selector";
 import { ConversationWithFeedback } from "@/components/leads/conversation-with-feedback";
+import { FunnelStageBadge } from "@/components/leads/funnel-stage-badge";
+import { LeadTimeline } from "@/components/leads/lead-timeline";
+import { VendorConversation } from "@/components/leads/vendor-conversation";
+import { LeadNotes } from "@/components/leads/lead-notes";
+import { MarkAsLostButton } from "@/components/leads/mark-as-lost-button";
 
 // ── Design tokens ────────────────────────────────────────────────
 const C = {
@@ -27,20 +32,17 @@ const STATUS_CFG: Record<string, { label: string; color: string; bg: string; bor
   qualified: { label: "Qualificado", color: C.green, bg: "rgba(63,185,80,.1)",   border: "rgba(63,185,80,.3)" },
   converted: { label: "Convertido",  color: C.amber, bg: "rgba(240,180,41,.1)",  border: "rgba(240,180,41,.3)" },
   optout:    { label: "Opt-out",     color: C.red,   bg: "rgba(248,81,73,.08)",  border: "rgba(248,81,73,.25)" },
+  lost:      { label: "Perdido",     color: C.red,   bg: "rgba(248,81,73,.08)",  border: "rgba(248,81,73,.25)" },
 };
 
 const VENDOR_LABELS: Record<string, string> = { SETOR_SOROCABA_SAO_PAULO: "Ana Paula", SETOR_CAMPINAS_JUNDIAI: "Alan", SETOR_CUIT: "CUIT" };
 
 function derivedStatus(lead: { lead_status: string | null; first_order_at: string | null; qual_stage: number | null }): string {
   if (lead.lead_status === "optout") return "optout";
+  if (lead.lead_status === "lost") return "lost";
   if (lead.first_order_at) return "converted";
   if ((lead.qual_stage ?? 0) >= 7) return "qualified";
   return lead.lead_status ?? "new";
-}
-
-function fmt(iso: string | null) {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
 function SmallBadge({ label, color, bg, border }: { label: string; color: string; bg: string; border: string }) {
@@ -59,18 +61,49 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
   const phone = decodeURIComponent(id);
   const supabase = await createClient();
 
-  const [{ data: lead }, { data: convRows }] = await Promise.all([
+  const [{ data: lead }, { data: convRows }, { data: vmRows }, { count: vmTotal }] = await Promise.all([
     supabase.from("ai_sdr_leads").select("*").eq("phone", phone).single(),
     supabase
       .from("conversas_sdr")
       .select("id, source, message_text, response, rag_domain, request_id, created_at")
       .eq("phone", phone)
-      .neq("source", "customer_paused")   // exclui eventos internos sem conteúdo útil
+      .neq("source", "customer_paused")
       .order("created_at", { ascending: true })
       .limit(100),
+    supabase
+      .from("vendor_messages")
+      .select("direction, content, media_type, sent_at")
+      .eq("lead_phone", phone)
+      .order("sent_at", { ascending: true })
+      .limit(50),
+    supabase
+      .from("vendor_messages")
+      .select("id", { count: "exact", head: true })
+      .eq("lead_phone", phone),
   ]);
 
   if (!lead) notFound();
+
+  // Re-query events and fse with actual lead.id (UUID) since initial query used phone
+  const [{ data: eventsById }, { data: fseById }] = await Promise.all([
+    supabase
+      .from("events")
+      .select("id, event_type, payload, created_at")
+      .eq("lead_id", lead.id)
+      .order("created_at", { ascending: false })
+      .limit(100),
+    supabase
+      .from("funnel_stage_events")
+      .select("id, from_stage, to_stage, actor, metadata, created_at")
+      .eq("lead_id", lead.id)
+      .order("created_at", { ascending: false })
+      .limit(100),
+  ]);
+
+  const events = (eventsById ?? []) as { id: string; event_type: string; payload: Record<string, unknown>; created_at: string }[];
+  const transitions = (fseById ?? []) as { id: string; from_stage: string | null; to_stage: string; actor: string; metadata: Record<string, unknown>; created_at: string }[];
+  const vendorMsgs = (vmRows ?? []) as { direction: string; content: string | null; media_type: string | null; sent_at: string }[];
+  const noteEvents = events.filter(e => e.event_type === "note_added");
 
   const status  = derivedStatus(lead);
   const tempCfg = TEMP_CFG[lead.lead_temperature ?? ""] ?? TEMP_CFG.COLD;
@@ -91,11 +124,12 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 style={{ color: C.text2, fontSize: 18, fontWeight: 700, fontFamily: "'Inter', system-ui, sans-serif", marginBottom: 2 }}>
-            {lead.name || "Lead sem nome"}
+            {lead.restaurant_name || lead.name || "Lead sem nome"}
           </h1>
           <p style={{ color: C.muted, fontSize: 11, fontFamily: "'Courier New', monospace" }}>{lead.phone}</p>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <FunnelStageBadge stage={lead.funnel_stage} />
           <SmallBadge {...tempCfg} />
           <SmallBadge {...stsCfg} />
           <a href={`https://wa.me/${lead.phone}`} target="_blank" rel="noopener noreferrer">
@@ -112,68 +146,75 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
         </div>
       </div>
 
-      {/* Main grid: single col on mobile, 3 cols on lg */}
+      {/* Main grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
-        {/* Left: CRM + conversation */}
+        {/* Left: CRM + conversations */}
         <div className="lg:col-span-2 space-y-4">
 
           {/* CRM card */}
           <div style={{ ...CARD, padding: "20px 24px" }}>
             <p style={{ ...LABEL, marginBottom: 16 }}>Dados CRM</p>
             <div className="grid grid-cols-2 gap-x-6 gap-y-4">
-
               <CrmField icon={<MapPin size={13} />} label="Cidade" value={lead.city} />
               <CrmField icon={<Package size={13} />} label="Segmento" value={lead.segment} capitalize />
               <CrmField icon={<Package size={13} />} label="Volume semanal" value={lead.weekly_volume_kg ? `${lead.weekly_volume_kg} kg` : null} />
               <CrmField icon={<Thermometer size={13} />} label="Temperatura" value={lead.lead_temperature} />
               <CrmField icon={<User size={13} />} label="Vendedor" value={VENDOR_LABELS[lead.routing_team ?? ""] ?? lead.routing_team} />
               <CrmField icon={<User size={13} />} label="Etapa qual." value={`${lead.qual_stage ?? 0}/9`} mono />
-
               {lead.pain_point && (
                 <div className="col-span-2">
                   <p style={LABEL}>Dor identificada</p>
                   <p style={{ color: C.muted, fontSize: 11, fontFamily: "'Courier New', monospace", marginTop: 4, fontStyle: "italic" }}>
-                    "{lead.pain_point}"
+                    &quot;{lead.pain_point}&quot;
                   </p>
                 </div>
               )}
-
               <div className="col-span-2">
                 <p style={{ ...LABEL, marginBottom: 8 }}>Grupos de produto</p>
-                <ProductGroupSelector
-                  phone={lead.phone}
-                  initial={(lead.product_groups as string[] | null) ?? []}
-                />
+                <ProductGroupSelector phone={lead.phone} initial={(lead.product_groups as string[] | null) ?? []} />
               </div>
             </div>
           </div>
 
-          {/* Conversation card */}
+          {/* SDR Conversation */}
           <div style={{ ...CARD, padding: "20px 24px" }}>
-            <p style={{ ...LABEL, marginBottom: 16 }}>Conversa</p>
+            <p style={{ ...LABEL, marginBottom: 16 }}>Conversa SDR</p>
             <ConversationWithFeedback rows={convRows ?? []} phone={phone} />
+          </div>
+
+          {/* Vendor Conversation */}
+          <div style={{ ...CARD, padding: "20px 24px" }}>
+            <p style={{ ...LABEL, marginBottom: 16 }}>
+              Conversa Vendedor
+              <span style={{ color: "#556677", marginLeft: 8 }}>({vmTotal ?? 0} msgs)</span>
+            </p>
+            <VendorConversation messages={vendorMsgs} total={vmTotal ?? 0} />
           </div>
         </div>
 
-        {/* Right: timeline + actions */}
+        {/* Right: timeline + notes + actions */}
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
           {/* Timeline */}
           <div style={{ ...CARD, padding: "20px 24px" }}>
             <p style={{ ...LABEL, marginBottom: 16 }}>Timeline</p>
-            <ol style={{ position: "relative", borderLeft: `1px solid ${C.border}`, paddingLeft: 20, display: "flex", flexDirection: "column", gap: 16 }}>
-              <TimelineItem label="Lead criado" date={lead.created_at} icon={<Clock size={10} />} color={C.muted} />
-              {lead.handoff_at && <TimelineItem label="Handoff enviado" date={lead.handoff_at} icon={<Calendar size={10} />} color={C.amber} />}
-              {lead.handoff_confirmed_at && <TimelineItem label="Handoff confirmado" date={lead.handoff_confirmed_at} icon={<Calendar size={10} />} color={C.blue} />}
-              {lead.first_order_at && <TimelineItem label="Primeiro pedido" date={lead.first_order_at} icon={<Package size={10} />} color={C.green} />}
-            </ol>
+            <LeadTimeline events={events} transitions={transitions} />
+          </div>
+
+          {/* Notes */}
+          <div style={{ ...CARD, padding: "20px 24px" }}>
+            <p style={{ ...LABEL, marginBottom: 16 }}>Observacoes</p>
+            <LeadNotes leadId={lead.id} notes={noteEvents} />
           </div>
 
           {/* Actions */}
           <div style={{ ...CARD, padding: "20px 24px" }}>
-            <p style={{ ...LABEL, marginBottom: 16 }}>Ações</p>
+            <p style={{ ...LABEL, marginBottom: 16 }}>Acoes</p>
             <LeadActions lead={lead} />
+            <div style={{ marginTop: 12 }}>
+              <MarkAsLostButton leadId={lead.id} currentStage={lead.funnel_stage} />
+            </div>
           </div>
         </div>
       </div>
@@ -184,35 +225,18 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
 function CrmField({ icon, label, value, capitalize, mono }: { icon: React.ReactNode; label: string; value: string | null | undefined; capitalize?: boolean; mono?: boolean }) {
   return (
     <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-      <span style={{ color: C.muted, marginTop: 1, flexShrink: 0 }}>{icon}</span>
+      <span style={{ color: "#8b949e", marginTop: 1, flexShrink: 0 }}>{icon}</span>
       <div>
-        <p style={LABEL}>{label}</p>
+        <p style={{ fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase", color: "#8b949e", fontFamily: "'Courier New', monospace" }}>{label}</p>
         <p style={{
-          color: C.text,
-          fontSize: 11,
+          color: "#c9d1d9", fontSize: 11,
           fontFamily: mono ? "'Courier New', monospace" : "'Inter', system-ui, sans-serif",
-          fontWeight: 500,
-          marginTop: 2,
+          fontWeight: 500, marginTop: 2,
           textTransform: capitalize ? "capitalize" : undefined,
         }}>
-          {value || "—"}
+          {value || "\u2014"}
         </p>
       </div>
     </div>
-  );
-}
-
-function TimelineItem({ label, date, icon, color }: { label: string; date: string | null; icon: React.ReactNode; color: string }) {
-  return (
-    <li style={{ position: "relative" }}>
-      <span style={{
-        position: "absolute", left: -26, top: 2,
-        width: 18, height: 18, borderRadius: "50%",
-        background: `${color}20`, border: `1px solid ${color}50`,
-        display: "flex", alignItems: "center", justifyContent: "center", color,
-      }}>{icon}</span>
-      <p style={{ color: C.text, fontSize: 11, fontFamily: "'Courier New', monospace", fontWeight: 600 }}>{label}</p>
-      <p style={{ color: C.muted, fontSize: 9, fontFamily: "'Courier New', monospace", marginTop: 1 }}>{fmt(date)}</p>
-    </li>
   );
 }
