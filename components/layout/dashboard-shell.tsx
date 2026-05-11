@@ -6,9 +6,11 @@ import { Header } from "./header";
 
 export function DashboardShell({
   email,
+  role = "vendedor",
   children,
 }: {
   email: string;
+  role?: string;
   children: React.ReactNode;
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -21,7 +23,7 @@ export function DashboardShell({
         onClick={() => setSidebarOpen(false)}
       />
 
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} role={role} />
 
       <div className="flex flex-col flex-1 overflow-hidden">
         <Header email={email} onMenuToggle={() => setSidebarOpen((v) => !v)} />

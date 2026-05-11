@@ -1,6 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { QualificationFunnel } from "@/components/dashboard/charts";
 
+import { redirect } from "next/navigation";
+import { getUserContext, canAccess } from "@/lib/auth/get-user-role";
+
 export const dynamic = "force-dynamic";
 
 // ── Ordem canonica das 15 etapas (asb-funnel.md) ─────────────────────────────
@@ -79,6 +82,9 @@ interface FunnelEvent {
 
 export default async function FunilPage() {
   const supabase = await createClient();
+
+  const ctx = await getUserContext();
+  if (!ctx || !canAccess(ctx.role, "/dashboard/funil")) redirect("/dashboard");
 
   // Query A — todos os leads com funnel_stage
   const { data: rawLeads } = await supabase

@@ -1,6 +1,11 @@
 import { OrdersUpload } from "@/components/uploads/orders-upload";
+import { redirect } from "next/navigation";
+import { getUserContext, canAccess } from "@/lib/auth/get-user-role";
 
-export default function UploadsPage() {
+export default async function UploadsPage() {
+  const ctx = await getUserContext();
+  if (!ctx || !canAccess(ctx.role, "/dashboard/uploads")) redirect("/dashboard");
+
   return (
     <div style={{ padding: "32px 24px", maxWidth: 800 }}>
       <div style={{ marginBottom: 28 }}>

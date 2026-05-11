@@ -120,6 +120,7 @@ const DEFAULT_CONFIG: LeadConfig = {
 };
 
 export default function SimulatorPage() {
+
   const [config, setConfig]       = useState<LeadConfig>(DEFAULT_CONFIG);
   const [message, setMessage]     = useState("");
   const [loading, setLoading]     = useState(false);

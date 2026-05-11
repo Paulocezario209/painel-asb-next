@@ -1,5 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 
+import { redirect } from "next/navigation";
+import { getUserContext, canAccess } from "@/lib/auth/get-user-role";
+
 export const dynamic = "force-dynamic";
 
 // ── Corte temporal: 11/05/2026 00:00 BRT = 03:00 UTC ─────────────────────────
@@ -48,6 +51,9 @@ function fmtTime(hours: number): string {
 
 export default async function VendedoresPage() {
   const supabase = await createClient();
+
+  const ctx = await getUserContext();
+  if (!ctx || !canAccess(ctx.role, "/dashboard/vendedores")) redirect("/dashboard");
 
   const { data: raw } = await supabase
     .from("ai_sdr_leads")

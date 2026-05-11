@@ -17,14 +17,25 @@ const navItems = [
   { href: "/dashboard/hot-leads",  label: "Leads Quentes", icon: Flame },
 ];
 
+const VENDOR_BLOCKED = new Set(["/dashboard/funil", "/dashboard/vendedores", "/dashboard/insights", "/dashboard/simulator", "/dashboard/uploads"]);
+const MANAGER_BLOCKED = new Set(["/dashboard/simulator", "/dashboard/uploads"]);
+
 export function Sidebar({
   isOpen = false,
   onClose,
+  role = "vendedor",
 }: {
   isOpen?: boolean;
   onClose?: () => void;
+  role?: string;
 }) {
   const pathname = usePathname();
+
+  const visibleItems = navItems.filter(item => {
+    if (role === "gestor") return true;
+    if (role === "manager") return !MANAGER_BLOCKED.has(item.href);
+    return !VENDOR_BLOCKED.has(item.href);
+  });
 
   return (
     <aside
@@ -43,7 +54,7 @@ export function Sidebar({
 
       {/* Nav */}
       <nav className="flex-1 px-2 py-3 space-y-0.5">
-        {navItems.map(({ href, label, icon: Icon }) => {
+        {visibleItems.map(({ href, label, icon: Icon }) => {
           const isActive = pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
           return (
             <Link

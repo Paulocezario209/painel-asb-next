@@ -3,6 +3,9 @@ import { SegmentChart } from "@/components/insights/segment-chart";
 import { PainDonut }    from "@/components/insights/pain-donut";
 import { SupplierBar }  from "@/components/insights/supplier-bar";
 
+import { redirect } from "next/navigation";
+import { getUserContext, canAccess } from "@/lib/auth/get-user-role";
+
 export const dynamic = "force-dynamic";
 
 // ── Lead shape (subset dos campos usados nesta página) ────────────────────────
@@ -69,6 +72,9 @@ const TEMP_META: Record<string, { color: string; bg: string; border: string; lab
 
 export default async function InsightsPage() {
   const supabase = await createClient();
+
+  const ctx = await getUserContext();
+  if (!ctx || !canAccess(ctx.role, "/dashboard/insights")) redirect("/dashboard");
 
   const { data: raw, error } = await supabase
     .from("ai_sdr_leads")
