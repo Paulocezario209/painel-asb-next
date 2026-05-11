@@ -30,7 +30,7 @@ const axisStyle = { fontSize: 10, fontFamily: "'Courier New', monospace", fill: 
 
 export function QualificationFunnel({ data }: { data: StageBucket[] }) {
   return (
-    <ResponsiveContainer width="100%" height={200}>
+    <ResponsiveContainer width="100%" height="100%">
       <BarChart data={data} layout="vertical" margin={{ left: 4, right: 12, top: 4, bottom: 0 }}>
         <defs>
           <linearGradient id="blueHoriz" x1="0" y1="0" x2="1" y2="0">
@@ -40,7 +40,7 @@ export function QualificationFunnel({ data }: { data: StageBucket[] }) {
         </defs>
         <CartesianGrid strokeDasharray="3 3" stroke={GRID} horizontal={false} />
         <XAxis type="number" tick={axisStyle} axisLine={{ stroke: GRID }} tickLine={false} />
-        <YAxis type="category" dataKey="label" width={40} tick={axisStyle} axisLine={false} tickLine={false} />
+        <YAxis type="category" dataKey="label" width={130} tick={axisStyle} axisLine={false} tickLine={false} interval={0} />
         <Tooltip {...tooltipStyle} formatter={(v) => [`${v} leads`, "Leads"]} />
         <Bar dataKey="count" fill="url(#blueHoriz)" radius={[0, 3, 3, 0]} />
       </BarChart>
