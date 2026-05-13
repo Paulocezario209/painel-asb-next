@@ -11,6 +11,7 @@ import { VendorConversation } from "@/components/leads/vendor-conversation";
 import { LeadNotes } from "@/components/leads/lead-notes";
 import { MarkAsLostButton } from "@/components/leads/mark-as-lost-button";
 import { ReassignVendorButton } from "@/components/leads/reassign-vendor-button";
+import { MarkProposalSentButton } from "@/components/leads/mark-proposal-sent-button";
 import { getUserContext } from "@/lib/auth/get-user-role";
 
 // ── Design tokens ────────────────────────────────────────────────
@@ -88,6 +89,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
 
   const userCtx = await getUserContext();
   const isGestor = userCtx?.isGestor ?? false;
+  const canMarkProposal = isGestor || (userCtx?.isVendedor && userCtx.routing_team === lead.routing_team);
 
   // Re-query events and fse with actual lead.id (UUID) since initial query used phone
   const [{ data: eventsById }, { data: fseById }] = await Promise.all([
@@ -217,6 +219,11 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
           <div style={{ ...CARD, padding: "20px 24px" }}>
             <p style={{ ...LABEL, marginBottom: 16 }}>Acoes</p>
             <LeadActions lead={lead} />
+            {canMarkProposal && (
+              <div style={{ marginTop: 12 }}>
+                <MarkProposalSentButton leadId={lead.id} currentStage={lead.funnel_stage} />
+              </div>
+            )}
             {isGestor && (
               <div style={{ marginTop: 12 }}>
                 <ReassignVendorButton leadId={lead.id} currentTeam={lead.routing_team} />
