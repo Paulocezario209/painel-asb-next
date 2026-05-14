@@ -153,7 +153,7 @@ export default async function DashboardPage() {
     { label: "Total Leads",        value: totalLeads ?? 0,    accent: "#FFFFFF", href: "/dashboard/leads" },
     { label: "Qualificados",       value: qualifiedLeads ?? 0, accent: "#C8102E", href: "/dashboard/hot-leads" },
     { label: "Handoffs Pendentes", value: handoffPending ?? 0, accent: "#f59e0b", href: "/dashboard/handoffs" },
-    { label: "Convertidos",        value: convertidos,          accent: "#22c55e", href: "/dashboard/leads" },
+    { label: "Convertidos",        value: convertidos,          accent: "#22c55e", href: "/dashboard/leads?status=converted" },
   ];
 
   return (

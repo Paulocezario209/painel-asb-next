@@ -3,7 +3,8 @@ import { LeadsTable } from "@/components/leads/leads-table";
 
 export const dynamic = "force-dynamic";
 
-export default async function LeadsPage() {
+export default async function LeadsPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
+  const sp = await searchParams;
   const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
@@ -23,7 +24,7 @@ export default async function LeadsPage() {
           {leads?.length ?? 0} leads encontrados
         </p>
       </div>
-      <LeadsTable leads={leads ?? []} userEmail={user?.email ?? ""} />
+      <LeadsTable leads={leads ?? []} userEmail={user?.email ?? ""} initialStatus={sp.status ?? "all"} />
     </div>
   );
 }

@@ -119,11 +119,11 @@ function Select({ value, onChange, children }: { value: string; onChange: (v: st
   );
 }
 
-export function LeadsTable({ leads: initialLeads, userEmail }: { leads: Lead[]; userEmail: string }) {
+export function LeadsTable({ leads: initialLeads, userEmail, initialStatus = "all" }: { leads: Lead[]; userEmail: string; initialStatus?: string }) {
   const router = useRouter();
   const [leads, setLeads] = useState<Lead[]>(initialLeads);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState(initialStatus);
   const [vendorFilter, setVendorFilter] = useState("all");
   const [abcFilter, setAbcFilter] = useState("all");
   const [productFilter, setProductFilter] = useState("all");
