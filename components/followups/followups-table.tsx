@@ -65,16 +65,23 @@ export function FollowupsTable({
   rows: initialRows,
   angleLabels,
   phaseLabels,
+  initialAngle = "all",
+  initialRespond = "all",
+  initialConvertido = "all",
 }: {
   rows: Row[];
   angleLabels: Record<string, string>;
   phaseLabels: Record<string, string>;
+  initialAngle?: string;
+  initialRespond?: string;
+  initialConvertido?: string;
 }) {
-  const [phaseFilter,    setPhaseFilter]    = useState("all");
-  const [angleFilter,    setAngleFilter]    = useState("all");
-  const [vendorFilter,   setVendorFilter]   = useState("all");
-  const [respondFilter,  setRespondFilter]  = useState("all");
-  const [search,         setSearch]         = useState("");
+  const [phaseFilter,      setPhaseFilter]      = useState("all");
+  const [angleFilter,      setAngleFilter]      = useState(initialAngle);
+  const [vendorFilter,     setVendorFilter]     = useState("all");
+  const [respondFilter,    setRespondFilter]    = useState(initialRespond);
+  const [convertidoFilter, setConvertidoFilter] = useState(initialConvertido);
+  const [search,           setSearch]           = useState("");
   const router = useRouter();
 
   const filtered = initialRows.filter(r => {
@@ -90,7 +97,10 @@ export function FollowupsTable({
       respondFilter === "all" ||
       (respondFilter === "yes" && r.responded) ||
       (respondFilter === "no"  && !r.responded);
-    return matchSearch && matchPhase && matchAngle && matchVendor && matchRespond;
+    const matchConvertido =
+      convertidoFilter === "all" ||
+      (convertidoFilter === "yes" && r.converted_after);
+    return matchSearch && matchPhase && matchAngle && matchVendor && matchRespond && matchConvertido;
   });
 
   const TH: React.CSSProperties = { ...LABEL, padding: "10px 14px", textAlign: "left", borderBottom: `1px solid ${C.border}`, whiteSpace: "nowrap" };

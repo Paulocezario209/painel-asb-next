@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { FollowupsTable } from "@/components/followups/followups-table";
 
@@ -25,7 +26,8 @@ const PHASE_LABELS: Record<string, string> = {
   semestral: "Semestral",
 };
 
-export default async function FollowupsPage() {
+export default async function FollowupsPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
+  const sp = await searchParams;
   const supabase = await createClient();
 
   const [{ data: followups }, { data: leads }] = await Promise.all([
@@ -57,11 +59,12 @@ export default async function FollowupsPage() {
   const topAngle = Object.entries(angleResponded).sort((a, b) => b[1] - a[1])[0];
   const topAngleLabel = topAngle ? (ANGLE_LABELS[topAngle[0]] ?? topAngle[0]) : "—";
 
+  const topAngleKey = topAngle ? topAngle[0] : "";
   const kpis = [
-    { label: "Total Enviados",     value: total,          accent: "#FFFFFF",  suffix: "" },
-    { label: "Taxa de Resposta",   value: responseRate,   accent: "#22c55e",  suffix: "%" },
-    { label: "Convertidos Após",   value: converted,      accent: "#f59e0b",  suffix: "" },
-    { label: "Ângulo Top",         value: topAngleLabel,  accent: "#C8102E",  suffix: "", isText: true },
+    { label: "Total Enviados",     value: total,          accent: "#FFFFFF",  suffix: "",  href: "/dashboard/followups" },
+    { label: "Taxa de Resposta",   value: responseRate,   accent: "#22c55e",  suffix: "%", href: "/dashboard/followups?resposta=sim" },
+    { label: "Convertidos Após",   value: converted,      accent: "#f59e0b",  suffix: "",  href: "/dashboard/followups?convertido=true" },
+    { label: "Ângulo Top",         value: topAngleLabel,  accent: "#C8102E",  suffix: "",  isText: true, href: topAngleKey ? `/dashboard/followups?angulo=${topAngleKey}` : "/dashboard/followups" },
   ];
 
   // Enrich rows with lead data for the table
@@ -84,18 +87,27 @@ export default async function FollowupsPage() {
 
       {/* KPI cards */}
       <div className="asb-grid-kpi">
-        {kpis.map(({ label, value, accent, suffix, isText }) => (
-          <div key={label} style={{ ...S.card, padding: "20px 20px", borderTop: `2px solid ${accent}` }}>
-            <p style={{ ...S.label, color: accent }}>{label}</p>
-            <p style={{ ...S.value, color: accent, marginTop: 12, fontSize: isText ? 14 : 28 }}>
-              {value}{suffix}
-            </p>
-          </div>
+        {kpis.map(({ label, value, accent, suffix, isText, href }) => (
+          <Link key={label} href={href} style={{ textDecoration: "none" }}>
+            <div style={{ ...S.card, padding: "20px 20px", borderTop: `2px solid ${accent}`, cursor: "pointer" }}>
+              <p style={{ ...S.label, color: accent }}>{label}</p>
+              <p style={{ ...S.value, color: accent, marginTop: 12, fontSize: isText ? 14 : 28 }}>
+                {value}{suffix}
+              </p>
+            </div>
+          </Link>
         ))}
       </div>
 
       {/* Table (client component — handles filters) */}
-      <FollowupsTable rows={enriched} angleLabels={ANGLE_LABELS} phaseLabels={PHASE_LABELS} />
+      <FollowupsTable
+        rows={enriched}
+        angleLabels={ANGLE_LABELS}
+        phaseLabels={PHASE_LABELS}
+        initialAngle={sp.angulo ?? "all"}
+        initialRespond={sp.resposta === "sim" ? "yes" : sp.resposta === "nao" ? "no" : "all"}
+        initialConvertido={sp.convertido === "true" ? "yes" : "all"}
+      />
     </div>
   );
 }
