@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { Flame, ShoppingBag, Users, Search } from "lucide-react";
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -90,6 +91,7 @@ const TEMP_COLOR: Record<string, string> = {
 export function HotLeadsTable({ leads }: { leads: HotLead[] }) {
   const [filter, setFilter] = useState<Filter>("all");
   const [search, setSearch] = useState("");
+  const router = useRouter();
 
   const filtered = useMemo(() => {
     let list = leads;
@@ -184,9 +186,11 @@ export function HotLeadsTable({ leads }: { leads: HotLead[] }) {
               return (
                 <tr
                   key={lead.phone}
+                  onClick={() => router.push(`/dashboard/leads/${encodeURIComponent(lead.phone)}`)}
                   style={{
                     borderBottom: `1px solid ${i < filtered.length - 1 ? "#0f1826" : "transparent"}`,
                     background: i % 2 === 0 ? "transparent" : "rgba(27,42,107,.04)",
+                    cursor: "pointer",
                   }}
                 >
                   {/* Perfil */}

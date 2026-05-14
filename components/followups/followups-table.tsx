@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 type Row = {
@@ -74,6 +75,7 @@ export function FollowupsTable({
   const [vendorFilter,   setVendorFilter]   = useState("all");
   const [respondFilter,  setRespondFilter]  = useState("all");
   const [search,         setSearch]         = useState("");
+  const router = useRouter();
 
   const filtered = initialRows.filter(r => {
     const q = search.toLowerCase();
@@ -162,9 +164,11 @@ export function FollowupsTable({
           }[row.angle ?? ""] ?? C.muted;
 
           return (
-            <div
+            <Link
               key={`${row.phone}-${row.followup_sequence}-${i}`}
+              href={`/dashboard/leads/${encodeURIComponent(row.phone)}`}
               style={{
+                textDecoration: "none",
                 background: C.bg,
                 border: `1px solid ${C.border2}`,
                 borderRadius: 6,
@@ -172,6 +176,7 @@ export function FollowupsTable({
                 display: "flex",
                 flexDirection: "column",
                 gap: 8,
+                cursor: "pointer",
               }}
             >
               {/* Name + phone */}
@@ -222,7 +227,7 @@ export function FollowupsTable({
                   {VENDOR_LABELS[row.routing_team ?? ""] ?? row.routing_team ?? "—"}
                 </span>
               </div>
-            </div>
+            </Link>
           );
         })}
       </div>
@@ -264,7 +269,8 @@ export function FollowupsTable({
               return (
                 <tr
                   key={`${row.phone}-${row.followup_sequence}-${i}`}
-                  style={{ background: rowBg }}
+                  style={{ background: rowBg, cursor: "pointer" }}
+                  onClick={() => router.push(`/dashboard/leads/${encodeURIComponent(row.phone)}`)}
                   onMouseEnter={e => (e.currentTarget.style.background = "#131a2e")}
                   onMouseLeave={e => (e.currentTarget.style.background = rowBg)}
                 >

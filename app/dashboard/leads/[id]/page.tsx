@@ -156,8 +156,14 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
       {/* Main grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
-        {/* Left: CRM + conversations */}
+        {/* Left: Conversation + CRM */}
         <div className="lg:col-span-2 space-y-4">
+
+          {/* SDR Conversation — no topo para gestor ver conversa primeiro */}
+          <div style={{ ...CARD, padding: "20px 24px" }}>
+            <p style={{ ...LABEL, marginBottom: 16 }}>Conversa SDR</p>
+            <ConversationWithFeedback rows={convRows ?? []} phone={phone} />
+          </div>
 
           {/* CRM card */}
           <div style={{ ...CARD, padding: "20px 24px" }}>
@@ -182,12 +188,6 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
                 <ProductGroupSelector phone={lead.phone} initial={(lead.product_groups as string[] | null) ?? []} />
               </div>
             </div>
-          </div>
-
-          {/* SDR Conversation */}
-          <div style={{ ...CARD, padding: "20px 24px" }}>
-            <p style={{ ...LABEL, marginBottom: 16 }}>Conversa SDR</p>
-            <ConversationWithFeedback rows={convRows ?? []} phone={phone} />
           </div>
 
           {/* Vendor Conversation */}

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import Link from "next/link";
 import {
   QualificationFunnel,
   WeeklyConversions,
@@ -149,10 +150,10 @@ export default async function DashboardPage() {
   const convertidos = leads.filter(l => l.first_order_at).length;
 
   const kpis = [
-    { label: "Total Leads",        value: totalLeads ?? 0,    accent: "#FFFFFF" },
-    { label: "Qualificados",       value: qualifiedLeads ?? 0, accent: "#C8102E" },
-    { label: "Handoffs Pendentes", value: handoffPending ?? 0, accent: "#f59e0b" },
-    { label: "Convertidos",        value: convertidos,          accent: "#22c55e" },
+    { label: "Total Leads",        value: totalLeads ?? 0,    accent: "#FFFFFF", href: "/dashboard/leads" },
+    { label: "Qualificados",       value: qualifiedLeads ?? 0, accent: "#C8102E", href: "/dashboard/hot-leads" },
+    { label: "Handoffs Pendentes", value: handoffPending ?? 0, accent: "#f59e0b", href: "/dashboard/handoffs" },
+    { label: "Convertidos",        value: convertidos,          accent: "#22c55e", href: "/dashboard/leads" },
   ];
 
   return (
@@ -248,11 +249,13 @@ export default async function DashboardPage() {
 
       {/* KPI cards */}
       <div className="asb-grid-kpi">
-        {kpis.map(({ label, value, accent }) => (
-          <div key={label} style={{ ...S.card, padding: "20px 20px", borderTop: `2px solid ${accent}` }}>
-            <p style={{ ...S.label, color: accent }} translate="no">{label}</p>
-            <p style={{ ...S.value, marginTop: 12 }}>{value}</p>
-          </div>
+        {kpis.map(({ label, value, accent, href }) => (
+          <Link key={label} href={href} style={{ textDecoration: "none" }}>
+            <div style={{ ...S.card, padding: "20px 20px", borderTop: `2px solid ${accent}`, cursor: "pointer", transition: "opacity .15s" }} className="asb-kpi-hover">
+              <p style={{ ...S.label, color: accent }} translate="no">{label}</p>
+              <p style={{ ...S.value, marginTop: 12 }}>{value}</p>
+            </div>
+          </Link>
         ))}
       </div>
 
