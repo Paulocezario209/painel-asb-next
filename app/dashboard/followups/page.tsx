@@ -64,7 +64,7 @@ export default async function FollowupsPage({ searchParams }: { searchParams: Pr
     { label: "Total Enviados",     value: total,          accent: "#FFFFFF",  suffix: "",  href: "/dashboard/followups" },
     { label: "Taxa de Resposta",   value: responseRate,   accent: "#22c55e",  suffix: "%", href: "/dashboard/followups?resposta=sim" },
     { label: "Convertidos Após",   value: converted,      accent: "#f59e0b",  suffix: "",  href: "/dashboard/followups?convertido=true" },
-    { label: "Ângulo Top",         value: topAngleLabel,  accent: "#C8102E",  suffix: "",  isText: true, href: topAngleKey ? `/dashboard/followups?angulo=${topAngleKey}` : "/dashboard/followups" },
+    { label: "Ângulo Top",         value: topAngleLabel,  accent: "#C8102E",  suffix: "",  href: topAngleKey ? `/dashboard/followups?angulo=${topAngleKey}` : "/dashboard/followups" },
   ];
 
   // Enrich rows with lead data for the table
@@ -87,11 +87,11 @@ export default async function FollowupsPage({ searchParams }: { searchParams: Pr
 
       {/* KPI cards */}
       <div className="asb-grid-kpi">
-        {kpis.map(({ label, value, accent, suffix, isText, href }) => (
+        {kpis.map(({ label, value, accent, suffix, href }) => (
           <Link key={label} href={href} style={{ textDecoration: "none" }}>
-            <div style={{ ...S.card, padding: "20px 20px", borderTop: `2px solid ${accent}`, cursor: "pointer", transition: "opacity .15s" }} className="asb-kpi-hover">
+            <div style={{ ...S.card, padding: "20px 20px", minHeight: 100, borderTop: `2px solid ${accent}`, cursor: "pointer", transition: "opacity .15s", display: "flex", flexDirection: "column", justifyContent: "space-between" }} className="asb-kpi-hover">
               <p style={{ ...S.label, color: accent }}>{label}</p>
-              <p style={{ ...S.value, color: accent, marginTop: 12, fontSize: isText ? 22 : 28 }}>
+              <p style={{ ...S.value, color: accent, marginTop: 12, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                 {value}{suffix}
               </p>
             </div>
