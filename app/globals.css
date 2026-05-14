@@ -167,6 +167,10 @@
   .asb-grid-kpi { grid-template-columns: repeat(4, 1fr); }
 }
 
+.asb-kpi-hover:hover {
+  opacity: 0.8;
+}
+
 .asb-grid-charts {
   display: grid;
   grid-template-columns: 1fr;

@@ -89,7 +89,7 @@ export default async function FollowupsPage({ searchParams }: { searchParams: Pr
       <div className="asb-grid-kpi">
         {kpis.map(({ label, value, accent, suffix, isText, href }) => (
           <Link key={label} href={href} style={{ textDecoration: "none" }}>
-            <div style={{ ...S.card, padding: "20px 20px", borderTop: `2px solid ${accent}`, cursor: "pointer" }}>
+            <div style={{ ...S.card, padding: "20px 20px", borderTop: `2px solid ${accent}`, cursor: "pointer", transition: "opacity .15s" }} className="asb-kpi-hover">
               <p style={{ ...S.label, color: accent }}>{label}</p>
               <p style={{ ...S.value, color: accent, marginTop: 12, fontSize: isText ? 14 : 28 }}>
                 {value}{suffix}
