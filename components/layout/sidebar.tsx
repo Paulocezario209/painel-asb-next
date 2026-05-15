@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, Bell, BarChart2, PhoneCall, FlaskConical, Upload, Flame, Filter, UserCheck, DollarSign } from "lucide-react";
+import { LayoutDashboard, Users, Bell, BarChart2, PhoneCall, FlaskConical, Upload, Flame, Filter, UserCheck, DollarSign, Target } from "lucide-react";
 
 const navItems = [
   { href: "/dashboard",            label: "Dashboard",   icon: LayoutDashboard },
   { href: "/dashboard/funil",     label: "Funil",       icon: Filter },
   { href: "/dashboard/vendedores", label: "Vendedores",  icon: UserCheck },
   { href: "/dashboard/vendas",     label: "Vendas",      icon: DollarSign },
+  { href: "/dashboard/gerente",   label: "Gerente",     icon: Target },
   { href: "/dashboard/leads",      label: "Leads",       icon: Users },
   { href: "/dashboard/handoffs",   label: "Handoffs",    icon: PhoneCall },
   { href: "/dashboard/followups",  label: "Follow-ups",  icon: Bell },
@@ -18,8 +19,8 @@ const navItems = [
   { href: "/dashboard/hot-leads",  label: "Leads Quentes", icon: Flame },
 ];
 
-const VENDOR_BLOCKED = new Set(["/dashboard/funil", "/dashboard/vendedores", "/dashboard/insights", "/dashboard/simulator", "/dashboard/uploads"]);
-const MANAGER_BLOCKED = new Set(["/dashboard/simulator", "/dashboard/uploads"]);
+const VENDOR_BLOCKED = new Set(["/dashboard/funil", "/dashboard/vendedores", "/dashboard/gerente", "/dashboard/insights", "/dashboard/simulator", "/dashboard/uploads"]);
+const MANAGER_BLOCKED = new Set(["/dashboard/gerente", "/dashboard/simulator", "/dashboard/uploads"]);
 
 export function Sidebar({
   isOpen = false,
