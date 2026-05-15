@@ -1,0 +1,61 @@
+import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+
+export async function POST(req: NextRequest) {
+  const { phone } = await req.json();
+  if (!phone) {
+    return NextResponse.json({ error: "phone required" }, { status: 400 });
+  }
+
+  const supabase = await createClient();
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+  const author = user.email ?? "unknown";
+
+  // Buscar lead para idempotencia + pegar id
+  const { data: lead, error: errLead } = await supabase
+    .from("ai_sdr_leads")
+    .select("id, first_order_at")
+    .eq("phone", phone)
+    .single();
+
+  if (errLead || !lead) {
+    return NextResponse.json({ error: "lead not found" }, { status: 404 });
+  }
+
+  if (lead.first_order_at) {
+    return NextResponse.json({
+      success: true,
+      message: "already converted",
+      first_order_at: lead.first_order_at,
+    });
+  }
+
+  const now = new Date().toISOString();
+
+  // PATCH: first_order_at + funnel_stage
+  // Trigger trg_converted_on_first_order seta lead_status='converted' automaticamente
+  const { error: errUpdate } = await supabase
+    .from("ai_sdr_leads")
+    .update({
+      first_order_at: now,
+      funnel_stage: "pedido_fechado",
+    })
+    .eq("phone", phone);
+
+  if (errUpdate) {
+    return NextResponse.json({ error: errUpdate.message }, { status: 500 });
+  }
+
+  // Evento de auditoria
+  await supabase.from("events").insert({
+    lead_id: lead.id,
+    event_type: "lead_converted",
+    payload: { author, source: "painel_manual" },
+  });
+
+  return NextResponse.json({ success: true, first_order_at: now });
+}

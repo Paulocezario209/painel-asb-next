@@ -146,9 +146,14 @@ export function LeadsTable({ leads: initialLeads, userEmail, initialStatus = "al
   }
 
   async function convertLead(phone: string) {
-    const now = new Date().toISOString();
-    await createClient().from("ai_sdr_leads").update({ first_order_at: now }).eq("phone", phone);
-    setLeads(prev => prev.map(l => l.phone === phone ? { ...l, first_order_at: now } : l));
+    const res = await fetch("/api/lead/mark-converted", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone }),
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    setLeads(prev => prev.map(l => l.phone === phone ? { ...l, first_order_at: data.first_order_at } : l));
   }
 
   const TH: React.CSSProperties = { ...LABEL, padding: "10px 14px", textAlign: "left", borderBottom: `1px solid ${C.border}`, whiteSpace: "nowrap" };

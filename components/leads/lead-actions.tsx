@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, TrendingUp } from "lucide-react";
 
@@ -49,15 +48,23 @@ export function LeadActions({ lead: initial }: { lead: Lead }) {
 
   async function convertLead() {
     setLoading("convert");
-    const supabase = createClient();
-    const now = new Date().toISOString();
-    await supabase
-      .from("ai_sdr_leads")
-      .update({ first_order_at: now })
-      .eq("phone", lead.phone);
-    setLead((l) => ({ ...l, first_order_at: now }));
-    setLoading(null);
-    router.refresh();
+    try {
+      const res = await fetch("/api/lead/mark-converted", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: lead.phone }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Erro desconhecido" }));
+        setConfirmError(err.error ?? "Falha ao converter");
+        return;
+      }
+      const data = await res.json();
+      setLead((l) => ({ ...l, first_order_at: data.first_order_at }));
+      router.refresh();
+    } finally {
+      setLoading(null);
+    }
   }
 
   if (!showConfirm && !showConvert) {
