@@ -178,7 +178,7 @@ export default async function VendasPage() {
           const vPctStr = vPct !== null ? vPct.toFixed(1) : null;
           const faltante = a.meta && a.meta > 0 ? Math.max(0, a.meta - a.realizado) : null;
           const pctColor = vPct !== null ? (vPct >= 100 ? "#22c55e" : vPct >= 50 ? "#f59e0b" : "#C8102E") : "#556677";
-          const accent = rt === "SETOR_CUIT" ? "#1B2A6B" : rt === "SETOR_CAMPINAS_JUNDIAI" ? "#22c55e" : "#C8102E";
+          const accent = rt === "SETOR_CUIT" ? "#ff7b1c" : rt === "SETOR_CAMPINAS_JUNDIAI" ? "#22c55e" : "#C8102E";
 
           return (
             <div key={rt} style={{ ...S.card, padding: "20px", borderTop: `2px solid ${accent}` }}>

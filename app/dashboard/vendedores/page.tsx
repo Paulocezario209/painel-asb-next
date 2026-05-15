@@ -132,7 +132,7 @@ export default async function VendedoresPage() {
           const avgH = m.hoursArr.length > 0
             ? m.hoursArr.reduce((s, v) => s + v, 0) / m.hoursArr.length
             : null;
-          const accent = rt === "SETOR_CUIT" ? "#1B2A6B" : rt === "SETOR_CAMPINAS_JUNDIAI" ? "#22c55e" : "#C8102E";
+          const accent = rt === "SETOR_CUIT" ? "#ff7b1c" : rt === "SETOR_CAMPINAS_JUNDIAI" ? "#22c55e" : "#C8102E";
 
           return (
             <div key={rt} style={{ ...S.card, padding: "20px", borderTop: `2px solid ${accent}` }}>
