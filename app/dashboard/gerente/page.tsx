@@ -118,7 +118,6 @@ export default async function GerentePage() {
   }).sort((a, b) => a.pct - b.pct);
 
   // ── B2 Comparativo mes anterior ────────────────────────────────────────────
-  // DEBT-P7: render desativado, logica intacta. Reativar apos backfill ARES.
   const diasDecorridos = await businessDaysElapsed(year, month, now);
   const mesAnterior = month === 1 ? 12 : month - 1;
   const anoMesAnterior = month === 1 ? year - 1 : year;
@@ -238,16 +237,35 @@ export default async function GerentePage() {
         </div>
       </div>
 
-      {/* ── B2 COMPARATIVO MES ANTERIOR (DESATIVADO - DEBT-P7) ────────────── */}
-      <div style={{ ...S.card, padding: "20px 24px", opacity: 0.5 }}>
+      {/* ── B2 COMPARATIVO MES ANTERIOR ──────────────────────────────────── */}
+      <div style={{ ...S.card, padding: "20px 24px" }}>
         <p style={S.section}>
           <span style={{ color: "#1B2A6B", marginRight: 6 }}>{"\u25C6"}</span>
           Comparativo Mes Anterior
         </p>
-        <p style={{ ...S.muted, fontSize: 11, marginTop: 12 }}>
-          Indisponivel: dados de {MESES_LABEL[mesAnterior]} estao fragmentarios no banco.
-          Bloco sera reativado apos backfill completo do sync ARES.
+        <p style={{ ...S.muted, fontSize: 9, marginBottom: 16 }}>
+          {MESES_LABEL[month]} ({diasDecorridos} dias uteis) vs {MESES_LABEL[mesAnterior]} (mesmos {diasDecorridos} dias uteis)
         </p>
+
+        <div className="asb-grid-kpi">
+          {[
+            { label: "Total", atual: totalRealizado, anterior: totalAnterior, deltaPct: totalDeltaPct },
+            ...comparativo.map(c => ({ label: c.name, atual: c.atual, anterior: c.anterior, deltaPct: c.deltaPct })),
+          ].map(({ label, atual, anterior, deltaPct }) => {
+            const arrow = deltaPct === null ? "" : deltaPct > 0 ? "\u2191" : deltaPct < 0 ? "\u2193" : "\u2192";
+            const color = deltaPct === null ? "#556677" : deltaPct > 5 ? "#22c55e" : deltaPct < -5 ? "#C8102E" : "#c8d8e8";
+            return (
+              <div key={label} style={{ ...S.card, padding: "16px", borderTop: `2px solid ${color}` }}>
+                <p style={{ ...S.label, color }}>{label}</p>
+                <p style={{ ...S.value, fontSize: 18, marginTop: 8 }}>{fmtBRL(atual)}</p>
+                <p style={{ ...S.muted, fontSize: 10, marginTop: 6 }}>vs {fmtBRL(anterior)}</p>
+                <p style={{ color, fontSize: 14, fontWeight: 700, fontFamily: "'Courier New', monospace", marginTop: 4 }}>
+                  {deltaPct !== null ? `${arrow} ${deltaPct >= 0 ? "+" : ""}${deltaPct.toFixed(1)}%` : "\u2014"}
+                </p>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* ── B6 PROJECAO FIM DE MES ────────────────────────────────────────── */}
