@@ -118,8 +118,8 @@ export default async function GerentePage() {
   }).sort((a, b) => a.pct - b.pct);
 
   // ── B6 Projecao ───────────────────────────────────────────────────────────
-  const totalDiasUteis = businessDaysInMonth(year, month);
-  const diasDecorridos = businessDaysElapsed(year, month, now);
+  const totalDiasUteis = await businessDaysInMonth(year, month);
+  const diasDecorridos = await businessDaysElapsed(year, month, now);
   const totalRealizado = VENDOR_ORDER.reduce((s, rt) => s + agg[rt].realizado, 0);
   const totalMeta = VENDOR_ORDER.reduce((s, rt) => s + agg[rt].meta, 0);
   const projecaoTotal = diasDecorridos > 0 ? (totalRealizado / diasDecorridos) * totalDiasUteis : 0;
