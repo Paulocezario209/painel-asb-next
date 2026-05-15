@@ -38,6 +38,22 @@ export async function businessDaysInMonth(year: number, month: number): Promise<
   return count;
 }
 
+export async function dateAfterNBusinessDays(year: number, month: number, n: number): Promise<string> {
+  const holidays = await fetchHolidays(year);
+  const daysInMonth = new Date(year, month, 0).getDate();
+  let count = 0;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = new Date(year, month - 1, d);
+    const day = date.getDay();
+    const iso = isoDate(date);
+    if (day !== 0 && day !== 6 && !holidays.has(iso)) {
+      count++;
+      if (count === n) return iso;
+    }
+  }
+  return isoDate(new Date(year, month - 1, daysInMonth));
+}
+
 export async function businessDaysElapsed(year: number, month: number, today: Date): Promise<number> {
   const holidays = await fetchHolidays(year);
   const limit = today.getDate();

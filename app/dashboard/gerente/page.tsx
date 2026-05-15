@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { getUserContext } from "@/lib/auth/get-user-role";
-import { businessDaysInMonth, businessDaysElapsed } from "@/lib/utils/business-days";
+import { businessDaysInMonth, businessDaysElapsed, dateAfterNBusinessDays } from "@/lib/utils/business-days";
 
 export const dynamic = "force-dynamic";
 
@@ -117,10 +117,41 @@ export default async function GerentePage() {
     return { rt, name: v?.name ?? rt, region: v?.region ?? "", ...a, pct, faltante };
   }).sort((a, b) => a.pct - b.pct);
 
+  // ── B2 Comparativo mes anterior ────────────────────────────────────────────
+  const diasDecorridos = await businessDaysElapsed(year, month, now);
+  const mesAnterior = month === 1 ? 12 : month - 1;
+  const anoMesAnterior = month === 1 ? year - 1 : year;
+  const limiteAnteriorISO = await dateAfterNBusinessDays(anoMesAnterior, mesAnterior, diasDecorridos);
+  const primeiroMesAnterior = `${anoMesAnterior}-${String(mesAnterior).padStart(2, "0")}-01`;
+
+  const { data: rawComp } = await supabase
+    .from("painel_dia_vendedor")
+    .select("vendedor_routing_team, realizado_parcial_brl")
+    .gte("dia", primeiroMesAnterior)
+    .lte("dia", limiteAnteriorISO);
+
+  const aggAnterior: Record<string, number> = {};
+  for (const r of (rawComp ?? []) as unknown as { vendedor_routing_team: string; realizado_parcial_brl: number }[]) {
+    aggAnterior[r.vendedor_routing_team] = (aggAnterior[r.vendedor_routing_team] ?? 0) + (r.realizado_parcial_brl ?? 0);
+  }
+
+  const totalRealizado = VENDOR_ORDER.reduce((s, rt) => s + agg[rt].realizado, 0);
+  const totalAnterior = VENDOR_ORDER.reduce((s, rt) => s + (aggAnterior[rt] ?? 0), 0);
+
+  const comparativo = VENDOR_ORDER.map(rt => {
+    const atual = agg[rt].realizado;
+    const anterior = aggAnterior[rt] ?? 0;
+    const delta = atual - anterior;
+    const deltaPct = anterior > 0 ? ((atual / anterior) - 1) * 100 : null;
+    return { rt, name: VENDOR_LABELS[rt]?.name ?? rt, atual, anterior, delta, deltaPct };
+  });
+
+  const totalDeltaPct = totalAnterior > 0 ? ((totalRealizado / totalAnterior) - 1) * 100 : null;
+
+  const MESES_LABEL = ["", "Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+
   // ── B6 Projecao ───────────────────────────────────────────────────────────
   const totalDiasUteis = await businessDaysInMonth(year, month);
-  const diasDecorridos = await businessDaysElapsed(year, month, now);
-  const totalRealizado = VENDOR_ORDER.reduce((s, rt) => s + agg[rt].realizado, 0);
   const totalMeta = VENDOR_ORDER.reduce((s, rt) => s + agg[rt].meta, 0);
   const projecaoTotal = diasDecorridos > 0 ? (totalRealizado / diasDecorridos) * totalDiasUteis : 0;
   const projecaoVsMeta = totalMeta > 0 ? (projecaoTotal / totalMeta) * 100 : 0;
@@ -200,6 +231,37 @@ export default async function GerentePage() {
                     Faltante <span style={{ color: v.faltante > 0 ? "#C8102E" : "#22c55e", fontWeight: 700 }}>{fmtBRL(v.faltante)}</span>
                   </span>
                 </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── B2 COMPARATIVO MES ANTERIOR ──────────────────────────────────── */}
+      <div style={{ ...S.card, padding: "20px 24px" }}>
+        <p style={S.section}>
+          <span style={{ color: "#1B2A6B", marginRight: 6 }}>{"\u25C6"}</span>
+          Comparativo Mes Anterior
+        </p>
+        <p style={{ ...S.muted, fontSize: 9, marginBottom: 16 }}>
+          {MESES_LABEL[month]} ({diasDecorridos} dias uteis) vs {MESES_LABEL[mesAnterior]} (mesmos {diasDecorridos} dias uteis)
+        </p>
+
+        <div className="asb-grid-kpi">
+          {[
+            { label: "Total", atual: totalRealizado, anterior: totalAnterior, deltaPct: totalDeltaPct },
+            ...comparativo.map(c => ({ label: c.name, atual: c.atual, anterior: c.anterior, deltaPct: c.deltaPct })),
+          ].map(({ label, atual, anterior, deltaPct }) => {
+            const arrow = deltaPct === null ? "" : deltaPct > 0 ? "\u2191" : deltaPct < 0 ? "\u2193" : "\u2192";
+            const color = deltaPct === null ? "#556677" : deltaPct > 5 ? "#22c55e" : deltaPct < -5 ? "#C8102E" : "#c8d8e8";
+            return (
+              <div key={label} style={{ ...S.card, padding: "16px", borderTop: `2px solid ${color}` }}>
+                <p style={{ ...S.label, color }}>{label}</p>
+                <p style={{ ...S.value, fontSize: 18, marginTop: 8 }}>{fmtBRL(atual)}</p>
+                <p style={{ ...S.muted, fontSize: 10, marginTop: 6 }}>vs {fmtBRL(anterior)}</p>
+                <p style={{ color, fontSize: 14, fontWeight: 700, fontFamily: "'Courier New', monospace", marginTop: 4 }}>
+                  {deltaPct !== null ? `${arrow} ${deltaPct >= 0 ? "+" : ""}${deltaPct.toFixed(1)}%` : "\u2014"}
+                </p>
               </div>
             );
           })}
