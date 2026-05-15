@@ -135,7 +135,8 @@ export default async function VendasPage() {
   const totalPedidos = vendorTeams.reduce((s, rt) => s + (agg[rt]?.pedidos ?? 0), 0);
   const totalClientes = vendorTeams.reduce((s, rt) => s + (agg[rt]?.clientes ?? 0), 0);
   const totalMeta = vendorTeams.reduce((s, rt) => s + (agg[rt]?.meta ?? 0), 0);
-  const pctMeta = totalMeta > 0 ? ((totalRealizado / totalMeta) * 100).toFixed(0) : null;
+  const pctAtingido = totalMeta > 0 ? ((totalRealizado / totalMeta) * 100) : null;
+  const pctAtingidoStr = pctAtingido !== null ? pctAtingido.toFixed(1) : null;
 
   // ── All days sorted for detail table ──────────────────────────────────────
   const allDias = [...dias].sort((a, b) => b.dia.localeCompare(a.dia));
@@ -152,13 +153,13 @@ export default async function VendasPage() {
         </p>
       </div>
 
-      {/* KPI cards */}
+      {/* KPI cards topo */}
       <div className="asb-grid-kpi">
         {[
+          { label: "Meta Total", value: totalMeta > 0 ? fmtBRL(totalMeta) : "\u2014", accent: "#f59e0b" },
           { label: "Realizado", value: fmtBRL(totalRealizado), accent: "#C8102E" },
           { label: "Faturado", value: fmtBRL(totalFaturado), accent: "#22c55e" },
-          { label: "Pedidos", value: String(totalPedidos), accent: "#1B2A6B" },
-          { label: pctMeta ? `Meta (${pctMeta}%)` : "Meta", value: totalMeta > 0 ? fmtBRL(totalMeta) : "\u2014", accent: "#f59e0b" },
+          { label: "% Atingido", value: pctAtingidoStr ? `${pctAtingidoStr}%` : "\u2014", accent: pctAtingido !== null ? (pctAtingido >= 100 ? "#22c55e" : pctAtingido >= 50 ? "#f59e0b" : "#C8102E") : "#556677" },
         ].map(({ label, value, accent }) => (
           <div key={label} style={{ ...S.card, padding: "20px", borderTop: `2px solid ${accent}` }}>
             <p style={{ ...S.label, color: accent }}>{label}</p>
@@ -167,38 +168,16 @@ export default async function VendasPage() {
         ))}
       </div>
 
-      {/* Barra de progresso meta */}
-      {totalMeta > 0 && (
-        <div style={{ ...S.card, padding: "16px 24px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-            <p style={S.label}>progresso da meta mensal</p>
-            <p style={{ ...S.label, color: Number(pctMeta) >= 100 ? "#22c55e" : Number(pctMeta) >= 70 ? "#f59e0b" : "#C8102E" }}>
-              {pctMeta}%
-            </p>
-          </div>
-          <div style={{ height: 6, background: "#1B2A6B", borderRadius: 3, overflow: "hidden" }}>
-            <div style={{
-              width: `${Math.min(Number(pctMeta), 100)}%`,
-              height: "100%",
-              background: Number(pctMeta) >= 100 ? "#22c55e" : Number(pctMeta) >= 70 ? "#f59e0b" : "#C8102E",
-              borderRadius: 3,
-              transition: "width .3s ease",
-            }} />
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6 }}>
-            <p style={{ ...S.muted, fontSize: 10 }}>{fmtBRL(totalRealizado)}</p>
-            <p style={{ ...S.muted, fontSize: 10 }}>{fmtBRL(totalMeta)}</p>
-          </div>
-        </div>
-      )}
-
       {/* Cards por vendedor */}
       <div className="asb-grid-kpi">
         {vendorTeams.map(rt => {
           const v = VENDOR_LABELS[rt];
           const a = agg[rt];
           if (!v || !a) return null;
-          const pct = a.meta && a.meta > 0 ? ((a.realizado / a.meta) * 100).toFixed(0) : null;
+          const vPct = a.meta && a.meta > 0 ? (a.realizado / a.meta) * 100 : null;
+          const vPctStr = vPct !== null ? vPct.toFixed(1) : null;
+          const faltante = a.meta && a.meta > 0 ? Math.max(0, a.meta - a.realizado) : null;
+          const pctColor = vPct !== null ? (vPct >= 100 ? "#22c55e" : vPct >= 50 ? "#f59e0b" : "#C8102E") : "#556677";
           const accent = rt === "SETOR_CUIT" ? "#1B2A6B" : rt === "SETOR_CAMPINAS_JUNDIAI" ? "#22c55e" : "#C8102E";
 
           return (
@@ -206,39 +185,24 @@ export default async function VendasPage() {
               <p style={{ ...S.label, color: accent }}>{v.name}</p>
               <p style={{ ...S.muted, fontSize: 9, marginTop: 2 }}>{v.region}</p>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px 20px", marginTop: 16 }}>
-                <div>
-                  <p style={S.label}>Realizado</p>
-                  <p style={{ ...S.value, fontSize: 20, marginTop: 4 }}>{fmtBRL(a.realizado)}</p>
-                </div>
-                <div>
-                  <p style={S.label}>Faturado</p>
-                  <p style={{ ...S.value, fontSize: 20, marginTop: 4, color: a.faturado > 0 ? "#22c55e" : "#FFFFFF" }}>{fmtBRL(a.faturado)}</p>
-                </div>
-                <div>
-                  <p style={S.label}>Pedidos</p>
-                  <p style={{ ...S.value, fontSize: 20, marginTop: 4 }}>{a.pedidos}</p>
-                </div>
-                <div>
-                  <p style={S.label}>Clientes</p>
-                  <p style={{ ...S.value, fontSize: 20, marginTop: 4 }}>{a.clientes}</p>
-                </div>
-                {pct && (
-                  <div style={{ gridColumn: "1 / -1" }}>
-                    <p style={S.label}>Meta</p>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 4 }}>
-                      <div style={{ flex: 1, height: 4, background: "#1B2A6B", borderRadius: 2, overflow: "hidden" }}>
-                        <div style={{
-                          width: `${Math.min(Number(pct), 100)}%`,
-                          height: "100%",
-                          background: Number(pct) >= 100 ? "#22c55e" : Number(pct) >= 70 ? "#f59e0b" : "#C8102E",
-                          borderRadius: 2,
-                        }} />
-                      </div>
-                      <span style={{ color: "#c8d8e8", fontSize: 11, fontFamily: "'Courier New', monospace", fontWeight: 700, minWidth: 36, textAlign: "right" }}>{pct}%</span>
-                    </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 16 }}>
+                {[
+                  { label: "Meta", value: a.meta ? fmtBRL(a.meta) : "\u2014", color: "#8899aa" },
+                  { label: "Realizado", value: fmtBRL(a.realizado), color: "#FFFFFF" },
+                  { label: "Faturado", value: fmtBRL(a.faturado), color: a.faturado > 0 ? "#22c55e" : "#556677" },
+                  { label: "% Atingido", value: vPctStr ? `${vPctStr}%` : "\u2014", color: pctColor },
+                  { label: "Faltante", value: faltante !== null ? fmtBRL(faltante) : "\u2014", color: faltante && faltante > 0 ? "#C8102E" : "#22c55e" },
+                ].map(row => (
+                  <div key={row.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                    <p style={S.label}>{row.label}</p>
+                    <p style={{ color: row.color, fontSize: 14, fontWeight: 700, fontFamily: "'Courier New', monospace" }}>{row.value}</p>
                   </div>
-                )}
+                ))}
+
+                <div style={{ borderTop: "1px solid rgba(27,42,107,.3)", paddingTop: 10, display: "flex", justifyContent: "space-between" }}>
+                  <span style={{ ...S.muted, fontSize: 10 }}>Pedidos: <span style={{ color: "#c8d8e8", fontWeight: 700 }}>{a.pedidos}</span></span>
+                  <span style={{ ...S.muted, fontSize: 10 }}>Clientes: <span style={{ color: "#c8d8e8", fontWeight: 700 }}>{a.clientes}</span></span>
+                </div>
               </div>
             </div>
           );
@@ -328,7 +292,7 @@ export default async function VendasPage() {
               const v = VENDOR_LABELS[rt];
               const a = agg[rt];
               if (!v || !a) return null;
-              const pct = a.meta && a.meta > 0 ? `${((a.realizado / a.meta) * 100).toFixed(0)}%` : "\u2014";
+              const pct = a.meta && a.meta > 0 ? `${((a.realizado / a.meta) * 100).toFixed(1)}%` : "\u2014";
               return (
                 <tr key={rt} style={{ borderTop: "1px solid rgba(27,42,107,.3)" }}>
                   <td style={{ color: "#c8d8e8", fontSize: 11, fontFamily: "'Courier New', monospace", padding: "7px 0" }}>{v.name}</td>
@@ -339,7 +303,7 @@ export default async function VendasPage() {
                   <td style={{ color: "#c8d8e8", fontSize: 11, fontFamily: "'Courier New', monospace", textAlign: "right", padding: "7px 0" }}>{a.clientes}</td>
                   <td style={{ color: "#8899aa", fontSize: 11, fontFamily: "'Courier New', monospace", textAlign: "right", padding: "7px 0" }}>{a.meta ? fmtBRL(a.meta) : "\u2014"}</td>
                   <td style={{
-                    color: pct !== "\u2014" ? (Number(pct.replace("%", "")) >= 100 ? "#22c55e" : Number(pct.replace("%", "")) >= 70 ? "#f59e0b" : "#C8102E") : "#556677",
+                    color: pct !== "\u2014" ? (Number(pct.replace("%", "")) >= 100 ? "#22c55e" : Number(pct.replace("%", "")) >= 50 ? "#f59e0b" : "#C8102E") : "#556677",
                     fontSize: 11, fontFamily: "'Courier New', monospace", textAlign: "right", padding: "7px 0", fontWeight: 700,
                   }}>{pct}</td>
                 </tr>
@@ -355,9 +319,9 @@ export default async function VendasPage() {
               <td style={{ color: "#FFFFFF", fontSize: 11, fontFamily: "'Courier New', monospace", textAlign: "right", padding: "7px 0", fontWeight: 700 }}>{totalClientes}</td>
               <td style={{ color: "#8899aa", fontSize: 11, fontFamily: "'Courier New', monospace", textAlign: "right", padding: "7px 0" }}>{totalMeta > 0 ? fmtBRL(totalMeta) : "\u2014"}</td>
               <td style={{
-                color: pctMeta ? (Number(pctMeta) >= 100 ? "#22c55e" : Number(pctMeta) >= 70 ? "#f59e0b" : "#C8102E") : "#556677",
+                color: pctAtingidoStr ? (pctAtingido! >= 100 ? "#22c55e" : pctAtingido! >= 50 ? "#f59e0b" : "#C8102E") : "#556677",
                 fontSize: 11, fontFamily: "'Courier New', monospace", textAlign: "right", padding: "7px 0", fontWeight: 700,
-              }}>{pctMeta ? `${pctMeta}%` : "\u2014"}</td>
+              }}>{pctAtingidoStr ? `${pctAtingidoStr}%` : "\u2014"}</td>
             </tr>
           </tbody>
         </table>
