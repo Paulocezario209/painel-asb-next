@@ -251,8 +251,8 @@ export default async function DashboardPage() {
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 6 }}>
                         {alertLeads.slice(0, 5).map((l: Record<string, unknown>) => (
                           <Link
-                            key={String(l.id)}
-                            href={`/dashboard/leads/${l.id}`}
+                            key={String(l.phone)}
+                            href={`/dashboard/leads/${l.phone}`}
                             style={{
                               fontSize: 10, fontFamily: "'Courier New', monospace",
                               color: color, opacity: 0.8, textDecoration: "underline",
@@ -337,8 +337,8 @@ export default async function DashboardPage() {
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 6 }}>
                 {urgentALeads.slice(0, 5).map((l: Record<string, unknown>) => (
                   <Link
-                    key={String(l.id)}
-                    href={`/dashboard/leads/${l.id}`}
+                    key={String(l.phone)}
+                    href={`/dashboard/leads/${l.phone}`}
                     style={{
                       fontSize: 10, fontFamily: "'Courier New', monospace",
                       color: "#C8102E", opacity: 0.8, textDecoration: "underline",
