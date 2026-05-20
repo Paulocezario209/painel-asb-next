@@ -11,6 +11,7 @@ import { VendorConversation } from "@/components/leads/vendor-conversation";
 import { LeadNotes } from "@/components/leads/lead-notes";
 import { MarkAsLostButton } from "@/components/leads/mark-as-lost-button";
 import { ReassignVendorButton } from "@/components/leads/reassign-vendor-button";
+import { ReactivateAiButton } from "@/components/leads/reactivate-ai-button";
 import { MarkProposalSentButton } from "@/components/leads/mark-proposal-sent-button";
 import { getUserContext } from "@/lib/auth/get-user-role";
 
@@ -227,6 +228,16 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
             {isGestor && (
               <div style={{ marginTop: 12 }}>
                 <ReassignVendorButton leadId={lead.id} currentTeam={lead.routing_team} />
+              </div>
+            )}
+            {isGestor && (
+              <div style={{ marginTop: 12 }}>
+                <ReactivateAiButton
+                  leadId={lead.id}
+                  aiActive={lead.ai_active}
+                  humanActive={lead.human_active}
+                  funnelStage={lead.funnel_stage}
+                />
               </div>
             )}
             <div style={{ marginTop: 12 }}>
