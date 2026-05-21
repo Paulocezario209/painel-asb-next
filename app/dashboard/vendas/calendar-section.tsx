@@ -14,7 +14,9 @@ type DayCell = {
   is_weekend: boolean;
   is_today: boolean;
   is_futuro: boolean;
-  status_dia: "weekend" | "futuro" | "batida" | "abaixo" | "sem_dado";
+  is_dia_meta?: boolean;
+  dia_semana?: number;
+  status_dia: "weekend" | "futuro" | "batida" | "abaixo" | "sem_dado" | "nao_rota";
   pct_atingido_dia: number | null;
 };
 
@@ -293,6 +295,12 @@ export function CalendarSection({
               let bg = "#0a0f1f", border = "1px solid #1B2A6B", color = "#c8d8e8", marker = "", markerColor = "transparent";
               if (d.status_dia === "weekend") {
                 bg = "#0a0f1f"; color = "#3a4555"; border = "1px solid #15203d";
+              } else if (d.status_dia === "nao_rota") {
+                // Dia útil sem meta do vendedor. Se houve venda (encaixe), mostra "+"
+                bg = "#0a0f1f"; color = "#6a7a8a"; border = "1px solid #15203d";
+                if (Number(d.realizado_brl) > 0) {
+                  marker = "+"; markerColor = "#185FA5";
+                }
               } else if (d.status_dia === "futuro") {
                 bg = "#0a0f1f"; color = "#556677"; border = "1px solid #1B2A6B";
               } else if (d.status_dia === "batida") {
@@ -334,8 +342,10 @@ export function CalendarSection({
 
           {/* Legenda */}
           <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid rgba(27,42,107,.3)", display: "flex", gap: 14, fontSize: 9, color: "#8899aa", fontFamily: "'Courier New', monospace", flexWrap: "wrap" }}>
-            <span><span style={{ color: "#22c55e", fontWeight: 900 }}>✓</span> Meta do dia batida</span>
-            <span><span style={{ color: "#C8102E", fontWeight: 900 }}>✗</span> Meta abaixo</span>
+            <span><span style={{ color: "#22c55e", fontWeight: 900 }}>✓</span> Meta batida</span>
+            <span><span style={{ color: "#C8102E", fontWeight: 900 }}>✗</span> Abaixo</span>
+            <span><span style={{ color: "#185FA5", fontWeight: 900 }}>+</span> Encaixe (fora rota)</span>
+            <span style={{ color: "#6a7a8a" }}>○ Dia útil sem meta</span>
             <span style={{ color: "#3a4555" }}>■ Sáb/Dom</span>
             <span style={{ color: "#ff7b1c" }}>● Hoje</span>
           </div>
@@ -357,6 +367,7 @@ export function CalendarSection({
               if (d.status_dia === "batida") accent = "#22c55e";
               else if (d.status_dia === "abaixo") accent = "#C8102E";
               else if (d.status_dia === "futuro") accent = "#1B2A6B";
+              else if (d.status_dia === "nao_rota") accent = Number(d.realizado_brl) > 0 ? "#185FA5" : "#2a3545";
 
               return (
                 <div
@@ -376,6 +387,7 @@ export function CalendarSection({
                     </span>
                     {d.status_dia === "batida" && <span style={{ color: "#22c55e", fontSize: 13, fontWeight: 900 }}>✓</span>}
                     {d.status_dia === "abaixo" && <span style={{ color: "#C8102E", fontSize: 13, fontWeight: 900 }}>✗</span>}
+                    {d.status_dia === "nao_rota" && Number(d.realizado_brl) > 0 && <span style={{ color: "#185FA5", fontSize: 13, fontWeight: 900 }}>+</span>}
                     {d.is_today && <span style={{ background: "#ff7b1c", color: "#fff", padding: "1px 6px", borderRadius: 3, fontSize: 8, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'Courier New', monospace" }}>HOJE</span>}
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 4, fontSize: 10, fontFamily: "'Courier New', monospace" }}>
