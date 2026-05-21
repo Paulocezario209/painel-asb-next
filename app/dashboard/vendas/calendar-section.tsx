@@ -241,17 +241,17 @@ export function CalendarSection({
                     fontFamily: "'Courier New', monospace",
                   }}
                 >
-                  {r.pct_atingido_mes !== null ? `${r.pct_atingido_mes}%` : "—"}
+                  {r.pct_atingido_mes !== null ? <span className="priv-pct">{`${r.pct_atingido_mes}%`}</span> : "—"}
                 </span>
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 14 }}>
                 {[
-                  { label: "Meta/dia",   value: fmtBRL(r.meta_diaria_brl), c: "#c8d8e8" },
-                  { label: "Hoje",       value: fmtBRL(r.realizado_hoje_brl), c: r.realizado_hoje_brl > 0 ? "#22c55e" : "#556677" },
-                  { label: "Acumulado",  value: fmtBRL(r.realizado_acumulado_brl), c: "#FFFFFF" },
-                  { label: "Esperado",   value: fmtBRL(r.meta_acumulada_brl), c: "#8899aa" },
-                  { label: "Saldo",      value: (saldoPositivo ? "+" : "") + fmtBRL(r.saldo_brl), c: saldoPositivo ? "#22c55e" : "#C8102E" },
+                  { label: "Meta/dia",   value: <span className="priv-brl">{fmtBRL(r.meta_diaria_brl)}</span>, c: "#c8d8e8" },
+                  { label: "Hoje",       value: <span className="priv-brl">{fmtBRL(r.realizado_hoje_brl)}</span>, c: r.realizado_hoje_brl > 0 ? "#22c55e" : "#556677" },
+                  { label: "Acumulado",  value: <span className="priv-brl">{fmtBRL(r.realizado_acumulado_brl)}</span>, c: "#FFFFFF" },
+                  { label: "Esperado",   value: <span className="priv-brl">{fmtBRL(r.meta_acumulada_brl)}</span>, c: "#8899aa" },
+                  { label: "Saldo",      value: <span className="priv-brl">{(saldoPositivo ? "+" : "") + fmtBRL(r.saldo_brl)}</span>, c: saldoPositivo ? "#22c55e" : "#C8102E" },
                 ].map(row => (
                   <div key={row.label} style={{ display: "flex", justifyContent: "space-between", fontSize: 11 }}>
                     <span style={{ color: "#556677", fontFamily: "'Courier New', monospace", fontSize: 9, letterSpacing: ".1em", textTransform: "uppercase" }}>{row.label}</span>
@@ -297,7 +297,7 @@ export function CalendarSection({
                 fontFamily: "'Courier New', monospace",
               }}
             >
-              Meta mês: {fmtBRL(Number(resumoAtivo.meta_total_mes_brl))}
+              Meta mês: <span className="priv-brl">{fmtBRL(Number(resumoAtivo.meta_total_mes_brl))}</span>
             </span>
           </div>
 
@@ -417,21 +417,21 @@ export function CalendarSection({
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 4, fontSize: 10, fontFamily: "'Courier New', monospace" }}>
                     <span style={{ color: "#556677" }}>Meta:</span>
-                    <span style={{ color: "#c8d8e8", textAlign: "right" }}>{fmtBRL(d.meta_diaria_brl)}</span>
+                    <span style={{ color: "#c8d8e8", textAlign: "right" }}><span className="priv-brl">{fmtBRL(d.meta_diaria_brl)}</span></span>
                     <span style={{ color: "#556677" }}>Real:</span>
-                    <span style={{ color: d.realizado_brl > 0 ? "#FFFFFF" : "#3a4555", textAlign: "right" }}>{fmtBRL(d.realizado_brl)}</span>
+                    <span style={{ color: d.realizado_brl > 0 ? "#FFFFFF" : "#3a4555", textAlign: "right" }}><span className="priv-brl">{fmtBRL(d.realizado_brl)}</span></span>
                     {!d.is_futuro && (
                       <>
                         <span style={{ color: "#556677" }}>{saldo >= 0 ? "Super." : "Déb.:"}</span>
                         <span style={{ color: saldo >= 0 ? "#22c55e" : "#C8102E", fontWeight: 700, textAlign: "right" }}>
-                          {(saldo >= 0 ? "+" : "") + fmtBRL(saldo)}
+                          <span className="priv-brl">{(saldo >= 0 ? "+" : "") + fmtBRL(saldo)}</span>
                         </span>
                       </>
                     )}
                     {d.pct_atingido_dia !== null && (
                       <>
                         <span style={{ color: "#556677" }}>%:</span>
-                        <span style={{ color: d.status_dia === "batida" ? "#22c55e" : "#C8102E", fontWeight: 700, textAlign: "right" }}>{d.pct_atingido_dia}%</span>
+                        <span style={{ color: d.status_dia === "batida" ? "#22c55e" : "#C8102E", fontWeight: 700, textAlign: "right" }}><span className="priv-pct">{d.pct_atingido_dia}%</span></span>
                       </>
                     )}
                   </div>

@@ -84,9 +84,9 @@ export function DayDetailModal({
               Pedidos {diaLabel}
             </h2>
             <div className="text-xs text-gray-400 mt-1">
-              {validos.length} pedido(s) válido(s) · <span className="font-semibold text-white">{fmtBRL(totalValido)}</span>
+              {validos.length} pedido(s) válido(s) · <span className="font-semibold text-white"><span className="priv-brl">{fmtBRL(totalValido)}</span></span>
               {totalCancelado > 0 && (
-                <span className="text-gray-500"> · {pedidos.length - validos.length} cancelado(s) {fmtBRL(totalCancelado)}</span>
+                <span className="text-gray-500"> · {pedidos.length - validos.length} cancelado(s) <span className="priv-brl">{fmtBRL(totalCancelado)}</span></span>
               )}
             </div>
           </div>
@@ -136,11 +136,11 @@ export function DayDetailModal({
                       </div>
                       <div className="text-right shrink-0">
                         <div className="text-sm font-bold text-white">
-                          {fmtBRL(p.valor_total_brl)}
+                          <span className="priv-brl">{fmtBRL(p.valor_total_brl)}</span>
                         </div>
                         {Number(p.valor_faturado_brl ?? 0) > 0 && (
                           <div className="text-[10px] text-gray-500 mt-0.5">
-                            NF: {fmtBRL(p.valor_faturado_brl)}
+                            NF: <span className="priv-brl">{fmtBRL(p.valor_faturado_brl)}</span>
                           </div>
                         )}
                       </div>

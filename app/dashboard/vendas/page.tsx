@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { getUserContext } from "@/lib/auth/get-user-role";
 import { CalendarSection } from "./calendar-section";
+import { VendasPrivacyShell } from "./vendas-privacy-shell";
 
 export const dynamic = "force-dynamic";
 
@@ -156,6 +157,7 @@ export default async function VendasPage() {
   const resumosData = (rawRes ?? []) as never[];
 
   return (
+    <VendasPrivacyShell>
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {/* Header */}
       <div>
@@ -170,10 +172,10 @@ export default async function VendasPage() {
       {/* KPI cards topo */}
       <div className="asb-grid-kpi">
         {[
-          { label: "Meta Total", value: totalMeta > 0 ? fmtBRL(totalMeta) : "\u2014", accent: "#f59e0b" },
-          { label: "Realizado", value: fmtBRL(totalRealizado), accent: "#C8102E" },
-          { label: "Faturado", value: fmtBRL(totalFaturado), accent: "#22c55e" },
-          { label: "% Atingido", value: pctAtingidoStr ? `${pctAtingidoStr}%` : "\u2014", accent: pctAtingido !== null ? (pctAtingido >= 100 ? "#22c55e" : pctAtingido >= 50 ? "#f59e0b" : "#C8102E") : "#556677" },
+          { label: "Meta Total", value: totalMeta > 0 ? <span className="priv-brl">{fmtBRL(totalMeta)}</span> : "\u2014", accent: "#f59e0b" },
+          { label: "Realizado", value: <span className="priv-brl">{fmtBRL(totalRealizado)}</span>, accent: "#C8102E" },
+          { label: "Faturado", value: <span className="priv-brl">{fmtBRL(totalFaturado)}</span>, accent: "#22c55e" },
+          { label: "% Atingido", value: pctAtingidoStr ? <span className="priv-pct">{`${pctAtingidoStr}%`}</span> : "\u2014", accent: pctAtingido !== null ? (pctAtingido >= 100 ? "#22c55e" : pctAtingido >= 50 ? "#f59e0b" : "#C8102E") : "#556677" },
         ].map(({ label, value, accent }) => (
           <div key={label} style={{ ...S.card, padding: "20px", borderTop: `2px solid ${accent}` }}>
             <p style={{ ...S.label, color: accent }}>{label}</p>
@@ -348,5 +350,6 @@ export default async function VendasPage() {
         </table>
       </div>
     </div>
+    </VendasPrivacyShell>
   );
 }
