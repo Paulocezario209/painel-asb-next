@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { getUserContext } from "@/lib/auth/get-user-role";
+import { CalendarSection } from "./calendar-section";
 
 export const dynamic = "force-dynamic";
 
@@ -141,6 +142,18 @@ export default async function VendasPage() {
   // ── All days sorted for detail table ──────────────────────────────────────
   const allDias = [...dias].sort((a, b) => b.dia.localeCompare(a.dia));
 
+  // ── F4: calendario com meta diaria + resumo mes vendedor (views novas) ────
+  let calQuery = supabase.from("v_calendario_metas").select("*");
+  let resQuery = supabase.from("v_resumo_mes_vendedor").select("*");
+  if (ctx.isVendedor && ctx.routing_team) {
+    calQuery = calQuery.eq("vendedor_routing_team", ctx.routing_team);
+    resQuery = resQuery.eq("vendedor_routing_team", ctx.routing_team);
+  }
+  const { data: rawCal } = await calQuery;
+  const { data: rawRes } = await resQuery;
+  const calendarioData = (rawCal ?? []) as never[];
+  const resumosData = (rawRes ?? []) as never[];
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {/* Header */}
@@ -168,8 +181,11 @@ export default async function VendasPage() {
         ))}
       </div>
 
-      {/* Cards por vendedor */}
-      <div className="asb-grid-kpi">
+      {/* F4: Cards individuais + calendario ✓/✗ + detalhe lateral */}
+      <CalendarSection calendario={calendarioData} resumos={resumosData} />
+
+      {/* DEAD_CARDS_FALLBACK (mantido só pra fallback role=vendedor, vai sair na próxima sessão) */}
+      <div className="asb-grid-kpi" style={{ display: "none" }}>
         {vendorTeams.map(rt => {
           const v = VENDOR_LABELS[rt];
           const a = agg[rt];
@@ -209,8 +225,8 @@ export default async function VendasPage() {
         })}
       </div>
 
-      {/* Tabela diaria */}
-      <div style={{ ...S.card, padding: "20px 24px" }}>
+      {/* Tabela diaria — escondida (substituida pelo CalendarSection acima) */}
+      <div style={{ ...S.card, padding: "20px 24px", display: "none" }}>
         <p style={S.section}>
           <span style={{ color: "#1B2A6B", marginRight: 6 }}>{"\u25A0"}</span>
           Detalhamento Diario — {mesAtual}
