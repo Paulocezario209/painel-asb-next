@@ -133,7 +133,8 @@ export function CalendarSection({
       }
       return Array.from(byDay.values()).map(c => ({
         ...c,
-        status_dia: c.is_weekend ? "weekend" :
+        // FIX: dia de meta tem prioridade sobre weekend (Alan SAB = dia-meta)
+        status_dia: (c.is_weekend && c.meta_diaria_brl === 0) ? "weekend" :
                     c.is_futuro ? "futuro" :
                     c.realizado_brl >= c.meta_diaria_brl && c.meta_diaria_brl > 0 ? "batida" :
                     c.realizado_brl === 0 ? "sem_dado" : "abaixo",
@@ -390,7 +391,8 @@ export function CalendarSection({
             Detalhe por dia
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            {diasOrdenados.filter(d => !d.is_weekend).map(d => {
+            {/* FIX: incluir sábado/domingo se for dia-meta do vendedor (Alan SAB) */}
+            {diasOrdenados.filter(d => d.status_dia !== "weekend").map(d => {
               const isSelected = diaSelecionado === d.dia;
               const dt = new Date(d.dia + "T00:00:00");
               const diaNum = dt.getDate();
