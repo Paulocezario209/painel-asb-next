@@ -272,7 +272,7 @@ export function CalendarSection({
                 fontFamily: "'Courier New', monospace",
               }}
             >
-              Mês: {resumoAtivo.pct_atingido_mes !== null ? `${resumoAtivo.pct_atingido_mes}%` : "—"}
+              Meta mês: {fmtBRL(Number(resumoAtivo.meta_total_mes_brl))}
             </span>
           </div>
 
