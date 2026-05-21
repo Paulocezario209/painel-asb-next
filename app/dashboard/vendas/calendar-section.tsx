@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useTransition } from "react";
 import Link from "next/link";
+import { getDayPedidos, type DayPedido } from "./actions";
+import { DayDetailModal } from "./day-detail-modal";
 
 type DayCell = {
   dia: string;
@@ -151,6 +153,24 @@ export function CalendarSection({
   const padding = primeiroDia ? new Date(primeiroDia.dia + "T00:00:00").getDay() : 0;
   const dataSelecionada = diasOrdenados.find(d => d.is_today) ?? diasOrdenados[0];
   const [diaSelecionado, setDiaSelecionado] = useState<string | null>(dataSelecionada?.dia ?? null);
+
+  // Drill-down: modal de pedidos do dia
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalDia, setModalDia] = useState<string>("");
+  const [modalPedidos, setModalPedidos] = useState<DayPedido[]>([]);
+  const [pendingModal, startModalTransition] = useTransition();
+
+  function openDayModal(dia: string) {
+    setDiaSelecionado(dia);
+    setModalDia(dia);
+    setModalPedidos([]);
+    setModalOpen(true);
+    const teamFilter = vendor === "all" ? null : vendor;
+    startModalTransition(async () => {
+      const list = await getDayPedidos(dia, teamFilter);
+      setModalPedidos(list);
+    });
+  }
 
   const corCardHex = COR_HEX[resumoAtivo.cor_card_mes];
 
@@ -322,7 +342,7 @@ export function CalendarSection({
               return (
                 <button
                   key={d.dia}
-                  onClick={() => setDiaSelecionado(d.dia)}
+                  onClick={() => openDayModal(d.dia)}
                   style={{
                     background: bg, border, borderRadius: 3,
                     color, padding: "6px 4px", textAlign: "center",
@@ -377,7 +397,7 @@ export function CalendarSection({
               return (
                 <div
                   key={d.dia}
-                  onClick={() => setDiaSelecionado(d.dia)}
+                  onClick={() => openDayModal(d.dia)}
                   style={{
                     background: isSelected ? "#15203d" : "#0a0f1f",
                     border: `1px solid ${isSelected ? "#c0c8d8" : accent}`,
@@ -421,6 +441,19 @@ export function CalendarSection({
           </div>
         </div>
       </div>
+
+      {modalOpen && (
+        <DayDetailModal
+          dia={modalDia}
+          vendorLabel={
+            vendor === "all"
+              ? "Consolidado"
+              : VENDOR_LABELS[vendor]?.name ?? vendor
+          }
+          pedidos={pendingModal ? [] : modalPedidos}
+          onClose={() => setModalOpen(false)}
+        />
+      )}
     </div>
   );
 }
