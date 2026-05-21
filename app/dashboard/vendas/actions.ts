@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { unstable_noStore as noStore } from "next/cache";
 
 export type DayPedido = {
   ares_pedido_id: number | null;
@@ -19,6 +20,7 @@ export async function getDayPedidos(
   dia: string,
   team: string | null,
 ): Promise<DayPedido[]> {
+  noStore();
   const supabase = await createClient();
 
   let q = supabase
@@ -74,6 +76,7 @@ function vName(team: string | null | undefined): string {
 }
 
 export async function getAlertasComerciais(): Promise<AlertasResponse> {
+  noStore();
   const supabase = await createClient();
   const alertas: Alerta[] = [];
   const hoje = new Date().toISOString().slice(0, 10);
@@ -303,6 +306,7 @@ export type EstrategiasResponse = {
 };
 
 export async function getEstrategiasComerciais(): Promise<EstrategiasResponse> {
+  noStore();
   const supabase = await createClient();
   const hoje = new Date().toISOString().slice(0, 10);
 
@@ -423,6 +427,7 @@ export async function getEstrategiasComerciais(): Promise<EstrategiasResponse> {
 }
 
 export async function getRankingVendedores(): Promise<RankingItem[]> {
+  noStore();
   const supabase = await createClient();
   const hoje = new Date().toISOString().slice(0, 10);
   const seteDiasAtras = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
