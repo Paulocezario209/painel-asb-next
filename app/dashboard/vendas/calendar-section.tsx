@@ -6,6 +6,7 @@ import { getDayPedidos, type DayPedido, type EstrategiasResponse } from "./actio
 import { DayDetailModal } from "./day-detail-modal";
 import { MissaoDoDia } from "./missao-do-dia";
 import { PainelGestor } from "./painel-gestor";
+import { PreviewMissaoModal } from "./preview-missao-modal";
 
 type DayCell = {
   dia: string;
@@ -178,6 +179,9 @@ export function CalendarSection({
       setModalPedidos(list);
     });
   }
+
+  // Preview missão de outro vendedor (gestor pode ver como cada vendedor vê)
+  const [previewVendor, setPreviewVendor] = useState<string | null>(null);
 
   const corCardHex = COR_HEX[resumoAtivo.cor_card_mes];
 
@@ -398,7 +402,7 @@ export function CalendarSection({
           isRestricted ? (
             <MissaoDoDia data={estrategias} vendor={restrictedToVendor!} />
           ) : vendor === "all" ? (
-            <PainelGestor data={estrategias} />
+            <PainelGestor data={estrategias} onVendorClick={setPreviewVendor} />
           ) : (
             <MissaoDoDia data={estrategias} vendor={vendor} />
           )
@@ -491,6 +495,14 @@ export function CalendarSection({
           }
           pedidos={pendingModal ? [] : modalPedidos}
           onClose={() => setModalOpen(false)}
+        />
+      )}
+
+      {previewVendor && estrategias && (
+        <PreviewMissaoModal
+          vendor={previewVendor}
+          data={estrategias}
+          onClose={() => setPreviewVendor(null)}
         />
       )}
     </div>

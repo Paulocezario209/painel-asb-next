@@ -21,9 +21,10 @@ const SAUDACAO = (h: number) => (h < 6 ? "Boa madrugada" : h < 12 ? "Bom dia" : 
 
 type Props = {
   data: EstrategiasResponse;
+  onVendorClick?: (vendor: string) => void;
 };
 
-export function PainelGestor({ data }: Props) {
+export function PainelGestor({ data, onVendorClick }: Props) {
   const agora = new Date();
   const hora = agora.getHours();
   const diaSemana = ["DOMINGO", "SEGUNDA", "TERÇA", "QUARTA", "QUINTA", "SEXTA", "SÁBADO"][agora.getDay()];
@@ -91,9 +92,12 @@ export function PainelGestor({ data }: Props) {
         </p>
       </div>
 
-      {/* Ranking */}
-      <p style={{ fontSize: 9, fontWeight: 700, color: "#ff7b1c", fontFamily: "'Courier New', monospace", letterSpacing: ".15em", marginBottom: 8, textTransform: "uppercase" }}>
+      {/* Ranking — clicável pra ver a Missão do vendedor */}
+      <p style={{ fontSize: 9, fontWeight: 700, color: "#ff7b1c", fontFamily: "'Courier New', monospace", letterSpacing: ".15em", marginBottom: 4, textTransform: "uppercase" }}>
         🏆 RANKING DO CICLO
+      </p>
+      <p style={{ fontSize: 9, color: "#556677", marginBottom: 8, fontStyle: "italic" }}>
+        💬 Clique no vendedor pra ver a missão que ele recebe
       </p>
       <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 14 }}>
         {ranked.map((b, i) => {
@@ -102,16 +106,28 @@ export function PainelGestor({ data }: Props) {
             b.status === "bater" ? "#22c55e" :
             b.status === "no_alvo" ? "#D4A017" : "#C8102E";
           return (
-            <div
+            <button
               key={b.vendedor}
+              onClick={() => onVendorClick?.(b.vendedor)}
               style={{
                 background: "#0a0f1f",
                 borderLeft: `3px solid ${cor}`,
+                border: "1px solid #2a2a2a",
                 borderRadius: 3,
                 padding: "8px 10px",
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
+                cursor: onVendorClick ? "pointer" : "default",
+                transition: "all .15s",
+                textAlign: "left",
+                width: "100%",
+              }}
+              onMouseEnter={(e) => {
+                if (onVendorClick) e.currentTarget.style.background = "#15203d";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "#0a0f1f";
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -125,10 +141,15 @@ export function PainelGestor({ data }: Props) {
                   </div>
                 </div>
               </div>
-              <span style={{ fontSize: 13, fontWeight: 700, color: cor, fontFamily: "'Courier New', monospace" }}>
-                <span className="priv-pct">{b.pct}%</span>
-              </span>
-            </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: cor, fontFamily: "'Courier New', monospace" }}>
+                  <span className="priv-pct">{b.pct}%</span>
+                </span>
+                {onVendorClick && (
+                  <span style={{ fontSize: 11, color: "#556677" }}>👁</span>
+                )}
+              </div>
+            </button>
           );
         })}
       </div>
