@@ -274,7 +274,7 @@ export type AcaoBaterMeta = {
   nome: string;
   proxima_meta: string;
   realizado: number;
-  meta: number;
+  meta: number; // meta REAL da data (vendedor_meta_diaria)
   gap: number;
   pct: number;
   status: "bater" | "abaixo" | "no_alvo";

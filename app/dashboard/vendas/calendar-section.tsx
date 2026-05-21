@@ -34,6 +34,7 @@ type ResumoVendor = {
   realizado_hoje_brl: number;  // refactor 2026-05-21: agora = realizado da PRÓXIMA data padrão de meta
   realizado_dia_atual_brl?: number;
   proxima_data_meta?: string | null;
+  meta_proxima_data_brl?: number;
   saldo_brl: number;
   pct_atingido_acumulado: number | null;
   pct_atingido_mes: number | null;
@@ -258,13 +259,17 @@ export function CalendarSection({
 
               <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 14 }}>
                 {[
-                  { label: "Meta/dia",   value: <span className="priv-brl">{fmtBRL(r.meta_diaria_brl)}</span>, c: "#c8d8e8" },
                   {
                     label: r.proxima_data_meta
-                      ? `Lançamentos ${new Date(r.proxima_data_meta + "T00:00:00").toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" }).replace(",", "").toUpperCase()}`
-                      : "Lançamentos",
+                      ? `Meta ${new Date(r.proxima_data_meta + "T00:00:00").toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" }).replace(",", "").toUpperCase()}`
+                      : "Meta próx.",
+                    value: <span className="priv-brl">{fmtBRL(Number(r.meta_proxima_data_brl ?? r.meta_diaria_brl))}</span>,
+                    c: "#ff7b1c"
+                  },
+                  {
+                    label: "Realizado",
                     value: <span className="priv-brl">{fmtBRL(r.realizado_hoje_brl)}</span>,
-                    c: r.realizado_hoje_brl > 0 ? "#22c55e" : "#556677"
+                    c: r.realizado_hoje_brl >= Number(r.meta_proxima_data_brl ?? r.meta_diaria_brl) && Number(r.meta_proxima_data_brl ?? r.meta_diaria_brl) > 0 ? "#22c55e" : r.realizado_hoje_brl > 0 ? "#D4A017" : "#556677"
                   },
                   { label: "Acumulado",  value: <span className="priv-brl">{fmtBRL(r.realizado_acumulado_brl)}</span>, c: "#FFFFFF" },
                   { label: "Esperado",   value: <span className="priv-brl">{fmtBRL(r.meta_acumulada_brl)}</span>, c: "#8899aa" },
