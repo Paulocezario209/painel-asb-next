@@ -77,9 +77,10 @@ export default async function VendasPage() {
     .lte("dia", ultimoDiaMes)
     .order("dia", { ascending: false });
 
-  // Vendedor ve apenas seus dados
-  if (ctx.isVendedor && ctx.routing_team) {
-    queryDia = queryDia.eq("vendedor_routing_team", ctx.routing_team);
+  // Vendedor restrito ve apenas seus dados — EXCETO SETOR_CUIT (Paulo) que ve tudo
+  const isVendedorRestrito = ctx.isVendedor && !!ctx.routing_team && ctx.routing_team !== "SETOR_CUIT";
+  if (isVendedorRestrito) {
+    queryDia = queryDia.eq("vendedor_routing_team", ctx.routing_team!);
   }
 
   const { data: rawDia } = await queryDia;
@@ -145,9 +146,9 @@ export default async function VendasPage() {
   // ── F4: calendario com meta diaria + resumo mes vendedor (views novas) ────
   let calQuery = supabase.from("v_calendario_metas").select("*");
   let resQuery = supabase.from("v_resumo_mes_vendedor").select("*");
-  if (ctx.isVendedor && ctx.routing_team) {
-    calQuery = calQuery.eq("vendedor_routing_team", ctx.routing_team);
-    resQuery = resQuery.eq("vendedor_routing_team", ctx.routing_team);
+  if (isVendedorRestrito) {
+    calQuery = calQuery.eq("vendedor_routing_team", ctx.routing_team!);
+    resQuery = resQuery.eq("vendedor_routing_team", ctx.routing_team!);
   }
   const { data: rawCal } = await calQuery;
   const { data: rawRes } = await resQuery;
@@ -182,7 +183,11 @@ export default async function VendasPage() {
       </div>
 
       {/* F4: Cards individuais + calendario ✓/✗ + detalhe lateral */}
-      <CalendarSection calendario={calendarioData} resumos={resumosData} />
+      <CalendarSection
+        calendario={calendarioData}
+        resumos={resumosData}
+        restrictedToVendor={isVendedorRestrito ? ctx.routing_team! : null}
+      />
 
       {/* DEAD_CARDS_FALLBACK (mantido só pra fallback role=vendedor, vai sair na próxima sessão) */}
       <div className="asb-grid-kpi" style={{ display: "none" }}>
@@ -289,8 +294,8 @@ export default async function VendasPage() {
         )}
       </div>
 
-      {/* Tabela consolidada */}
-      <div style={{ ...S.card, padding: "20px 24px" }}>
+      {/* Tabela consolidada — apenas gestor/manager + SETOR_CUIT */}
+      <div style={{ ...S.card, padding: "20px 24px", display: isVendedorRestrito ? "none" : undefined }}>
         <p style={S.section}>
           <span style={{ color: "#1B2A6B", marginRight: 6 }}>{"\u25A0"}</span>
           Consolidado por Vendedor — {mesAtual}

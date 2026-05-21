@@ -59,11 +59,14 @@ function fmtBRL(v: number, frac = 0): string {
 export function CalendarSection({
   calendario,
   resumos,
+  restrictedToVendor,
 }: {
   calendario: DayCell[];
   resumos: ResumoVendor[];
+  restrictedToVendor?: string | null;
 }) {
-  const [vendor, setVendor] = useState<string>("all");
+  const [vendor, setVendor] = useState<string>(restrictedToVendor ?? "all");
+  const isRestricted = !!restrictedToVendor;
 
   const resumoConsolidado: ResumoVendor = useMemo(() => {
     const sumMeta = resumos.reduce((a, r) => a + Number(r.meta_diaria_brl), 0);
@@ -153,38 +156,40 @@ export function CalendarSection({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      {/* Toggle vendedor */}
-      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-        <span style={{ fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", color: "#556677", fontFamily: "'Courier New', monospace" }}>
-          Vendedor
-        </span>
-        {[{ k: "all", label: "Consolidado" }, ...ORDER.map(k => ({ k, label: VENDOR_LABELS[k]?.name ?? k }))].map(({ k, label }) => {
-          const active = vendor === k;
-          const accent = k === "all" ? "#1B2A6B" : VENDOR_LABELS[k]?.accent ?? "#1B2A6B";
-          return (
-            <button
-              key={k}
-              onClick={() => setVendor(k)}
-              style={{
-                padding: "6px 12px",
-                fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase",
-                fontFamily: "'Courier New', monospace", fontWeight: 700,
-                background: active ? accent : "transparent",
-                color: active ? "#FFFFFF" : "#c0c8d8",
-                border: `1px solid ${active ? accent : "#1B2A6B"}`,
-                borderRadius: 3,
-                cursor: "pointer", transition: "all .15s",
-              }}
-            >
-              {label}
-            </button>
-          );
-        })}
-      </div>
+      {/* Toggle vendedor — escondido pra vendedor (vê só os próprios dados) */}
+      {!isRestricted && (
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <span style={{ fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", color: "#556677", fontFamily: "'Courier New', monospace" }}>
+            Vendedor
+          </span>
+          {[{ k: "all", label: "Consolidado" }, ...ORDER.map(k => ({ k, label: VENDOR_LABELS[k]?.name ?? k }))].map(({ k, label }) => {
+            const active = vendor === k;
+            const accent = k === "all" ? "#1B2A6B" : VENDOR_LABELS[k]?.accent ?? "#1B2A6B";
+            return (
+              <button
+                key={k}
+                onClick={() => setVendor(k)}
+                style={{
+                  padding: "6px 12px",
+                  fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase",
+                  fontFamily: "'Courier New', monospace", fontWeight: 700,
+                  background: active ? accent : "transparent",
+                  color: active ? "#FFFFFF" : "#c0c8d8",
+                  border: `1px solid ${active ? accent : "#1B2A6B"}`,
+                  borderRadius: 3,
+                  cursor: "pointer", transition: "all .15s",
+                }}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
-      {/* 3 cards individuais por vendedor */}
+      {/* Cards individuais por vendedor (vendedor: só o próprio) */}
       <div className="asb-grid-kpi">
-        {ORDER.map(rt => {
+        {ORDER.filter(rt => !isRestricted || rt === restrictedToVendor).map(rt => {
           const r = resumos.find(x => x.vendedor_routing_team === rt);
           if (!r) return null;
           const v = VENDOR_LABELS[rt];
