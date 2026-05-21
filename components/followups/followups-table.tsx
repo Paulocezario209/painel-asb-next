@@ -22,9 +22,9 @@ type Row = {
 
 // ── Design tokens ────────────────────────────────────────────────────────────
 const C = {
-  bg: "#0f1428", bg2: "#080b14", border: "#1B2A6B", border2: "#1B2A6B",
+  bg: "#1a1a1a", bg2: "#0f0f0f", border: "#2a2a2a", border2: "#2a2a2a",
   text: "#FFFFFF", muted: "#8899aa", link: "#c0c8d8", green: "#22c55e",
-  amber: "#f59e0b", red: "#C8102E", blue: "#2A3F8F",
+  amber: "#f59e0b", red: "#C8102E", blue: "#3a3a3a",
 };
 
 const LABEL: React.CSSProperties = {

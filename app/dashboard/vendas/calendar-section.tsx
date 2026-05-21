@@ -164,7 +164,7 @@ export function CalendarSection({
           </span>
           {[{ k: "all", label: "Consolidado" }, ...ORDER.map(k => ({ k, label: VENDOR_LABELS[k]?.name ?? k }))].map(({ k, label }) => {
             const active = vendor === k;
-            const accent = k === "all" ? "#1B2A6B" : VENDOR_LABELS[k]?.accent ?? "#1B2A6B";
+            const accent = k === "all" ? "#185FA5" : VENDOR_LABELS[k]?.accent ?? "#185FA5";
             return (
               <button
                 key={k}
@@ -175,7 +175,7 @@ export function CalendarSection({
                   fontFamily: "'Courier New', monospace", fontWeight: 700,
                   background: active ? accent : "transparent",
                   color: active ? "#FFFFFF" : "#c0c8d8",
-                  border: `1px solid ${active ? accent : "#1B2A6B"}`,
+                  border: `1px solid ${active ? accent : "#2a2a2a"}`,
                   borderRadius: 3,
                   cursor: "pointer", transition: "all .15s",
                 }}
@@ -199,8 +199,8 @@ export function CalendarSection({
             <div
               key={rt}
               style={{
-                background: "#0f1428",
-                border: `1px solid ${vendor === rt ? v.accent : "#1B2A6B"}`,
+                background: "#1a1a1a",
+                border: `1px solid ${vendor === rt ? v.accent : "#2a2a2a"}`,
                 borderTop: `3px solid ${v.accent}`,
                 borderRadius: 4,
                 padding: 20,
@@ -259,7 +259,7 @@ export function CalendarSection({
         {/* Calendario */}
         <div
           style={{
-            background: "#0f1428",
+            background: "#1a1a1a",
             border: `2px solid ${corCardHex}`,
             borderRadius: 4,
             padding: 20,
@@ -297,7 +297,7 @@ export function CalendarSection({
               const dia = new Date(d.dia + "T00:00:00").getDate();
               const selected = diaSelecionado === d.dia;
               const isToday = d.is_today;
-              let bg = "#0a0f1f", border = "1px solid #1B2A6B", color = "#c8d8e8", marker = "", markerColor = "transparent";
+              let bg = "#0a0f1f", border = "1px solid #2a2a2a", color = "#c8d8e8", marker = "", markerColor = "transparent";
               if (d.status_dia === "weekend") {
                 bg = "#0a0f1f"; color = "#3a4555"; border = "1px solid #15203d";
               } else if (d.status_dia === "nao_rota") {
@@ -307,7 +307,7 @@ export function CalendarSection({
                   marker = "+"; markerColor = "#185FA5";
                 }
               } else if (d.status_dia === "futuro") {
-                bg = "#0a0f1f"; color = "#556677"; border = "1px solid #1B2A6B";
+                bg = "#0a0f1f"; color = "#556677"; border = "1px solid #2a2a2a";
               } else if (d.status_dia === "batida") {
                 marker = "✓"; markerColor = "#22c55e";
               } else if (d.status_dia === "abaixo") {
@@ -357,7 +357,7 @@ export function CalendarSection({
         </div>
 
         {/* Detalhe lateral */}
-        <div style={{ background: "#0f1428", border: "1px solid #1B2A6B", borderRadius: 4, padding: 20, maxHeight: 540, overflowY: "auto" }}>
+        <div style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8, padding: 20, maxHeight: 540, overflowY: "auto" }}>
           <p style={{ fontSize: 11, fontWeight: 700, color: "#c0c8d8", fontFamily: "'Courier New', monospace", textTransform: "uppercase", letterSpacing: ".1em", marginBottom: 12 }}>
             Detalhe por dia
           </p>
@@ -371,7 +371,7 @@ export function CalendarSection({
               let accent = "#556677";
               if (d.status_dia === "batida") accent = "#22c55e";
               else if (d.status_dia === "abaixo") accent = "#C8102E";
-              else if (d.status_dia === "futuro") accent = "#1B2A6B";
+              else if (d.status_dia === "futuro") accent = "#2a2a2a";
               else if (d.status_dia === "nao_rota") accent = Number(d.realizado_brl) > 0 ? "#185FA5" : "#2a3545";
 
               return (

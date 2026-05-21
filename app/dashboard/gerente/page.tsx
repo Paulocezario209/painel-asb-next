@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 // ── Design tokens ───────────────────────────────────────────────────────────
 const S = {
-  card:    { background: "#0f1428", border: "1px solid #1B2A6B", borderRadius: 4 } as React.CSSProperties,
+  card:    { background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8 } as React.CSSProperties,
   label:   { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#556677", fontFamily: "'Courier New', monospace" },
   value:   { fontSize: 28, fontWeight: 700, color: "#FFFFFF", fontFamily: "'Inter', system-ui, sans-serif", lineHeight: 1 },
   section: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#c0c8d8", fontFamily: "'Courier New', monospace", marginBottom: 12 } as React.CSSProperties,
@@ -234,7 +234,7 @@ export default async function GerentePage() {
                 padding: "16px 20px",
                 borderLeft: `3px solid ${accent}`,
                 borderTop: i === 0 ? `1px solid ${barColor}40` : undefined,
-                background: i === 0 ? `${barColor}08` : "#0f1428",
+                background: i === 0 ? `${barColor}08` : "#1a1a1a",
               }}>
                 {/* Top row: nome + % */}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10 }}>
@@ -248,7 +248,7 @@ export default async function GerentePage() {
                 </div>
 
                 {/* Progress bar */}
-                <div style={{ height: 6, background: "#1B2A6B", borderRadius: 3, overflow: "hidden", marginBottom: 10 }}>
+                <div style={{ height: 6, background: "#2a2a2a", borderRadius: 3, overflow: "hidden", marginBottom: 10 }}>
                   <div style={{
                     width: `${Math.min(v.pct, 100)}%`,
                     height: "100%",
@@ -279,7 +279,7 @@ export default async function GerentePage() {
       {/* ── B2 COMPARATIVO MES ANTERIOR ──────────────────────────────────── */}
       <div style={{ ...S.card, padding: "20px 24px" }}>
         <p style={S.section}>
-          <span style={{ color: "#1B2A6B", marginRight: 6 }}>{"\u25C6"}</span>
+          <span style={{ color: "#2a2a2a", marginRight: 6 }}>{"\u25C6"}</span>
           Comparativo Mes Anterior
         </p>
         <p style={{ ...S.muted, fontSize: 9, marginBottom: 16 }}>
@@ -320,7 +320,7 @@ export default async function GerentePage() {
         {/* KPI cards */}
         <div className="asb-grid-kpi" style={{ marginBottom: 20 }}>
           {[
-            { label: "Dias Decorridos", value: `${diasDecorridos}/${totalDiasUteis}`, accent: "#1B2A6B" },
+            { label: "Dias Decorridos", value: `${diasDecorridos}/${totalDiasUteis}`, accent: "#185FA5" },
             { label: "Projecao Total", value: fmtBRL(projecaoTotal), accent: projColor(projecaoVsMeta) },
             { label: "vs Meta", value: totalMeta > 0 ? `${projecaoVsMeta.toFixed(1)}%` : "\u2014", accent: projColor(projecaoVsMeta) },
             { label: "Delta", value: totalMeta > 0 ? `${deltaTotal >= 0 ? "+" : ""}${fmtBRL(deltaTotal)}` : "\u2014", accent: deltaTotal >= 0 ? "#22c55e" : "#C8102E" },
@@ -357,7 +357,7 @@ export default async function GerentePage() {
                 </tr>
               );
             })}
-            <tr style={{ borderTop: "2px solid #1B2A6B" }}>
+            <tr style={{ borderTop: "2px solid #2a2a2a" }}>
               <td style={{ color: "#FFFFFF", fontSize: 11, fontFamily: "'Courier New', monospace", padding: "7px 0", fontWeight: 700 }}>TOTAL</td>
               <td style={{ color: "#c8d8e8", fontSize: 11, fontFamily: "'Courier New', monospace", textAlign: "right", padding: "7px 0" }}>{fmtBRL(totalRealizado)}</td>
               <td style={{ color: "#FFFFFF", fontSize: 11, fontFamily: "'Courier New', monospace", textAlign: "right", padding: "7px 0", fontWeight: 700 }}>{fmtBRL(projecaoTotal)}</td>

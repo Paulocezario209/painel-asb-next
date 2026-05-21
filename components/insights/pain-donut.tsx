@@ -4,11 +4,11 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recha
 
 type Row = { label: string; count: number };
 
-const COLORS = ["#C8102E", "#1B2A6B", "#f59e0b", "#22c55e", "#8b5cf6", "#0ea5e9", "#ec4899", "#14b8a6"];
+const COLORS = ["#C8102E", "#2a2a2a", "#f59e0b", "#22c55e", "#8b5cf6", "#0ea5e9", "#ec4899", "#14b8a6"];
 
 const tooltipStyle = {
   contentStyle: {
-    background: "#0f1428", border: "1px solid #C8102E", borderRadius: 3,
+    background: "#1a1a1a", border: "1px solid #C8102E", borderRadius: 3,
     fontSize: 11, fontFamily: "'Courier New', monospace", color: "#c8d8e8",
     boxShadow: "0 4px 20px rgba(200,16,46,.15)",
   },

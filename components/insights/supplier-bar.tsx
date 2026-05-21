@@ -11,7 +11,7 @@ const TEXT = "#556677";
 
 const tooltipStyle = {
   contentStyle: {
-    background: "#0f1428", border: "1px solid #C8102E", borderRadius: 3,
+    background: "#1a1a1a", border: "1px solid #C8102E", borderRadius: 3,
     fontSize: 11, fontFamily: "'Courier New', monospace", color: "#c8d8e8",
     boxShadow: "0 4px 20px rgba(200,16,46,.15)",
   },

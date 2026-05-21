@@ -71,12 +71,12 @@ const ETAPAS = Array.from({ length: 10 }, (_, i) => i);
 
 // ── Design tokens ──────────────────────────────────────────────────────────────
 const S = {
-  card:    { background: "#0f1428", border: "1px solid #1B2A6B", borderRadius: 4, padding: "20px 24px" } as React.CSSProperties,
+  card:    { background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 4, padding: "20px 24px" } as React.CSSProperties,
   label:   { display: "block", fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase" as const, color: "#556677", fontFamily: "'Courier New', monospace", marginBottom: 6 },
   section: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#c0c8d8", fontFamily: "'Courier New', monospace", marginBottom: 14 } as React.CSSProperties,
   muted:   { color: "#8899aa", fontSize: 11, fontFamily: "'Courier New', monospace" } as React.CSSProperties,
   input:   {
-    width: "100%", background: "#080b14", border: "1px solid #1B2A6B", borderRadius: 3,
+    width: "100%", background: "#080b14", border: "1px solid #2a2a2a", borderRadius: 3,
     color: "#c8d8e8", fontSize: 11, fontFamily: "'Courier New', monospace",
     padding: "7px 10px", outline: "none", boxSizing: "border-box" as const,
   },
@@ -100,7 +100,7 @@ function QualBadge({ stage }: { stage: number | null }) {
 function DomainBadge({ domain }: { domain: string }) {
   return (
     <span style={{
-      display: "inline-block", background: "rgba(27,42,107,.25)", border: "1px solid #1B2A6B",
+      display: "inline-block", background: "rgba(27,42,107,.25)", border: "1px solid #2a2a2a",
       color: "#8899aa", fontSize: 9, fontFamily: "'Courier New', monospace",
       padding: "2px 8px", borderRadius: 3, letterSpacing: ".10em",
     }}>
@@ -335,7 +335,7 @@ export default function SimulatorPage() {
                   <DomainBadge domain={lastResult.domain} />
                   {lastResult.intent && (
                     <span style={{
-                      display: "inline-block", background: "rgba(27,42,107,.2)", border: "1px solid #1B2A6B",
+                      display: "inline-block", background: "rgba(27,42,107,.2)", border: "1px solid #2a2a2a",
                       color: "#8899aa", fontSize: 9, fontFamily: "'Courier New', monospace",
                       padding: "2px 8px", borderRadius: 3,
                     }}>
@@ -376,7 +376,7 @@ export default function SimulatorPage() {
                 )}
 
                 {/* Input echo */}
-                <div style={{ marginTop: 10, borderLeft: "2px solid #1B2A6B", paddingLeft: 10 }}>
+                <div style={{ marginTop: 10, borderLeft: "2px solid #185FA5", paddingLeft: 10 }}>
                   <p style={{ ...S.muted, fontSize: 10, fontStyle: "italic" }}>
                     Lead disse: "{lastResult.message}"
                   </p>
@@ -396,7 +396,7 @@ export default function SimulatorPage() {
                 <button
                   onClick={() => { setHistory([]); setLastResult(null); }}
                   style={{
-                    background: "transparent", border: "1px solid #1B2A6B", color: "#556677",
+                    background: "transparent", border: "1px solid #2a2a2a", color: "#556677",
                     fontSize: 9, fontFamily: "'Courier New', monospace", letterSpacing: ".10em",
                     textTransform: "uppercase", padding: "3px 8px", borderRadius: 3, cursor: "pointer",
                   }}
@@ -413,7 +413,7 @@ export default function SimulatorPage() {
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {history.map((h, i) => (
-                  <div key={i} style={{ borderLeft: "2px solid #1B2A6B", paddingLeft: 12 }}>
+                  <div key={i} style={{ borderLeft: "2px solid #185FA5", paddingLeft: 12 }}>
                     {/* Lead */}
                     <div style={{
                       background: "rgba(27,42,107,.15)", borderRadius: "0 4px 4px 0",

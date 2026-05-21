@@ -32,8 +32,8 @@ type Filter = "all" | "hot" | "client";
 
 const C = {
   bg:     "#080b14",
-  bg2:    "#0f1428",
-  border: "#1B2A6B",
+  bg2:    "#1a1a1a",
+  border: "#2a2a2a",
   text:   "#FFFFFF",
   muted:  "#8899aa",
   label:  "#556677",

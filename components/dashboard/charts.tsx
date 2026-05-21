@@ -12,13 +12,13 @@ type VendorRow   = { label: string; handoffs: number; confirmed: number; convert
 const GRID  = "rgba(27,42,107,.35)";
 const TEXT  = "#556677";
 const RED   = "#C8102E";
-const BLUE  = "#1B2A6B";
+const BLUE  = "#2a2a2a";
 const BLUE2 = "#2A3F8F";
 const AMBER = "#f59e0b";
 
 const tooltipStyle = {
   contentStyle: {
-    background: "#0f1428", border: "1px solid #C8102E", borderRadius: 3,
+    background: "#1a1a1a", border: "1px solid #C8102E", borderRadius: 3,
     fontSize: 11, fontFamily: "'Courier New', monospace", color: "#c8d8e8",
     boxShadow: "0 4px 20px rgba(200,16,46,.15)",
   },
@@ -58,7 +58,7 @@ export function WeeklyConversions({ data }: { data: WeekPoint[] }) {
         <Tooltip {...tooltipStyle} formatter={(v) => [`${v}`, "Conversões"]} />
         <Line
           type="monotone" dataKey="count" stroke={RED} strokeWidth={2}
-          dot={{ r: 3, fill: RED, stroke: "#0f1428", strokeWidth: 2 }}
+          dot={{ r: 3, fill: RED, stroke: "#1a1a1a", strokeWidth: 2 }}
           activeDot={{ r: 5, fill: RED, stroke: "#C8102E", strokeWidth: 2 }}
         />
       </LineChart>
@@ -77,7 +77,7 @@ export function VendorPerformance({ data }: { data: VendorRow[] }) {
           </linearGradient>
           <linearGradient id="blueVert" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#2A3F8F" />
-            <stop offset="100%" stopColor="#1B2A6B" />
+            <stop offset="100%" stopColor="#2a2a2a" />
           </linearGradient>
           <linearGradient id="amberVert" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#f59e0b" />

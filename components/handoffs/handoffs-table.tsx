@@ -122,7 +122,7 @@ export function HandoffsTable({ initial }: { initial: Handoff[] }) {
     padding: "5px 12px", borderRadius: 3, cursor: "pointer",
     fontSize: 9, letterSpacing: ".12em", textTransform: "uppercase" as const,
     fontFamily: "'Courier New', monospace", fontWeight: 600,
-    border: active ? "1px solid #C8102E" : "1px solid #1B2A6B",
+    border: active ? "1px solid #C8102E" : "1px solid #2a2a2a",
     background: active ? "rgba(200,16,46,.12)" : "transparent",
     color: active ? "#C8102E" : "#8899aa",
     transition: "all .15s",
@@ -138,7 +138,7 @@ export function HandoffsTable({ initial }: { initial: Handoff[] }) {
             {v === "todos" ? "Todos" : VENDOR_LABELS[v]}
           </button>
         ))}
-        <div style={{ width: 1, height: 18, background: "#1B2A6B", margin: "0 4px" }} />
+        <div style={{ width: 1, height: 18, background: "#2a2a2a", margin: "0 4px" }} />
         <button style={btnFilter(urgentOnly)} onClick={() => setUrgent(p => !p)}>
           ⚡ Só críticos (&gt; 4h)
         </button>
@@ -155,7 +155,7 @@ export function HandoffsTable({ initial }: { initial: Handoff[] }) {
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 720 }}>
             <thead>
-              <tr style={{ borderBottom: "1px solid #1B2A6B" }}>
+              <tr style={{ borderBottom: "1px solid #2a2a2a" }}>
                 {["Lead", "Cidade / Segmento", "Volume", "Dor", "Agendado para", "Tempo", "Vendedor", ""].map(h => (
                   <th key={h} style={{ ...S.label, textAlign: "left", padding: "8px 12px", whiteSpace: "nowrap" }}>{h}</th>
                 ))}
@@ -215,7 +215,7 @@ export function HandoffsTable({ initial }: { initial: Handoff[] }) {
                   {/* Vendedor */}
                   <td style={{ ...S.cell, whiteSpace: "nowrap" }}>
                     <span style={{
-                      border: "1px solid #1B2A6B", color: "#8899aa", fontSize: 9,
+                      border: "1px solid #2a2a2a", color: "#8899aa", fontSize: 9,
                       padding: "2px 7px", borderRadius: 2, fontFamily: "'Courier New', monospace",
                     }}>
                       {VENDOR_LABELS[r.routing_team ?? ""] ?? r.routing_team ?? "—"}

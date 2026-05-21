@@ -92,7 +92,7 @@ export function OrdersUpload() {
         <div
           {...getRootProps()}
           style={{
-            border: `2px dashed ${isDragActive ? "#C8102E" : "#1B2A6B"}`,
+            border: `2px dashed ${isDragActive ? "#C8102E" : "#2a2a2a"}`,
             borderRadius: 6,
             padding: "48px 24px",
             textAlign: "center",
@@ -103,7 +103,7 @@ export function OrdersUpload() {
         >
           <input {...getInputProps()} />
           <Upload
-            style={{ width: 40, height: 40, margin: "0 auto 16px", color: isDragActive ? "#C8102E" : "#1B2A6B" }}
+            style={{ width: 40, height: 40, margin: "0 auto 16px", color: isDragActive ? "#C8102E" : "#2a2a2a" }}
           />
           <p style={{ color: "#c0c8d8", fontSize: 14, fontFamily: "'Courier New', monospace" }}>
             {isDragActive
@@ -120,7 +120,7 @@ export function OrdersUpload() {
       {state === "uploading" && (
         <div
           style={{
-            border: "1px solid #1B2A6B",
+            border: "1px solid #2a2a2a",
             borderRadius: 6,
             padding: "48px 24px",
             textAlign: "center",
@@ -128,7 +128,7 @@ export function OrdersUpload() {
           }}
         >
           <Loader2
-            style={{ width: 36, height: 36, margin: "0 auto 16px", color: "#1B2A6B", animation: "spin 1s linear infinite" }}
+            style={{ width: 36, height: 36, margin: "0 auto 16px", color: "#2a2a2a", animation: "spin 1s linear infinite" }}
           />
           <p style={{ color: "#c0c8d8", fontSize: 13, fontFamily: "'Courier New', monospace" }}>
             Processando <strong>{filename}</strong>…
@@ -142,7 +142,7 @@ export function OrdersUpload() {
 
       {/* Done */}
       {state === "done" && result && (
-        <div style={{ border: "1px solid #1B2A6B", borderRadius: 6, overflow: "hidden" }}>
+        <div style={{ border: "1px solid #2a2a2a", borderRadius: 6, overflow: "hidden" }}>
           {/* Header */}
           <div
             style={{
@@ -151,7 +151,7 @@ export function OrdersUpload() {
               background: result.status === "failed" ? "rgba(200,16,46,.12)" :
                           result.status === "partial" ? "rgba(234,179,8,.08)" :
                           "rgba(34,197,94,.08)",
-              borderBottom: "1px solid #1B2A6B",
+              borderBottom: "1px solid #2a2a2a",
             }}
           >
             {result.status === "failed"
@@ -173,7 +173,7 @@ export function OrdersUpload() {
           <div
             style={{
               display: "grid", gridTemplateColumns: "repeat(4, 1fr)",
-              gap: 1, background: "#1B2A6B",
+              gap: 1, background: "#2a2a2a",
             }}
           >
             {[
@@ -184,7 +184,7 @@ export function OrdersUpload() {
             ].map(({ label, value, color }) => (
               <div
                 key={label}
-                style={{ background: "#080b14", padding: "16px 12px", textAlign: "center" }}
+                style={{ background: "#0f0f0f", padding: "16px 12px", textAlign: "center" }}
               >
                 <div style={{ fontSize: 24, fontWeight: 700, color, fontFamily: "'Courier New', monospace" }}>
                   {value}
@@ -198,7 +198,7 @@ export function OrdersUpload() {
 
           {/* Errors */}
           {result.errors.length > 0 && (
-            <div style={{ padding: "12px 16px", borderTop: "1px solid #1B2A6B" }}>
+            <div style={{ padding: "12px 16px", borderTop: "1px solid #2a2a2a" }}>
               <p style={{ color: "#eab308", fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'Courier New', monospace", marginBottom: 8 }}>
                 Erros ({result.errors.length})
               </p>
@@ -229,13 +229,13 @@ export function OrdersUpload() {
           )}
 
           {/* Actions */}
-          <div style={{ padding: "12px 16px", borderTop: "1px solid #1B2A6B", textAlign: "right" }}>
+          <div style={{ padding: "12px 16px", borderTop: "1px solid #2a2a2a", textAlign: "right" }}>
             <button
               onClick={reset}
               style={{
                 display: "inline-flex", alignItems: "center", gap: 6,
                 padding: "6px 14px", borderRadius: 3,
-                background: "transparent", border: "1px solid #1B2A6B",
+                background: "transparent", border: "1px solid #2a2a2a",
                 color: "#8899aa", fontSize: 10, letterSpacing: ".1em",
                 textTransform: "uppercase", fontFamily: "'Courier New', monospace",
                 cursor: "pointer",
@@ -265,7 +265,7 @@ export function OrdersUpload() {
             style={{
               display: "inline-flex", alignItems: "center", gap: 6,
               padding: "6px 14px", borderRadius: 3,
-              background: "transparent", border: "1px solid #1B2A6B",
+              background: "transparent", border: "1px solid #2a2a2a",
               color: "#8899aa", fontSize: 10, letterSpacing: ".1em",
               textTransform: "uppercase", fontFamily: "'Courier New', monospace",
               cursor: "pointer",

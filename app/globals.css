@@ -51,10 +51,10 @@
 /* ASB Design System — identidade oficial American Steak Brasil */
 :root {
   --asb-bg:         #0a0d1a;
-  --asb-surface:    #0f1428;
-  --asb-card:       #0f1428;
-  --asb-border:     #1B2A6B;
-  --asb-border2:    #2A3F8F;
+  --asb-surface:    #1a1a1a;
+  --asb-card:       #1a1a1a;
+  --asb-border:     #2a2a2a;
+  --asb-border2:    #3a3a3a;
   --asb-text:       #FFFFFF;
   --asb-text2:      #c8d8e8;
   --asb-muted:      #8899aa;
@@ -68,9 +68,9 @@
 
   --background:   #0a0d1a;
   --foreground:   #FFFFFF;
-  --card:         #0f1428;
+  --card:         #1a1a1a;
   --card-foreground: #FFFFFF;
-  --popover:      #0f1428;
+  --popover:      #1a1a1a;
   --popover-foreground: #FFFFFF;
   --primary:      #C8102E;
   --primary-foreground: #FFFFFF;
@@ -134,14 +134,14 @@
 }
 
 .asb-card {
-  background: #0f1428;
-  border: 1px solid #1B2A6B;
-  border-radius: 4px;
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
   transition: border-color .2s, box-shadow .2s;
 }
 .asb-card:hover {
-  border-color: #2A3F8F;
-  box-shadow: 0 0 0 1px rgba(27,42,107,.3), 0 4px 20px rgba(200,16,46,.06);
+  border-color: #3a3a3a;
+  box-shadow: 0 0 0 1px rgba(42,42,42,.3), 0 4px 20px rgba(0,0,0,.20);
 }
 
 .asb-badge {

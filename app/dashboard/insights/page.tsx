@@ -26,7 +26,7 @@ interface Lead {
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const S = {
-  card:    { background: "#0f1428", border: "1px solid #1B2A6B", borderRadius: 4 } as React.CSSProperties,
+  card:    { background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8 } as React.CSSProperties,
   label:   { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#556677", fontFamily: "'Courier New', monospace" },
   value:   { fontSize: 28, fontWeight: 700, color: "#FFFFFF", fontFamily: "'Inter', system-ui, sans-serif", lineHeight: 1 },
   section: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#c0c8d8", fontFamily: "'Courier New', monospace", marginBottom: 12 } as React.CSSProperties,
@@ -184,7 +184,7 @@ export default async function InsightsPage() {
               { label: "Taxa Qualificação",  value: `${taxaQual}%`,         accent: "#C8102E",  sub: `${qualified} de ${total} leads` },
               { label: "Leads c/ Dor",       value: `${taxaPain}%`,         accent: "#f59e0b",  sub: `${withPain} identificadas` },
               { label: "Handoffs Realizados",value: String(withHandoff),     accent: "#22c55e",  sub: `${total > 0 ? Math.round(withHandoff/total*100) : 0}% da base` },
-              { label: "Volume Médio",        value: avgVolume ? `${avgVolume} kg` : "—", accent: "#1B2A6B", sub: "por semana/lead" },
+              { label: "Volume Médio",        value: avgVolume ? `${avgVolume} kg` : "—", accent: "#185FA5", sub: "por semana/lead" },
             ].map(({ label, value, accent, sub }) => (
               <div key={label} style={{ ...S.card, padding: "20px", borderTop: `2px solid ${accent}` }}>
                 <p style={{ ...S.label, color: accent }}>{label}</p>
@@ -314,7 +314,7 @@ export default async function InsightsPage() {
                       <div key={label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                         <span style={{ color: "#c8d8e8", fontSize: 11, fontFamily: "'Courier New', monospace" }}>{label}</span>
                         <span style={{
-                          border: "1px solid #1B2A6B", color: "#8899aa", fontSize: 9,
+                          border: "1px solid #2a2a2a", color: "#8899aa", fontSize: 9,
                           padding: "2px 7px", borderRadius: 2, fontFamily: "'Courier New', monospace",
                         }}>{count} leads</span>
                       </div>

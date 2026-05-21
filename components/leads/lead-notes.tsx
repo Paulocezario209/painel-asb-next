@@ -47,7 +47,7 @@ export function LeadNotes({ leadId, notes }: { leadId: string; notes: NoteEvent[
           disabled={saving || !content.trim()}
           style={{
             alignSelf: "flex-end", padding: "6px 14px", borderRadius: 4,
-            background: saving ? "#30363d" : "#1B2A6B", border: "1px solid #1B2A6B",
+            background: saving ? "#30363d" : "#2a2a2a", border: "1px solid #2a2a2a",
             color: "#FFFFFF", fontSize: 10, letterSpacing: ".10em", textTransform: "uppercase",
             fontFamily: "'Courier New', monospace", cursor: saving ? "wait" : "pointer",
             opacity: !content.trim() ? 0.4 : 1,

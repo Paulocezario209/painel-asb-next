@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 // ── Design tokens — ASB brand ───────────────────────────────────────────────
 const S = {
-  card:    { background: "#0f1428", border: "1px solid #1B2A6B", borderRadius: 4 } as React.CSSProperties,
+  card:    { background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8 } as React.CSSProperties,
   label:   { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#556677", fontFamily: "'Courier New', monospace" },
   value:   { fontSize: 28, fontWeight: 700, color: "#FFFFFF", fontFamily: "'Inter', system-ui, sans-serif", lineHeight: 1 },
   section: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#c0c8d8", fontFamily: "'Courier New', monospace", marginBottom: 12 } as React.CSSProperties,
@@ -233,7 +233,7 @@ export default async function VendasPage() {
       {/* Tabela diaria — escondida (substituida pelo CalendarSection acima) */}
       <div style={{ ...S.card, padding: "20px 24px", display: "none" }}>
         <p style={S.section}>
-          <span style={{ color: "#1B2A6B", marginRight: 6 }}>{"\u25A0"}</span>
+          <span style={{ color: "#2a2a2a", marginRight: 6 }}>{"\u25A0"}</span>
           Detalhamento Diario — {mesAtual}
         </p>
         {allDias.length > 0 ? (
@@ -297,7 +297,7 @@ export default async function VendasPage() {
       {/* Tabela consolidada — apenas gestor/manager + SETOR_CUIT */}
       <div style={{ ...S.card, padding: "20px 24px", display: isVendedorRestrito ? "none" : undefined }}>
         <p style={S.section}>
-          <span style={{ color: "#1B2A6B", marginRight: 6 }}>{"\u25A0"}</span>
+          <span style={{ color: "#2a2a2a", marginRight: 6 }}>{"\u25A0"}</span>
           Consolidado por Vendedor — {mesAtual}
         </p>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
@@ -331,7 +331,7 @@ export default async function VendasPage() {
               );
             })}
             {/* Total row */}
-            <tr style={{ borderTop: "2px solid #1B2A6B" }}>
+            <tr style={{ borderTop: "2px solid #2a2a2a" }}>
               <td style={{ color: "#FFFFFF", fontSize: 11, fontFamily: "'Courier New', monospace", padding: "7px 0", fontWeight: 700 }}>TOTAL</td>
               <td style={{ color: "#FFFFFF", fontSize: 11, fontFamily: "'Courier New', monospace", textAlign: "right", padding: "7px 0", fontWeight: 700 }}>{fmtBRL(totalRealizado)}</td>
               <td style={{ color: totalFaturado > 0 ? "#22c55e" : "#556677", fontSize: 11, fontFamily: "'Courier New', monospace", textAlign: "right", padding: "7px 0", fontWeight: 700 }}>{fmtBRL(totalFaturado)}</td>

@@ -55,7 +55,7 @@ const QUALIFICACAO = new Set([
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const S = {
-  card:    { background: "#0f1428", border: "1px solid #1B2A6B", borderRadius: 4 } as React.CSSProperties,
+  card:    { background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8 } as React.CSSProperties,
   label:   { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#556677", fontFamily: "'Courier New', monospace" },
   value:   { fontSize: 28, fontWeight: 700, color: "#FFFFFF", fontFamily: "'Inter', system-ui, sans-serif", lineHeight: 1 },
   section: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#c0c8d8", fontFamily: "'Courier New', monospace", marginBottom: 12 } as React.CSSProperties,
@@ -150,7 +150,7 @@ export default async function FunilPage() {
       {/* KPI row */}
       <div className="asb-grid-kpi">
         {[
-          { label: "Total Leads",          value: String(total),                                   accent: "#1B2A6B", sub: "na base" },
+          { label: "Total Leads",          value: String(total),                                   accent: "#185FA5", sub: "na base" },
           { label: "Em Qualificacao",       value: String(emQualificacao),                         accent: "#f59e0b", sub: "etapas 2-6" },
           { label: "Handoff+",             value: String(emHandoffPlus),                           accent: "#22c55e", sub: "etapas 7-15" },
           { label: "Taxa SDR \u2192 Handoff", value: taxaHandoff ? `${taxaHandoff}%` : "\u2014", accent: "#C8102E", sub: total > 0 ? `${emHandoffPlus} de ${total} leads` : "" },

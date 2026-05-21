@@ -31,9 +31,9 @@ type Lead = {
 
 // ── Design tokens — ASB brand ────────────────────────────────────
 const C = {
-  bg:     "#0f1428",
+  bg:     "#1a1a1a",
   bg2:    "#080b14",
-  border: "#1B2A6B",
+  border: "#2a2a2a",
   border2:"#2A3F8F",
   text:   "#FFFFFF",
   muted:  "#8899aa",
@@ -58,7 +58,7 @@ const TEMP_CFG: Record<string, BadgeCfg> = {
 };
 
 const STATUS_CFG: Record<string, BadgeCfg> = {
-  new:       { label: "Novo",        color: "#8899bb", bg: "rgba(27,42,107,.27)",  border: "#1B2A6B" },
+  new:       { label: "Novo",        color: "#8899bb", bg: "rgba(27,42,107,.27)",  border: "#2a2a2a" },
   qualified: { label: "Qualificado", color: "#C8102E", bg: "rgba(200,16,46,.13)",  border: "rgba(200,16,46,.5)" },
   converted: { label: "Convertido",  color: "#22c55e", bg: "rgba(34,197,94,.1)",   border: "rgba(34,197,94,.3)" },
   optout:    { label: "Opt-out",     color: C.muted,   bg: "rgba(136,153,170,.06)", border: "rgba(136,153,170,.2)" },
@@ -312,7 +312,7 @@ export function LeadsTable({ leads: initialLeads, userEmail, initialStatus = "al
       <div className="asb-desktop-only" style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 4, overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
-            <tr style={{ background: "#080b14" }}>
+            <tr style={{ background: "#0f0f0f" }}>
               {["Lead", "Cidade", "Segmento", "Volume", "ABC", "Temp.", "Status", "Vendedor", "Etapa", "Handoff", "Ações"].map(h => (
                 <th key={h} style={TH}>{h}</th>
               ))}
