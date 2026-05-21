@@ -1,0 +1,93 @@
+"use client";
+
+import type { Alerta, AlertasResponse } from "./actions";
+
+const SEV: Record<Alerta["severidade"], { bg: string; border: string; icon: string; label: string }> = {
+  vermelho: { bg: "rgba(200,16,46,.12)", border: "#C8102E", icon: "🔴", label: "CRÍTICO" },
+  laranja:  { bg: "rgba(186,117,23,.12)", border: "#BA7517", icon: "🟠", label: "ATENÇÃO" },
+  amarelo:  { bg: "rgba(212,160,23,.12)", border: "#D4A017", icon: "🟡", label: "AVISO" },
+  verde:    { bg: "rgba(15,110,86,.12)", border: "#0F6E56", icon: "🟢", label: "OK" },
+};
+
+const TIPO_ICON: Record<Alerta["tipo"], string> = {
+  saldo_negativo: "💰",
+  atrasados: "⏰",
+  dormente: "💤",
+  tendencia_queda: "📉",
+  meta_dia: "🎯",
+};
+
+export function AlertasComerciais({ data }: { data: AlertasResponse }) {
+  if (data.total === 0) {
+    return (
+      <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg" style={{ padding: "20px 24px" }}>
+        <p style={{ fontSize: 11, fontWeight: 700, color: "#22c55e", fontFamily: "'Courier New', monospace", textTransform: "uppercase", letterSpacing: ".1em", marginBottom: 6 }}>
+          🟢 ALERTAS COMERCIAIS
+        </p>
+        <p style={{ fontSize: 12, color: "#8899aa" }}>
+          Nenhum alerta no momento. Operação saudável.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg" style={{ padding: "20px 24px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 14 }}>
+        <p style={{ fontSize: 11, fontWeight: 700, color: "#c0c8d8", fontFamily: "'Courier New', monospace", textTransform: "uppercase", letterSpacing: ".1em" }}>
+          ⚠ ALERTAS COMERCIAIS — {data.total}
+        </p>
+        <div style={{ display: "flex", gap: 6, fontSize: 9, fontFamily: "'Courier New', monospace" }}>
+          {data.contadores.vermelho > 0 && (
+            <span style={{ color: "#fff", background: "#C8102E", padding: "2px 8px", borderRadius: 3, fontWeight: 700 }}>
+              {data.contadores.vermelho} CRÍTICO
+            </span>
+          )}
+          {data.contadores.laranja > 0 && (
+            <span style={{ color: "#fff", background: "#BA7517", padding: "2px 8px", borderRadius: 3, fontWeight: 700 }}>
+              {data.contadores.laranja} ATENÇÃO
+            </span>
+          )}
+          {data.contadores.amarelo > 0 && (
+            <span style={{ color: "#0f0f0f", background: "#D4A017", padding: "2px 8px", borderRadius: 3, fontWeight: 700 }}>
+              {data.contadores.amarelo} AVISO
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 10 }}>
+        {data.alertas.map((a, i) => {
+          const s = SEV[a.severidade];
+          return (
+            <div
+              key={`${a.tipo}-${i}`}
+              style={{
+                background: s.bg,
+                borderLeft: `3px solid ${s.border}`,
+                borderRadius: 4,
+                padding: "10px 12px",
+                display: "flex",
+                flexDirection: "column",
+                gap: 4,
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ fontSize: 14 }}>{TIPO_ICON[a.tipo]}</span>
+                <span style={{ fontSize: 8, fontWeight: 700, color: s.border, fontFamily: "'Courier New', monospace", letterSpacing: ".1em" }}>
+                  {s.label}
+                </span>
+              </div>
+              <p style={{ fontSize: 12, fontWeight: 700, color: "#FFFFFF", lineHeight: 1.3 }}>
+                {a.titulo}
+              </p>
+              <p style={{ fontSize: 10, color: "#8899aa", lineHeight: 1.4 }}>
+                {a.descricao}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
