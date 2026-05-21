@@ -395,18 +395,22 @@ export function CalendarSection({
             Detalhe por dia
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            {/* FIX: incluir sábado/domingo se for dia-meta do vendedor (Alan SAB) */}
-            {diasOrdenados.filter(d => d.status_dia !== "weekend").map(d => {
+            {/* FIX: incluir sábado/domingo se for dia-meta + esconder dias completamente vazios */}
+            {diasOrdenados
+              .filter(d => d.status_dia !== "weekend")
+              .filter(d => d.is_dia_meta || Number(d.realizado_brl) > 0) // esconder Meta=0 + Real=0
+              .map(d => {
               const isSelected = diaSelecionado === d.dia;
               const dt = new Date(d.dia + "T00:00:00");
               const diaNum = dt.getDate();
               const dow = DOW[dt.getDay()];
               const saldo = Number(d.realizado_brl) - Number(d.meta_diaria_brl);
+              const isEncaixe = !d.is_dia_meta && Number(d.realizado_brl) > 0;
               let accent = "#556677";
               if (d.status_dia === "batida") accent = "#22c55e";
               else if (d.status_dia === "abaixo") accent = "#C8102E";
-              else if (d.status_dia === "futuro") accent = "#2a2a2a";
-              else if (d.status_dia === "nao_rota") accent = Number(d.realizado_brl) > 0 ? "#185FA5" : "#2a3545";
+              else if (d.status_dia === "futuro") accent = Number(d.realizado_brl) > 0 ? "#ff7b1c" : "#2a2a2a";
+              else if (isEncaixe) accent = "#185FA5";
 
               return (
                 <div
@@ -424,17 +428,24 @@ export function CalendarSection({
                     <span style={{ color: "#c0c8d8", fontFamily: "'Courier New', monospace", fontSize: 11, fontWeight: 700 }}>
                       {String(diaNum).padStart(2, "0")} ({dow})
                     </span>
-                    {d.status_dia === "batida" && <span style={{ color: "#22c55e", fontSize: 13, fontWeight: 900 }}>✓</span>}
-                    {d.status_dia === "abaixo" && <span style={{ color: "#C8102E", fontSize: 13, fontWeight: 900 }}>✗</span>}
-                    {d.status_dia === "nao_rota" && Number(d.realizado_brl) > 0 && <span style={{ color: "#185FA5", fontSize: 13, fontWeight: 900 }}>+</span>}
-                    {d.is_today && <span style={{ background: "#ff7b1c", color: "#fff", padding: "1px 6px", borderRadius: 3, fontSize: 8, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'Courier New', monospace" }}>HOJE</span>}
+                    <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                      {d.is_today && <span style={{ background: "#ff7b1c", color: "#fff", padding: "1px 6px", borderRadius: 3, fontSize: 8, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'Courier New', monospace" }}>HOJE</span>}
+                      {isEncaixe && <span style={{ background: "rgba(24,95,165,.15)", color: "#185FA5", padding: "1px 6px", borderRadius: 3, fontSize: 8, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'Courier New', monospace" }}>ENCAIXE</span>}
+                      {d.is_dia_meta && !d.is_futuro && d.status_dia === "batida" && <span style={{ color: "#22c55e", fontSize: 13, fontWeight: 900 }}>✓</span>}
+                      {d.is_dia_meta && !d.is_futuro && d.status_dia === "abaixo" && <span style={{ color: "#C8102E", fontSize: 13, fontWeight: 900 }}>✗</span>}
+                      {d.is_dia_meta && d.is_futuro && Number(d.realizado_brl) > 0 && <span style={{ color: "#ff7b1c", fontSize: 13, fontWeight: 900 }}>▸</span>}
+                    </div>
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 4, fontSize: 10, fontFamily: "'Courier New', monospace" }}>
-                    <span style={{ color: "#556677" }}>Meta:</span>
-                    <span style={{ color: "#c8d8e8", textAlign: "right" }}><span className="priv-brl">{fmtBRL(d.meta_diaria_brl)}</span></span>
-                    <span style={{ color: "#556677" }}>Real:</span>
+                    {d.is_dia_meta && (
+                      <>
+                        <span style={{ color: "#556677" }}>Meta:</span>
+                        <span style={{ color: "#c8d8e8", textAlign: "right" }}><span className="priv-brl">{fmtBRL(d.meta_diaria_brl)}</span></span>
+                      </>
+                    )}
+                    <span style={{ color: "#556677" }}>{isEncaixe ? "Encaixe:" : "Real:"}</span>
                     <span style={{ color: d.realizado_brl > 0 ? "#FFFFFF" : "#3a4555", textAlign: "right" }}><span className="priv-brl">{fmtBRL(d.realizado_brl)}</span></span>
-                    {!d.is_futuro && (
+                    {d.is_dia_meta && !d.is_futuro && (
                       <>
                         <span style={{ color: "#556677" }}>{saldo >= 0 ? "Super." : "Déb.:"}</span>
                         <span style={{ color: saldo >= 0 ? "#22c55e" : "#C8102E", fontWeight: 700, textAlign: "right" }}>
@@ -442,10 +453,10 @@ export function CalendarSection({
                         </span>
                       </>
                     )}
-                    {d.pct_atingido_dia !== null && (
+                    {d.is_dia_meta && d.pct_atingido_dia !== null && (
                       <>
                         <span style={{ color: "#556677" }}>%:</span>
-                        <span style={{ color: d.status_dia === "batida" ? "#22c55e" : "#C8102E", fontWeight: 700, textAlign: "right" }}><span className="priv-pct">{d.pct_atingido_dia}%</span></span>
+                        <span style={{ color: d.status_dia === "batida" ? "#22c55e" : d.is_futuro ? "#ff7b1c" : "#C8102E", fontWeight: 700, textAlign: "right" }}><span className="priv-pct">{d.pct_atingido_dia}%</span></span>
                       </>
                     )}
                   </div>
