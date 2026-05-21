@@ -5,7 +5,7 @@ import { CalendarSection } from "./calendar-section";
 import { VendasPrivacyShell } from "./vendas-privacy-shell";
 import { AlertasComerciais } from "./alertas-comerciais";
 import { RankingVendedores } from "./ranking-vendedores";
-import { getAlertasComerciais, getRankingVendedores } from "./actions";
+import { getAlertasComerciais, getRankingVendedores, getEstrategiasComerciais } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -134,6 +134,7 @@ export default async function VendasPage() {
     ? { total: 0, alertas: [], contadores: { vermelho: 0, laranja: 0, amarelo: 0 } }
     : await getAlertasComerciais();
   const rankingData = isVendedorRestrito ? [] : await getRankingVendedores();
+  const estrategiasData = await getEstrategiasComerciais();
 
   // ── F4: calendario com meta diaria + resumo mes vendedor (views novas) ────
   let calQuery = supabase.from("v_calendario_metas").select("*");
@@ -188,6 +189,7 @@ export default async function VendasPage() {
         calendario={calendarioData}
         resumos={resumosData}
         restrictedToVendor={isVendedorRestrito ? ctx.routing_team! : null}
+        estrategias={estrategiasData}
       />
 
     </div>

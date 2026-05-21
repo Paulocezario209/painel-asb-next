@@ -2,8 +2,10 @@
 
 import { useState, useMemo, useTransition } from "react";
 import Link from "next/link";
-import { getDayPedidos, type DayPedido } from "./actions";
+import { getDayPedidos, type DayPedido, type EstrategiasResponse } from "./actions";
 import { DayDetailModal } from "./day-detail-modal";
+import { MissaoDoDia } from "./missao-do-dia";
+import { PainelGestor } from "./painel-gestor";
 
 type DayCell = {
   dia: string;
@@ -64,10 +66,12 @@ export function CalendarSection({
   calendario,
   resumos,
   restrictedToVendor,
+  estrategias,
 }: {
   calendario: DayCell[];
   resumos: ResumoVendor[];
   restrictedToVendor?: string | null;
+  estrategias?: EstrategiasResponse | null;
 }) {
   const [vendor, setVendor] = useState<string>(restrictedToVendor ?? "all");
   const isRestricted = !!restrictedToVendor;
@@ -389,10 +393,19 @@ export function CalendarSection({
           </div>
         </div>
 
-        {/* Detalhe lateral */}
-        <div style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8, padding: 20, maxHeight: 540, overflowY: "auto" }}>
+        {/* Vendedor → Missão pessoal · Gestor consolidado → Painel analítico · Gestor com vendedor selecionado → Missão daquele */}
+        {estrategias ? (
+          isRestricted ? (
+            <MissaoDoDia data={estrategias} vendor={restrictedToVendor!} />
+          ) : vendor === "all" ? (
+            <PainelGestor data={estrategias} />
+          ) : (
+            <MissaoDoDia data={estrategias} vendor={vendor} />
+          )
+        ) : (
+        <div style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8, padding: 20, maxHeight: 540, overflowY: "auto", display: "none" }}>
           <p style={{ fontSize: 11, fontWeight: 700, color: "#c0c8d8", fontFamily: "'Courier New', monospace", textTransform: "uppercase", letterSpacing: ".1em", marginBottom: 12 }}>
-            Detalhe por dia
+            Detalhe por dia (legacy — escondido se estrategias presente)
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {/* FIX: incluir sábado/domingo se for dia-meta + esconder dias completamente vazios */}
@@ -465,6 +478,7 @@ export function CalendarSection({
             })}
           </div>
         </div>
+        )}
       </div>
 
       {modalOpen && (

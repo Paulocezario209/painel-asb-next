@@ -262,6 +262,166 @@ export type RankingItem = {
   cor_card_mes: string;
 };
 
+// ════════════════════════════════════════════════════════════════════
+// ESTRATÉGIAS E AÇÕES — 3 grupos de recomendações práticas
+// ════════════════════════════════════════════════════════════════════
+
+export type AcaoBaterMeta = {
+  vendedor: string;
+  nome: string;
+  proxima_meta: string;
+  realizado: number;
+  meta: number;
+  gap: number;
+  pct: number;
+  status: "bater" | "abaixo" | "no_alvo";
+  sugestao: string;
+};
+
+export type AcaoPendente = {
+  vendedor: string;
+  nome: string;
+  qty: number;
+  valor: number;
+  mais_antigo_dias: number;
+};
+
+export type AcaoDormente = {
+  cliente: string;
+  vendedor: string;
+  nome_vendedor: string;
+  ultimo_pedido: string;
+  dias_sem_comprar: number;
+  valor_historico: number;
+  prioridade: "alta" | "media" | "baixa";
+};
+
+export type EstrategiasResponse = {
+  baterMeta: AcaoBaterMeta[];
+  fecharPendentes: AcaoPendente[];
+  reativarDormentes: AcaoDormente[];
+};
+
+export async function getEstrategiasComerciais(): Promise<EstrategiasResponse> {
+  const supabase = await createClient();
+  const hoje = new Date().toISOString().slice(0, 10);
+
+  // ── Bater meta do ciclo ────────────────────────────────────────────
+  const { data: resumos } = await supabase
+    .from("v_resumo_mes_vendedor")
+    .select("vendedor_routing_team, proxima_data_meta, realizado_hoje_brl, meta_diaria_brl, saldo_brl");
+
+  // Pegar meta diária da próxima data (peso aplicado) via v_calendario_metas
+  const proximaDatas = [...new Set((resumos ?? []).map(r => r.proxima_data_meta).filter(Boolean))];
+  const { data: calProx } = proximaDatas.length > 0
+    ? await supabase
+        .from("v_calendario_metas")
+        .select("vendedor_routing_team, dia, meta_diaria_brl, realizado_brl")
+        .in("dia", proximaDatas as string[])
+    : { data: [] };
+
+  const baterMeta: AcaoBaterMeta[] = (resumos ?? []).map(r => {
+    const cal = (calProx ?? []).find(c =>
+      c.vendedor_routing_team === r.vendedor_routing_team &&
+      c.dia === r.proxima_data_meta
+    );
+    const metaDia = Number(cal?.meta_diaria_brl ?? 0);
+    const realizadoDia = Number(cal?.realizado_brl ?? 0);
+    const gap = metaDia - realizadoDia;
+    const pct = metaDia > 0 ? Math.round((realizadoDia / metaDia) * 100) : 0;
+    const status: AcaoBaterMeta["status"] =
+      pct >= 100 ? "bater" : pct >= 80 ? "no_alvo" : "abaixo";
+    const sugestao =
+      pct >= 100
+        ? "✓ Meta batida. Continue captando pra superar."
+        : gap > 20000
+        ? `Foco em clientes de alto ticket. Faltam R$ ${gap.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}.`
+        : gap > 5000
+        ? `Reative dormentes + reforce ticket. Faltam R$ ${gap.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}.`
+        : `Praticamente lá. Faltam R$ ${gap.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}.`;
+    return {
+      vendedor: r.vendedor_routing_team as string,
+      nome: vName(r.vendedor_routing_team as string),
+      proxima_meta: r.proxima_data_meta as string,
+      realizado: realizadoDia,
+      meta: metaDia,
+      gap,
+      pct,
+      status,
+      sugestao,
+    };
+  });
+
+  // ── Pedidos pendentes (escritório precisa fechar) ──────────────────
+  const { data: pendentesRaw } = await supabase
+    .from("pedidos_espelho")
+    .select("vendedor_routing_team, valor_total_brl, data_emissao")
+    .in("status_pedido", ["pendente", "aprovado"]);
+
+  const pendMap: Record<string, { qty: number; valor: number; maisAntigo: string }> = {};
+  for (const p of pendentesRaw ?? []) {
+    const t = p.vendedor_routing_team ?? "DESCONHECIDO";
+    pendMap[t] = pendMap[t] ?? { qty: 0, valor: 0, maisAntigo: "" };
+    pendMap[t].qty += 1;
+    pendMap[t].valor += Number(p.valor_total_brl ?? 0);
+    if (!pendMap[t].maisAntigo || (p.data_emissao ?? "") < pendMap[t].maisAntigo) {
+      pendMap[t].maisAntigo = p.data_emissao ?? pendMap[t].maisAntigo;
+    }
+  }
+  const fecharPendentes: AcaoPendente[] = Object.entries(pendMap)
+    .filter(([_, v]) => v.qty > 0)
+    .map(([team, v]) => ({
+      vendedor: team,
+      nome: vName(team),
+      qty: v.qty,
+      valor: v.valor,
+      mais_antigo_dias: v.maisAntigo
+        ? Math.floor((Date.now() - new Date(v.maisAntigo + "T00:00:00").getTime()) / 86400000)
+        : 0,
+    }))
+    .sort((a, b) => b.valor - a.valor);
+
+  // ── Top dormentes (>14d sem comprar) ───────────────────────────────
+  const { data: pedidos60d } = await supabase
+    .from("pedidos_espelho")
+    .select("cliente_nome, vendedor_routing_team, data_meta, valor_total_brl, status_pedido")
+    .gte("data_meta", new Date(Date.now() - 60 * 86400000).toISOString().slice(0, 10))
+    .neq("status_pedido", "cancelado");
+  const dormMap: Record<string, { vendedor: string; ultimo: string; valor: number }> = {};
+  for (const p of pedidos60d ?? []) {
+    if (!p.cliente_nome) continue;
+    const cur = dormMap[p.cliente_nome] ?? {
+      vendedor: p.vendedor_routing_team ?? "—",
+      ultimo: p.data_meta ?? "",
+      valor: 0,
+    };
+    if ((p.data_meta ?? "") > cur.ultimo) cur.ultimo = p.data_meta ?? cur.ultimo;
+    cur.valor += Number(p.valor_total_brl ?? 0);
+    dormMap[p.cliente_nome] = cur;
+  }
+  const limite14d = new Date(Date.now() - 14 * 86400000).toISOString().slice(0, 10);
+  const reativarDormentes: AcaoDormente[] = Object.entries(dormMap)
+    .filter(([_, d]) => d.ultimo < limite14d)
+    .map(([cliente, d]) => {
+      const dias = Math.floor(
+        (Date.now() - new Date(d.ultimo + "T00:00:00").getTime()) / 86400000,
+      );
+      return {
+        cliente,
+        vendedor: d.vendedor,
+        nome_vendedor: vName(d.vendedor),
+        ultimo_pedido: d.ultimo,
+        dias_sem_comprar: dias,
+        valor_historico: d.valor,
+        prioridade: (d.valor > 10000 ? "alta" : d.valor > 2000 ? "media" : "baixa") as AcaoDormente["prioridade"],
+      };
+    })
+    .sort((a, b) => b.valor_historico - a.valor_historico)
+    .slice(0, 8);
+
+  return { baterMeta, fecharPendentes, reativarDormentes };
+}
+
 export async function getRankingVendedores(): Promise<RankingItem[]> {
   const supabase = await createClient();
   const hoje = new Date().toISOString().slice(0, 10);
