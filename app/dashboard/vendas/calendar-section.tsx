@@ -337,6 +337,10 @@ export function CalendarSection({
                 }
               } else if (d.status_dia === "futuro") {
                 bg = "#0a0f1f"; color = "#556677"; border = "1px solid #2a2a2a";
+                // Dia futuro COM lançamentos em curso = marca laranja ▶
+                if (Number(d.realizado_brl) > 0) {
+                  marker = "▸"; markerColor = "#ff7b1c";
+                }
               } else if (d.status_dia === "batida") {
                 marker = "✓"; markerColor = "#22c55e";
               } else if (d.status_dia === "abaixo") {
