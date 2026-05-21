@@ -253,8 +253,8 @@ export function CalendarSection({
                   { label: "Meta/dia",   value: <span className="priv-brl">{fmtBRL(r.meta_diaria_brl)}</span>, c: "#c8d8e8" },
                   {
                     label: r.proxima_data_meta
-                      ? `Próx. meta ${new Date(r.proxima_data_meta + "T00:00:00").toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" }).replace(",", "").toUpperCase()}`
-                      : "Próx. meta",
+                      ? `Lançamentos ${new Date(r.proxima_data_meta + "T00:00:00").toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" }).replace(",", "").toUpperCase()}`
+                      : "Lançamentos",
                     value: <span className="priv-brl">{fmtBRL(r.realizado_hoje_brl)}</span>,
                     c: r.realizado_hoje_brl > 0 ? "#22c55e" : "#556677"
                   },
