@@ -35,7 +35,8 @@ type ResumoVendor = {
   realizado_dia_atual_brl?: number;
   proxima_data_meta?: string | null;
   meta_proxima_data_brl?: number;
-  saldo_brl: number;
+  saldo_brl: number;          // saldo do MÊS (Acumulado − Esperado até hoje)
+  saldo_dia_brl?: number;     // saldo do DIA (Realizado próx meta − Meta próx data)
   pct_atingido_acumulado: number | null;
   pct_atingido_mes: number | null;
   dias_batidos: number;
@@ -258,7 +259,10 @@ export function CalendarSection({
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 14 }}>
-                {[
+                {(() => {
+                  const saldoDia = Number(r.saldo_dia_brl ?? 0);
+                  const saldoDiaPositivo = saldoDia >= 0;
+                  return [
                   {
                     label: r.proxima_data_meta
                       ? `Meta ${new Date(r.proxima_data_meta + "T00:00:00").toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" }).replace(",", "").toUpperCase()}`
@@ -267,14 +271,19 @@ export function CalendarSection({
                     c: "#ff7b1c"
                   },
                   {
-                    label: "Realizado",
+                    label: "Realizado dia",
                     value: <span className="priv-brl">{fmtBRL(r.realizado_hoje_brl)}</span>,
                     c: r.realizado_hoje_brl >= Number(r.meta_proxima_data_brl ?? r.meta_diaria_brl) && Number(r.meta_proxima_data_brl ?? r.meta_diaria_brl) > 0 ? "#22c55e" : r.realizado_hoje_brl > 0 ? "#D4A017" : "#556677"
                   },
+                  {
+                    label: "Saldo dia",
+                    value: <span className="priv-brl">{(saldoDiaPositivo ? "+" : "") + fmtBRL(saldoDia)}</span>,
+                    c: saldoDiaPositivo ? "#22c55e" : "#C8102E"
+                  },
                   { label: "Acumulado",  value: <span className="priv-brl">{fmtBRL(r.realizado_acumulado_brl)}</span>, c: "#FFFFFF" },
                   { label: "Esperado",   value: <span className="priv-brl">{fmtBRL(r.meta_acumulada_brl)}</span>, c: "#8899aa" },
-                  { label: "Saldo",      value: <span className="priv-brl">{(saldoPositivo ? "+" : "") + fmtBRL(r.saldo_brl)}</span>, c: saldoPositivo ? "#22c55e" : "#C8102E" },
-                ].map(row => (
+                  { label: "Saldo mês",  value: <span className="priv-brl">{(saldoPositivo ? "+" : "") + fmtBRL(r.saldo_brl)}</span>, c: saldoPositivo ? "#22c55e" : "#C8102E" },
+                ];})().map(row => (
                   <div key={row.label} style={{ display: "flex", justifyContent: "space-between", fontSize: 11 }}>
                     <span style={{ color: "#556677", fontFamily: "'Courier New', monospace", fontSize: 9, letterSpacing: ".1em", textTransform: "uppercase" }}>{row.label}</span>
                     <span style={{ color: row.c, fontWeight: 700, fontFamily: "'Courier New', monospace" }}>{row.value}</span>
