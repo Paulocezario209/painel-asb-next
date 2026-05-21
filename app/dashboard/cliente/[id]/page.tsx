@@ -57,6 +57,13 @@ export default async function ClientePage({
     .order("created_at", { ascending: false })
     .limit(20);
 
+  // F3: métricas calculadas pelo worker customer_lifecycle (cache)
+  const { data: lifecycleState } = await supabase
+    .from("customer_lifecycle_state")
+    .select("*")
+    .eq("lead_id", id)
+    .maybeSingle();
+
   const vendorMap = new Map<string, string>(
     (vendors ?? []).map((v: Vendor) => [v.id, v.name])
   );
@@ -153,6 +160,87 @@ export default async function ClientePage({
           )}
         </div>
       </div>
+
+      {/* F3 — Métricas calculadas pelo worker */}
+      {lifecycleState && (
+        <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-gray-400">
+              Métricas da Carteira (worker daily 6h BRT)
+            </h2>
+            <span className="text-[10px] text-gray-500 font-mono">
+              Calculado em {lifecycleState.last_computed_at ? new Date(lifecycleState.last_computed_at).toLocaleString("pt-BR") : "—"}
+            </span>
+          </div>
+          <div className="grid grid-cols-4 gap-3">
+            <div className="bg-[#0f0f0f] border border-[#2a2a2a] rounded p-3">
+              <div className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Pedidos</div>
+              <div className="text-2xl font-bold text-white mt-1">{lifecycleState.total_orders ?? 0}</div>
+            </div>
+            <div className="bg-[#0f0f0f] border border-[#2a2a2a] rounded p-3">
+              <div className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Tier ABC</div>
+              <div
+                className="text-2xl font-bold mt-1"
+                style={{
+                  color: lifecycleState.customer_tier === "A" ? "#D4A017" :
+                         lifecycleState.customer_tier === "B" ? "#185FA5" :
+                         lifecycleState.customer_tier === "C" ? "#9696AF" : "#555",
+                }}
+              >
+                {lifecycleState.customer_tier ?? "—"}
+              </div>
+            </div>
+            <div className="bg-[#0f0f0f] border border-[#2a2a2a] rounded p-3">
+              <div className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Receita BRL</div>
+              <div className="text-xl font-bold text-white mt-1">
+                R$ {Number(lifecycleState.total_revenue_brl ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </div>
+            </div>
+            <div className="bg-[#0f0f0f] border border-[#2a2a2a] rounded p-3">
+              <div className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Ticket Médio</div>
+              <div className="text-xl font-bold text-white mt-1">
+                R$ {Number(lifecycleState.avg_ticket_brl ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </div>
+            </div>
+            <div className="bg-[#0f0f0f] border border-[#2a2a2a] rounded p-3">
+              <div className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">1º Pedido</div>
+              <div className="text-sm font-semibold text-white mt-1">
+                {lifecycleState.first_order_at ? new Date(lifecycleState.first_order_at).toLocaleDateString("pt-BR") : "—"}
+              </div>
+            </div>
+            <div className="bg-[#0f0f0f] border border-[#2a2a2a] rounded p-3">
+              <div className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Último Pedido</div>
+              <div className="text-sm font-semibold text-white mt-1">
+                {lifecycleState.last_order_at ? new Date(lifecycleState.last_order_at).toLocaleDateString("pt-BR") : "—"}
+              </div>
+            </div>
+            <div className="bg-[#0f0f0f] border border-[#2a2a2a] rounded p-3">
+              <div className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Dias Sem Comprar</div>
+              <div
+                className="text-xl font-bold mt-1"
+                style={{
+                  color: !lifecycleState.days_since_last_order ? "#fff" :
+                         lifecycleState.days_since_last_order > 60 ? "#BA1717" :
+                         lifecycleState.days_since_last_order > 14 ? "#BA7517" : "#22C55E",
+                }}
+              >
+                {lifecycleState.days_since_last_order ?? "—"}d
+              </div>
+            </div>
+            <div className="bg-[#0f0f0f] border border-[#2a2a2a] rounded p-3">
+              <div className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Próxima Esperada</div>
+              <div className="text-sm font-semibold text-white mt-1">
+                {lifecycleState.next_expected_order_at ? new Date(lifecycleState.next_expected_order_at).toLocaleDateString("pt-BR") : "—"}
+              </div>
+              {lifecycleState.avg_order_interval_days && (
+                <div className="text-[10px] text-gray-500 mt-1">
+                  avg {Number(lifecycleState.avg_order_interval_days).toFixed(1)}d
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Timeline */}
       <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4">
