@@ -170,34 +170,39 @@ export async function getAlertasComerciais(): Promise<AlertasResponse> {
     }
   }
 
-  // A4 — Tendência queda (hoje < 50% da média 7d e é dia de venda)
-  const seteDiasAtras = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
-  const { data: dias7d } = await supabase
-    .from("painel_dia_vendedor")
-    .select("vendedor_routing_team, dia, realizado_parcial_brl")
-    .gte("dia", seteDiasAtras)
-    .lte("dia", hoje);
-  const mediaPorVendedor: Record<string, { soma: number; dias: number; hoje: number }> = {};
-  for (const d of dias7d ?? []) {
+  // A4 — Tendência queda APENAS em DIA DE META do vendedor (vs média dos últimos
+  // dias de meta dele — não calendário corrido). Evita falso alarme em dia atípico.
+  const { data: calHoje30d } = await supabase
+    .from("v_calendario_metas")
+    .select("vendedor_routing_team, dia, is_dia_meta, realizado_brl")
+    .gte("dia", new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10))
+    .lte("dia", hoje)
+    .eq("is_dia_meta", true);
+
+  const diasMetaPorVendedor: Record<string, { historico: number[]; hoje: number }> = {};
+  for (const d of calHoje30d ?? []) {
     const t = d.vendedor_routing_team ?? "—";
-    mediaPorVendedor[t] = mediaPorVendedor[t] ?? { soma: 0, dias: 0, hoje: 0 };
-    const val = Number(d.realizado_parcial_brl ?? 0);
-    if (val > 0) {
-      mediaPorVendedor[t].soma += val;
-      mediaPorVendedor[t].dias += 1;
+    diasMetaPorVendedor[t] = diasMetaPorVendedor[t] ?? { historico: [], hoje: 0 };
+    const val = Number(d.realizado_brl ?? 0);
+    if (d.dia === hoje) {
+      diasMetaPorVendedor[t].hoje = val;
+    } else if (val > 0) {
+      diasMetaPorVendedor[t].historico.push(val);
     }
-    if (d.dia === hoje) mediaPorVendedor[t].hoje = val;
   }
-  for (const [team, agg] of Object.entries(mediaPorVendedor)) {
-    if (agg.dias < 2) continue;
-    const media = agg.soma / agg.dias;
+  for (const [team, agg] of Object.entries(diasMetaPorVendedor)) {
+    // Só alerta se HOJE é dia padrão de meta do vendedor (hoje > 0 OR é dia útil que ainda vai render)
+    // E historico tem ao menos 2 dias pra comparar
+    if (agg.historico.length < 2) continue;
+    const media = agg.historico.reduce((s, v) => s + v, 0) / agg.historico.length;
+    // Alerta se hoje DELE > 0 (já começou) E ainda muito abaixo da média
     if (media > 1000 && agg.hoje > 0 && agg.hoje < media * 0.5) {
       const pctQueda = Math.round((1 - agg.hoje / media) * 100);
       alertas.push({
         tipo: "tendencia_queda",
         severidade: pctQueda >= 70 ? "vermelho" : "laranja",
-        titulo: `${vName(team)} hoje ${pctQueda}% abaixo da média`,
-        descricao: `Hoje R$ ${agg.hoje.toLocaleString("pt-BR", { minimumFractionDigits: 2 })} · média 7d R$ ${media.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`,
+        titulo: `${vName(team)} hoje ${pctQueda}% abaixo da média de dia-meta`,
+        descricao: `Hoje R$ ${agg.hoje.toLocaleString("pt-BR", { minimumFractionDigits: 2 })} · média últimos ${agg.historico.length} dias de meta R$ ${media.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`,
         vendedor: team,
         valor: agg.hoje - media,
       });
