@@ -64,6 +64,20 @@ export default async function ClientePage({
     .eq("lead_id", id)
     .maybeSingle();
 
+  // Bonus: up-sell oportunidade (se aplicável)
+  const { data: upsellOp } = await supabase
+    .from("v_upsell_oportunidades")
+    .select("*")
+    .eq("lead_id", id)
+    .maybeSingle();
+
+  // Bonus: tier upgrade candidate (se aplicável)
+  const { data: tierUp } = await supabase
+    .from("v_tier_upgrade_candidates")
+    .select("*")
+    .eq("lead_id", id)
+    .maybeSingle();
+
   const vendorMap = new Map<string, string>(
     (vendors ?? []).map((v: Vendor) => [v.id, v.name])
   );
@@ -239,6 +253,97 @@ export default async function ClientePage({
               )}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Bonus: cards de oportunidade lado a lado */}
+      {(upsellOp || tierUp) && (
+        <div className="grid grid-cols-2 gap-4">
+          {upsellOp && (
+            <div
+              className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4"
+              style={{ borderLeft: "3px solid #BA7517" }}
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <span style={{ fontSize: 18 }}>🎯</span>
+                <h2 className="text-xs font-bold uppercase tracking-wider text-[#E0993A]">
+                  Oportunidade de Up-sell
+                </h2>
+              </div>
+              <div className="space-y-2 text-xs">
+                <div>
+                  <span className="text-gray-500">Ticket atual:</span>{" "}
+                  <span className="text-white font-semibold">
+                    R$ {Number(upsellOp.cliente_ticket).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Média Tier {upsellOp.customer_tier}:</span>{" "}
+                  <span className="text-white font-semibold">
+                    R$ {Number(upsellOp.tier_avg_ticket).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Gap:</span>{" "}
+                  <span className="text-[#E0993A] font-bold">{upsellOp.gap_pct}% abaixo</span>
+                </div>
+                <div className="pt-2 mt-2 border-t border-[#2a2a2a]">
+                  <span className="text-gray-500">Potencial anual se subir pra média:</span>
+                  <div className="text-[#22C55E] font-bold text-lg mt-1">
+                    + R$ {Number(upsellOp.potencial_anual_brl).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {tierUp && (
+            <div
+              className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4"
+              style={{ borderLeft: "3px solid #185FA5" }}
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <span style={{ fontSize: 18 }}>⬆</span>
+                <h2 className="text-xs font-bold uppercase tracking-wider text-[#4FA3E8]">
+                  Sugestão de Tier Upgrade
+                </h2>
+              </div>
+              <div className="space-y-2 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-500">Tier atual:</span>
+                  <span
+                    className="px-2 py-0.5 rounded font-bold"
+                    style={{ background: "#9696AF", color: "#fff" }}
+                  >
+                    {tierUp.tier_atual}
+                  </span>
+                  <span className="text-gray-500">→</span>
+                  <span className="text-gray-500">Sugerido:</span>
+                  <span
+                    className="px-2 py-0.5 rounded font-bold"
+                    style={{
+                      background: tierUp.tier_sugerido === "A" ? "#D4A017" : "#185FA5",
+                      color: "#fff",
+                    }}
+                  >
+                    {tierUp.tier_sugerido}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Volume:</span>{" "}
+                  <span className="text-white font-semibold">{tierUp.weekly_volume_kg} kg/sem</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Razão:</span>{" "}
+                  <span className="text-gray-300 text-[10px] font-mono">{tierUp.razao}</span>
+                </div>
+                <div className="pt-2 mt-2 border-t border-[#2a2a2a] text-[10px] text-gray-500">
+                  Reclassificação manual pelo gestor — worker calcula tier
+                  automaticamente após first_order+30d baseado em weekly_volume_kg.
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

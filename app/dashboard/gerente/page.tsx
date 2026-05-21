@@ -163,6 +163,9 @@ export default async function GerentePage() {
     return { ...v, proj, projPct };
   });
 
+  // Bonus Fase 3: KPI Retention Carteira
+  const { data: retention } = await supabase.from("v_retention_metrics").select("*").maybeSingle();
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {/* Header */}
@@ -174,6 +177,42 @@ export default async function GerentePage() {
           Visao consolidada {mesAtual} &middot; {diasDecorridos}/{totalDiasUteis} dias uteis
         </p>
       </div>
+
+      {/* ── Retention Carteira (Funil v2 Fase 3 — atualizado pelo worker daily) ── */}
+      {retention && (
+        <div style={{ ...S.card, padding: "20px 24px" }}>
+          <p style={S.section}>
+            <span style={{ color: "#22C55E", marginRight: 6 }}>{"♥"}</span>
+            Retention da Carteira
+          </p>
+          <div className="asb-grid-kpi">
+            <div style={{ ...S.card, padding: 16, borderTop: "2px solid #22C55E" }}>
+              <p style={{ ...S.label, color: "#22C55E" }}>Carteira Total</p>
+              <p style={{ ...S.value, marginTop: 6 }}>{retention.total_carteira ?? 0}</p>
+              <p style={{ ...S.muted, fontSize: 9, marginTop: 6 }}>
+                {retention.em_ativacao ?? 0} em ativação · {retention.ativos ?? 0} ativos · {retention.recorrentes ?? 0} recorrentes
+              </p>
+            </div>
+            <div style={{ ...S.card, padding: 16, borderTop: "2px solid #185FA5" }}>
+              <p style={{ ...S.label, color: "#185FA5" }}>Retention Rate</p>
+              <p style={{ ...S.value, marginTop: 6 }}>{retention.retention_rate_pct ?? 0}%</p>
+              <p style={{ ...S.muted, fontSize: 9, marginTop: 6 }}>% da carteira já recorrente</p>
+            </div>
+            <div style={{ ...S.card, padding: 16, borderTop: "2px solid #BA7517" }}>
+              <p style={{ ...S.label, color: "#BA7517" }}>Activation Rate</p>
+              <p style={{ ...S.value, marginTop: 6 }}>{retention.activation_rate_pct ?? 0}%</p>
+              <p style={{ ...S.muted, fontSize: 9, marginTop: 6 }}>% saiu de em_ativacao</p>
+            </div>
+            <div style={{ ...S.card, padding: 16, borderTop: "2px solid #D4A017" }}>
+              <p style={{ ...S.label, color: "#D4A017" }}>Health Rate</p>
+              <p style={{ ...S.value, marginTop: 6 }}>{retention.health_rate_pct ?? 0}%</p>
+              <p style={{ ...S.muted, fontSize: 9, marginTop: 6 }}>
+                {retention.healthy ?? 0} healthy · {retention.at_risk ?? 0} risco · {retention.inactive ?? 0} inativos
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── B1 PRIORIDADES DO DIA (ranking pior em cima) ──────────────────── */}
       <div style={{ ...S.card, padding: "20px 24px" }}>
