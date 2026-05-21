@@ -71,6 +71,13 @@ export default async function ClientePage({
     .eq("lead_id", id)
     .maybeSingle();
 
+  // Bonus: downsell risco queda (espelho simétrico do up-sell)
+  const { data: downsellRisk } = await supabase
+    .from("v_downsell_risco_queda")
+    .select("*")
+    .eq("lead_id", id)
+    .maybeSingle();
+
   // Bonus: tier upgrade candidate (se aplicável)
   const { data: tierUp } = await supabase
     .from("v_tier_upgrade_candidates")
@@ -257,7 +264,7 @@ export default async function ClientePage({
       )}
 
       {/* Bonus: cards de oportunidade lado a lado */}
-      {(upsellOp || tierUp) && (
+      {(upsellOp || downsellRisk || tierUp) && (
         <div className="grid grid-cols-2 gap-4">
           {upsellOp && (
             <div
@@ -291,6 +298,44 @@ export default async function ClientePage({
                   <span className="text-gray-500">Potencial anual se subir pra média:</span>
                   <div className="text-[#22C55E] font-bold text-lg mt-1">
                     + R$ {Number(upsellOp.potencial_anual_brl).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {downsellRisk && (
+            <div
+              className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4"
+              style={{ borderLeft: "3px solid #BA1717" }}
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <span style={{ fontSize: 18 }}>🔻</span>
+                <h2 className="text-xs font-bold uppercase tracking-wider text-[#E84545]">
+                  Risco de Queda — Ticket Inflado
+                </h2>
+              </div>
+              <div className="space-y-2 text-xs">
+                <div>
+                  <span className="text-gray-500">Ticket atual:</span>{" "}
+                  <span className="text-white font-semibold">
+                    R$ {Number(downsellRisk.cliente_ticket).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Média Tier {downsellRisk.customer_tier}:</span>{" "}
+                  <span className="text-white font-semibold">
+                    R$ {Number(downsellRisk.tier_avg_ticket).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Acima da média:</span>{" "}
+                  <span className="text-[#E84545] font-bold">+{downsellRisk.excesso_pct}%</span>
+                </div>
+                <div className="pt-2 mt-2 border-t border-[#2a2a2a]">
+                  <span className="text-gray-500">Revenue em risco (se buscar alternativa mais barata):</span>
+                  <div className="text-[#E84545] font-bold text-lg mt-1">
+                    R$ {Number(downsellRisk.revenue_em_risco_brl).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </div>
                 </div>
               </div>
