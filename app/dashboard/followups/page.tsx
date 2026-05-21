@@ -30,7 +30,7 @@ export default async function FollowupsPage({ searchParams }: { searchParams: Pr
   const sp = await searchParams;
   const supabase = await createClient();
 
-  const [{ data: followups }, { data: leads }] = await Promise.all([
+  const [{ data: followups }, { data: leads }, { count: vencidos }, { count: semData }] = await Promise.all([
     supabase
       .from("followup_history")
       .select("phone, followup_sequence, phase, angle, message_sent, sent_at, responded, converted_after")
@@ -38,6 +38,18 @@ export default async function FollowupsPage({ searchParams }: { searchParams: Pr
     supabase
       .from("ai_sdr_leads")
       .select("phone, name, city, routing_team, weekly_volume_kg"),
+    // Alerta: vencidos não disparados (next_followup_at <= NOW)
+    supabase
+      .from("ai_sdr_leads")
+      .select("id", { count: "exact", head: true })
+      .eq("followup_eligible", true)
+      .lte("next_followup_at", new Date().toISOString()),
+    // Alerta: elegíveis sem data
+    supabase
+      .from("ai_sdr_leads")
+      .select("id", { count: "exact", head: true })
+      .eq("followup_eligible", true)
+      .is("next_followup_at", null),
   ]);
 
   const rows = followups ?? [];
@@ -84,6 +96,48 @@ export default async function FollowupsPage({ searchParams }: { searchParams: Pr
         </h1>
         <p style={S.muted}>Histórico de follow-ups automáticos</p>
       </div>
+
+      {/* Alertas de saúde do sistema (se houver problema) */}
+      {((vencidos ?? 0) > 0 || (semData ?? 0) > 0) && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {(vencidos ?? 0) > 0 && (
+            <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4" style={{ borderLeft: "3px solid #BA7517" }}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#BA7517]">
+                    🟠 Vencidos não disparados
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    leads com `next_followup_at` no passado aguardando envio
+                  </p>
+                </div>
+                <span className="text-3xl font-bold text-[#E0993A] font-mono">{vencidos}</span>
+              </div>
+              <p className="text-[10px] text-gray-600 mt-2">
+                Backlog esvazia ~2-3 dias úteis (cooldown 23h por lead). Sem ação necessária.
+              </p>
+            </div>
+          )}
+          {(semData ?? 0) > 0 && (
+            <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4" style={{ borderLeft: "3px solid #BA1717" }}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#BA1717]">
+                    🔴 Elegíveis sem data
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    leads marcados elegíveis mas sem `next_followup_at` — não disparam
+                  </p>
+                </div>
+                <span className="text-3xl font-bold text-[#E84545] font-mono">{semData}</span>
+              </div>
+              <p className="text-[10px] text-gray-600 mt-2">
+                Bug em writer upstream. Investigar qual workflow setou `followup_eligible=true` sem agendar.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* KPI cards */}
       <div className="asb-grid-kpi">
