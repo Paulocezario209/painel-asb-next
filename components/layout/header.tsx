@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Menu } from "lucide-react";
+import { StoreSwitcher } from "./store-switcher";
 
 export function Header({
   email,
@@ -34,12 +35,7 @@ export function Header({
         >
           <Menu size={18} />
         </button>
-        <div className="sm:hidden" style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={{ width: 22, height: 22, background: "#1B2A6B", border: "1px solid #2A3F8F", borderRadius: 2, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <span style={{ color: "#FFFFFF", fontWeight: 700, fontSize: 11 }} translate="no">A</span>
-          </div>
-          <span style={{ color: "#FFFFFF", fontSize: 12, fontWeight: 700, fontFamily: "'Courier New', monospace", letterSpacing: ".1em", textTransform: "uppercase" }} translate="no">ASB</span>
-        </div>
+        <StoreSwitcher />
       </div>
 
       <div className="flex items-center gap-3">
