@@ -1,6 +1,7 @@
 // app/compras/resultados/page.tsx — Camada Resultados (Compras × Faturamento)
 // Regra Compras MTD (CLAUDE.md): status != cancelado, data_emissao, emit 1+2074, ts_delete via espelho.
 import { createClient } from "@/lib/supabase/server";
+import { CalendarDashboard, type DiaCalendario, type CompraRow } from "@/app/compras/_components/calendar-dashboard";
 
 export const dynamic = "force-dynamic";
 
@@ -37,7 +38,7 @@ export default async function ResultadosPage() {
   const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
   const iso = (d: Date) => d.toISOString().slice(0, 10);
 
-  const [fatRes, compRes, metaRes] = await Promise.all([
+  const [fatRes, compRes, metaRes, calRes] = await Promise.all([
     supabase
       .from("v_faturado_diario")
       .select("dia, faturado_brl")
@@ -45,7 +46,7 @@ export default async function ResultadosPage() {
       .lte("dia", iso(hoje)),
     supabase
       .from("compras_espelho")
-      .select("data_emissao, valor_total_brl, status_compra")
+      .select("data_emissao, valor_total_brl, status_compra, fornecedor_nome")
       .gte("data_emissao", iso(inicioMes))
       .lte("data_emissao", iso(hoje))
       .neq("status_compra", "cancelado")
@@ -56,14 +57,18 @@ export default async function ResultadosPage() {
       .select("dia, meta_diaria_brl")
       .gte("dia", iso(inicioMes))
       .lte("dia", iso(fimMes)),
+    // calendário/dashboard (Fase 1.5) — agregado diário + semáforo + sinalizadores
+    supabase
+      .from("v_calendario_compras_dia")
+      .select("*")
+      .gte("dia", iso(inicioMes))
+      .lte("dia", iso(fimMes))
+      .order("dia"),
   ]);
   const fatRows = (fatRes.data ?? []) as { dia: string; faturado_brl: number }[];
-  const compRows = (compRes.data ?? []) as {
-    data_emissao: string;
-    valor_total_brl: number;
-    status_compra: string;
-  }[];
+  const compRows = (compRes.data ?? []) as CompraRow[];
   const metaRows = (metaRes.data ?? []) as { dia: string; meta_diaria_brl: number }[];
+  const calRows = (calRes.data ?? []) as DiaCalendario[];
 
   // MTD
   const faturadoMtd = fatRows.reduce((s, r) => s + Number(r.faturado_brl || 0), 0);
@@ -175,6 +180,9 @@ export default async function ResultadosPage() {
           </span>
         </div>
       </div>
+
+      {/* Fase 1.5 — calendário + gráficos mensais + drawer do dia */}
+      <CalendarDashboard days={calRows} compras={compRows} />
     </div>
   );
 }
