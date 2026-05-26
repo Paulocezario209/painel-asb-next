@@ -1,7 +1,13 @@
 // app/compras/resultados/page.tsx — Camada Resultados (Compras × Faturamento)
 // Regra Compras MTD (CLAUDE.md): status != cancelado, data_emissao, emit 1+2074, ts_delete via espelho.
 import { createClient } from "@/lib/supabase/server";
-import { CalendarDashboard, type DiaCalendario, type CompraRow } from "@/app/compras/_components/calendar-dashboard";
+import {
+  CalendarDashboard,
+  type DiaCalendario,
+  type CompraRow,
+  type DrilldownItemRow,
+  type FatTipoRow,
+} from "@/app/compras/_components/calendar-dashboard";
 
 export const dynamic = "force-dynamic";
 
@@ -38,7 +44,7 @@ export default async function ResultadosPage() {
   const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
   const iso = (d: Date) => d.toISOString().slice(0, 10);
 
-  const [fatRes, compRes, metaRes, calRes] = await Promise.all([
+  const [fatRes, compRes, metaRes, calRes, itensRes, fatTipoRes] = await Promise.all([
     supabase
       .from("v_faturado_diario")
       .select("dia, faturado_brl")
@@ -64,11 +70,27 @@ export default async function ResultadosPage() {
       .gte("dia", iso(inicioMes))
       .lte("dia", iso(fimMes))
       .order("dia"),
+    // Fase 1.6 — drilldown produto por dia (não-cancelado), via v_compras_itens_dia
+    supabase
+      .from("v_compras_itens_dia")
+      .select("data_emissao, fornecedor_nome, produto_nome, quantidade, preco_un, valor_brl")
+      .gte("data_emissao", iso(inicioMes))
+      .lte("data_emissao", iso(hoje))
+      .neq("status_compra", "cancelado")
+      .in("id_pessoa_emitente", [1, 2074]),
+    // Fase 1.6 — split NF/Recibo do mês corrente
+    supabase
+      .from("faturamento_tipo_dia")
+      .select("dia, tipo_doc, valor_brl, qtd_docs")
+      .gte("dia", iso(inicioMes))
+      .lte("dia", iso(hoje)),
   ]);
   const fatRows = (fatRes.data ?? []) as { dia: string; faturado_brl: number }[];
   const compRows = (compRes.data ?? []) as CompraRow[];
   const metaRows = (metaRes.data ?? []) as { dia: string; meta_diaria_brl: number }[];
   const calRows = (calRes.data ?? []) as DiaCalendario[];
+  const itensRows = (itensRes.data ?? []) as DrilldownItemRow[];
+  const fatTipoRows = (fatTipoRes.data ?? []) as FatTipoRow[];
 
   // MTD
   const faturadoMtd = fatRows.reduce((s, r) => s + Number(r.faturado_brl || 0), 0);
@@ -181,8 +203,8 @@ export default async function ResultadosPage() {
         </div>
       </div>
 
-      {/* Fase 1.5 — calendário + gráficos mensais + drawer do dia */}
-      <CalendarDashboard days={calRows} compras={compRows} />
+      {/* Fase 1.5 + 1.6 — calendário + gráficos + donut NF/Recibo + drawer com drilldown de produto */}
+      <CalendarDashboard days={calRows} compras={compRows} itens={itensRows} fatTipo={fatTipoRows} />
     </div>
   );
 }

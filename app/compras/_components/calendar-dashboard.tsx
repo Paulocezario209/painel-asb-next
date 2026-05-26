@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, ReferenceLine, CartesianGrid,
+  PieChart, Pie, Cell, Legend,
 } from "recharts";
 
 export type DiaCalendario = {
@@ -24,17 +25,47 @@ export type CompraRow = {
   status_compra: string;
   fornecedor_nome: string | null;
 };
+export type DrilldownItemRow = {
+  data_emissao: string;
+  fornecedor_nome: string | null;
+  produto_nome: string | null;
+  quantidade: number;
+  preco_un: number;
+  valor_brl: number;
+};
+export type FatTipoRow = {
+  dia: string;
+  tipo_doc: string; // 'NF' | 'Recibo'
+  valor_brl: number;
+  qtd_docs: number;
+};
 
 const mono = "'Courier New', monospace";
 const SEM: Record<string, string> = { verde: "#2ea043", amarelo: "#d29922", vermelho: "#f85149", sem_dado: "#2a3340" };
 const FLAG_EMOJI: Record<string, string> = {
   pico_compras: "🔥", top_faturado: "💰", margem_critica: "⚠️", abaixo_meta: "📉", acima_meta: "🎯",
 };
+const DONUT: Record<string, string> = { NF: "#2ea043", Recibo: "#d29922" };
 const brl = (n: number) => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 const ddmm = (iso: string) => iso.slice(8, 10) + "/" + iso.slice(5, 7);
 
-export function CalendarDashboard({ days, compras }: { days: DiaCalendario[]; compras: CompraRow[] }) {
+export function CalendarDashboard({
+  days, compras, itens, fatTipo,
+}: {
+  days: DiaCalendario[];
+  compras: CompraRow[];
+  itens: DrilldownItemRow[];
+  fatTipo: FatTipoRow[];
+}) {
   const [sel, setSel] = useState<string | null>(null);
+
+  // Donut NF/Recibo (MTD) — soma client-side (PostgREST bloqueia agregação no select)
+  const donut = useMemo(() => {
+    const m: Record<string, number> = {};
+    for (const f of fatTipo) m[f.tipo_doc] = (m[f.tipo_doc] || 0) + Number(f.valor_brl || 0);
+    return Object.entries(m).map(([tipo, valor]) => ({ tipo, valor }));
+  }, [fatTipo]);
+  const donutTotal = useMemo(() => donut.reduce((s, d) => s + d.valor, 0), [donut]);
 
   const chartData = useMemo(
     () => days.map((d) => ({
@@ -65,6 +96,19 @@ export function CalendarDashboard({ days, compras }: { days: DiaCalendario[]; co
     }
     return Object.entries(m).sort((a, b) => b[1] - a[1]);
   }, [sel, compras]);
+
+  // produtos do dia selecionado, agrupados por fornecedor (drilldown Fase 1.6)
+  const selItensByFornec = useMemo(() => {
+    const m: Record<string, DrilldownItemRow[]> = {};
+    if (!sel) return m;
+    for (const it of itens) {
+      if (it.data_emissao !== sel) continue;
+      const k = it.fornecedor_nome || "(sem fornecedor)";
+      (m[k] ||= []).push(it);
+    }
+    for (const k of Object.keys(m)) m[k].sort((a, b) => Number(b.valor_brl) - Number(a.valor_brl));
+    return m;
+  }, [sel, itens]);
 
   const card: React.CSSProperties = { background: "#0f1428", border: "1px solid #1B2A6B", borderRadius: 6, padding: 14 };
   const lbl: React.CSSProperties = { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", color: "#556677", fontFamily: mono };
@@ -98,6 +142,29 @@ export function CalendarDashboard({ days, compras }: { days: DiaCalendario[]; co
               <Line type="monotone" dataKey="pct" stroke="#c8d8e8" dot={{ r: 2 }} strokeWidth={1} name="% compras/fat" connectNulls />
             </LineChart>
           </ResponsiveContainer>
+        </div>
+        <div style={{ ...card, flex: 1, minWidth: 240 }}>
+          <div style={{ ...lbl, marginBottom: 8 }}>Faturado por tipo — NF × Recibo (MTD)</div>
+          {donutTotal === 0 ? (
+            <div style={{ color: "#556677", fontSize: 11, fontFamily: mono, padding: 12 }}>sem faturamento no mês</div>
+          ) : (
+            <ResponsiveContainer width="100%" height={180}>
+              <PieChart>
+                <Pie data={donut} dataKey="valor" nameKey="tipo" cx="50%" cy="50%" innerRadius={45} outerRadius={70} paddingAngle={2}>
+                  {donut.map((d) => <Cell key={d.tipo} fill={DONUT[d.tipo] || "#556677"} />)}
+                </Pie>
+                <Tooltip formatter={(v, n) => [brl(Number(v)), String(n)]} contentStyle={{ background: "#0f1428", border: "1px solid #1B2A6B", fontSize: 11 }} />
+                <Legend
+                  formatter={(value) => {
+                    const d = donut.find((x) => x.tipo === value);
+                    const p = donutTotal > 0 && d ? Math.round((d.valor / donutTotal) * 100) : 0;
+                    return `${value} ${p}%`;
+                  }}
+                  wrapperStyle={{ fontSize: 11, fontFamily: mono }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
         </div>
       </div>
 
@@ -177,19 +244,30 @@ export function CalendarDashboard({ days, compras }: { days: DiaCalendario[]; co
             </div>
 
             <div>
-              <div style={{ ...lbl, marginBottom: 6 }}>Fornecedores do dia ({selFornec.length})</div>
+              <div style={{ ...lbl, marginBottom: 6 }}>Fornecedores do dia ({selFornec.length}) · clique implícito: produtos abaixo de cada um</div>
               {selFornec.length === 0 ? (
                 <div style={{ color: "#556677", fontSize: 11, fontFamily: mono }}>sem compras neste dia</div>
               ) : (
                 selFornec.map(([nome, val]) => (
-                  <div key={nome} style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", borderBottom: "1px solid #1B2A6B", fontSize: 11, fontFamily: mono, color: "#c8d8e8" }}>
-                    <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 220 }}>{nome}</span>
-                    <b>{brl(val)}</b>
+                  <div key={nome} style={{ marginBottom: 10 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", borderBottom: "1px solid #1B2A6B", fontSize: 11, fontFamily: mono, color: "#c8d8e8" }}>
+                      <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 220, fontWeight: 700 }}>{nome}</span>
+                      <b>{brl(val)}</b>
+                    </div>
+                    {(selItensByFornec[nome] || []).map((it, idx) => (
+                      <div key={idx} style={{ display: "flex", justifyContent: "space-between", gap: 8, padding: "3px 0 3px 10px", fontSize: 10, fontFamily: mono, color: "#8899aa" }}>
+                        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 200 }}>
+                          {(it.produto_nome || "(produto)") + " · " + Number(it.quantidade) + "× " + brl(Number(it.preco_un))}
+                        </span>
+                        <span>{brl(Number(it.valor_brl))}</span>
+                      </div>
+                    ))}
                   </div>
                 ))
               )}
-              <div style={{ color: "#556677", fontSize: 9, fontFamily: mono, marginTop: 8 }}>
-                Detalhe por produto (lote/validade/peso) — Fase 1.6 (compras_itens via movimentacao_itens).
+              <div style={{ color: "#556677", fontSize: 9, fontFamily: mono, marginTop: 4 }}>
+                Drilldown por produto (v_compras_itens_dia). Total do fornecedor = valor do pedido (header,
+                c/ frete/desc.); itens = linhas. Lote/validade de fornecedor: DEBT-067 (não digitado no ARES).
               </div>
             </div>
           </div>
