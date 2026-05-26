@@ -3,13 +3,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart2, Boxes, LineChart, ClipboardList } from "lucide-react";
+import { BarChart2, Boxes, LineChart, ClipboardList, Factory } from "lucide-react";
 
 const navItems = [
   { href: "/compras/resultados", label: "Resultados",  icon: BarChart2 },
   { href: "/compras/estoque",    label: "Estoque",     icon: Boxes },
   { href: "/compras/previsao",   label: "Previsão",    icon: LineChart },
   { href: "/compras/inventario", label: "Inventário",  icon: ClipboardList },
+  { href: "/compras/custos",     label: "Custos",      icon: Factory },
 ];
 
 const GREEN = "#2ea043";
