@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 
-export type UserRole = "gestor" | "manager" | "vendedor";
+export type UserRole = "gestor" | "manager" | "vendedor" | "tecnico_compras";
 
 export interface UserContext {
   email: string;
@@ -9,6 +9,7 @@ export interface UserContext {
   isGestor: boolean;
   isManager: boolean;
   isVendedor: boolean;
+  isTecnicoCompras: boolean;
 }
 
 const VENDOR_BLOCKED: string[] = [
@@ -28,6 +29,8 @@ export function canAccess(role: UserRole, route: string): boolean {
   if (role === "gestor") return true;
   if (role === "manager") return !MANAGER_BLOCKED.includes(route);
   if (role === "vendedor") return !VENDOR_BLOCKED.includes(route);
+  // tecnico_compras: acesso exclusivo a /compras — bloqueado em todo /dashboard
+  if (role === "tecnico_compras") return route.startsWith("/compras");
   return false;
 }
 
@@ -52,5 +55,6 @@ export async function getUserContext(): Promise<UserContext | null> {
     isGestor: role === "gestor",
     isManager: role === "manager",
     isVendedor: role === "vendedor",
+    isTecnicoCompras: role === "tecnico_compras",
   };
 }

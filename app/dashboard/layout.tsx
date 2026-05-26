@@ -18,6 +18,11 @@ export default async function DashboardLayout({
   const ctx = await getUserContext();
   const role = ctx?.role ?? "vendedor";
 
+  // tecnico_compras: acesso exclusivo a /compras — bloqueia toda a área SDR/dashboard
+  if (role === "tecnico_compras") {
+    redirect("/compras/resultados");
+  }
+
   return (
     <DashboardShell email={user.email ?? ""} role={role}>
       {children}
