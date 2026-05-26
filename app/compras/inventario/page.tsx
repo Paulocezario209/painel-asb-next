@@ -62,7 +62,8 @@ export default async function InventarioPage() {
       <div style={{ border: "1px solid #d29922", background: "rgba(210,153,34,.08)", borderRadius: 6, padding: "10px 14px" }}>
         <p style={{ color: "#d29922", fontSize: 11, fontFamily: mono }}>
           {comFisica} produto(s) com contagem física · {emRevisao} em revisão (ambíguos da transcrição).
-          Inventário 30/05 (módulo ARES) expande a cobertura. Correção de ambíguos: aba Estoque.
+          Janela do espelho = 90 dias: o único acerto de inventário nela é 01/05 (por isso ~25 dias em todos).
+          Contagens anteriores a 90d não aparecem (DEBT-072). Inventário 30/05 (módulo ARES) expande. Ambíguos: aba Estoque.
         </p>
       </div>
 
@@ -103,7 +104,7 @@ export default async function InventarioPage() {
               <tr key={m.id_produto} style={{ borderBottom: "1px solid #0b0f1d" }}>
                 <td style={{ ...td, textAlign: "left", color: "#FFFFFF", maxWidth: 320, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.descricao || `#${m.id_produto}`}</td>
                 <td style={{ ...td, textAlign: "left", color: "#8899aa" }}>{m.grupo_nome || "—"}</td>
-                <td style={td}>{m.ultima_contagem ? m.ultima_contagem.slice(0, 10).split("-").reverse().join("/") : "(nunca)"}</td>
+                <td style={td}>{m.ultima_contagem ? m.ultima_contagem.slice(0, 10).split("-").reverse().join("/") : "(sem acerto ≤90d)"}</td>
                 <td style={{ ...td, color: m.dias_desde_contagem == null ? "#f85149" : "#c8d8e8" }}>{m.dias_desde_contagem == null ? "—" : n0(m.dias_desde_contagem)}</td>
                 <td style={{ ...td, textAlign: "center" }}>{m.tem_contagem_fisica ? "✓" : "❌"}</td>
               </tr>
