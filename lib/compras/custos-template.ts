@@ -3,6 +3,10 @@
  * Módulo PURO (sem HTTP/DB) — importado pelo route GET /api/compras/custos/template
  * e testável isoladamente. Dropdowns via data validation nativo (exceljs).
  *
+ * 5 abas: Instruções + Temperatura Produto + Temperatura Setor + Horas Operacionais
+ *         + Jornada Semanal + Qualidade. (Qualidade inclui perda de MP via tipo=descarte.)
+ * Dashboard semanal (v_custos_producao_semana) espelha 1:1 o PDF "Controle Custo" da Qualidade.
+ *
  * Domínios espelham os CHECK constraints das tabelas producao_* — NÃO divergir.
  */
 import * as ExcelJS from "exceljs";
@@ -46,7 +50,7 @@ function listDV(ws: ExcelJS.Worksheet, col: string, values: string[], rows = 500
       allowBlank: true,
       formulae: [`"${values.join(",")}"`],
       showErrorMessage: true,
-      errorStyle: "error",
+      errorStyle: "stop", // OOXML válido: rejeita digitação fora do enum
       errorTitle: "Valor inválido",
       error: `Use apenas: ${values.join(", ")}`,
     };
@@ -67,7 +71,7 @@ function numDV(
       operator: between ? "between" : "greaterThanOrEqual",
       formulae: between ? [opts.min!, opts.max!] : [opts.min ?? 0],
       showErrorMessage: true,
-      errorStyle: "error",
+      errorStyle: "warning", // OOXML válido: avisa mas permite salvar (upload revalida)
       errorTitle: "Fora do intervalo",
       error: between ? `Valor entre ${opts.min} e ${opts.max}` : `Valor >= ${opts.min ?? 0}`,
     };
@@ -102,15 +106,16 @@ export function buildTemplateWorkbook(cfg: CustosConfig = DEFAULT_CONFIG): Excel
 
   // ── Aba 0: Instruções ──
   const ins = wb.addWorksheet("Instruções", { properties: { tabColor: { argb: "FF1F2937" } } });
-  ins.columns = [{ width: 4 }, { width: 30 }, { width: 70 }];
+  ins.columns = [{ width: 4 }, { width: 32 }, { width: 72 }];
   const line = (a: string, b = "", bold = false) => {
     const row = ins.addRow(["", a, b]);
     if (bold) row.font = { bold: true };
     return row;
   };
   ins.addRow([]);
-  line("ASB — Apontamentos de Produção", "", true).font = { bold: true, size: 14 };
+  line("ASB — Apontamentos de Produção (semanal)", "", true).font = { bold: true, size: 14 };
   line("Gerado em", hoje);
+  line("Periodicidade", "Líderes preenchem ao longo da semana e sobem o arquivo na sexta-feira.");
   ins.addRow([]);
   line("REGRA DE OURO", "", true);
   line("ID OP", "Consulte o ID da Ordem de Produção no ARES e digite na coluna. O painel NÃO é fonte de OP.");
@@ -119,8 +124,9 @@ export function buildTemplateWorkbook(cfg: CustosConfig = DEFAULT_CONFIG): Excel
   line("ABAS A PREENCHER", "", true);
   line("1. Temperatura Produto", "Temperatura por OP em cada momento (entrada/meio/saida/final). Sanitário.");
   line("2. Temperatura Setor", "Temperatura ambiente por setor e turno.");
-  line("3. Horas Operacionais", "Horas trabalhadas por etapa (moagem/modelagem/embalamento) no dia.");
-  line("4. Qualidade", "Rendimento, retrabalho, descarte e não-conformidade por OP.");
+  line("3. Horas Operacionais", "Horas por etapa no dia. Formato HH:MM:SS (ex: 8:00:12). O sistema converte.");
+  line("4. Jornada Semanal", "1 linha por semana: ano + semana ISO + dias trabalhados + horas semanais.");
+  line("5. Qualidade", "Rendimento, retrabalho, descarte e não-conformidade por OP. Perda de MP = tipo 'descarte'.");
   ins.addRow([]);
   line("THRESHOLDS ATUAIS (no momento do download)", "", true);
   line("Custo/hora moagem", `R$ ${Number(cfg.custo_hora_moagem).toFixed(2)}`);
@@ -137,7 +143,7 @@ export function buildTemplateWorkbook(cfg: CustosConfig = DEFAULT_CONFIG): Excel
       .join(" · ")
   );
   ins.addRow([]);
-  line("ATENÇÃO", "Datas no formato AAAA-MM-DD. Temperatura em °C. Não renomeie as abas nem os cabeçalhos.", true);
+  line("ATENÇÃO", "Datas em AAAA-MM-DD. Temperatura em °C. Não renomeie as abas nem os cabeçalhos.", true);
 
   // ── Aba 1: Temperatura Produto ──
   const a1 = wb.addWorksheet("Temperatura Produto");
@@ -178,27 +184,50 @@ export function buildTemplateWorkbook(cfg: CustosConfig = DEFAULT_CONFIG): Excel
   listDV(a2, "C", TURNO);
   numDV(a2, "D", { min: -30, max: 60 });
 
-  // ── Aba 3: Horas Operacionais ──
+  // ── Aba 3: Horas Operacionais (HH:MM:SS como texto — upload converte p/ decimal) ──
   const a3 = wb.addWorksheet("Horas Operacionais");
   header(a3, [
     { h: "Data", w: 14 },
     { h: "Etapa", w: 16 },
-    { h: "Horas", w: 10 },
+    { h: "Horas (HH:MM:SS)", w: 18 },
     { h: "Apontador", w: 20 },
     { h: "Observação", w: 30 },
   ]);
+  a3.getColumn(3).numFmt = "@"; // força texto na coluna de horas (não vira serial de tempo)
   a3.addRows([
-    [hoje, "moagem", 4, "Rafael", "exemplo — apague"],
-    [hoje, "modelagem", 6.5, "Ana", "exemplo — apague"],
-    [hoje, "embalamento", 3, "João", "exemplo — apague"],
+    [hoje, "moagem", "08:00:12", "Rafael", "exemplo — apague"],
+    [hoje, "modelagem", "06:24:00", "Ana", "exemplo — apague"],
+    [hoje, "embalamento", "03:07:00", "João", "exemplo — apague"],
   ]);
   paintSamples(a3, 2, 3, 5);
   listDV(a3, "B", ETAPA);
-  numDV(a3, "C", { min: 0, max: 24 });
+  a3.getCell("C1").note = "Formato HH:MM:SS (ex: 8:00:12). O sistema converte para decimal automaticamente.";
 
-  // ── Aba 4: Qualidade ──
-  const a4 = wb.addWorksheet("Qualidade");
+  // ── Aba 4: Jornada Semanal (1 linha por semana) ──
+  const a4 = wb.addWorksheet("Jornada Semanal");
   header(a4, [
+    { h: "Ano", w: 10 },
+    { h: "Semana ISO", w: 12 },
+    { h: "Dias Trabalhados", w: 16 },
+    { h: "Horas Semanais", w: 16 },
+    { h: "Apontador", w: 20 },
+    { h: "Observação", w: 30 },
+  ]);
+  a4.addRows([
+    [2026, 21, 5.0, 44.0, "Rafael", "exemplo — apague"],
+    [2026, 22, 4.0, 36.0, "Rafael", "exemplo — apague (semana com feriado)"],
+    [2026, 23, 5.0, 44.0, "Ana", "exemplo — apague"],
+  ]);
+  paintSamples(a4, 2, 3, 6);
+  numDV(a4, "A", { min: 2024, max: 2030 });
+  numDV(a4, "B", { min: 1, max: 53 });
+  numDV(a4, "C", { min: 0, max: 7 });
+  numDV(a4, "D", { min: 0, max: 80 });
+  a4.getCell("B1").note = "Semana ISO 8601 (mesma do calendário Excel). 1 linha por semana.";
+
+  // ── Aba 5: Qualidade (inclui perda de MP via tipo=descarte) ──
+  const a5 = wb.addWorksheet("Qualidade");
+  header(a5, [
     { h: "Data", w: 14 },
     { h: "ID OP", w: 12 },
     { h: "Tipo", w: 18 },
@@ -207,15 +236,15 @@ export function buildTemplateWorkbook(cfg: CustosConfig = DEFAULT_CONFIG): Excel
     { h: "Justificativa", w: 30 },
     { h: "Apontador", w: 20 },
   ]);
-  a4.addRows([
+  a5.addRows([
     [hoje, 12345, "rendimento", 92, "percent", "exemplo — apague", "Rafael"],
-    [hoje, 12345, "retrabalho", 5.5, "kg", "exemplo — apague", "Ana"],
-    [hoje, 12346, "descarte", 1.2, "kg", "exemplo — apague", "João"],
+    [hoje, 12345, "descarte", 1.2, "kg", "perda de MP — exemplo, apague", "Ana"],
+    [hoje, 12346, "retrabalho", 5.5, "kg", "exemplo — apague", "João"],
   ]);
-  paintSamples(a4, 2, 3, 7);
-  listDV(a4, "C", TIPO_QUAL);
-  listDV(a4, "E", UNIDADE);
-  numDV(a4, "D", { min: 0 });
+  paintSamples(a5, 2, 3, 7);
+  listDV(a5, "C", TIPO_QUAL);
+  listDV(a5, "E", UNIDADE);
+  numDV(a5, "D", { min: 0 });
 
   return wb;
 }
