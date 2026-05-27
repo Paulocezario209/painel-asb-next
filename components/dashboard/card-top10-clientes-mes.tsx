@@ -1,9 +1,8 @@
 // Card "TOP 10 Clientes do Mês" — substitui CardReconciliar no /dashboard.
 // Server Component self-contained. Lê v_top10_clientes_mes (receita do mês corrente, pedidos_espelho).
-// Visibilidade: gestor/manager vê todos; vendedor vê só seu routing_team (RLS via getUserContext).
+// Visibilidade: mesmo padrão dos demais cards do dashboard (createClient direto, todos veem tudo).
 // Vitrine de informação — SEM link clicável (DEBT-040: rota ARES pura ainda não existe).
 import { createClient } from "@/lib/supabase/server";
-import { getUserContext } from "@/lib/auth/get-user-role";
 
 const mono = "'Courier New', monospace";
 const brl = (n: number) =>
@@ -33,11 +32,8 @@ type Row = {
 };
 
 export async function CardTop10ClientesMes() {
-  const ctx = await getUserContext();
-  if (!ctx) return null;
-
   const supabase = await createClient();
-  let q = supabase
+  const { data } = await supabase
     .from("v_top10_clientes_mes")
     .select(
       "ares_pessoa_id, nome_fantasia, contato, bairro, cidade, vendedor_routing_team, vendedor_nome, pedidos_mes, receita_mes, recorrencia_semanal, ticket_medio"
@@ -45,12 +41,6 @@ export async function CardTop10ClientesMes() {
     .order("receita_mes", { ascending: false })
     .limit(10);
 
-  // vendedor vê só os seus; gestor/manager veem todos
-  if (ctx.isVendedor && ctx.routing_team) {
-    q = q.eq("vendedor_routing_team", ctx.routing_team);
-  }
-
-  const { data } = await q;
   const rows = (data ?? []) as Row[];
   if (rows.length === 0) return null;
 
