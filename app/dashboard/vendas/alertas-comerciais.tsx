@@ -1,7 +1,21 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import type { Alerta, AlertasResponse } from "./actions";
+import { getPedidosAtrasadosPorVendedor, getClientesDormentes } from "./actions";
+import {
+  AlertDrawer,
+  PEDIDOS_ATRASADOS_COLUMNS,
+  CLIENTES_DORMENTES_COLUMNS,
+  type PedidoAtrasadoRow,
+  type ClienteDormenteRow,
+} from "./alert-drawer";
+
+type DrawerState =
+  | { kind: "atrasados"; title: string; subtitle?: string; rows: PedidoAtrasadoRow[] }
+  | { kind: "dormente"; title: string; subtitle?: string; rows: ClienteDormenteRow[] }
+  | null;
 
 const SEV: Record<Alerta["severidade"], { bg: string; border: string; icon: string; label: string }> = {
   vermelho: { bg: "rgba(200,16,46,.12)", border: "#C8102E", icon: "🔴", label: "CRÍTICO" },
@@ -19,6 +33,25 @@ const TIPO_ICON: Record<Alerta["tipo"], string> = {
 };
 
 export function AlertasComerciais({ data }: { data: AlertasResponse }) {
+  const [drawer, setDrawer] = useState<DrawerState>(null);
+  const [loading, setLoading] = useState(false);
+
+  async function openDrawer(a: Alerta) {
+    if (loading) return;
+    setLoading(true);
+    try {
+      if (a.tipo === "atrasados") {
+        const rows = await getPedidosAtrasadosPorVendedor(a.vendedor ?? "");
+        setDrawer({ kind: "atrasados", title: a.titulo, subtitle: a.descricao, rows });
+      } else if (a.tipo === "dormente") {
+        const rows = await getClientesDormentes(5);
+        setDrawer({ kind: "dormente", title: "Clientes dormentes", subtitle: a.descricao, rows });
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
   if (data.total === 0) {
     return (
       <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg" style={{ padding: "20px 24px" }}>
@@ -60,7 +93,9 @@ export function AlertasComerciais({ data }: { data: AlertasResponse }) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 10 }}>
         {data.alertas.map((a, i) => {
           const s = SEV[a.severidade];
-          const clickable = !!a.href;
+          const isLink = !!a.href;
+          const isDrawer = !a.href && (a.tipo === "atrasados" || a.tipo === "dormente");
+          const clickable = isLink || isDrawer;
           const cardStyle: React.CSSProperties = {
             background: s.bg,
             borderLeft: `3px solid ${s.border}`,
@@ -90,21 +125,53 @@ export function AlertasComerciais({ data }: { data: AlertasResponse }) {
               </p>
             </>
           );
-          return clickable ? (
-            <Link
-              key={`${a.tipo}-${i}`}
-              href={a.href!}
-              style={{ ...cardStyle, textDecoration: "none" }}
-            >
-              {inner}
-            </Link>
-          ) : (
+          if (isLink) {
+            return (
+              <Link key={`${a.tipo}-${i}`} href={a.href!} style={{ ...cardStyle, textDecoration: "none" }}>
+                {inner}
+              </Link>
+            );
+          }
+          if (isDrawer) {
+            return (
+              <div
+                key={`${a.tipo}-${i}`}
+                role="button"
+                tabIndex={0}
+                onClick={() => openDrawer(a)}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") openDrawer(a); }}
+                style={cardStyle}
+              >
+                {inner}
+              </div>
+            );
+          }
+          return (
             <div key={`${a.tipo}-${i}`} style={cardStyle}>
               {inner}
             </div>
           );
         })}
       </div>
+
+      {drawer?.kind === "atrasados" && (
+        <AlertDrawer
+          title={drawer.title}
+          subtitle={drawer.subtitle}
+          columns={PEDIDOS_ATRASADOS_COLUMNS}
+          rows={drawer.rows}
+          onClose={() => setDrawer(null)}
+        />
+      )}
+      {drawer?.kind === "dormente" && (
+        <AlertDrawer
+          title={drawer.title}
+          subtitle={drawer.subtitle}
+          columns={CLIENTES_DORMENTES_COLUMNS}
+          rows={drawer.rows}
+          onClose={() => setDrawer(null)}
+        />
+      )}
     </div>
   );
 }
