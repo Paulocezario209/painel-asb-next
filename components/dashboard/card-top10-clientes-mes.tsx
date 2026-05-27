@@ -22,7 +22,6 @@ type Row = {
   nome_fantasia: string | null;
   contato: string | null;
   bairro: string | null;
-  cidade: string | null;
   vendedor_routing_team: string | null;
   vendedor_nome: string | null;
   pedidos_mes: number;
@@ -36,7 +35,7 @@ export async function CardTop10ClientesMes() {
   const { data } = await supabase
     .from("v_top10_clientes_mes")
     .select(
-      "ares_pessoa_id, nome_fantasia, contato, bairro, cidade, vendedor_routing_team, vendedor_nome, pedidos_mes, receita_mes, recorrencia_semanal, ticket_medio"
+      "ares_pessoa_id, nome_fantasia, contato, bairro, vendedor_routing_team, vendedor_nome, pedidos_mes, receita_mes, recorrencia_semanal, ticket_medio"
     )
     .order("receita_mes", { ascending: false })
     .limit(10);
@@ -72,7 +71,7 @@ export async function CardTop10ClientesMes() {
               <th style={{ ...th, textAlign: "right" }}>ID</th>
               <th style={th}>Cliente</th>
               <th style={th}>Contato</th>
-              <th style={th}>Cidade / Bairro</th>
+              <th style={th}>Bairro</th>
               <th style={th}>Vendedor</th>
               <th style={{ ...th, textAlign: "right" }}>Pedidos</th>
               <th style={{ ...th, textAlign: "right" }}>Receita mês</th>
@@ -87,7 +86,7 @@ export async function CardTop10ClientesMes() {
                 <td style={{ ...td, textAlign: "right", color: "#8899aa", fontSize: 10 }}>{r.ares_pessoa_id}</td>
                 <td style={{ ...td, color: "#FFFFFF" }}>{r.nome_fantasia || "—"}</td>
                 <td style={{ ...td, color: "#8899aa", fontSize: 11 }}>{fmtTel(r.contato)}</td>
-                <td style={{ ...td, color: "#8899aa", fontSize: 11 }}>{r.cidade || r.bairro || "—"}</td>
+                <td style={{ ...td, color: "#8899aa", fontSize: 11 }}>{r.bairro || "—"}</td>
                 <td style={{ ...td, color: "#c8d8e8", fontSize: 11 }}>{r.vendedor_nome || "—"}</td>
                 <td style={{ ...td, textAlign: "right" }}>{r.pedidos_mes}</td>
                 <td style={{ ...td, textAlign: "right", color: "#2ea043", fontWeight: 700 }}>{brl(r.receita_mes)}</td>
