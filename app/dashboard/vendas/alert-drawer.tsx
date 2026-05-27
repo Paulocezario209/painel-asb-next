@@ -38,6 +38,7 @@ export function fmtDate(iso: string | null | undefined): string {
 
 // ── Tipos das linhas (preenchidas pelas server actions na Etapa 2) ───────────
 export type PedidoAtrasadoRow = {
+  n_pedido: string | null;
   cliente_nome: string | null;
   valor_total_brl: number | null;
   data_meta: string | null;
@@ -55,6 +56,7 @@ export type ClienteDormenteRow = {
 
 // ── Configs de coluna (decisões de layout do Paulo) ──────────────────────────
 export const PEDIDOS_ATRASADOS_COLUMNS: DrawerColumn<PedidoAtrasadoRow>[] = [
+  { key: "n_pedido", label: "Nº Pedido", render: (r) => <span style={{ color: "#8899aa" }}>#{r.n_pedido ?? "—"}</span> },
   { key: "cliente_nome", label: "Cliente", render: (r) => r.cliente_nome ?? "—" },
   { key: "valor_total_brl", label: "Valor", align: "right", render: (r) => fmtBRL(r.valor_total_brl) },
   { key: "dias_atraso", label: "Dias atrasado", align: "right",

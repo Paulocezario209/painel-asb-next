@@ -460,7 +460,7 @@ export async function getPedidosAtrasadosPorVendedor(team: string): Promise<Pedi
   const hoje = new Date().toISOString().slice(0, 10);
   const { data, error } = await supabase
     .from("pedidos_espelho")
-    .select("cliente_nome, valor_total_brl, data_meta")
+    .select("n_pedido, cliente_nome, valor_total_brl, data_meta")
     .in("status_pedido", ["pendente", "aprovado"])
     .lt("data_meta", hoje)
     .eq("is_deleted", false)
@@ -474,6 +474,7 @@ export async function getPedidosAtrasadosPorVendedor(team: string): Promise<Pedi
   }
   const today = Date.now();
   return (data ?? []).map((p) => ({
+    n_pedido: p.n_pedido,
     cliente_nome: p.cliente_nome,
     valor_total_brl: p.valor_total_brl,
     data_meta: p.data_meta,
