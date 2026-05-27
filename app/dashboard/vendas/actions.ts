@@ -114,6 +114,7 @@ export async function getAlertasComerciais(): Promise<AlertasResponse> {
     .select("vendedor_routing_team, valor_total_brl")
     .in("status_pedido", ["pendente", "aprovado"])
     .lt("data_meta", hoje)
+    .eq("is_deleted", false)
     .not("ares_cliente_id", "in", "(1,4,808)")
     .gt("valor_total_brl", 0);
   const atrasadosPorVendedor: Record<string, { qty: number; valor: number }> = {};
@@ -462,6 +463,7 @@ export async function getPedidosAtrasadosPorVendedor(team: string): Promise<Pedi
     .select("cliente_nome, valor_total_brl, data_meta")
     .in("status_pedido", ["pendente", "aprovado"])
     .lt("data_meta", hoje)
+    .eq("is_deleted", false)
     .eq("vendedor_routing_team", team)
     .not("ares_cliente_id", "in", "(1,4,808)")
     .gt("valor_total_brl", 0)
