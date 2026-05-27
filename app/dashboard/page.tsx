@@ -5,6 +5,7 @@ import {
   WeeklyConversions,
   VendorPerformance,
 } from "@/components/dashboard/charts";
+import { CardReconciliar } from "@/components/dashboard/card-reconciliar";
 
 export const dynamic = "force-dynamic";
 
@@ -287,6 +288,9 @@ export default async function DashboardPage() {
           </Link>
         ))}
       </div>
+
+      {/* DEBT-001 — clientes a reconciliar (só gestor; null se 0) */}
+      <CardReconciliar />
 
       {/* Onde Focar Agora */}
       <div style={{ ...S.card, padding: "20px 24px" }}>
