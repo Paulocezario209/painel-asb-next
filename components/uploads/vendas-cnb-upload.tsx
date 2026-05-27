@@ -1,0 +1,269 @@
+"use client";
+
+import { useCallback, useState } from "react";
+import { useDropzone } from "react-dropzone";
+import { useRouter } from "next/navigation";
+import { Upload, CheckCircle, AlertCircle, Loader2, FileSpreadsheet, RotateCcw } from "lucide-react";
+
+type State = "idle" | "uploading" | "preview" | "applying" | "done" | "error";
+
+type ParsedVenda = {
+  row: number;
+  numero: string;
+  data_venda: string | null;
+  cliente_documento: string;
+  cliente_documento_tipo: "CPF" | "CNPJ" | null;
+  cliente_nome: string;
+  valor_total_brl: number;
+  forma_pagamento: string | null;
+  vendedor_raw: string;
+  vendedor_routing_team: string | null;
+  error?: string;
+};
+
+type PreviewResp = {
+  mode: "preview";
+  total: number;
+  validas: number;
+  invalidas: number;
+  previa: ParsedVenda[];
+  erros: ParsedVenda[];
+};
+
+type AppliedResp = {
+  mode: "applied";
+  total: number;
+  aplicadas: number;
+  invalidas: number;
+  detalhe: ParsedVenda[];
+  erros: ParsedVenda[];
+};
+
+const VENDOR_NOMES: Record<string, string> = {
+  SETOR_SOROCABA_SAO_PAULO: "Ana Paula",
+  SETOR_CAMPINAS_JUNDIAI: "Alan",
+  SETOR_CUIT: "Paulo Cezario",
+};
+
+function fmtBRL(v: number) {
+  return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+export function VendasCnbUpload() {
+  const router = useRouter();
+  const [state, setState] = useState<State>("idle");
+  const [filename, setFilename] = useState<string | null>(null);
+  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<PreviewResp | null>(null);
+  const [applied, setApplied] = useState<AppliedResp | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
+    const f = acceptedFiles[0];
+    if (!f) return;
+    setFilename(f.name);
+    setFile(f);
+    setState("uploading");
+    setPreview(null);
+    setApplied(null);
+    setErrorMsg(null);
+
+    const form = new FormData();
+    form.append("file", f);
+    form.append("dry_run", "true");
+    try {
+      const res = await fetch("/api/vendas-cnb/upload", { method: "POST", body: form });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        setErrorMsg(err.error ?? `Erro HTTP ${res.status}`);
+        setState("error");
+        return;
+      }
+      setPreview(await res.json());
+      setState("preview");
+    } catch (e) {
+      setErrorMsg(String(e));
+      setState("error");
+    }
+  }, []);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
+      "application/vnd.ms-excel": [".xls"],
+    },
+    maxFiles: 1,
+    disabled: state === "uploading" || state === "applying",
+  });
+
+  async function aplicar() {
+    if (!file) return;
+    setState("applying");
+    setErrorMsg(null);
+    const form = new FormData();
+    form.append("file", file);
+    form.append("dry_run", "false");
+    try {
+      const res = await fetch("/api/vendas-cnb/upload", { method: "POST", body: form });
+      const data = await res.json();
+      if (!res.ok) {
+        setErrorMsg(data.error ?? `Erro HTTP ${res.status}`);
+        setState("error");
+        return;
+      }
+      setApplied(data as AppliedResp);
+      setState("done");
+      router.refresh();
+    } catch (e) {
+      setErrorMsg(String(e));
+      setState("error");
+    }
+  }
+
+  function reset() {
+    setState("idle");
+    setFile(null);
+    setFilename(null);
+    setPreview(null);
+    setApplied(null);
+    setErrorMsg(null);
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      {(state === "idle" || state === "error") && (
+        <div
+          {...getRootProps()}
+          className="bg-[#1a1a1a] border-2 border-dashed border-[#2a2a2a] rounded-lg"
+          style={{
+            padding: 40, textAlign: "center", cursor: "pointer", transition: "all .15s",
+            background: isDragActive ? "#15203d" : "#1a1a1a",
+            borderColor: isDragActive ? "#ff7b1c" : "#2a2a2a",
+          }}
+        >
+          <input {...getInputProps()} />
+          <Upload size={48} color="#556677" style={{ margin: "0 auto 12px" }} />
+          <p style={{ fontSize: 13, color: "#FFFFFF", fontWeight: 700, fontFamily: "'Courier New', monospace" }}>
+            {isDragActive ? "Solte o arquivo aqui" : "Arraste XLSX de vendas CNB ou clique pra escolher"}
+          </p>
+          <p style={{ fontSize: 10, color: "#556677", marginTop: 8, fontFamily: "'Courier New', monospace" }}>
+            Colunas esperadas: numero · data · cliente_cnpj_cpf · cliente_nome · valor_total · forma_pagamento · vendedor
+          </p>
+        </div>
+      )}
+
+      {(state === "uploading" || state === "applying") && (
+        <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg" style={{ padding: 32, textAlign: "center" }}>
+          <Loader2 size={32} className="animate-spin" color="#ff7b1c" style={{ margin: "0 auto 12px" }} />
+          <p style={{ fontSize: 12, color: "#c8d8e8", fontFamily: "'Courier New', monospace" }}>
+            {state === "uploading" ? "Parseando XLSX..." : "Gravando vendas CNB..."}
+          </p>
+        </div>
+      )}
+
+      {state === "error" && errorMsg && (
+        <div className="bg-[#1a1a1a] border border-[#C8102E] rounded-lg" style={{ padding: 16, display: "flex", gap: 10, alignItems: "flex-start" }}>
+          <AlertCircle size={20} color="#C8102E" />
+          <div style={{ flex: 1 }}>
+            <p style={{ fontSize: 12, color: "#C8102E", fontWeight: 700, marginBottom: 4 }}>Erro</p>
+            <p style={{ fontSize: 11, color: "#c8d8e8" }}>{errorMsg}</p>
+          </div>
+        </div>
+      )}
+
+      {state === "preview" && preview && (
+        <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg" style={{ padding: 20 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <FileSpreadsheet size={18} color="#ff7b1c" />
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#FFFFFF", fontFamily: "'Courier New', monospace" }}>{filename}</span>
+            </div>
+            <span style={{ fontSize: 9, color: "#ff7b1c", background: "rgba(255,123,28,.15)", padding: "3px 8px", borderRadius: 3, letterSpacing: ".1em", textTransform: "uppercase", fontWeight: 700, fontFamily: "'Courier New', monospace" }}>PREVIEW</span>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 14 }}>
+            <Stat label="Total linhas" value={preview.total} cor="#c8d8e8" />
+            <Stat label="Válidas" value={preview.validas} cor="#22c55e" />
+            <Stat label="Inválidas" value={preview.invalidas} cor="#C8102E" />
+          </div>
+
+          {preview.previa.length > 0 && (
+            <div style={{ marginBottom: 14, overflowX: "auto" }}>
+              <p style={{ fontSize: 10, color: "#22c55e", fontWeight: 700, fontFamily: "'Courier New', monospace", marginBottom: 6, letterSpacing: ".1em", textTransform: "uppercase" }}>✓ Será gravado</p>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11, fontFamily: "'Courier New', monospace" }}>
+                <thead><tr>
+                  <th style={{ ...th, textAlign: "left" }}>Nº</th>
+                  <th style={{ ...th, textAlign: "left" }}>Cliente</th>
+                  <th style={{ ...th, textAlign: "left" }}>Doc</th>
+                  <th style={th}>Data</th>
+                  <th style={{ ...th, textAlign: "right" }}>Valor</th>
+                  <th style={{ ...th, textAlign: "left" }}>Vendedor</th>
+                </tr></thead>
+                <tbody>
+                  {preview.previa.map((p) => (
+                    <tr key={p.row} style={{ borderTop: "1px solid #2a2a2a" }}>
+                      <td style={{ ...td, color: "#8899aa" }}>#{p.numero}</td>
+                      <td style={{ ...td, color: "#FFFFFF" }}>{p.cliente_nome}</td>
+                      <td style={td}>{p.cliente_documento_tipo} {p.cliente_documento}</td>
+                      <td style={td}>{p.data_venda}</td>
+                      <td style={{ ...td, textAlign: "right", color: "#22c55e", fontWeight: 700 }}>{fmtBRL(p.valor_total_brl)}</td>
+                      <td style={td}>{VENDOR_NOMES[p.vendedor_routing_team ?? ""] ?? p.vendedor_raw}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {preview.erros.length > 0 && (
+            <div style={{ marginBottom: 14 }}>
+              <p style={{ fontSize: 10, color: "#C8102E", fontWeight: 700, fontFamily: "'Courier New', monospace", marginBottom: 6, letterSpacing: ".1em", textTransform: "uppercase" }}>✗ Erros</p>
+              {preview.erros.map((e) => (
+                <p key={e.row} style={{ fontSize: 10, color: "#c8d8e8", fontFamily: "'Courier New', monospace" }}>
+                  Linha {e.row}: <span style={{ color: "#C8102E" }}>{e.error}</span>
+                </p>
+              ))}
+            </div>
+          )}
+
+          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 16 }}>
+            <button onClick={reset} style={{ background: "transparent", border: "1px solid #2a2a2a", color: "#8899aa", padding: "8px 14px", borderRadius: 4, fontSize: 11, fontFamily: "'Courier New', monospace", cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+              <RotateCcw size={14} /> Cancelar
+            </button>
+            <button onClick={aplicar} disabled={preview.validas === 0} style={{ background: preview.validas > 0 ? "#22c55e" : "#2a2a2a", border: "none", color: "#fff", padding: "8px 16px", borderRadius: 4, fontSize: 11, fontWeight: 700, fontFamily: "'Courier New', monospace", cursor: preview.validas > 0 ? "pointer" : "not-allowed", letterSpacing: ".05em", textTransform: "uppercase" }}>
+              Aplicar {preview.validas} venda(s)
+            </button>
+          </div>
+        </div>
+      )}
+
+      {state === "done" && applied && (
+        <div className="bg-[#1a1a1a] border border-[#22c55e] rounded-lg" style={{ padding: 20 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+            <CheckCircle size={24} color="#22c55e" />
+            <div>
+              <p style={{ fontSize: 14, fontWeight: 700, color: "#22c55e" }}>{applied.aplicadas} venda(s) CNB gravada(s)</p>
+              <p style={{ fontSize: 10, color: "#8899aa", fontFamily: "'Courier New', monospace" }}>UPSERT por número + data + documento (re-upload atualiza)</p>
+            </div>
+          </div>
+          <button onClick={reset} style={{ marginTop: 8, background: "transparent", border: "1px solid #2a2a2a", color: "#8899aa", padding: "8px 14px", borderRadius: 4, fontSize: 11, fontFamily: "'Courier New', monospace", cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+            <Upload size={14} /> Subir outra planilha
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Stat({ label, value, cor }: { label: string; value: number; cor: string }) {
+  return (
+    <div style={{ background: "#0a0f1f", borderRadius: 4, padding: "10px 12px" }}>
+      <p style={{ fontSize: 9, color: "#556677", fontFamily: "'Courier New', monospace", letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 2 }}>{label}</p>
+      <p style={{ fontSize: 18, color: cor, fontWeight: 700, fontFamily: "'Inter', system-ui, sans-serif" }}>{value}</p>
+    </div>
+  );
+}
+
+const th: React.CSSProperties = { fontSize: 9, color: "#556677", fontFamily: "'Courier New', monospace", letterSpacing: ".1em", textTransform: "uppercase", padding: "6px 8px", textAlign: "right" };
+const td: React.CSSProperties = { padding: "6px 8px", color: "#c8d8e8", fontFamily: "'Courier New', monospace" };
