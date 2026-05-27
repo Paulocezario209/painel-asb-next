@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import type { Alerta, AlertasResponse } from "./actions";
 
 const SEV: Record<Alerta["severidade"], { bg: string; border: string; icon: string; label: string }> = {
@@ -59,24 +60,27 @@ export function AlertasComerciais({ data }: { data: AlertasResponse }) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 10 }}>
         {data.alertas.map((a, i) => {
           const s = SEV[a.severidade];
-          return (
-            <div
-              key={`${a.tipo}-${i}`}
-              style={{
-                background: s.bg,
-                borderLeft: `3px solid ${s.border}`,
-                borderRadius: 4,
-                padding: "10px 12px",
-                display: "flex",
-                flexDirection: "column",
-                gap: 4,
-              }}
-            >
+          const clickable = !!a.href;
+          const cardStyle: React.CSSProperties = {
+            background: s.bg,
+            borderLeft: `3px solid ${s.border}`,
+            borderRadius: 4,
+            padding: "10px 12px",
+            display: "flex",
+            flexDirection: "column",
+            gap: 4,
+            ...(clickable ? { cursor: "pointer" } : {}),
+          };
+          const inner = (
+            <>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <span style={{ fontSize: 14 }}>{TIPO_ICON[a.tipo]}</span>
                 <span style={{ fontSize: 8, fontWeight: 700, color: s.border, fontFamily: "'Courier New', monospace", letterSpacing: ".1em" }}>
                   {s.label}
                 </span>
+                {clickable && (
+                  <span style={{ marginLeft: "auto", fontSize: 11, color: s.border, fontWeight: 700 }}>→</span>
+                )}
               </div>
               <p style={{ fontSize: 12, fontWeight: 700, color: "#FFFFFF", lineHeight: 1.3 }}>
                 {a.titulo}
@@ -84,6 +88,19 @@ export function AlertasComerciais({ data }: { data: AlertasResponse }) {
               <p style={{ fontSize: 10, color: "#8899aa", lineHeight: 1.4 }}>
                 {a.descricao}
               </p>
+            </>
+          );
+          return clickable ? (
+            <Link
+              key={`${a.tipo}-${i}`}
+              href={a.href!}
+              style={{ ...cardStyle, textDecoration: "none" }}
+            >
+              {inner}
+            </Link>
+          ) : (
+            <div key={`${a.tipo}-${i}`} style={cardStyle}>
+              {inner}
             </div>
           );
         })}

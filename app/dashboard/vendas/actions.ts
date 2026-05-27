@@ -55,6 +55,7 @@ export type Alerta = {
   descricao: string;
   vendedor?: string | null;
   valor?: number | null;
+  href?: string | null; // Fase 1: drill-down. A1/A4/A5 → tela de vendedores.
   metadados?: Record<string, unknown>;
 };
 
@@ -98,6 +99,7 @@ export async function getAlertasComerciais(): Promise<AlertasResponse> {
         descricao: `Saldo R$ ${Math.abs(saldo).toLocaleString("pt-BR", { minimumFractionDigits: 2 })} · ${restantes} dia(s) útil(eis) restantes · precisa R$ ${precisaPorDia.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}/dia`,
         vendedor: r.vendedor_routing_team,
         valor: saldo,
+        href: "/dashboard/vendedores",
         metadados: { restantes, pct: r.pct_atingido_mes },
       });
     }
@@ -208,6 +210,7 @@ export async function getAlertasComerciais(): Promise<AlertasResponse> {
         descricao: `Hoje R$ ${agg.hoje.toLocaleString("pt-BR", { minimumFractionDigits: 2 })} · média últimos ${agg.historico.length} dias de meta R$ ${media.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`,
         vendedor: team,
         valor: agg.hoje - media,
+        href: "/dashboard/vendedores",
       });
     }
   }
@@ -230,6 +233,7 @@ export async function getAlertasComerciais(): Promise<AlertasResponse> {
         descricao: `${pct.toFixed(1)}% da meta diária · faltam R$ ${(meta - real).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`,
         vendedor: c.vendedor_routing_team,
         valor: real - meta,
+        href: "/dashboard/vendedores",
       });
     }
   }
