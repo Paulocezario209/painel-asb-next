@@ -131,48 +131,26 @@ export async function getAlertasComerciais(): Promise<AlertasResponse> {
     });
   }
 
-  // A3 — Top clientes dormentes (>14d sem comprar, top 5 por valor histórico)
-  type DormenteRow = { cliente: string; vendedor: string; ultimo: string; dias: number; valor: number };
-  const { data: dormentesRaw } = await supabase.rpc("get_top_dormentes_30d", {});
-  if (!dormentesRaw) {
-    // Fallback runtime via query: agregar pedidos_espelho
-    const { data: pedidos60d } = await supabase
-      .from("pedidos_espelho")
-      .select("cliente_nome, vendedor_routing_team, data_meta, valor_total_brl, status_pedido")
-      .gte("data_meta", new Date(Date.now() - 60 * 86400000).toISOString().slice(0, 10))
-      .neq("status_pedido", "cancelado");
-    const map: Record<string, DormenteRow> = {};
-    for (const p of pedidos60d ?? []) {
-      if (!p.cliente_nome) continue;
-      const cur = map[p.cliente_nome] ?? {
-        cliente: p.cliente_nome,
-        vendedor: p.vendedor_routing_team ?? "—",
-        ultimo: p.data_meta ?? "",
-        dias: 0,
-        valor: 0,
-      };
-      if ((p.data_meta ?? "") > cur.ultimo) cur.ultimo = p.data_meta ?? cur.ultimo;
-      cur.valor += Number(p.valor_total_brl ?? 0);
-      map[p.cliente_nome] = cur;
-    }
-    const limite = new Date(Date.now() - 14 * 86400000).toISOString().slice(0, 10);
-    const dormentes = Object.values(map)
-      .filter((d) => d.ultimo < limite)
-      .map((d) => ({ ...d, dias: Math.floor((Date.now() - new Date(d.ultimo + "T00:00:00").getTime()) / 86400000) }))
-      .sort((a, b) => b.valor - a.valor)
-      .slice(0, 5);
-    if (dormentes.length > 0) {
-      const top = dormentes[0];
-      alertas.push({
-        tipo: "dormente",
-        severidade: top.valor > 20000 ? "vermelho" : top.valor > 5000 ? "laranja" : "amarelo",
-        titulo: `${dormentes.length} cliente(s) dormente(s) — top: ${top.cliente.slice(0, 40)}`,
-        descricao: `Há ${top.dias}d sem comprar · valor histórico R$ ${top.valor.toLocaleString("pt-BR", { minimumFractionDigits: 2 })} · vendedor: ${vName(top.vendedor)}`,
-        vendedor: top.vendedor,
-        valor: top.valor,
-        metadados: { dormentes },
-      });
-    }
+  // A3 — Top clientes dormentes via v_clientes_dormentes (churn por frequência, asb-crm §8).
+  // Fonte: VIEW Postgres (agrega no banco) — elimina o truncamento PostgREST 1000 linhas (DEBT-P2).
+  const { data: dormentes } = await supabase
+    .from("v_clientes_dormentes")
+    .select("ares_cliente_id, cliente_nome, vendedor_routing_team, days_since_last, receita_total, churn_state")
+    .in("churn_state", ["churn_warning", "churn_at_risk", "churn"])
+    .order("receita_total", { ascending: false })
+    .limit(5);
+  if (dormentes && dormentes.length > 0) {
+    const top = dormentes[0];
+    const valorTop = Number(top.receita_total ?? 0);
+    alertas.push({
+      tipo: "dormente",
+      severidade: valorTop > 20000 ? "vermelho" : valorTop > 5000 ? "laranja" : "amarelo",
+      titulo: `${dormentes.length} cliente(s) dormente(s) — top: ${String(top.cliente_nome ?? "").slice(0, 40)}`,
+      descricao: `Há ${top.days_since_last}d sem comprar · receita histórica R$ ${valorTop.toLocaleString("pt-BR", { minimumFractionDigits: 2 })} · vendedor: ${vName(top.vendedor_routing_team)}`,
+      vendedor: top.vendedor_routing_team,
+      valor: valorTop,
+      metadados: { dormentes },
+    });
   }
 
   // A4 — Tendência queda APENAS em DIA DE META do vendedor (vs média dos últimos
@@ -389,43 +367,26 @@ export async function getEstrategiasComerciais(): Promise<EstrategiasResponse> {
     }))
     .sort((a, b) => b.valor - a.valor);
 
-  // ── Top dormentes (>14d sem comprar) ───────────────────────────────
-  const { data: pedidos60d } = await supabase
-    .from("pedidos_espelho")
-    .select("cliente_nome, vendedor_routing_team, data_meta, valor_total_brl, status_pedido")
-    .gte("data_meta", new Date(Date.now() - 60 * 86400000).toISOString().slice(0, 10))
-    .neq("status_pedido", "cancelado");
-  const dormMap: Record<string, { vendedor: string; ultimo: string; valor: number }> = {};
-  for (const p of pedidos60d ?? []) {
-    if (!p.cliente_nome) continue;
-    const cur = dormMap[p.cliente_nome] ?? {
-      vendedor: p.vendedor_routing_team ?? "—",
-      ultimo: p.data_meta ?? "",
-      valor: 0,
+  // ── Top dormentes via v_clientes_dormentes (churn por frequência, asb-crm §8) ──
+  // VIEW Postgres (agrega no banco) — sem truncamento PostgREST 1000 linhas (DEBT-P2).
+  const { data: dormentesView } = await supabase
+    .from("v_clientes_dormentes")
+    .select("cliente_nome, vendedor_routing_team, last_order_date, days_since_last, receita_total, churn_state")
+    .in("churn_state", ["churn_warning", "churn_at_risk", "churn"])
+    .order("receita_total", { ascending: false })
+    .limit(8);
+  const reativarDormentes: AcaoDormente[] = (dormentesView ?? []).map((d) => {
+    const valor = Number(d.receita_total ?? 0);
+    return {
+      cliente: d.cliente_nome ?? "—",
+      vendedor: d.vendedor_routing_team ?? "—",
+      nome_vendedor: vName(d.vendedor_routing_team),
+      ultimo_pedido: d.last_order_date ?? "",
+      dias_sem_comprar: Number(d.days_since_last ?? 0),
+      valor_historico: valor,
+      prioridade: (valor > 10000 ? "alta" : valor > 2000 ? "media" : "baixa") as AcaoDormente["prioridade"],
     };
-    if ((p.data_meta ?? "") > cur.ultimo) cur.ultimo = p.data_meta ?? cur.ultimo;
-    cur.valor += Number(p.valor_total_brl ?? 0);
-    dormMap[p.cliente_nome] = cur;
-  }
-  const limite14d = new Date(Date.now() - 14 * 86400000).toISOString().slice(0, 10);
-  const reativarDormentes: AcaoDormente[] = Object.entries(dormMap)
-    .filter(([_, d]) => d.ultimo < limite14d)
-    .map(([cliente, d]) => {
-      const dias = Math.floor(
-        (Date.now() - new Date(d.ultimo + "T00:00:00").getTime()) / 86400000,
-      );
-      return {
-        cliente,
-        vendedor: d.vendedor,
-        nome_vendedor: vName(d.vendedor),
-        ultimo_pedido: d.ultimo,
-        dias_sem_comprar: dias,
-        valor_historico: d.valor,
-        prioridade: (d.valor > 10000 ? "alta" : d.valor > 2000 ? "media" : "baixa") as AcaoDormente["prioridade"],
-      };
-    })
-    .sort((a, b) => b.valor_historico - a.valor_historico)
-    .slice(0, 8);
+  });
 
   return { baterMeta, fecharPendentes, reativarDormentes };
 }
