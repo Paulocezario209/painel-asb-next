@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { unstable_noStore as noStore } from "next/cache";
+import type { PedidoAtrasadoRow, ClienteDormenteRow } from "./alert-drawer";
 
 export type DayPedido = {
   ares_pedido_id: number | null;
@@ -105,12 +106,16 @@ export async function getAlertasComerciais(): Promise<AlertasResponse> {
     }
   }
 
-  // A2 — Pedidos atrasados (status pendente/aprovado, data_meta < hoje)
+  // A2 — Pedidos atrasados (status pendente/aprovado, data_meta < hoje).
+  // Filtro alinhado ao drawer (DEBT-083): exclui AMERICAN STEAK interna (1,4,808) e
+  // rascunhos R$0 → cards "DESCONHECIDO" e R$0 deixam de renderizar (qty=0).
   const { data: atrasados } = await supabase
     .from("pedidos_espelho")
     .select("vendedor_routing_team, valor_total_brl")
     .in("status_pedido", ["pendente", "aprovado"])
-    .lt("data_meta", hoje);
+    .lt("data_meta", hoje)
+    .not("ares_cliente_id", "in", "(1,4,808)")
+    .gt("valor_total_brl", 0);
   const atrasadosPorVendedor: Record<string, { qty: number; valor: number }> = {};
   for (const p of atrasados ?? []) {
     const t = p.vendedor_routing_team ?? "DESCONHECIDO";
@@ -440,4 +445,55 @@ export async function getRankingVendedores(): Promise<RankingItem[]> {
   });
 
   return ranking;
+}
+
+// ════════════════════════════════════════════════════════════════════
+// DRILL-DOWN DOS CARDS DE ALERTA (DEBT-083) — alimentam o AlertDrawer
+// ════════════════════════════════════════════════════════════════════
+
+// Pedidos atrasados de um vendedor (mesmo filtro do A2: exclui AMERICAN STEAK + rascunhos R$0).
+export async function getPedidosAtrasadosPorVendedor(team: string): Promise<PedidoAtrasadoRow[]> {
+  noStore();
+  if (!team) return [];
+  const supabase = await createClient();
+  const hoje = new Date().toISOString().slice(0, 10);
+  const { data, error } = await supabase
+    .from("pedidos_espelho")
+    .select("cliente_nome, valor_total_brl, data_meta")
+    .in("status_pedido", ["pendente", "aprovado"])
+    .lt("data_meta", hoje)
+    .eq("vendedor_routing_team", team)
+    .not("ares_cliente_id", "in", "(1,4,808)")
+    .gt("valor_total_brl", 0)
+    .order("data_meta", { ascending: true });
+  if (error) {
+    console.error("[getPedidosAtrasadosPorVendedor]", error);
+    return [];
+  }
+  const today = Date.now();
+  return (data ?? []).map((p) => ({
+    cliente_nome: p.cliente_nome,
+    valor_total_brl: p.valor_total_brl,
+    data_meta: p.data_meta,
+    dias_atraso: p.data_meta
+      ? Math.floor((today - new Date(p.data_meta + "T00:00:00").getTime()) / 86400000)
+      : 0,
+  }));
+}
+
+// Top dormentes (mesma query do card A3) — fonte v_clientes_dormentes (asb-crm §8).
+export async function getClientesDormentes(limit = 5): Promise<ClienteDormenteRow[]> {
+  noStore();
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("v_clientes_dormentes")
+    .select("cliente_nome, last_order_date, days_since_last, avg_interval_days, vendedor_routing_team, churn_state")
+    .in("churn_state", ["churn_warning", "churn_at_risk", "churn"])
+    .order("receita_total", { ascending: false })
+    .limit(limit);
+  if (error) {
+    console.error("[getClientesDormentes]", error);
+    return [];
+  }
+  return (data ?? []) as ClienteDormenteRow[];
 }
