@@ -86,6 +86,17 @@ export default async function VendasPage() {
     .eq("data_inicio", primeiroDiaMes);
   const metas = (rawMetas ?? []) as unknown as Meta[];
 
+  // ── Query C: faturado REAL do mes (NF + Recibo) — ARES via faturamento_tipo_dia ──
+  // DEBT-088: FATURADO = faturamento realizado (NF+Recibo), MTD, cron 15min. Sem vendedor/status.
+  const { data: rawFat } = await supabase
+    .from("faturamento_tipo_dia")
+    .select("valor_brl")
+    .gte("dia", primeiroDiaMes)
+    .lte("dia", ultimoDiaMes);
+  const totalFaturadoReal = (rawFat ?? []).reduce(
+    (s, r) => s + (Number((r as { valor_brl: number | null }).valor_brl) || 0), 0,
+  );
+
   // ── Aggregate per vendor ──────────────────────────────────────────────────
   type VendorAgg = {
     realizado: number;
@@ -124,7 +135,7 @@ export default async function VendasPage() {
 
   // Global totals (KPIs hero)
   const totalRealizado = vendorTeams.reduce((s, rt) => s + (agg[rt]?.realizado ?? 0), 0);
-  const totalFaturado = vendorTeams.reduce((s, rt) => s + (agg[rt]?.faturado ?? 0), 0);
+  const totalFaturado = totalFaturadoReal;  // DEBT-088: NF+Recibo real do ARES (nao proxy status='faturado')
   const totalMeta = vendorTeams.reduce((s, rt) => s + (agg[rt]?.meta ?? 0), 0);
   const pctAtingido = totalMeta > 0 ? ((totalRealizado / totalMeta) * 100) : null;
   const pctAtingidoStr = pctAtingido !== null ? pctAtingido.toFixed(1) : null;
@@ -157,7 +168,7 @@ export default async function VendasPage() {
           Vendas
         </h1>
         <p style={S.muted}>
-          Faturamento {mesAtual} &middot; fonte: pedidos_espelho via painel_dia_vendedor
+          Faturamento {mesAtual} &middot; faturado NF+Recibo realizado (ARES) &middot; meta/realizado via painel_dia_vendedor
         </p>
       </div>
 
