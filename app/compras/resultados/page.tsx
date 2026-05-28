@@ -75,7 +75,7 @@ export default async function ResultadosPage() {
       .from("v_compras_itens_dia")
       .select("dia, data_emissao, fornecedor_nome, produto_nome, quantidade, preco_un, valor_brl")
       .gte("dia", iso(inicioMes))
-      .lte("dia", iso(hoje))
+      .lte("dia", iso(fimMes))
       .neq("status_compra", "cancelado")
       .in("id_pessoa_emitente", [1, 2074]),
     // Fase 1.6 — split NF/Recibo do mês corrente
