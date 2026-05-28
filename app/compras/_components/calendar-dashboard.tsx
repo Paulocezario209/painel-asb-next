@@ -26,6 +26,7 @@ export type CompraRow = {
   fornecedor_nome: string | null;
 };
 export type DrilldownItemRow = {
+  dia: string;
   data_emissao: string;
   fornecedor_nome: string | null;
   produto_nome: string | null;
@@ -50,10 +51,9 @@ const brl = (n: number) => n.toLocaleString("pt-BR", { style: "currency", curren
 const ddmm = (iso: string) => iso.slice(8, 10) + "/" + iso.slice(5, 7);
 
 export function CalendarDashboard({
-  days, compras, itens, fatTipo,
+  days, itens, fatTipo,
 }: {
   days: DiaCalendario[];
-  compras: CompraRow[];
   itens: DrilldownItemRow[];
   fatTipo: FatTipoRow[];
 }) {
@@ -86,23 +86,24 @@ export function CalendarDashboard({
   }, [days]);
 
   const selDia = days.find((d) => d.dia === sel) || null;
+  // DEBT-042 B1: fornecedores do dia derivados dos próprios itens (consistência total com o drilldown)
   const selFornec = useMemo(() => {
     if (!sel) return [];
     const m: Record<string, number> = {};
-    for (const c of compras) {
-      if (c.data_emissao !== sel) continue;
-      const k = c.fornecedor_nome || "(sem fornecedor)";
-      m[k] = (m[k] || 0) + Number(c.valor_total_brl || 0);
+    for (const it of itens) {
+      if (it.dia !== sel) continue;
+      const k = it.fornecedor_nome || "(sem fornecedor)";
+      m[k] = (m[k] || 0) + Number(it.valor_brl || 0);
     }
     return Object.entries(m).sort((a, b) => b[1] - a[1]);
-  }, [sel, compras]);
+  }, [sel, itens]);
 
   // produtos do dia selecionado, agrupados por fornecedor (drilldown Fase 1.6)
   const selItensByFornec = useMemo(() => {
     const m: Record<string, DrilldownItemRow[]> = {};
     if (!sel) return m;
     for (const it of itens) {
-      if (it.data_emissao !== sel) continue;
+      if (it.dia !== sel) continue;
       const k = it.fornecedor_nome || "(sem fornecedor)";
       (m[k] ||= []).push(it);
     }

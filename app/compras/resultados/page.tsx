@@ -73,9 +73,9 @@ export default async function ResultadosPage() {
     // Fase 1.6 — drilldown produto por dia (não-cancelado), via v_compras_itens_dia
     supabase
       .from("v_compras_itens_dia")
-      .select("data_emissao, fornecedor_nome, produto_nome, quantidade, preco_un, valor_brl")
-      .gte("data_emissao", iso(inicioMes))
-      .lte("data_emissao", iso(hoje))
+      .select("dia, data_emissao, fornecedor_nome, produto_nome, quantidade, preco_un, valor_brl")
+      .gte("dia", iso(inicioMes))
+      .lte("dia", iso(hoje))
       .neq("status_compra", "cancelado")
       .in("id_pessoa_emitente", [1, 2074]),
     // Fase 1.6 — split NF/Recibo do mês corrente
@@ -107,9 +107,9 @@ export default async function ResultadosPage() {
   // diário (para projeção)
   const fatDia: Record<string, number> = {};
   for (const r of fatRows) fatDia[r.dia] = (fatDia[r.dia] || 0) + Number(r.faturado_brl || 0);
+  // compDia migrado p/ base de ENTREGA (DEBT-042): usa o agregado já keyed por `dia` da view do calendário
   const compDia: Record<string, number> = {};
-  for (const r of compRows)
-    compDia[r.data_emissao] = (compDia[r.data_emissao] || 0) + Number(r.valor_total_brl || 0);
+  for (const r of calRows) compDia[r.dia] = Number(r.compras_brl || 0);
 
   // últimos 7 dias úteis (SEG-SÁB) até hoje
   const last7: Date[] = [];
@@ -204,7 +204,7 @@ export default async function ResultadosPage() {
       </div>
 
       {/* Fase 1.5 + 1.6 — calendário + gráficos + donut NF/Recibo + drawer com drilldown de produto */}
-      <CalendarDashboard days={calRows} compras={compRows} itens={itensRows} fatTipo={fatTipoRows} />
+      <CalendarDashboard days={calRows} itens={itensRows} fatTipo={fatTipoRows} />
     </div>
   );
 }
