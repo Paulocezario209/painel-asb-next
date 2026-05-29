@@ -15,6 +15,7 @@ import { AbaGerencial, type MesGer } from "./aba-gerencial";
 import { ModalProducao, ModalLote, ModalInsumo } from "./modais";
 import { ShewartIMRChart } from "./shewhart-imr-chart";
 import { ComparativoInsumosChart } from "./comparativo-insumos-chart";
+import { RelatorioInsumos } from "./relatorio-insumos";
 import { AbaProjecao12 } from "./aba-projecao12";
 import { AbaAlertas } from "./aba-alertas";
 import { AbaRelatorio } from "./aba-relatorio";
@@ -119,8 +120,8 @@ export function DashboardCustos() {
   const sRecorteMes = diarioMes.filter((d) => d.categoria === CAT_RECORTE).map((d) => ({ label: d.data.slice(5), value: Number(d.kg) }));
   const sGorduraMes = diarioMes.filter((d) => d.categoria === CAT_GORDURA).map((d) => ({ label: d.data.slice(5), value: Number(d.kg) }));
   // Comparativo % gordura/recorte do mês (Etapa 2 item 3) — pct null = gap; reusa mesKey
-  const sComparativoMes = insumosCons.comparativo.filter((c) => c.data.slice(0, 7) === mesKey).sort((a, b) => a.data.localeCompare(b.data))
-    .map((c) => ({ label: c.data.slice(5), pct: c.pct_gordura, recorte: Number(c.recorte_kg), gordura: Number(c.gordura_kg) }));
+  const comparativoMes = insumosCons.comparativo.filter((c) => c.data.slice(0, 7) === mesKey).sort((a, b) => a.data.localeCompare(b.data));
+  const sComparativoMes = comparativoMes.map((c) => ({ label: c.data.slice(5), pct: c.pct_gordura, recorte: Number(c.recorte_kg), gordura: Number(c.gordura_kg) }));
   // Consumo mensal Recorte vs Gordura (Etapa 2 item 4 — Gerencial) — pivot de v_insumos_consumo_mensal por ano_mes
   const insumosMensal = useMemo(() => {
     const map = new Map<string, { ano_mes: string; recorte: number; gordura: number }>();
@@ -285,6 +286,9 @@ export function DashboardCustos() {
               </>
             )}
           </div>
+
+          {/* Relatório de insumos do mês (Etapa 2 item 5) — read-only */}
+          <RelatorioInsumos mesLabel={`${MESES[selMes - 1]}/${selAno}`} diario={diarioMes} comparativo={comparativoMes} />
         </div>
       )}
 
@@ -327,6 +331,7 @@ export function DashboardCustos() {
       {aba === "gerencial" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <AbaGerencial meses={meses} registros={regs} thresholds={thresholds} insumosMensal={insumosMensal} />
+          <RelatorioInsumos mesLabel={`${MESES[selMes - 1]}/${selAno}`} diario={diarioMes} comparativo={comparativoMes} />
           {!temHoras && (
             <div style={{ ...sCard, padding: 16 }}>
               <p style={{ ...sLabel, marginBottom: 6 }}>Horas vs Kg (Moagem / Modelagem / Embalamento)</p>
