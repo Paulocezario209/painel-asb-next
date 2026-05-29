@@ -14,6 +14,7 @@ import { Calendario } from "./calendario";
 import { AbaGerencial, type MesGer } from "./aba-gerencial";
 import { ModalProducao, ModalLote, ModalInsumo } from "./modais";
 import { ShewartIMRChart } from "./shewhart-imr-chart";
+import { ComparativoInsumosChart } from "./comparativo-insumos-chart";
 import { AbaProjecao12 } from "./aba-projecao12";
 import { AbaAlertas } from "./aba-alertas";
 import { AbaRelatorio } from "./aba-relatorio";
@@ -117,6 +118,9 @@ export function DashboardCustos() {
   const diarioMes = insumosCons.diario.filter((d) => d.data.slice(0, 7) === mesKey).sort((a, b) => a.data.localeCompare(b.data));
   const sRecorteMes = diarioMes.filter((d) => d.categoria === CAT_RECORTE).map((d) => ({ label: d.data.slice(5), value: Number(d.kg) }));
   const sGorduraMes = diarioMes.filter((d) => d.categoria === CAT_GORDURA).map((d) => ({ label: d.data.slice(5), value: Number(d.kg) }));
+  // Comparativo % gordura/recorte do mês (Etapa 2 item 3) — pct null = gap; reusa mesKey
+  const sComparativoMes = insumosCons.comparativo.filter((c) => c.data.slice(0, 7) === mesKey).sort((a, b) => a.data.localeCompare(b.data))
+    .map((c) => ({ label: c.data.slice(5), pct: c.pct_gordura, recorte: Number(c.recorte_kg), gordura: Number(c.gordura_kg) }));
 
   async function acao(nome: string, fn: () => Promise<unknown>) {
     setBusy(nome); setErro(null);
@@ -259,10 +263,15 @@ export function DashboardCustos() {
             {diarioMes.length === 0 ? (
               <div style={{ ...sCard, padding: 16 }}><p style={{ color: C.mut, fontSize: 11, fontFamily: mono }}>sem lançamentos de insumo no mês</p></div>
             ) : (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(440px,1fr))", gap: 20 }}>
-                <ShewartIMRChart title="Consumo Estatístico de Recorte Bovino (kg)" data={sRecorteMes} unit="kg" />
-                <ShewartIMRChart title="Consumo Estatístico de Gordura Bovina (kg)" data={sGorduraMes} unit="kg" />
-              </div>
+              <>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(440px,1fr))", gap: 20 }}>
+                  <ShewartIMRChart title="Consumo Estatístico de Recorte Bovino (kg)" data={sRecorteMes} unit="kg" />
+                  <ShewartIMRChart title="Consumo Estatístico de Gordura Bovina (kg)" data={sGorduraMes} unit="kg" />
+                </div>
+                <div style={{ marginTop: 20 }}>
+                  <ComparativoInsumosChart data={sComparativoMes} />
+                </div>
+              </>
             )}
           </div>
         </div>
