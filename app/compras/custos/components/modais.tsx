@@ -23,6 +23,11 @@ function Campo({ label, children }: { label: string; children: React.ReactNode }
 
 const hoje = () => new Date().toISOString().slice(0, 10);
 
+// Categorias normalizadas de insumo (chave de toda agregação — Etapa 2).
+// Recorte/Gordura travam unidade=kg (consumo diário em kg p/ gráficos estatísticos).
+const CATEGORIAS_INSUMO = ["Recorte Bovino 80/20", "Gordura Bovina", "Outros"] as const;
+const CAT_KG_LOCK = new Set<string>(["Recorte Bovino 80/20", "Gordura Bovina"]);
+
 export function ModalProducao({ registro, onClose, onSaved }: { registro?: Record<string, unknown> | null; onClose: () => void; onSaved: () => void }) {
   const [f, setF] = useState({
     data: (registro?.data as string) ?? hoje(),
@@ -116,6 +121,7 @@ export function ModalInsumo({ onClose, onSaved }: { onClose: () => void; onSaved
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const set = (k: string, v: string | number) => setF((p) => ({ ...p, [k]: v }));
+  const catKgLock = CAT_KG_LOCK.has(f.categoria); // Recorte/Gordura → unidade travada em kg
   async function salvar() {
     setSaving(true); setErr(null);
     try { await api.salvarInsumo({ ...f, validade: f.validade || null }); onSaved(); onClose(); }
@@ -128,17 +134,17 @@ export function ModalInsumo({ onClose, onSaved }: { onClose: () => void; onSaved
         <Campo label="Matéria"><input value={f.materia} onChange={(e) => set("materia", e.target.value)} style={sInput} /></Campo>
         <Campo label="Fornecedor"><input value={f.fornecedor} onChange={(e) => set("fornecedor", e.target.value)} style={sInput} /></Campo>
         <Campo label="Quantidade"><input type="number" step="0.001" value={f.quantidade} onChange={(e) => set("quantidade", Number(e.target.value))} style={sInput} /></Campo>
-        <Campo label="Unidade"><select value={f.unidade} onChange={(e) => set("unidade", e.target.value)} style={sInput}>{["kg", "un", "L", "m", "outro"].map((u) => <option key={u} value={u}>{u}</option>)}</select></Campo>
+        <Campo label={catKgLock ? "Unidade (travada: kg)" : "Unidade"}><select value={f.unidade} disabled={catKgLock} onChange={(e) => set("unidade", e.target.value)} style={{ ...sInput, opacity: catKgLock ? 0.6 : 1, cursor: catKgLock ? "not-allowed" : "pointer" }}>{["kg", "un", "L", "m", "outro"].map((u) => <option key={u} value={u}>{u}</option>)}</select></Campo>
         <Campo label="Custo Unit. (R$)"><input type="number" step="0.0001" value={f.custo_unit} onChange={(e) => set("custo_unit", Number(e.target.value))} style={sInput} /></Campo>
         <Campo label="Lote"><input value={f.lote} onChange={(e) => set("lote", e.target.value)} style={sInput} /></Campo>
         <Campo label="Validade"><input type="date" value={f.validade} onChange={(e) => set("validade", e.target.value)} style={sInput} /></Campo>
         <Campo label="SIF"><input value={f.sif} onChange={(e) => set("sif", e.target.value)} style={sInput} /></Campo>
-        <Campo label="Categoria"><input value={f.categoria} onChange={(e) => set("categoria", e.target.value)} style={sInput} /></Campo>
+        <Campo label="Categoria"><select value={f.categoria} onChange={(e) => { const v = e.target.value; setF((p) => ({ ...p, categoria: v, unidade: CAT_KG_LOCK.has(v) ? "kg" : p.unidade })); }} style={sInput}><option value="">— selecione —</option>{CATEGORIAS_INSUMO.map((c) => <option key={c} value={c}>{c}</option>)}</select></Campo>
       </div>
       {err && <p style={{ color: C.vermelho, fontSize: 11, fontFamily: mono, marginTop: 10 }}>{err}</p>}
       <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 18 }}>
         <button onClick={onClose} style={btnGhost}>Cancelar</button>
-        <button onClick={salvar} disabled={saving || !f.materia} style={btn(!saving && !!f.materia)}>{saving ? "Salvando..." : "Salvar"}</button>
+        <button onClick={salvar} disabled={saving || !f.materia || !f.categoria} style={btn(!saving && !!f.materia && !!f.categoria)}>{saving ? "Salvando..." : "Salvar"}</button>
       </div>
     </Shell>
   );
