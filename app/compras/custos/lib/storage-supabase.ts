@@ -10,6 +10,13 @@ export type InsumoDiario = { data: string; categoria: string; kg: number; custo_
 export type InsumoComparativo = { data: string; recorte_kg: number; gordura_kg: number; pct_gordura: number | null };
 export type InsumoMensal = { ano_mes: string; categoria: string; kg: number; custo_brl: number };
 
+// Categorias normalizadas de insumo — FONTE ÚNICA (dropdown ModalInsumo + chave dos gráficos).
+// Espelha os literais do FILTER em scripts/migrations/2026_05_29_v_insumos_consumo.sql (casados byte-a-byte).
+export const CAT_RECORTE = "Recorte Bovino 80/20";
+export const CAT_GORDURA = "Gordura Bovina";
+export const CATEGORIAS_INSUMO = [CAT_RECORTE, CAT_GORDURA, "Outros"] as const;
+export const CAT_KG_LOCK = new Set<string>([CAT_RECORTE, CAT_GORDURA]); // travam unidade=kg
+
 const BASE = "/api/compras/custos";
 async function jget(url: string) { const r = await fetch(url); if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error ?? `HTTP ${r.status}`); return r.json(); }
 async function jsend(url: string, method: string, body: unknown) {

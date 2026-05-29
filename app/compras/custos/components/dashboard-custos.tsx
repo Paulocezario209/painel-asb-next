@@ -9,7 +9,7 @@ import { C, mono, sCard, sLabel, sInput, btn, btnGhost } from "../lib/ui";
 import { brl, kg, num } from "../lib/formatadores";
 import { THRESHOLDS_DEFAULT, STATUS_COR, STATUS_LABEL, type Thresholds, type Status } from "../lib/classificar";
 import { calcularProjecao } from "../lib/calcular-projecao";
-import { api, type Registro } from "../lib/storage-supabase";
+import { api, type Registro, type InsumoDiario, type InsumoComparativo, type InsumoMensal, CAT_RECORTE, CAT_GORDURA } from "../lib/storage-supabase";
 import { Calendario } from "./calendario";
 import { AbaGerencial, type MesGer } from "./aba-gerencial";
 import { ModalProducao, ModalLote, ModalInsumo } from "./modais";
@@ -54,6 +54,7 @@ export function DashboardCustos() {
   const [aba, setAba] = useState<string>("geral");
   const [regs, setRegs] = useState<Registro[]>([]);
   const [insumos, setInsumos] = useState<Insumo[]>([]);
+  const [insumosCons, setInsumosCons] = useState<{ diario: InsumoDiario[]; comparativo: InsumoComparativo[]; mensal: InsumoMensal[] }>({ diario: [], comparativo: [], mensal: [] });
   const [thresholds, setThresholds] = useState<Thresholds>(THRESHOLDS_DEFAULT);
   const [custoHora, setCustoHora] = useState<Record<string, number>>({ moagem: 0, modelagem: 0, embalamento: 0 });
   const [alertasAtivos, setAlertasAtivos] = useState<AlertaAtivo[]>([]);
@@ -75,11 +76,12 @@ export function DashboardCustos() {
   const carregar = useCallback(async () => {
     setLoading(true); setErro(null);
     try {
-      const [r, ins, ac, pc, ar] = await Promise.all([
+      const [r, ins, ac, pc, ar, ic] = await Promise.all([
         api.carregarTodos(), api.insumos().catch(() => []), api.alertasConfig().catch(() => null), api.processoConfig().catch(() => null),
         fetch("/api/compras/custos/alertas-resumo").then((x) => x.json()).catch(() => null),
+        api.insumosConsumo().catch(() => ({ diario: [], comparativo: [], mensal: [] })), // endpoint novo: falha NUNCA derruba o dashboard
       ]);
-      setRegs(r); setInsumos(ins as Insumo[]);
+      setRegs(r); setInsumos(ins as Insumo[]); setInsumosCons(ic);
       if (Array.isArray(ac)) { const f = (n: string) => ac.find((x: { nivel: string }) => x.nivel === n)?.valor_max; setThresholds({ IDEAL: f("ideal") ?? 18, ATENCAO: f("atencao") ?? 19, ALERTA: f("alerta") ?? 20 }); }
       if (Array.isArray(pc)) { const o: Record<string, number> = {}; pc.forEach((x: { etapa: string; custo_hora: number }) => (o[x.etapa] = Number(x.custo_hora))); setCustoHora({ moagem: o.moagem ?? 0, modelagem: o.modelagem ?? 0, embalamento: o.embalamento ?? 0 }); }
       if (ar?.ativos) setAlertasAtivos(ar.ativos);
@@ -99,7 +101,8 @@ export function DashboardCustos() {
   const custoHoraZero = custoHora.moagem === 0 && custoHora.modelagem === 0 && custoHora.embalamento === 0;
   const projecao = useMemo(() => calcularProjecao(meses.map((m) => ({ ano_mes: m.ano_mes, kg_total: m.kg_total, custo_medio_kg: m.custo_medio_kg }))), [meses]);
 
-  const diasDoMes = regs.filter((r) => r.data.slice(0, 7) === `${selAno}-${String(selMes).padStart(2, "0")}`).sort((a, b) => a.data.localeCompare(b.data));
+  const mesKey = `${selAno}-${String(selMes).padStart(2, "0")}`; // predicado de mês único (reusado por diasDoMes e insumos)
+  const diasDoMes = regs.filter((r) => r.data.slice(0, 7) === mesKey).sort((a, b) => a.data.localeCompare(b.data));
   const mesSel = meses.find((m) => m.ano === selAno && m.mes === selMes);
   const corCusto = (v: number) => (v <= thresholds.IDEAL ? C.verde2 : v <= thresholds.ATENCAO ? C.amarelo : v <= thresholds.ALERTA ? C.laranja : C.vermelho);
 
@@ -109,6 +112,11 @@ export function DashboardCustos() {
   const sTempMes = diasDoMes.filter((r) => r.kg_produzido > 0).map((r) => ({ label: r.data.slice(5), value: Number(r.temperatura) }));
   const sOpsMes = diasDoMes.filter((r) => r.ops > 0).map((r) => ({ label: r.data.slice(5), value: Number(r.ops) }));
   const temHoras = regs.some((r) => (r.horas_moagem || 0) > 0 || (r.horas_modelagem || 0) > 0 || (r.horas_embalamento || 0) > 0);
+
+  // Consumo de insumos do mês (Etapa 2 itens 1-2) — reusa mesKey; chaveia por CAT_* (sem string hardcoded). Mesma forma {label,value} dos I-MR.
+  const diarioMes = insumosCons.diario.filter((d) => d.data.slice(0, 7) === mesKey).sort((a, b) => a.data.localeCompare(b.data));
+  const sRecorteMes = diarioMes.filter((d) => d.categoria === CAT_RECORTE).map((d) => ({ label: d.data.slice(5), value: Number(d.kg) }));
+  const sGorduraMes = diarioMes.filter((d) => d.categoria === CAT_GORDURA).map((d) => ({ label: d.data.slice(5), value: Number(d.kg) }));
 
   async function acao(nome: string, fn: () => Promise<unknown>) {
     setBusy(nome); setErro(null);
@@ -243,6 +251,19 @@ export function DashboardCustos() {
               <ShewartIMRChart title="Controle de Temperatura (°C)" data={sTempMes} unit="°C" />
               <ShewartIMRChart title="Controle de OPs" data={sOpsMes} unit="ops" />
             </div>
+          </div>
+
+          {/* Consumo de insumos diário (Etapa 2 itens 1-2) — após CONTROLE DIÁRIO, mesmo mês */}
+          <div>
+            <p style={{ ...sLabel, marginBottom: 10 }}>CONSUMO DE INSUMOS — {selMes}/{selAno}</p>
+            {diarioMes.length === 0 ? (
+              <div style={{ ...sCard, padding: 16 }}><p style={{ color: C.mut, fontSize: 11, fontFamily: mono }}>sem lançamentos de insumo no mês</p></div>
+            ) : (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(440px,1fr))", gap: 20 }}>
+                <ShewartIMRChart title="Consumo Estatístico de Recorte Bovino (kg)" data={sRecorteMes} unit="kg" />
+                <ShewartIMRChart title="Consumo Estatístico de Gordura Bovina (kg)" data={sGorduraMes} unit="kg" />
+              </div>
+            )}
           </div>
         </div>
       )}

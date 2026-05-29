@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 import { C, mono, sInput, sLabel, btn, btnGhost } from "../lib/ui";
-import { api } from "../lib/storage-supabase";
+import { api, CATEGORIAS_INSUMO, CAT_KG_LOCK } from "../lib/storage-supabase";
 
 function Shell({ titulo, onClose, children }: { titulo: string; onClose: () => void; children: React.ReactNode }) {
   return (
@@ -22,11 +22,6 @@ function Campo({ label, children }: { label: string; children: React.ReactNode }
 }
 
 const hoje = () => new Date().toISOString().slice(0, 10);
-
-// Categorias normalizadas de insumo (chave de toda agregação — Etapa 2).
-// Recorte/Gordura travam unidade=kg (consumo diário em kg p/ gráficos estatísticos).
-const CATEGORIAS_INSUMO = ["Recorte Bovino 80/20", "Gordura Bovina", "Outros"] as const;
-const CAT_KG_LOCK = new Set<string>(["Recorte Bovino 80/20", "Gordura Bovina"]);
 
 export function ModalProducao({ registro, onClose, onSaved }: { registro?: Record<string, unknown> | null; onClose: () => void; onSaved: () => void }) {
   const [f, setF] = useState({
