@@ -103,12 +103,11 @@ export function DashboardCustos() {
   const mesSel = meses.find((m) => m.ano === selAno && m.mes === selMes);
   const corCusto = (v: number) => (v <= thresholds.IDEAL ? C.verde2 : v <= thresholds.ATENCAO ? C.amarelo : v <= thresholds.ALERTA ? C.laranja : C.vermelho);
 
-  // séries Shewhart (ordenadas por data)
-  const serieOrd = useMemo(() => [...regs].sort((a, b) => a.data.localeCompare(b.data)), [regs]);
-  const sCustoKg = serieOrd.filter((r) => r.kg_produzido > 0 && r.custo_kg != null).slice(-40).map((r) => ({ label: r.data.slice(5), value: Number(r.custo_kg) }));
-  const sKg = serieOrd.filter((r) => r.kg_produzido > 0).slice(-40).map((r) => ({ label: r.data.slice(5), value: Number(r.kg_produzido) }));
-  const sTemp = serieOrd.filter((r) => r.kg_produzido > 0).slice(-40).map((r) => ({ label: r.data.slice(5), value: Number(r.temperatura) }));
-  const sOps = serieOrd.filter((r) => r.ops > 0).slice(-40).map((r) => ({ label: r.data.slice(5), value: Number(r.ops) }));
+  // séries Shewhart I-MR mês-escopadas — derivadas de diasDoMes (já ordenado asc), mesma forma {label,value}
+  const sCustoKgMes = diasDoMes.filter((r) => r.kg_produzido > 0 && r.custo_kg != null).map((r) => ({ label: r.data.slice(5), value: Number(r.custo_kg) }));
+  const sKgMes = diasDoMes.filter((r) => r.kg_produzido > 0).map((r) => ({ label: r.data.slice(5), value: Number(r.kg_produzido) }));
+  const sTempMes = diasDoMes.filter((r) => r.kg_produzido > 0).map((r) => ({ label: r.data.slice(5), value: Number(r.temperatura) }));
+  const sOpsMes = diasDoMes.filter((r) => r.ops > 0).map((r) => ({ label: r.data.slice(5), value: Number(r.ops) }));
   const temHoras = regs.some((r) => (r.horas_moagem || 0) > 0 || (r.horas_modelagem || 0) > 0 || (r.horas_embalamento || 0) > 0);
 
   async function acao(nome: string, fn: () => Promise<unknown>) {
@@ -234,6 +233,17 @@ export function DashboardCustos() {
               </tbody>
             </table>
           </div>
+
+          {/* Controle diário I-MR — escopado ao mês selecionado (movido de Gerencial, Etapa 1) */}
+          <div>
+            <p style={{ ...sLabel, marginBottom: 10 }}>CONTROLE DIÁRIO — {selMes}/{selAno}</p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(440px,1fr))", gap: 20 }}>
+              <ShewartIMRChart title="Variação de Custo (R$/kg)" data={sCustoKgMes} unit="R$" thresholds={{ ideal: thresholds.IDEAL, alerta: thresholds.ATENCAO, critico: thresholds.ALERTA }} />
+              <ShewartIMRChart title="Controle de Peso (kg)" data={sKgMes} unit="kg" />
+              <ShewartIMRChart title="Controle de Temperatura (°C)" data={sTempMes} unit="°C" />
+              <ShewartIMRChart title="Controle de OPs" data={sOpsMes} unit="ops" />
+            </div>
+          </div>
         </div>
       )}
 
@@ -276,13 +286,6 @@ export function DashboardCustos() {
       {aba === "gerencial" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <AbaGerencial meses={meses} registros={regs} thresholds={thresholds} />
-          <p style={{ ...sLabel, marginTop: 4 }}>Controle Estatístico (cartas I-MR · Western Electric)</p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(340px,1fr))", gap: 12 }}>
-            <ShewartIMRChart title="Variação de Custo (R$/kg)" data={sCustoKg} unit="R$" thresholds={{ ideal: thresholds.IDEAL, alerta: thresholds.ATENCAO, critico: thresholds.ALERTA }} />
-            <ShewartIMRChart title="Controle de Peso (kg)" data={sKg} unit="kg" />
-            <ShewartIMRChart title="Controle de Temperatura (°C)" data={sTemp} unit="°C" />
-            <ShewartIMRChart title="Controle de OPs" data={sOps} unit="ops" />
-          </div>
           {!temHoras && (
             <div style={{ ...sCard, padding: 16 }}>
               <p style={{ ...sLabel, marginBottom: 6 }}>Horas vs Kg (Moagem / Modelagem / Embalamento)</p>
