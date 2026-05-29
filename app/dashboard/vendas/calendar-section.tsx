@@ -318,7 +318,7 @@ export function CalendarSection({
         >
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 16 }}>
             <p style={{ fontSize: 11, fontWeight: 700, color: "#c0c8d8", fontFamily: "'Courier New', monospace", textTransform: "uppercase", letterSpacing: ".1em" }}>
-              📅 Calendário — {new Date(diasOrdenados[0]?.dia ?? new Date()).toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}
+              📅 Calendário — {new Date((diasOrdenados[0]?.dia ?? new Date().toISOString().slice(0, 10)) + "T00:00:00").toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}
             </p>
             <span
               style={{
