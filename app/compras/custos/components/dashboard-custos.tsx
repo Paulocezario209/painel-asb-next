@@ -121,6 +121,17 @@ export function DashboardCustos() {
   // Comparativo % gordura/recorte do mês (Etapa 2 item 3) — pct null = gap; reusa mesKey
   const sComparativoMes = insumosCons.comparativo.filter((c) => c.data.slice(0, 7) === mesKey).sort((a, b) => a.data.localeCompare(b.data))
     .map((c) => ({ label: c.data.slice(5), pct: c.pct_gordura, recorte: Number(c.recorte_kg), gordura: Number(c.gordura_kg) }));
+  // Consumo mensal Recorte vs Gordura (Etapa 2 item 4 — Gerencial) — pivot de v_insumos_consumo_mensal por ano_mes
+  const insumosMensal = useMemo(() => {
+    const map = new Map<string, { ano_mes: string; recorte: number; gordura: number }>();
+    for (const m of insumosCons.mensal) {
+      let e = map.get(m.ano_mes);
+      if (!e) { e = { ano_mes: m.ano_mes, recorte: 0, gordura: 0 }; map.set(m.ano_mes, e); }
+      if (m.categoria === CAT_RECORTE) e.recorte += Number(m.kg);
+      else if (m.categoria === CAT_GORDURA) e.gordura += Number(m.kg);
+    }
+    return [...map.values()].sort((a, b) => a.ano_mes.localeCompare(b.ano_mes));
+  }, [insumosCons.mensal]);
 
   async function acao(nome: string, fn: () => Promise<unknown>) {
     setBusy(nome); setErro(null);
@@ -315,7 +326,7 @@ export function DashboardCustos() {
       {/* === GERENCIAL (5.3.5/6) === */}
       {aba === "gerencial" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <AbaGerencial meses={meses} registros={regs} thresholds={thresholds} />
+          <AbaGerencial meses={meses} registros={regs} thresholds={thresholds} insumosMensal={insumosMensal} />
           {!temHoras && (
             <div style={{ ...sCard, padding: 16 }}>
               <p style={{ ...sLabel, marginBottom: 6 }}>Horas vs Kg (Moagem / Modelagem / Embalamento)</p>

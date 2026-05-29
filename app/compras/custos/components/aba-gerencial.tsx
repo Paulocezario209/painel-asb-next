@@ -10,6 +10,7 @@ export type MesGer = {
   ano_mes: string; kg_total: number; custo_medio_kg: number;
   horas_moagem_total: number; horas_modelagem_total: number; horas_embalamento_total: number;
 };
+export type InsumoMes = { ano_mes: string; recorte: number; gordura: number };
 type Apontamento = { tipo: "critico" | "alerta" | "atencao" | "positivo"; titulo: string; detalhe: string; acao: string };
 
 const TIPO_COR = { critico: C.vermelho, alerta: C.laranja, atencao: C.amarelo, positivo: C.verde2 };
@@ -59,7 +60,7 @@ function detectar(meses: MesGer[], registros: Registro[], t: Thresholds): Aponta
   return out;
 }
 
-export function AbaGerencial({ meses, registros, thresholds }: { meses: MesGer[]; registros: Registro[]; thresholds: Thresholds }) {
+export function AbaGerencial({ meses, registros, thresholds, insumosMensal = [] }: { meses: MesGer[]; registros: Registro[]; thresholds: Thresholds; insumosMensal?: InsumoMes[] }) {
   const apont = detectar(meses, registros, thresholds);
   const horasData = meses.length ? (() => { const u = meses[meses.length - 1]; return [
     { etapa: "Moagem", horas: u.horas_moagem_total }, { etapa: "Modelagem", horas: u.horas_modelagem_total }, { etapa: "Embalamento", horas: u.horas_embalamento_total },
@@ -108,6 +109,21 @@ export function AbaGerencial({ meses, registros, thresholds }: { meses: MesGer[]
           </ResponsiveContainer>
         </div>
       </div>
+
+      {insumosMensal.length > 0 && (
+        <div style={{ ...sCard, padding: "12px 8px 4px" }}>
+          <p style={{ ...lblChart }}>Consumo de insumos por mês (kg) — Recorte 80/20 vs Gordura</p>
+          <ResponsiveContainer width="100%" height={240}>
+            <ComposedChart data={insumosMensal}>
+              <CartesianGrid stroke={C.borda} strokeDasharray="3 3" vertical={false} />
+              <XAxis dataKey="ano_mes" {...axis} /><YAxis {...axis} />
+              <Tooltip {...tip} formatter={(value, name) => [`${Number(value).toLocaleString("pt-BR")} kg`, name]} />
+              <Bar dataKey="recorte" name="Recorte 80/20" fill={C.azul} radius={[3, 3, 0, 0]} />
+              <Bar dataKey="gordura" name="Gordura" fill={C.laranja} radius={[3, 3, 0, 0]} />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+      )}
 
       <div style={{ ...sCard, padding: 16 }}>
         <p style={{ color: C.branco, fontSize: 12, fontWeight: 700, fontFamily: mono, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 12 }}>
