@@ -29,7 +29,6 @@ interface DiaVendedor {
   mes: number;
   semana: number;
   realizado_parcial_brl: number;
-  valor_faturado_brl: number;
   pedidos_count: number;
   pedidos_cancelados_count: number;
   pedidos_faturados_count: number;
@@ -100,7 +99,6 @@ export default async function VendasPage() {
   // ── Aggregate per vendor ──────────────────────────────────────────────────
   type VendorAgg = {
     realizado: number;
-    faturado: number;
     pedidos: number;
     cancelados: number;
     faturados: number;
@@ -115,7 +113,7 @@ export default async function VendasPage() {
 
   const agg: Record<string, VendorAgg> = {};
   for (const rt of vendorTeams) {
-    agg[rt] = { realizado: 0, faturado: 0, pedidos: 0, cancelados: 0, faturados: 0, clientes: 0, meta: null, dias: [] };
+    agg[rt] = { realizado: 0, pedidos: 0, cancelados: 0, faturados: 0, clientes: 0, meta: null, dias: [] };
     const meta = metas.find(m => m.vendedor_routing_team === rt);
     if (meta) agg[rt].meta = meta.meta_valor_brl;
   }
@@ -125,7 +123,6 @@ export default async function VendasPage() {
     if (!agg[rt]) continue;
     const a = agg[rt];
     a.realizado += d.realizado_parcial_brl ?? 0;
-    a.faturado += d.valor_faturado_brl ?? 0;
     a.pedidos += d.pedidos_count ?? 0;
     a.cancelados += d.pedidos_cancelados_count ?? 0;
     a.faturados += d.pedidos_faturados_count ?? 0;

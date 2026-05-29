@@ -32,7 +32,6 @@ const VENDOR_ACCENT: Record<string, string> = {
 interface DiaVendedor {
   vendedor_routing_team: string;
   realizado_parcial_brl: number;
-  valor_faturado_brl: number;
   pedidos_count: number;
   clientes_count: number;
 }
@@ -73,10 +72,10 @@ export default async function GerentePage() {
   const ultimoDiaMes = new Date(year, month, 0).toISOString().slice(0, 10);
 
   // ── Queries paralelas ─────────────────────────────────────────────────────
-  const [{ data: rawDia }, { data: rawMetas }] = await Promise.all([
+  const [{ data: rawDia }, { data: rawMetas }, { data: rawFat }] = await Promise.all([
     supabase
       .from("painel_dia_vendedor")
-      .select("vendedor_routing_team, realizado_parcial_brl, valor_faturado_brl, pedidos_count, clientes_count")
+      .select("vendedor_routing_team, realizado_parcial_brl, pedidos_count, clientes_count")
       .gte("dia", primeiroDiaMes)
       .lte("dia", ultimoDiaMes),
     supabase
@@ -85,25 +84,34 @@ export default async function GerentePage() {
       .eq("granularidade", "mensal")
       .eq("ativo", true)
       .eq("data_inicio", primeiroDiaMes),
+    // Faturado real (NF+Recibo) MTD — MESMA fonte/recorte do /dashboard/vendas (paridade DEBT-088)
+    supabase
+      .from("faturamento_tipo_dia")
+      .select("valor_brl")
+      .gte("dia", primeiroDiaMes)
+      .lte("dia", ultimoDiaMes),
   ]);
 
   const dias = (rawDia ?? []) as unknown as DiaVendedor[];
   const metas = (rawMetas ?? []) as unknown as Meta[];
+  // Faturado total real do mês (NF+Recibo) — idêntico ao totalFaturadoReal do /vendas
+  const totalFaturadoReal = (rawFat ?? []).reduce(
+    (s, r) => s + (Number((r as { valor_brl: number | null }).valor_brl) || 0), 0,
+  );
 
   // ── Aggregate per vendor ──────────────────────────────────────────────────
-  type VendorAgg = { realizado: number; faturado: number; pedidos: number; clientes: number; meta: number };
+  type VendorAgg = { realizado: number; pedidos: number; clientes: number; meta: number };
 
   const agg: Record<string, VendorAgg> = {};
   for (const rt of VENDOR_ORDER) {
     const meta = metas.find(m => m.vendedor_routing_team === rt);
-    agg[rt] = { realizado: 0, faturado: 0, pedidos: 0, clientes: 0, meta: meta?.meta_valor_brl ?? 0 };
+    agg[rt] = { realizado: 0, pedidos: 0, clientes: 0, meta: meta?.meta_valor_brl ?? 0 };
   }
 
   for (const d of dias) {
     const a = agg[d.vendedor_routing_team];
     if (!a) continue;
     a.realizado += d.realizado_parcial_brl ?? 0;
-    a.faturado += d.valor_faturado_brl ?? 0;
     a.pedidos += d.pedidos_count ?? 0;
     a.clientes += d.clientes_count ?? 0;
   }
@@ -176,6 +184,13 @@ export default async function GerentePage() {
         <p style={S.muted}>
           Visao consolidada {mesAtual} &middot; {diasDecorridos}/{totalDiasUteis} dias uteis
         </p>
+      </div>
+
+      {/* Faturado total real (NF+Recibo) — MESMA fonte/recorte do /vendas. TOTAL do mês, sem quebra por vendedor (faturado por vendedor adiado — DEBT-097). */}
+      <div style={{ ...S.card, padding: "20px 24px", borderTop: "2px solid #22c55e", maxWidth: 360 }}>
+        <p style={{ ...S.label, color: "#22c55e" }}>Faturado total (NF+Recibo)</p>
+        <p style={{ ...S.value, marginTop: 12 }}>{fmtBRL(totalFaturadoReal)}</p>
+        <p style={{ ...S.muted, fontSize: 9, marginTop: 6 }}>MTD &middot; total do mês, sem quebra por vendedor</p>
       </div>
 
       {/* ── Retention Carteira (Funil v2 Fase 3 — atualizado pelo worker daily) ── */}
