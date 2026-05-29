@@ -34,7 +34,16 @@ type Row = {
   stage_sugerido: string; n_pedidos: number; receita_brl: number; routing_team: string | null;
   ares_pessoa_id: number | null; nome_ares: string | null;
   primeiro_pedido: string | null; ultimo_pedido: string | null; dias_desde_ultimo_pedido: number | null;
+  ares_vendedor_nome: string | null; ares_routing_team: string | null;
 };
+
+// Vendedor REAL do ARES (dono do pedido mais recente); cai p/ label do routing ARES, depois routing SDR.
+function vendedorReal(r: Row): string {
+  if (r.ares_vendedor_nome) return r.ares_vendedor_nome;
+  if (r.ares_routing_team) return VENDOR_LABELS[r.ares_routing_team] ?? r.ares_routing_team.replace("SETOR_", "");
+  if (r.routing_team) return VENDOR_LABELS[r.routing_team] ?? r.routing_team.replace("SETOR_", "");
+  return "—";
+}
 
 export async function CardReconciliar() {
   const ctx = await getUserContext();
@@ -43,7 +52,7 @@ export async function CardReconciliar() {
   const supabase = await createClient();
   const { data } = await supabase
     .from("v_clientes_a_reconciliar")
-    .select("lead_id, phone, name, funnel_atual, stage_sugerido, n_pedidos, receita_brl, routing_team, ares_pessoa_id, nome_ares, primeiro_pedido, ultimo_pedido, dias_desde_ultimo_pedido")
+    .select("lead_id, phone, name, funnel_atual, stage_sugerido, n_pedidos, receita_brl, routing_team, ares_pessoa_id, nome_ares, primeiro_pedido, ultimo_pedido, dias_desde_ultimo_pedido, ares_vendedor_nome, ares_routing_team")
     .order("receita_brl", { ascending: false });
   const rows = (data ?? []) as Row[];
   if (rows.length === 0) return null;
@@ -65,7 +74,7 @@ export async function CardReconciliar() {
           <thead><tr>
             <th style={th}>Cliente</th>
             <th style={{ ...th, textAlign: "right" }}>ID ARES</th>
-            <th style={th}>Vendedor</th>
+            <th style={th}>Vendedor (ARES)</th>
             <th style={{ ...th, textAlign: "right" }}>Pedidos</th>
             <th style={{ ...th, textAlign: "right" }}>Receita</th>
             <th style={th}>1ª compra</th>
@@ -80,7 +89,7 @@ export async function CardReconciliar() {
               <tr key={r.lead_id} style={{ borderBottom: "1px solid #222" }}>
                 <td style={{ ...td, color: "#FFFFFF" }}>{r.name || r.nome_ares || r.phone}</td>
                 <td style={{ ...td, textAlign: "right", color: "#8899aa", fontSize: 10 }}>{r.ares_pessoa_id ?? "—"}</td>
-                <td style={{ ...td, color: "#8899aa", fontSize: 11 }}>{VENDOR_LABELS[r.routing_team ?? ""] ?? (r.routing_team || "—").replace("SETOR_", "")}</td>
+                <td style={{ ...td, color: "#8899aa", fontSize: 11 }}>{vendedorReal(r)}</td>
                 <td style={{ ...td, textAlign: "right" }}>{r.n_pedidos}</td>
                 <td style={{ ...td, textAlign: "right", color: "#2ea043", fontWeight: 700 }}>{brl(r.receita_brl)}</td>
                 <td style={{ ...td, color: "#8899aa", fontSize: 11 }}>{fmtDate(r.primeiro_pedido)}</td>
