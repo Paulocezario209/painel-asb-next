@@ -72,8 +72,8 @@ export default async function GerentePage() {
   const primeiroMesAnterior = `${anoMesAnterior}-${String(mesAnterior).padStart(2, "0")}-01`;
 
   // ── Queries paralelas ─────────────────────────────────────────────────────
-  // OFICIAL = eixo de ENTREGA (v_resumo_mes_vendedor — MESMA fonte do /vendas; DEBT-097 opção 2,
-  //   interino em entrega até o §5/sync trazer faturamento por vendedor — DEBT-103).
+  // OFICIAL = eixo de FATURAMENTO §5 (v_resumo_mes_vendedor pós DEBT-103 FASE C; MESMA fonte do /vendas;
+  //   realizado por faturamento real NF+Recibo — DEBT-103 FASE C aplicada).
   // EMISSÃO (painel_dia_vendedor / data_emissao, 088c) = PRÉVIA em tempo real, NÃO-oficial.
   const [{ data: rawResumo }, { data: rawMetas }, { data: rawFat }, { data: rawEmissao }, { data: rawComp }] = await Promise.all([
     supabase
@@ -103,15 +103,19 @@ export default async function GerentePage() {
   const totalFaturadoReal = (rawFat ?? []).reduce(
     (s, r) => s + (Number((r as { valor_brl: number | null }).valor_brl) || 0), 0,
   );
+  // DEBT-103 FASE D: realizado OFICIAL por vendedor = FATURADO §5 (v_resumo já está no eixo faturamento pós-FASE C).
+  // Linha "não-atribuído" = card total − Σ faturado por vendedor. AO VIVO (encolhe c/ cobertura).
+  const somaFatVendedores = resumo.reduce((s, r) => s + Number(r.realizado_mes_brl ?? 0), 0);
+  const naoAtribuido = Math.max(0, totalFaturadoReal - somaFatVendedores);
 
-  // ── Aggregate per vendor (realizado OFICIAL = entrega; emissao = prévia) ───
+  // ── Aggregate per vendor (realizado OFICIAL = faturamento §5; emissao = prévia) ───
   type VendorAgg = { realizado: number; emissao: number; meta: number };
   const agg: Record<string, VendorAgg> = {};
   for (const rt of VENDOR_ORDER) {
     const r = resumo.find(x => x.vendedor_routing_team === rt);
     const m = metas.find(x => x.vendedor_routing_team === rt);
     agg[rt] = {
-      realizado: Number(r?.realizado_mes_brl ?? 0),            // ENTREGA (oficial, = /vendas)
+      realizado: Number(r?.realizado_mes_brl ?? 0),            // FATURAMENTO §5 (oficial, = /vendas)
       emissao: 0,                                              // EMISSÃO (prévia tempo real)
       meta: m?.meta_valor_brl ?? Number(r?.meta_total_mes_brl ?? 0),
     };
@@ -179,11 +183,14 @@ export default async function GerentePage() {
         </p>
       </div>
 
-      {/* Faturado total real (NF+Recibo) — MESMA fonte/recorte do /vendas. TOTAL do mês, sem quebra por vendedor (faturado por vendedor adiado — DEBT-097). */}
+      {/* Faturado total real (NF+Recibo). Σ por vendedor (§5) + não-atribuído = total. */}
       <div style={{ ...S.card, padding: "20px 24px", borderTop: "2px solid #22c55e", maxWidth: 360 }}>
         <p style={{ ...S.label, color: "#22c55e" }}>Faturado total (NF+Recibo)</p>
         <p style={{ ...S.value, marginTop: 12 }}>{fmtBRL(totalFaturadoReal)}</p>
-        <p style={{ ...S.muted, fontSize: 9, marginTop: 6 }}>MTD &middot; total do mês, sem quebra por vendedor</p>
+        <p style={{ ...S.muted, fontSize: 9, marginTop: 6 }}>
+          MTD &middot; por vendedor {fmtBRL(somaFatVendedores)}
+          {naoAtribuido > 0 ? ` + não-atribuído ${fmtBRL(naoAtribuido)}` : ""}
+        </p>
       </div>
 
       {/* ── Retention Carteira (Funil v2 Fase 3 — atualizado pelo worker daily) ── */}
@@ -229,7 +236,7 @@ export default async function GerentePage() {
           Prioridades do Dia
         </p>
         <p style={{ ...S.muted, fontSize: 9, marginBottom: 16 }}>
-          Ordenado por % atingido (pior em cima) &middot; realizado/meta OFICIAL por <b style={{ color: "#8899aa" }}>entrega</b> (= /vendas); &ldquo;prévia emissão&rdquo; = tempo real, não-oficial
+          Ordenado por % atingido (pior em cima) &middot; realizado/meta OFICIAL por <b style={{ color: "#8899aa" }}>faturamento</b> NF+Recibo (§5, = /vendas); &ldquo;prévia emissão&rdquo; = tempo real, não-oficial
         </p>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>

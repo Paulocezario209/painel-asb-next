@@ -156,6 +156,16 @@ export default async function VendasPage() {
   const calendarioData = (rawCal ?? []) as never[];
   const resumosData = (rawRes ?? []) as never[];
 
+  // ── DEBT-103 FASE D: realizado OFICIAL = FATURADO §5 (v_resumo, eixo data_faturamento) ──
+  // totalRealizado (acima) = painel_dia_vendedor por data_emissao → vira PRÉVIA rotulada.
+  const realizadoFatOficial = (rawRes ?? []).reduce(
+    (s, r) => s + Number((r as { realizado_mes_brl: number | null }).realizado_mes_brl ?? 0), 0,
+  );
+  const pctFat = totalMeta > 0 ? (realizadoFatOficial / totalMeta) * 100 : null;
+  const pctFatStr = pctFat !== null ? pctFat.toFixed(1) : null;
+  // Linha "não-atribuído" = card (faturamento_tipo_dia) − Σ faturado por vendedor. AO VIVO (encolhe c/ cobertura).
+  const naoAtribuido = Math.max(0, totalFaturado - realizadoFatOficial);
+
   return (
     <VendasPrivacyShell>
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -165,21 +175,22 @@ export default async function VendasPage() {
           Vendas
         </h1>
         <p style={S.muted}>
-          Faturamento {mesAtual} &middot; faturado NF+Recibo realizado (ARES) &middot; meta/realizado via painel_dia_vendedor
+          Faturamento {mesAtual} &middot; realizado OFICIAL = faturado NF+Recibo por dia de faturamento (§5) &middot; prévia por emissão (tempo real)
         </p>
       </div>
 
       {/* KPI cards topo */}
       <div className="asb-grid-kpi">
         {[
-          { label: "Meta Total", value: totalMeta > 0 ? <span className="priv-brl">{fmtBRL(totalMeta)}</span> : "\u2014", accent: "#f59e0b" },
-          { label: "Realizado", value: <span className="priv-brl">{fmtBRL(totalRealizado)}</span>, accent: "#C8102E" },
-          { label: "Faturado", value: <span className="priv-brl">{fmtBRL(totalFaturado)}</span>, accent: "#22c55e" },
-          { label: "% Atingido", value: pctAtingidoStr ? <span className="priv-pct">{`${pctAtingidoStr}%`}</span> : "\u2014", accent: pctAtingido !== null ? (pctAtingido >= 100 ? "#22c55e" : pctAtingido >= 50 ? "#f59e0b" : "#C8102E") : "#556677" },
-        ].map(({ label, value, accent }) => (
+          { label: "Meta Total", value: totalMeta > 0 ? <span className="priv-brl">{fmtBRL(totalMeta)}</span> : "\u2014", accent: "#f59e0b", sub: undefined as string | undefined },
+          { label: "Realizado (faturado \u00a75)", value: <span className="priv-brl">{fmtBRL(realizadoFatOficial)}</span>, accent: "#C8102E", sub: `pr\u00e9via emiss\u00e3o ${fmtBRL(totalRealizado)}` },
+          { label: "% Atingido", value: pctFatStr ? <span className="priv-pct">{`${pctFatStr}%`}</span> : "\u2014", accent: pctFat !== null ? (pctFat >= 100 ? "#22c55e" : pctFat >= 50 ? "#f59e0b" : "#C8102E") : "#556677", sub: undefined },
+          { label: "Faturado total (NF+Recibo)", value: <span className="priv-brl">{fmtBRL(totalFaturado)}</span>, accent: "#22c55e", sub: naoAtribuido > 0 ? `${fmtBRL(naoAtribuido)} n\u00e3o-atribu\u00eddo` : undefined },
+        ].map(({ label, value, accent, sub }) => (
           <div key={label} style={{ ...S.card, padding: "20px", borderTop: `2px solid ${accent}` }}>
             <p style={{ ...S.label, color: accent }}>{label}</p>
             <p style={{ ...S.value, marginTop: 12 }}>{value}</p>
+            {sub && <p style={{ ...S.muted, fontSize: 9, marginTop: 6 }}>{sub}</p>}
           </div>
         ))}
       </div>
