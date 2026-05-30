@@ -29,13 +29,6 @@ const VENDOR_ACCENT: Record<string, string> = {
 };
 
 // ── Interfaces ──────────────────────────────────────────────────────────────
-interface DiaVendedor {
-  vendedor_routing_team: string;
-  realizado_parcial_brl: number;
-  pedidos_count: number;
-  clientes_count: number;
-}
-
 interface Meta {
   vendedor_routing_team: string;
   meta_valor_brl: number;
@@ -71,49 +64,61 @@ export default async function GerentePage() {
   const primeiroDiaMes = `${mesAtual}-01`;
   const ultimoDiaMes = new Date(year, month, 0).toISOString().slice(0, 10);
 
+  // ── Boundaries mês anterior (comparativo) ─────────────────────────────────
+  const diasDecorridos = await businessDaysElapsed(year, month, now);
+  const mesAnterior = month === 1 ? 12 : month - 1;
+  const anoMesAnterior = month === 1 ? year - 1 : year;
+  const limiteAnteriorISO = await dateAfterNBusinessDays(anoMesAnterior, mesAnterior, diasDecorridos);
+  const primeiroMesAnterior = `${anoMesAnterior}-${String(mesAnterior).padStart(2, "0")}-01`;
+
   // ── Queries paralelas ─────────────────────────────────────────────────────
-  const [{ data: rawDia }, { data: rawMetas }, { data: rawFat }] = await Promise.all([
+  // OFICIAL = eixo de ENTREGA (v_resumo_mes_vendedor — MESMA fonte do /vendas; DEBT-097 opção 2,
+  //   interino em entrega até o §5/sync trazer faturamento por vendedor — DEBT-103).
+  // EMISSÃO (painel_dia_vendedor / data_emissao, 088c) = PRÉVIA em tempo real, NÃO-oficial.
+  const [{ data: rawResumo }, { data: rawMetas }, { data: rawFat }, { data: rawEmissao }, { data: rawComp }] = await Promise.all([
     supabase
-      .from("painel_dia_vendedor")
-      .select("vendedor_routing_team, realizado_parcial_brl, pedidos_count, clientes_count")
-      .gte("dia", primeiroDiaMes)
-      .lte("dia", ultimoDiaMes),
+      .from("v_resumo_mes_vendedor")
+      .select("vendedor_routing_team, realizado_mes_brl, meta_total_mes_brl, pct_atingido_mes"),
     supabase
       .from("metas")
       .select("vendedor_routing_team, meta_valor_brl")
-      .eq("granularidade", "mensal")
-      .eq("ativo", true)
-      .eq("data_inicio", primeiroDiaMes),
+      .eq("granularidade", "mensal").eq("ativo", true).eq("data_inicio", primeiroDiaMes),
     // Faturado real (NF+Recibo) MTD — MESMA fonte/recorte do /dashboard/vendas (paridade DEBT-088)
     supabase
       .from("faturamento_tipo_dia")
-      .select("valor_brl")
-      .gte("dia", primeiroDiaMes)
-      .lte("dia", ultimoDiaMes),
+      .select("valor_brl").gte("dia", primeiroDiaMes).lte("dia", ultimoDiaMes),
+    // EMISSÃO (prévia tempo real — data_emissao)
+    supabase
+      .from("painel_dia_vendedor")
+      .select("vendedor_routing_team, realizado_parcial_brl").gte("dia", primeiroDiaMes).lte("dia", ultimoDiaMes),
+    // COMPARATIVO mês anterior — eixo ENTREGA (mesmo do oficial)
+    supabase
+      .from("v_faturado_diario")
+      .select("vendedor_routing_team, realizado_parcial_brl").gte("dia", primeiroMesAnterior).lte("dia", limiteAnteriorISO),
   ]);
 
-  const dias = (rawDia ?? []) as unknown as DiaVendedor[];
+  const resumo = (rawResumo ?? []) as unknown as { vendedor_routing_team: string; realizado_mes_brl: number; meta_total_mes_brl: number; pct_atingido_mes: number | null }[];
   const metas = (rawMetas ?? []) as unknown as Meta[];
-  // Faturado total real do mês (NF+Recibo) — idêntico ao totalFaturadoReal do /vendas
+  // Faturado total real do mês (NF+Recibo) — idêntico ao totalFaturadoReal do /vendas (NÃO tocar)
   const totalFaturadoReal = (rawFat ?? []).reduce(
     (s, r) => s + (Number((r as { valor_brl: number | null }).valor_brl) || 0), 0,
   );
 
-  // ── Aggregate per vendor ──────────────────────────────────────────────────
-  type VendorAgg = { realizado: number; pedidos: number; clientes: number; meta: number };
-
+  // ── Aggregate per vendor (realizado OFICIAL = entrega; emissao = prévia) ───
+  type VendorAgg = { realizado: number; emissao: number; meta: number };
   const agg: Record<string, VendorAgg> = {};
   for (const rt of VENDOR_ORDER) {
-    const meta = metas.find(m => m.vendedor_routing_team === rt);
-    agg[rt] = { realizado: 0, pedidos: 0, clientes: 0, meta: meta?.meta_valor_brl ?? 0 };
+    const r = resumo.find(x => x.vendedor_routing_team === rt);
+    const m = metas.find(x => x.vendedor_routing_team === rt);
+    agg[rt] = {
+      realizado: Number(r?.realizado_mes_brl ?? 0),            // ENTREGA (oficial, = /vendas)
+      emissao: 0,                                              // EMISSÃO (prévia tempo real)
+      meta: m?.meta_valor_brl ?? Number(r?.meta_total_mes_brl ?? 0),
+    };
   }
-
-  for (const d of dias) {
-    const a = agg[d.vendedor_routing_team];
-    if (!a) continue;
-    a.realizado += d.realizado_parcial_brl ?? 0;
-    a.pedidos += d.pedidos_count ?? 0;
-    a.clientes += d.clientes_count ?? 0;
+  for (const r of (rawEmissao ?? []) as unknown as { vendedor_routing_team: string; realizado_parcial_brl: number }[]) {
+    const a = agg[r.vendedor_routing_team];
+    if (a) a.emissao += Number(r.realizado_parcial_brl ?? 0);
   }
 
   // ── B1 Ranking (pior em cima) ─────────────────────────────────────────────
@@ -125,25 +130,13 @@ export default async function GerentePage() {
     return { rt, name: v?.name ?? rt, region: v?.region ?? "", ...a, pct, faltante };
   }).sort((a, b) => a.pct - b.pct);
 
-  // ── B2 Comparativo mes anterior ────────────────────────────────────────────
-  const diasDecorridos = await businessDaysElapsed(year, month, now);
-  const mesAnterior = month === 1 ? 12 : month - 1;
-  const anoMesAnterior = month === 1 ? year - 1 : year;
-  const limiteAnteriorISO = await dateAfterNBusinessDays(anoMesAnterior, mesAnterior, diasDecorridos);
-  const primeiroMesAnterior = `${anoMesAnterior}-${String(mesAnterior).padStart(2, "0")}-01`;
-
-  const { data: rawComp } = await supabase
-    .from("painel_dia_vendedor")
-    .select("vendedor_routing_team, realizado_parcial_brl")
-    .gte("dia", primeiroMesAnterior)
-    .lte("dia", limiteAnteriorISO);
-
+  // ── B2 Comparativo mes anterior (eixo ENTREGA, mesmo do oficial) ──────────
   const aggAnterior: Record<string, number> = {};
   for (const r of (rawComp ?? []) as unknown as { vendedor_routing_team: string; realizado_parcial_brl: number }[]) {
     aggAnterior[r.vendedor_routing_team] = (aggAnterior[r.vendedor_routing_team] ?? 0) + (r.realizado_parcial_brl ?? 0);
   }
-
   const totalRealizado = VENDOR_ORDER.reduce((s, rt) => s + agg[rt].realizado, 0);
+  const totalEmissao = VENDOR_ORDER.reduce((s, rt) => s + agg[rt].emissao, 0);
   const totalAnterior = VENDOR_ORDER.reduce((s, rt) => s + (aggAnterior[rt] ?? 0), 0);
 
   const comparativo = VENDOR_ORDER.map(rt => {
@@ -158,7 +151,7 @@ export default async function GerentePage() {
 
   const MESES_LABEL = ["", "Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
-  // ── B6 Projecao ───────────────────────────────────────────────────────────
+  // ── B6 Projecao (eixo ENTREGA) ────────────────────────────────────────────
   const totalDiasUteis = await businessDaysInMonth(year, month);
   const totalMeta = VENDOR_ORDER.reduce((s, rt) => s + agg[rt].meta, 0);
   const projecaoTotal = diasDecorridos > 0 ? (totalRealizado / diasDecorridos) * totalDiasUteis : 0;
@@ -236,7 +229,7 @@ export default async function GerentePage() {
           Prioridades do Dia
         </p>
         <p style={{ ...S.muted, fontSize: 9, marginBottom: 16 }}>
-          Ordenado por % atingido (pior em cima)
+          Ordenado por % atingido (pior em cima) &middot; realizado/meta OFICIAL por <b style={{ color: "#8899aa" }}>entrega</b> (= /vendas); &ldquo;prévia emissão&rdquo; = tempo real, não-oficial
         </p>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -273,7 +266,7 @@ export default async function GerentePage() {
                   }} />
                 </div>
 
-                {/* Bottom row: realizado / meta / faltante */}
+                {/* Bottom row: realizado (entrega, oficial) / meta / faltante / pr\u00e9via (emiss\u00e3o) */}
                 <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
                   <span style={{ ...S.muted, fontSize: 10 }}>
                     Realizado <span style={{ color: "#c8d8e8", fontWeight: 700 }}>{fmtBRL(v.realizado)}</span>
@@ -283,6 +276,9 @@ export default async function GerentePage() {
                   </span>
                   <span style={{ ...S.muted, fontSize: 10 }}>
                     Faltante <span style={{ color: v.faltante > 0 ? "#C8102E" : "#22c55e", fontWeight: 700 }}>{fmtBRL(v.faltante)}</span>
+                  </span>
+                  <span style={{ ...S.muted, fontSize: 10 }} title="Pr\u00e9via em tempo real por data de emiss\u00e3o (n\u00e3o-oficial). Oficial = por entrega.">
+                    Pr\u00e9via emiss\u00e3o <span style={{ color: "#6a7a8a", fontWeight: 700 }}>{fmtBRL(v.emissao)}</span>
                   </span>
                 </div>
               </div>
