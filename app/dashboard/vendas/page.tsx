@@ -194,6 +194,17 @@ export default async function VendasPage() {
   const calendarioData = (rawCal ?? []) as never[];
   const resumosData = (rawRes ?? []) as never[];
 
+  // ── Feature 2: parte CNB do realizado §5 por vendedor (mês corrente) ──────
+  // Aditivo: v_cnb_mes_vendedor (rollup de v_cnb_dia_vendedor). O §5 (realizado_mes_brl)
+  // JÁ inclui CNB; aqui só separamos a parcela p/ exibir. ares = §5 − cnb (escalar no card).
+  let cnbQuery = supabase.from("v_cnb_mes_vendedor").select("vendedor_routing_team, cnb_mes_brl");
+  if (isVendedorRestrito) cnbQuery = cnbQuery.eq("vendedor_routing_team", ctx.routing_team!);
+  const { data: rawCnb } = await cnbQuery;
+  const cnbByVendor: Record<string, number> = {};
+  for (const c of (rawCnb ?? []) as unknown as { vendedor_routing_team: string; cnb_mes_brl: number }[]) {
+    cnbByVendor[c.vendedor_routing_team] = Number(c.cnb_mes_brl ?? 0);
+  }
+
   // ── DEBT-103 FASE D: realizado OFICIAL = FATURADO §5 (v_resumo, eixo data_faturamento) ──
   // totalRealizado (acima) = painel_dia_vendedor por data_emissao → vira PRÉVIA rotulada.
   const realizadoFatOficial = (rawRes ?? []).reduce(
@@ -246,6 +257,7 @@ export default async function VendasPage() {
         calendario={calendarioData}
         resumos={resumosData}
         emissaoByVendor={emissaoByVendor}
+        cnbByVendor={cnbByVendor}
         restrictedToVendor={isVendedorRestrito ? ctx.routing_team! : null}
         estrategias={estrategiasData}
       />

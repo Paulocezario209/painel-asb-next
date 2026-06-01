@@ -37,6 +37,7 @@ type ResumoVendor = {
   meta_proxima_data_brl?: number;
   saldo_brl: number;          // saldo do MÊS (Acumulado − Esperado até hoje)
   saldo_dia_brl?: number;     // saldo do DIA (Realizado próx meta − Meta próx data)
+  realizado_mes_brl?: number;   // §5 do mês (ARES+CNB) — = realizado_acumulado_brl no mês corrente
   pct_atingido_acumulado: number | null;
   pct_atingido_mes: number | null;
   dias_batidos: number;
@@ -69,12 +70,14 @@ export function CalendarSection({
   calendario,
   resumos,
   emissaoByVendor,
+  cnbByVendor,
   restrictedToVendor,
   estrategias,
 }: {
   calendario: DayCell[];
   resumos: ResumoVendor[];
   emissaoByVendor?: Record<string, { realizadoMes: number; realizadoCiclo: number; qtdCiclo: number; windowStart: string }>;
+  cnbByVendor?: Record<string, number>;
   restrictedToVendor?: string | null;
   estrategias?: EstrategiasResponse | null;
 }) {
@@ -236,6 +239,10 @@ export function CalendarSection({
           // REALIZADO (CICLO) v2 (§2): só pedidos cujo dia de faturamento = proxima_data_meta (este card); ACUMULADO = mês corrente.
           const realizadoCiclo = em ? em.realizadoCiclo : r.realizado_hoje_brl;
           const acumuladoEmissao = em ? em.realizadoMes : r.realizado_acumulado_brl;
+          // Feature 2: §5 oficial (ARES+CNB) decomposto — número total inalterado, só separa CNB.
+          const totalSf = Number(r.realizado_acumulado_brl);          // §5 oficial (já = ARES+CNB)
+          const cnbVend = Number(cnbByVendor?.[rt] ?? 0);             // parte CNB (v_cnb_mes_vendedor)
+          const aresPart = totalSf - cnbVend;                         // parte ARES (fiscal) = §5 − CNB
           const saldoMes = acumuladoEmissao - Number(r.meta_acumulada_brl);
           const saldoPositivo = saldoMes >= 0;
           const pctCiclo = metaProx > 0
@@ -296,7 +303,9 @@ export function CalendarSection({
                   { label: "Acumulado",  value: <span className="priv-brl">{fmtBRL(acumuladoEmissao)}</span>, c: "#FFFFFF" },
                   { label: "Esperado",   value: <span className="priv-brl">{fmtBRL(r.meta_acumulada_brl)}</span>, c: "#8899aa" },
                   { label: "Saldo mês",  value: <span className="priv-brl">{(saldoPositivo ? "+" : "") + fmtBRL(saldoMes)}</span>, c: saldoPositivo ? "#22c55e" : "#C8102E" },
-                  { label: "Faturado (oficial)", value: <span className="priv-brl">{fmtBRL(r.realizado_acumulado_brl)}</span>, c: "#22c55e" },
+                  { label: "Total §5 (ARES+CNB)", value: <span className="priv-brl">{fmtBRL(totalSf)}</span>, c: "#22c55e" },
+                  { label: "↳ ARES (fiscal)", value: <span className="priv-brl">{fmtBRL(aresPart)}</span>, c: "#8899aa" },
+                  { label: `↳ CNB ${v.name}`, value: <span className="priv-brl">{fmtBRL(cnbVend)}</span>, c: cnbVend > 0 ? "#ff7b1c" : "#556677" },
                 ];})().map(row => (
                   <div key={row.label} style={{ display: "flex", justifyContent: "space-between", fontSize: 11 }}>
                     <span style={{ color: "#556677", fontFamily: "'Courier New', monospace", fontSize: 9, letterSpacing: ".1em", textTransform: "uppercase" }}>{row.label}</span>
