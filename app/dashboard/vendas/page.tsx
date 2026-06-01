@@ -133,19 +133,24 @@ export default async function VendasPage() {
     a.dias.push(d);
   }
 
-  // ── REALTIME EMISSÃO por vendedor (painel_dia_vendedor) ─────────────────────
-  // Restaura REALIZADO DIA / ACUMULADO / % do card ao eixo de EMISSÃO em tempo real.
-  // FASE D repointou o card pro faturado §5 (via v_resumo) → R$ 0 enquanto não há NF.
-  // O faturado §5 segue exposto, mas como linha SEPARADA "Faturado (oficial)" no card.
-  const hojeBRT = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(now);
-  const emissaoByVendor: Record<string, { realizadoMes: number; realizadoHoje: number }> = {};
-  for (const rt of vendorTeams) {
-    const a = agg[rt];
-    emissaoByVendor[rt] = {
-      realizadoMes: a?.realizado ?? 0,
-      realizadoHoje: (a?.dias ?? [])
-        .filter(d => d.dia === hojeBRT)
-        .reduce((s, d) => s + (d.realizado_parcial_brl ?? 0), 0),
+  // ── JANELA DO CICLO ABERTO por vendedor (DEBT-111 C2 — view v_emissao_ciclo_vendedor) ──
+  // Eixo LANÇAMENTO: realizado da meta aberta = Σ desde o último faturamento encerrado
+  // (window_start = GREATEST(prev_faturamento, última sexta); cancelado já fora). Atravessa
+  // a virada do mês (ex.: dom 31/05 entra no ciclo que fatura em 01/06). Ana validada = 73.230.
+  // realizadoMes (Acumulado/Saldo mês) segue por MÊS CORRENTE via agg (painel_dia_vendedor).
+  let cicloQuery = supabase
+    .from("v_emissao_ciclo_vendedor")
+    .select("vendedor_routing_team, window_start, emissao_ciclo_brl, qtd_lancamentos");
+  if (isVendedorRestrito) cicloQuery = cicloQuery.eq("vendedor_routing_team", ctx.routing_team!);
+  const { data: rawCiclo } = await cicloQuery;
+  type CicloRow = { vendedor_routing_team: string; window_start: string; emissao_ciclo_brl: number; qtd_lancamentos: number };
+  const emissaoByVendor: Record<string, { realizadoMes: number; realizadoCiclo: number; qtdCiclo: number; windowStart: string }> = {};
+  for (const c of (rawCiclo ?? []) as unknown as CicloRow[]) {
+    emissaoByVendor[c.vendedor_routing_team] = {
+      realizadoMes: agg[c.vendedor_routing_team]?.realizado ?? 0,
+      realizadoCiclo: Number(c.emissao_ciclo_brl ?? 0),
+      qtdCiclo: Number(c.qtd_lancamentos ?? 0),
+      windowStart: c.window_start,
     };
   }
 

@@ -74,7 +74,7 @@ export function CalendarSection({
 }: {
   calendario: DayCell[];
   resumos: ResumoVendor[];
-  emissaoByVendor?: Record<string, { realizadoMes: number; realizadoHoje: number }>;
+  emissaoByVendor?: Record<string, { realizadoMes: number; realizadoCiclo: number; qtdCiclo: number; windowStart: string }>;
   restrictedToVendor?: string | null;
   estrategias?: EstrategiasResponse | null;
 }) {
@@ -233,12 +233,13 @@ export function CalendarSection({
           // Faturado §5 (v_resumo) preservado em linha separada "Faturado (oficial)".
           const em = emissaoByVendor?.[rt];
           const metaProx = Number(r.meta_proxima_data_brl ?? r.meta_diaria_brl);
-          const realizadoDia = em ? em.realizadoHoje : r.realizado_hoje_brl;
+          // REALIZADO (CICLO) = janela desde o último faturamento (atravessa o mês); ACUMULADO = mês corrente.
+          const realizadoCiclo = em ? em.realizadoCiclo : r.realizado_hoje_brl;
           const acumuladoEmissao = em ? em.realizadoMes : r.realizado_acumulado_brl;
           const saldoMes = acumuladoEmissao - Number(r.meta_acumulada_brl);
           const saldoPositivo = saldoMes >= 0;
-          const pctMes = em && Number(r.meta_total_mes_brl) > 0
-            ? Math.round((em.realizadoMes / Number(r.meta_total_mes_brl)) * 1000) / 10
+          const pctCiclo = metaProx > 0
+            ? Math.round((realizadoCiclo / metaProx) * 1000) / 10
             : r.pct_atingido_mes;
           return (
             <div
@@ -266,13 +267,13 @@ export function CalendarSection({
                     fontFamily: "'Courier New', monospace",
                   }}
                 >
-                  {pctMes !== null ? <span className="priv-pct">{`${pctMes}%`}</span> : "—"}
+                  {pctCiclo !== null ? <span className="priv-pct">{`${pctCiclo}%`}</span> : "—"}
                 </span>
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 14 }}>
                 {(() => {
-                  const saldoDia = realizadoDia - metaProx;   // emissão dia − meta próx (coerente c/ Realizado dia)
+                  const saldoDia = realizadoCiclo - metaProx;   // ciclo (janela) − meta próx
                   const saldoDiaPositivo = saldoDia >= 0;
                   return [
                   {
@@ -283,9 +284,9 @@ export function CalendarSection({
                     c: "#ff7b1c"
                   },
                   {
-                    label: "Realizado dia",
-                    value: <span className="priv-brl">{fmtBRL(realizadoDia)}</span>,
-                    c: realizadoDia >= metaProx && metaProx > 0 ? "#22c55e" : realizadoDia > 0 ? "#D4A017" : "#556677"
+                    label: "Realizado (ciclo)",
+                    value: <span className="priv-brl">{fmtBRL(realizadoCiclo)}</span>,
+                    c: realizadoCiclo >= metaProx && metaProx > 0 ? "#22c55e" : realizadoCiclo > 0 ? "#D4A017" : "#556677"
                   },
                   {
                     label: "Saldo dia",
