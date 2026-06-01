@@ -1,5 +1,7 @@
 // app/compras/resultados/page.tsx — Camada Resultados (Compras × Faturamento)
 // Regra Compras MTD (CLAUDE.md): status != cancelado, data_emissao, emit 1+2074, ts_delete via espelho.
+// Seletor de mês (?mes=YYYY-MM): corrente = MTD + projeção; passado = realizado, sem projeção.
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import {
   CalendarDashboard,
@@ -14,6 +16,7 @@ export const dynamic = "force-dynamic";
 const mono = "'Courier New', monospace";
 const brl = (n: number) =>
   n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+const MESES_PT = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
 // Dias úteis ASB: SEG-SÁB (exclui só domingo — ASB opera ter-sáb, sábado conta)
 function bizDays(from: Date, to: Date): number {
@@ -37,11 +40,26 @@ function semaforo(pct: number): { cor: string; label: string } {
   return { cor: "#f85149", label: "CRÍTICO" };
 }
 
-export default async function ResultadosPage() {
+export default async function ResultadosPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | undefined>>;
+}) {
   const supabase = await createClient();
   const hoje = new Date();
-  const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-  const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
+
+  // Mês escolhido via ?mes=YYYY-MM (default: mês corrente — comportamento idêntico ao de hoje).
+  const sp = await searchParams;
+  const mesParam = sp?.mes;
+  const m = mesParam && /^2026-(0[1-9]|1[0-2])$/.test(mesParam) ? mesParam : null;
+  const anoSel = m ? Number(m.slice(0, 4)) : hoje.getFullYear();
+  const mesSel = m ? Number(m.slice(5, 7)) - 1 : hoje.getMonth(); // 0-based
+
+  const inicioMes = new Date(anoSel, mesSel, 1);
+  const fimMes = new Date(anoSel, mesSel + 1, 0);
+  const isMesCorrente = anoSel === hoje.getFullYear() && mesSel === hoje.getMonth();
+  // janela: corrente termina HOJE (MTD); passado termina no último dia do mês (realizado).
+  const fimJanela = isMesCorrente ? hoje : fimMes;
   const iso = (d: Date) => d.toISOString().slice(0, 10);
 
   const [fatRes, compRes, metaRes, calRes, itensRes, fatTipoRes] = await Promise.all([
@@ -49,12 +67,12 @@ export default async function ResultadosPage() {
       .from("v_faturado_diario")
       .select("dia, faturado_brl")
       .gte("dia", iso(inicioMes))
-      .lte("dia", iso(hoje)),
+      .lte("dia", iso(fimJanela)),
     supabase
       .from("compras_espelho")
       .select("data_emissao, valor_total_brl, status_compra, fornecedor_nome")
       .gte("data_emissao", iso(inicioMes))
-      .lte("data_emissao", iso(hoje))
+      .lte("data_emissao", iso(fimJanela))
       .neq("status_compra", "cancelado")
       .in("id_pessoa_emitente", [1, 2074]),
     // meta dos vendedores (todos) por dia — base da projeção por fator de ritmo
@@ -62,20 +80,20 @@ export default async function ResultadosPage() {
       .from("v_calendario_metas")
       .select("dia, meta_diaria_brl")
       .gte("dia", iso(inicioMes))
-      .lte("dia", iso(fimMes)),
+      .lte("dia", iso(fimJanela)),
     // calendário/dashboard (Fase 1.5) — agregado diário + semáforo + sinalizadores
     supabase
       .from("v_calendario_compras_dia")
       .select("*")
       .gte("dia", iso(inicioMes))
-      .lte("dia", iso(fimMes))
+      .lte("dia", iso(fimJanela))
       .order("dia"),
     // Fase 1.6 — drilldown produto por dia (não-cancelado), via v_compras_itens_dia
     supabase
       .from("v_compras_itens_dia")
       .select("dia, data_emissao, fornecedor_nome, produto_nome, quantidade, preco_un, valor_brl")
       .gte("dia", iso(inicioMes))
-      .lte("dia", iso(fimMes))
+      .lte("dia", iso(fimJanela))
       .neq("status_compra", "cancelado")
       .in("id_pessoa_emitente", [1, 2074]),
     // Fase 1.6 — split NF/Recibo do mês corrente
@@ -83,7 +101,7 @@ export default async function ResultadosPage() {
       .from("faturamento_tipo_dia")
       .select("dia, tipo_doc, valor_brl, qtd_docs")
       .gte("dia", iso(inicioMes))
-      .lte("dia", iso(hoje)),
+      .lte("dia", iso(fimJanela)),
   ]);
   const fatRows = (fatRes.data ?? []) as { dia: string; faturado_brl: number }[];
   const compRows = (compRes.data ?? []) as CompraRow[];
@@ -120,7 +138,7 @@ export default async function ResultadosPage() {
   }
   const medCompras = median(last7.map((d) => compDia[iso(d)] || 0));
 
-  const duDecorridos = bizDays(inicioMes, hoje);
+  const duDecorridos = bizDays(inicioMes, fimJanela); // corrente: até hoje; passado: mês inteiro
   const duTotal = bizDays(inicioMes, fimMes);
   const duRestantes = Math.max(0, duTotal - duDecorridos);
 
@@ -144,6 +162,12 @@ export default async function ResultadosPage() {
     color: "#556677",
     fontFamily: mono,
   };
+  const mtdLabel = isMesCorrente ? "MTD" : "Realizado";
+  // Seletor: Jan..mês corrente de 2026 (não oferecer meses futuros)
+  const mesesDisponiveis = Array.from(
+    { length: hoje.getFullYear() === 2026 ? hoje.getMonth() + 1 : 12 },
+    (_, i) => i,
+  );
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -157,25 +181,62 @@ export default async function ResultadosPage() {
           textTransform: "uppercase",
         }}
       >
-        Resultados · Compras × Faturamento{" "}
+        Resultado de {MESES_PT[mesSel]}/{anoSel}{" "}
         <span style={{ color: "#556677", fontSize: 11 }}>
-          (MTD · {duDecorridos}/{duTotal} dias úteis)
+          {isMesCorrente ? `(em andamento · ${duDecorridos}/${duTotal} dias úteis)` : "(mês fechado)"}
         </span>
       </h1>
+
+      {/* Seletor de mês (links com ?mes=YYYY-MM) */}
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+        <span style={{ ...labelS, marginRight: 4 }}>2026</span>
+        {mesesDisponiveis.map((i) => {
+          const ativo = i === mesSel && anoSel === 2026;
+          return (
+            <Link
+              key={i}
+              href={`?mes=2026-${String(i + 1).padStart(2, "0")}`}
+              style={{
+                fontFamily: mono,
+                fontSize: 11,
+                textDecoration: "none",
+                padding: "3px 9px",
+                borderRadius: 4,
+                border: `1px solid ${ativo ? "#2ea043" : "#1B2A6B"}`,
+                color: ativo ? "#FFFFFF" : "#8899aa",
+                background: ativo ? "rgba(46,160,67,.12)" : "transparent",
+                fontWeight: ativo ? 700 : 400,
+              }}
+            >
+              {MESES_PT[i]}
+            </Link>
+          );
+        })}
+      </div>
 
       {/* Cards topo */}
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
         <div style={{ background: "#0f1428", border: "1px solid #1B2A6B", borderRadius: 6, padding: 18, flex: 1, minWidth: 200 }}>
-          <div style={labelS}>Faturado MTD</div>
-          <div style={{ fontSize: 26, fontWeight: 700, color: "#FFFFFF", fontFamily: "Inter, sans-serif", marginTop: 6 }}>{brl(faturadoMtd)}</div>
+          <div style={labelS}>Faturado {mtdLabel}</div>
+          {fatRows.length === 0 ? (
+            <div style={{ ...labelS, marginTop: 10, textTransform: "none", letterSpacing: 0 }}>Sem dados de faturamento neste período</div>
+          ) : (
+            <div style={{ fontSize: 26, fontWeight: 700, color: "#FFFFFF", fontFamily: "Inter, sans-serif", marginTop: 6 }}>{brl(faturadoMtd)}</div>
+          )}
         </div>
 
         <div style={{ background: "#0f1428", border: "1px solid #1B2A6B", borderRadius: 6, padding: 18, flex: 1, minWidth: 200 }}>
-          <div style={labelS}>Compras MTD</div>
-          <div style={{ fontSize: 26, fontWeight: 700, color: "#FFFFFF", fontFamily: "Inter, sans-serif", marginTop: 6 }}>{brl(comprasMtd)}</div>
-          <div style={{ ...labelS, marginTop: 8, color: "#8899aa", textTransform: "none", letterSpacing: 0 }}>
-            Recebido (NF): <b style={{ color: "#2ea043" }}>{brl(recebidoMtd)}</b> · A chegar: <b style={{ color: "#d29922" }}>{brl(aChegarMtd)}</b>
-          </div>
+          <div style={labelS}>Compras {mtdLabel}</div>
+          {compRows.length === 0 ? (
+            <div style={{ ...labelS, marginTop: 10, textTransform: "none", letterSpacing: 0 }}>Sem dados de compras neste período</div>
+          ) : (
+            <>
+              <div style={{ fontSize: 26, fontWeight: 700, color: "#FFFFFF", fontFamily: "Inter, sans-serif", marginTop: 6 }}>{brl(comprasMtd)}</div>
+              <div style={{ ...labelS, marginTop: 8, color: "#8899aa", textTransform: "none", letterSpacing: 0 }}>
+                Recebido (NF): <b style={{ color: "#2ea043" }}>{brl(recebidoMtd)}</b> · A chegar: <b style={{ color: "#d29922" }}>{brl(aChegarMtd)}</b>
+              </div>
+            </>
+          )}
         </div>
 
         <div style={{ background: "#0f1428", border: `1px solid ${sem.cor}`, borderRadius: 6, padding: 18, flex: 1, minWidth: 200 }}>
@@ -187,24 +248,40 @@ export default async function ResultadosPage() {
         </div>
       </div>
 
-      {/* Projeção */}
-      <div style={{ background: "#0f1428", border: `1px solid ${semProj.cor}`, borderRadius: 6, padding: 18 }}>
-        <div style={{ ...labelS, marginBottom: 8 }}>
-          Projeção fechamento do mês (faturado: meta × ritmo · compras: mediana 7 dias úteis)
+      {/* Projeção — só no mês corrente; mês fechado mostra "resultado realizado" */}
+      {isMesCorrente ? (
+        <div style={{ background: "#0f1428", border: `1px solid ${semProj.cor}`, borderRadius: 6, padding: 18 }}>
+          <div style={{ ...labelS, marginBottom: 8 }}>
+            Projeção fechamento do mês (faturado: meta × ritmo · compras: mediana 7 dias úteis)
+          </div>
+          {metaRows.length === 0 ? (
+            <div style={{ ...labelS, textTransform: "none", letterSpacing: 0 }}>Sem meta de vendedores neste período — projeção indisponível</div>
+          ) : (
+            <div style={{ display: "flex", gap: 24, flexWrap: "wrap", fontFamily: mono, fontSize: 13, color: "#c8d8e8" }}>
+              <span>Faturado proj.: <b>{brl(projFaturado)}</b></span>
+              <span>Compras proj.: <b>{brl(projCompras)}</b></span>
+              <span style={{ color: semProj.cor }}>% proj.: <b>{pctProj}% {semProj.label}</b></span>
+              <span>Gap vs 54%: <b style={{ color: gap54 > 0 ? "#f85149" : "#2ea043" }}>{brl(gap54)}</b></span>
+              <span style={{ color: fatorRitmo >= 1 ? "#2ea043" : "#d29922" }}>
+                Ritmo: <b>{Math.round(fatorRitmo * 100)}%</b> da meta {fatorRitmo >= 1 ? "↑" : "↓"}
+              </span>
+            </div>
+          )}
         </div>
-        <div style={{ display: "flex", gap: 24, flexWrap: "wrap", fontFamily: mono, fontSize: 13, color: "#c8d8e8" }}>
-          <span>Faturado proj.: <b>{brl(projFaturado)}</b></span>
-          <span>Compras proj.: <b>{brl(projCompras)}</b></span>
-          <span style={{ color: semProj.cor }}>% proj.: <b>{pctProj}% {semProj.label}</b></span>
-          <span>Gap vs 54%: <b style={{ color: gap54 > 0 ? "#f85149" : "#2ea043" }}>{brl(gap54)}</b></span>
-          <span style={{ color: fatorRitmo >= 1 ? "#2ea043" : "#d29922" }}>
-            Ritmo: <b>{Math.round(fatorRitmo * 100)}%</b> da meta {fatorRitmo >= 1 ? "↑" : "↓"}
-          </span>
+      ) : (
+        <div style={{ background: "#0f1428", border: "1px solid #1B2A6B", borderRadius: 6, padding: 14 }}>
+          <span style={{ ...labelS, textTransform: "none", letterSpacing: 0 }}>Mês fechado — resultado realizado (sem projeção).</span>
         </div>
-      </div>
+      )}
 
       {/* Fase 1.5 + 1.6 — calendário + gráficos + donut NF/Recibo + drawer com drilldown de produto */}
-      <CalendarDashboard days={calRows} itens={itensRows} fatTipo={fatTipoRows} />
+      {calRows.length === 0 && itensRows.length === 0 ? (
+        <div style={{ background: "#0f1428", border: "1px solid #1B2A6B", borderRadius: 6, padding: 18 }}>
+          <span style={{ ...labelS, textTransform: "none", letterSpacing: 0 }}>Sem dados de calendário/compras neste período.</span>
+        </div>
+      ) : (
+        <CalendarDashboard days={calRows} itens={itensRows} fatTipo={fatTipoRows} />
+      )}
     </div>
   );
 }
