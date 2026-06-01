@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Search, X } from "lucide-react";
+import { norm } from "@/lib/normalize";
 
 const mono = "'Courier New', monospace";
 
@@ -14,8 +15,6 @@ export type PrevRow = {
 };
 
 const n3 = (n: number | null) => (n == null ? "—" : n.toLocaleString("pt-BR", { maximumFractionDigits: 3 }));
-const norm = (s: unknown) =>
-  (s ?? "").toString().normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
 export default function PrevisaoClient({ rows }: { rows: PrevRow[] }) {
   const [q, setQ] = useState("");
