@@ -233,7 +233,7 @@ export function CalendarSection({
           // Faturado §5 (v_resumo) preservado em linha separada "Faturado (oficial)".
           const em = emissaoByVendor?.[rt];
           const metaProx = Number(r.meta_proxima_data_brl ?? r.meta_diaria_brl);
-          // REALIZADO (CICLO) = janela desde o último faturamento (atravessa o mês); ACUMULADO = mês corrente.
+          // REALIZADO (CICLO) v2 (§2): só pedidos cujo dia de faturamento = proxima_data_meta (este card); ACUMULADO = mês corrente.
           const realizadoCiclo = em ? em.realizadoCiclo : r.realizado_hoje_brl;
           const acumuladoEmissao = em ? em.realizadoMes : r.realizado_acumulado_brl;
           const saldoMes = acumuladoEmissao - Number(r.meta_acumulada_brl);

@@ -134,11 +134,13 @@ export default async function VendasPage() {
     a.dias.push(d);
   }
 
-  // ── JANELA DO CICLO ABERTO por vendedor (DEBT-111 C2 — view v_emissao_ciclo_vendedor) ──
-  // Eixo LANÇAMENTO: realizado da meta aberta = Σ desde o último faturamento encerrado
-  // (window_start = GREATEST(prev_faturamento, última sexta); cancelado já fora). Atravessa
-  // a virada do mês (ex.: dom 31/05 entra no ciclo que fatura em 01/06). Ana validada = 73.230.
-  // realizadoMes (Acumulado/Saldo mês) segue por MÊS CORRENTE via agg (painel_dia_vendedor).
+  // ── REALIZADO (CICLO) por vendedor (v_emissao_ciclo_vendedor v2 — REGRA_METAS v1.2, §2) ──
+  // ATRIBUIÇÃO POR DIA DE FATURAMENTO (§2 vence §3): a view soma só os pedidos ≠cancelado cuja
+  // META = proxima_data_meta (dia que o card exibe). Meta = dia_fat (previsao_entrega−1 útil;
+  // §9 sáb→sex) com fold: meta não-terminal (seg/ter) = só o próprio dia; meta terminal da semana
+  // (Ana/CUIT qui combina QUI+SEX; Alan sex) = tudo até sexta. NÃO é mais o lump da janela —
+  // entrega futura cai na meta do SEU dia, fora do card de hoje. Eixo segue emissão (lançado
+  // ≠cancelado, inclui pendente; CNB fora). realizadoMes (Acumulado/Saldo mês) = MÊS CORRENTE via agg.
   // Leitura via SERVICE ROLE (server-side) — MESMA regra/leitura pros 3 setores, sem ramo
   // por vendedor. A view é security_invoker: a RLS de pedidos_espelho zera o ciclo do PRÓPRIO
   // setor do gestor (CUIT do Paulo) na sessão autenticada — assimetria DEBT-069c (igual ao
