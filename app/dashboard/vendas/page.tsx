@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 import { getUserContext } from "@/lib/auth/get-user-role";
 import { CalendarSection } from "./calendar-section";
@@ -138,7 +139,16 @@ export default async function VendasPage() {
   // (window_start = GREATEST(prev_faturamento, última sexta); cancelado já fora). Atravessa
   // a virada do mês (ex.: dom 31/05 entra no ciclo que fatura em 01/06). Ana validada = 73.230.
   // realizadoMes (Acumulado/Saldo mês) segue por MÊS CORRENTE via agg (painel_dia_vendedor).
-  let cicloQuery = supabase
+  // Leitura via SERVICE ROLE (server-side) — MESMA regra/leitura pros 3 setores, sem ramo
+  // por vendedor. A view é security_invoker: a RLS de pedidos_espelho zera o ciclo do PRÓPRIO
+  // setor do gestor (CUIT do Paulo) na sessão autenticada — assimetria DEBT-069c (igual ao
+  // que v_resumo/painel já contornam por serem DEFINER). Service role bypassa só a leitura;
+  // o escopo do vendedor restrito segue garantido pelo .eq abaixo. Fallback p/ a sessão.
+  const srk = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const cicloClient = srk
+    ? createServiceClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, srk)
+    : supabase;
+  let cicloQuery = cicloClient
     .from("v_emissao_ciclo_vendedor")
     .select("vendedor_routing_team, window_start, emissao_ciclo_brl, qtd_lancamentos");
   if (isVendedorRestrito) cicloQuery = cicloQuery.eq("vendedor_routing_team", ctx.routing_team!);
@@ -153,6 +163,8 @@ export default async function VendasPage() {
       windowStart: c.window_start,
     };
   }
+  // PRÉVIA (topo) = Σ dos REALIZADO (CICLO) dos 3 cards (bate com os cards, mesma fonte)
+  const totalCiclo = VENDOR_ORDER.reduce((s, rt) => s + (emissaoByVendor[rt]?.realizadoCiclo ?? 0), 0);
 
   // Global totals (KPIs hero)
   const totalRealizado = vendorTeams.reduce((s, rt) => s + (agg[rt]?.realizado ?? 0), 0);
@@ -207,7 +219,7 @@ export default async function VendasPage() {
       <div className="asb-grid-kpi">
         {[
           { label: "Meta Total", value: totalMeta > 0 ? <span className="priv-brl">{fmtBRL(totalMeta)}</span> : "\u2014", accent: "#f59e0b", sub: undefined as string | undefined },
-          { label: "Realizado (faturado \u00a75)", value: <span className="priv-brl">{fmtBRL(realizadoFatOficial)}</span>, accent: "#C8102E", sub: `pr\u00e9via emiss\u00e3o ${fmtBRL(totalRealizado)}` },
+          { label: "Realizado (faturado \u00a75)", value: <span className="priv-brl">{fmtBRL(realizadoFatOficial)}</span>, accent: "#C8102E", sub: `pr\u00e9via ciclo ${fmtBRL(totalCiclo)}` },
           { label: "% Atingido", value: pctFatStr ? <span className="priv-pct">{`${pctFatStr}%`}</span> : "\u2014", accent: pctFat !== null ? (pctFat >= 100 ? "#22c55e" : pctFat >= 50 ? "#f59e0b" : "#C8102E") : "#556677", sub: undefined },
           { label: "Faturado total (NF+Recibo)", value: <span className="priv-brl">{fmtBRL(totalFaturado)}</span>, accent: "#22c55e", sub: naoAtribuido > 0 ? `${fmtBRL(naoAtribuido)} n\u00e3o-atribu\u00eddo` : undefined },
         ].map(({ label, value, accent, sub }) => (
