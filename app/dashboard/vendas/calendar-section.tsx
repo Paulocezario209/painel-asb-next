@@ -68,11 +68,13 @@ function fmtBRL(v: number, frac = 0): string {
 export function CalendarSection({
   calendario,
   resumos,
+  emissaoByVendor,
   restrictedToVendor,
   estrategias,
 }: {
   calendario: DayCell[];
   resumos: ResumoVendor[];
+  emissaoByVendor?: Record<string, { realizadoMes: number; realizadoHoje: number }>;
   restrictedToVendor?: string | null;
   estrategias?: EstrategiasResponse | null;
 }) {
@@ -227,7 +229,17 @@ export function CalendarSection({
           if (!r) return null;
           const v = VENDOR_LABELS[rt];
           const corMes = COR_HEX[r.cor_card_mes];
-          const saldoPositivo = Number(r.saldo_brl) >= 0;
+          // RESTAURA emissão tempo-real no card (REALIZADO DIA / ACUMULADO / %).
+          // Faturado §5 (v_resumo) preservado em linha separada "Faturado (oficial)".
+          const em = emissaoByVendor?.[rt];
+          const metaProx = Number(r.meta_proxima_data_brl ?? r.meta_diaria_brl);
+          const realizadoDia = em ? em.realizadoHoje : r.realizado_hoje_brl;
+          const acumuladoEmissao = em ? em.realizadoMes : r.realizado_acumulado_brl;
+          const saldoMes = acumuladoEmissao - Number(r.meta_acumulada_brl);
+          const saldoPositivo = saldoMes >= 0;
+          const pctMes = em && Number(r.meta_total_mes_brl) > 0
+            ? Math.round((em.realizadoMes / Number(r.meta_total_mes_brl)) * 1000) / 10
+            : r.pct_atingido_mes;
           return (
             <div
               key={rt}
@@ -254,35 +266,36 @@ export function CalendarSection({
                     fontFamily: "'Courier New', monospace",
                   }}
                 >
-                  {r.pct_atingido_mes !== null ? <span className="priv-pct">{`${r.pct_atingido_mes}%`}</span> : "—"}
+                  {pctMes !== null ? <span className="priv-pct">{`${pctMes}%`}</span> : "—"}
                 </span>
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 14 }}>
                 {(() => {
-                  const saldoDia = Number(r.saldo_dia_brl ?? 0);
+                  const saldoDia = realizadoDia - metaProx;   // emissão dia − meta próx (coerente c/ Realizado dia)
                   const saldoDiaPositivo = saldoDia >= 0;
                   return [
                   {
                     label: r.proxima_data_meta
                       ? `Meta ${new Date(r.proxima_data_meta + "T00:00:00").toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" }).replace(",", "").toUpperCase()}`
                       : "Meta próx.",
-                    value: <span className="priv-brl">{fmtBRL(Number(r.meta_proxima_data_brl ?? r.meta_diaria_brl))}</span>,
+                    value: <span className="priv-brl">{fmtBRL(metaProx)}</span>,
                     c: "#ff7b1c"
                   },
                   {
                     label: "Realizado dia",
-                    value: <span className="priv-brl">{fmtBRL(r.realizado_hoje_brl)}</span>,
-                    c: r.realizado_hoje_brl >= Number(r.meta_proxima_data_brl ?? r.meta_diaria_brl) && Number(r.meta_proxima_data_brl ?? r.meta_diaria_brl) > 0 ? "#22c55e" : r.realizado_hoje_brl > 0 ? "#D4A017" : "#556677"
+                    value: <span className="priv-brl">{fmtBRL(realizadoDia)}</span>,
+                    c: realizadoDia >= metaProx && metaProx > 0 ? "#22c55e" : realizadoDia > 0 ? "#D4A017" : "#556677"
                   },
                   {
                     label: "Saldo dia",
                     value: <span className="priv-brl">{(saldoDiaPositivo ? "+" : "") + fmtBRL(saldoDia)}</span>,
                     c: saldoDiaPositivo ? "#22c55e" : "#C8102E"
                   },
-                  { label: "Acumulado",  value: <span className="priv-brl">{fmtBRL(r.realizado_acumulado_brl)}</span>, c: "#FFFFFF" },
+                  { label: "Acumulado",  value: <span className="priv-brl">{fmtBRL(acumuladoEmissao)}</span>, c: "#FFFFFF" },
                   { label: "Esperado",   value: <span className="priv-brl">{fmtBRL(r.meta_acumulada_brl)}</span>, c: "#8899aa" },
-                  { label: "Saldo mês",  value: <span className="priv-brl">{(saldoPositivo ? "+" : "") + fmtBRL(r.saldo_brl)}</span>, c: saldoPositivo ? "#22c55e" : "#C8102E" },
+                  { label: "Saldo mês",  value: <span className="priv-brl">{(saldoPositivo ? "+" : "") + fmtBRL(saldoMes)}</span>, c: saldoPositivo ? "#22c55e" : "#C8102E" },
+                  { label: "Faturado (oficial)", value: <span className="priv-brl">{fmtBRL(r.realizado_acumulado_brl)}</span>, c: "#22c55e" },
                 ];})().map(row => (
                   <div key={row.label} style={{ display: "flex", justifyContent: "space-between", fontSize: 11 }}>
                     <span style={{ color: "#556677", fontFamily: "'Courier New', monospace", fontSize: 9, letterSpacing: ".1em", textTransform: "uppercase" }}>{row.label}</span>

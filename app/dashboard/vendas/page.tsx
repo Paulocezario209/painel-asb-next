@@ -133,6 +133,22 @@ export default async function VendasPage() {
     a.dias.push(d);
   }
 
+  // ── REALTIME EMISSÃO por vendedor (painel_dia_vendedor) ─────────────────────
+  // Restaura REALIZADO DIA / ACUMULADO / % do card ao eixo de EMISSÃO em tempo real.
+  // FASE D repointou o card pro faturado §5 (via v_resumo) → R$ 0 enquanto não há NF.
+  // O faturado §5 segue exposto, mas como linha SEPARADA "Faturado (oficial)" no card.
+  const hojeBRT = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(now);
+  const emissaoByVendor: Record<string, { realizadoMes: number; realizadoHoje: number }> = {};
+  for (const rt of vendorTeams) {
+    const a = agg[rt];
+    emissaoByVendor[rt] = {
+      realizadoMes: a?.realizado ?? 0,
+      realizadoHoje: (a?.dias ?? [])
+        .filter(d => d.dia === hojeBRT)
+        .reduce((s, d) => s + (d.realizado_parcial_brl ?? 0), 0),
+    };
+  }
+
   // Global totals (KPIs hero)
   const totalRealizado = vendorTeams.reduce((s, rt) => s + (agg[rt]?.realizado ?? 0), 0);
   const totalFaturado = totalFaturadoReal;  // DEBT-088: NF+Recibo real do ARES (nao proxy status='faturado')
@@ -210,6 +226,7 @@ export default async function VendasPage() {
       <CalendarSection
         calendario={calendarioData}
         resumos={resumosData}
+        emissaoByVendor={emissaoByVendor}
         restrictedToVendor={isVendedorRestrito ? ctx.routing_team! : null}
         estrategias={estrategiasData}
       />
