@@ -261,7 +261,8 @@ export default async function ResultadosPage({
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
         <div style={{ background: "#0f1428", border: "1px solid #1B2A6B", borderRadius: 6, padding: 18, flex: 1, minWidth: 200 }}>
           <div style={labelS}>Faturado {mtdLabel}</div>
-          {fatRows.length === 0 ? (
+          {/* mês corrente em andamento: zerado é estado válido (R$ 0), nunca "sem dados" */}
+          {!isMesCorrente && fatRows.length === 0 ? (
             <div style={{ ...labelS, marginTop: 10, textTransform: "none", letterSpacing: 0 }}>Sem dados de faturamento neste período</div>
           ) : (
             <div style={{ fontSize: 26, fontWeight: 700, color: "#FFFFFF", fontFamily: "Inter, sans-serif", marginTop: 6 }}>{brl(faturadoMtd)}</div>
@@ -270,7 +271,8 @@ export default async function ResultadosPage({
 
         <div style={{ background: "#0f1428", border: "1px solid #1B2A6B", borderRadius: 6, padding: 18, flex: 1, minWidth: 200 }}>
           <div style={labelS}>Compras {mtdLabel}</div>
-          {compRows.length === 0 ? (
+          {/* mês corrente em andamento: zerado é estado válido (R$ 0), nunca "sem dados" */}
+          {!isMesCorrente && compRows.length === 0 ? (
             <div style={{ ...labelS, marginTop: 10, textTransform: "none", letterSpacing: 0 }}>Sem dados de compras neste período</div>
           ) : (
             <>
@@ -323,7 +325,7 @@ export default async function ResultadosPage({
           <span style={{ ...labelS, textTransform: "none", letterSpacing: 0 }}>Sem dados de calendário/compras neste período.</span>
         </div>
       ) : (
-        <CalendarDashboard days={calRows} itens={itensRows} fatTipo={fatTipoRows} />
+        <CalendarDashboard days={calRows} itens={itensRows} fatTipo={fatTipoRows} isMesCorrente={isMesCorrente} />
       )}
     </div>
   );

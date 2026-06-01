@@ -51,11 +51,12 @@ const brl = (n: number) => n.toLocaleString("pt-BR", { style: "currency", curren
 const ddmm = (iso: string) => iso.slice(8, 10) + "/" + iso.slice(5, 7);
 
 export function CalendarDashboard({
-  days, itens, fatTipo,
+  days, itens, fatTipo, isMesCorrente = false,
 }: {
   days: DiaCalendario[];
   itens: DrilldownItemRow[];
   fatTipo: FatTipoRow[];
+  isMesCorrente?: boolean;
 }) {
   const [sel, setSel] = useState<string | null>(null);
 
@@ -147,7 +148,12 @@ export function CalendarDashboard({
         <div style={{ ...card, flex: 1, minWidth: 240 }}>
           <div style={{ ...lbl, marginBottom: 8 }}>Faturado por tipo — NF × Recibo (MTD)</div>
           {donutTotal === 0 ? (
-            <div style={{ color: "#556677", fontSize: 11, fontFamily: mono, padding: 12 }}>sem faturamento no mês</div>
+            // mês corrente em andamento: zerado é estado válido (R$ 0), nunca "sem dados"
+            isMesCorrente ? (
+              <div style={{ color: "#c8d8e8", fontSize: 22, fontWeight: 700, fontFamily: "Inter, sans-serif", padding: 12 }}>{brl(0)}</div>
+            ) : (
+              <div style={{ color: "#556677", fontSize: 11, fontFamily: mono, padding: 12 }}>sem faturamento no mês</div>
+            )
           ) : (
             <ResponsiveContainer width="100%" height={180}>
               <PieChart>
