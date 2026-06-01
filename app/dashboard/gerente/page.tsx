@@ -52,6 +52,9 @@ function projColor(pct: number): string {
 
 export default async function GerentePage() {
   const supabase = await createClient();
+  // 069c: instância SSR sem getUser() não hidrata a sessão dos cookies → não anexa o
+  // access token → reads RLS (tabela `metas`) saem como anon (auth.uid() null) → 0 linhas.
+  await supabase.auth.getUser();
 
   const ctx = await getUserContext();
   if (!ctx || ctx.role !== "gestor") redirect("/dashboard");
