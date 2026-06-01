@@ -4,6 +4,7 @@ import { useState, useMemo, useTransition } from "react";
 import Link from "next/link";
 import { getDayPedidos, type DayPedido, type EstrategiasResponse } from "./actions";
 import { DayDetailModal } from "./day-detail-modal";
+import { MetaCalendarGrid } from "@/components/dashboard/meta-calendar-grid";
 import { MissaoDoDia } from "./missao-do-dia";
 import { PainelGestor } from "./painel-gestor";
 import { PreviewMissaoModal } from "./preview-missao-modal";
@@ -163,9 +164,7 @@ export function CalendarSection({
   // Monta grid mes (semanas)
   const diasOrdenados = useMemo(() => [...calendarioFiltrado].sort((a, b) => a.dia.localeCompare(b.dia)), [calendarioFiltrado]);
 
-  // Encontra primeiro dia do mes pra fazer padding
-  const primeiroDia = diasOrdenados[0];
-  const padding = primeiroDia ? new Date(primeiroDia.dia + "T00:00:00").getDay() : 0;
+  // (padding do grid agora é interno ao MetaCalendarGrid)
   const dataSelecionada = diasOrdenados.find(d => d.is_today) ?? diasOrdenados[0];
   const [diaSelecionado, setDiaSelecionado] = useState<string | null>(dataSelecionada?.dia ?? null);
 
@@ -330,109 +329,15 @@ export function CalendarSection({
 
       {/* Calendario + Detalhe lateral */}
       <div style={{ display: "grid", gridTemplateColumns: "1.6fr 1fr", gap: 16 }}>
-        {/* Calendario */}
-        <div
-          style={{
-            background: "#1a1a1a",
-            border: `2px solid ${corCardHex}`,
-            borderRadius: 4,
-            padding: 20,
-          }}
-        >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 16 }}>
-            <p style={{ fontSize: 11, fontWeight: 700, color: "#c0c8d8", fontFamily: "'Courier New', monospace", textTransform: "uppercase", letterSpacing: ".1em" }}>
-              📅 Calendário — {new Date((diasOrdenados[0]?.dia ?? new Date().toISOString().slice(0, 10)) + "T00:00:00").toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}
-            </p>
-            <span
-              style={{
-                background: corCardHex, color: "#fff",
-                padding: "3px 10px", borderRadius: 3, fontSize: 10,
-                fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase",
-                fontFamily: "'Courier New', monospace",
-              }}
-            >
-              Meta mês: <span className="priv-brl">{fmtBRL(Number(resumoAtivo.meta_total_mes_brl))}</span>
-            </span>
-          </div>
-
-          {/* DOW header */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4, marginBottom: 4 }}>
-            {DOW.map(d => (
-              <div key={d} style={{ fontSize: 9, color: "#556677", textAlign: "center", fontFamily: "'Courier New', monospace", textTransform: "uppercase", letterSpacing: ".1em" }}>{d}</div>
-            ))}
-          </div>
-
-          {/* Grid dias */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
-            {Array.from({ length: padding }).map((_, i) => (
-              <div key={`pad-${i}`} />
-            ))}
-            {diasOrdenados.map(d => {
-              const dia = new Date(d.dia + "T00:00:00").getDate();
-              const selected = diaSelecionado === d.dia;
-              const isToday = d.is_today;
-              let bg = "#0a0f1f", border = "1px solid #2a2a2a", color = "#c8d8e8", marker = "", markerColor = "transparent";
-              if (d.status_dia === "weekend") {
-                bg = "#0a0f1f"; color = "#3a4555"; border = "1px solid #15203d";
-              } else if (d.status_dia === "nao_rota") {
-                // Dia útil sem meta do vendedor. Se houve venda (encaixe), mostra "+"
-                bg = "#0a0f1f"; color = "#6a7a8a"; border = "1px solid #15203d";
-                if (Number(d.realizado_brl) > 0) {
-                  marker = "+"; markerColor = "#185FA5";
-                }
-              } else if (d.status_dia === "futuro") {
-                bg = "#0a0f1f"; color = "#556677"; border = "1px solid #2a2a2a";
-                // Dia futuro COM lançamentos em curso = marca laranja ▶
-                if (Number(d.realizado_brl) > 0) {
-                  marker = "▸"; markerColor = "#ff7b1c";
-                }
-              } else if (d.status_dia === "batida") {
-                marker = "✓"; markerColor = "#22c55e";
-              } else if (d.status_dia === "abaixo") {
-                marker = "✗"; markerColor = "#C8102E";
-              }
-              if (isToday) {
-                border = "2px solid #ff7b1c";
-              }
-              if (selected) {
-                border = "2px solid #c0c8d8";
-              }
-              return (
-                <button
-                  key={d.dia}
-                  onClick={() => openDayModal(d.dia)}
-                  style={{
-                    background: bg, border, borderRadius: 3,
-                    color, padding: "6px 4px", textAlign: "center",
-                    cursor: d.status_dia === "weekend" ? "default" : "pointer",
-                    fontFamily: "'Courier New', monospace", fontSize: 11,
-                    fontWeight: 700, position: "relative", minHeight: 44,
-                    display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2,
-                    transition: "all .15s",
-                  }}
-                  disabled={d.status_dia === "weekend"}
-                >
-                  <span>{dia}</span>
-                  {marker && (
-                    <span style={{ color: markerColor, fontSize: 13, fontWeight: 900, lineHeight: 1 }}>
-                      {marker}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Legenda */}
-          <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid rgba(27,42,107,.3)", display: "flex", gap: 14, fontSize: 9, color: "#8899aa", fontFamily: "'Courier New', monospace", flexWrap: "wrap" }}>
-            <span><span style={{ color: "#22c55e", fontWeight: 900 }}>✓</span> Meta batida</span>
-            <span><span style={{ color: "#C8102E", fontWeight: 900 }}>✗</span> Abaixo</span>
-            <span><span style={{ color: "#185FA5", fontWeight: 900 }}>+</span> Encaixe (fora rota)</span>
-            <span style={{ color: "#6a7a8a" }}>○ Dia útil sem meta</span>
-            <span style={{ color: "#3a4555" }}>■ Sáb/Dom</span>
-            <span style={{ color: "#ff7b1c" }}>● Hoje</span>
-          </div>
-        </div>
+        {/* Calendario (grid extraído p/ MetaCalendarGrid — reuso /vendas + /gerente, DEBT-108) */}
+        <MetaCalendarGrid
+          days={diasOrdenados}
+          selectedDay={diaSelecionado}
+          onDayClick={openDayModal}
+          mesLabel={new Date((diasOrdenados[0]?.dia ?? new Date().toISOString().slice(0, 10)) + "T00:00:00").toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}
+          metaMesBrl={Number(resumoAtivo.meta_total_mes_brl)}
+          corHex={corCardHex}
+        />
 
         {/* Vendedor → Missão pessoal · Gestor consolidado → Painel analítico · Gestor com vendedor selecionado → Missão daquele */}
         {estrategias ? (

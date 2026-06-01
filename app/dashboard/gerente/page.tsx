@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { getUserContext } from "@/lib/auth/get-user-role";
+import { MetasCalendarioGerente } from "@/components/dashboard/metas-calendario-gerente";
 import { businessDaysInMonth, businessDaysElapsed, dateAfterNBusinessDays } from "@/lib/utils/business-days";
 
 export const dynamic = "force-dynamic";
@@ -390,6 +391,17 @@ export default async function GerentePage() {
             </tr>
           </tbody>
         </table>
+      </div>
+
+      {/* Calendário de Metas multi-mês (Feature 1 / DEBT-108) — RPC calendario_metas_mes */}
+      <div style={{ marginTop: 8 }}>
+        <h2 style={{ color: "#FFFFFF", fontSize: 13, fontWeight: 700, fontFamily: "'Courier New', monospace", letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
+          Calendário de Metas
+        </h2>
+        <p style={{ color: "#8899aa", fontSize: 11, fontFamily: "'Courier New', monospace", marginBottom: 14 }}>
+          Navegue qualquer mês · clique no dia para ver meta (e realizado, se já passou)
+        </p>
+        <MetasCalendarioGerente />
       </div>
     </div>
   );
