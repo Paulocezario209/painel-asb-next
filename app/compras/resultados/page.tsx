@@ -18,6 +18,14 @@ const brl = (n: number) =>
   n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 const MESES_PT = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
+type MensalRow = {
+  mes: string; ano: number; mes_num: number;
+  faturado_brl: number; compras_brl: number; pct_compras_faturado: number;
+  semaforo: "OK" | "ALERTA" | "CRITICO" | string;
+};
+// cor da bolinha do semáforo da view (OK/ALERTA/CRITICO)
+const semCor = (s: string) => (s === "CRITICO" ? "#f85149" : s === "ALERTA" ? "#d29922" : "#2ea043");
+
 // Dias úteis ASB: SEG-SÁB (exclui só domingo — ASB opera ter-sáb, sábado conta)
 function bizDays(from: Date, to: Date): number {
   let n = 0;
@@ -62,7 +70,7 @@ export default async function ResultadosPage({
   const fimJanela = isMesCorrente ? hoje : fimMes;
   const iso = (d: Date) => d.toISOString().slice(0, 10);
 
-  const [fatRes, compRes, metaRes, calRes, itensRes, fatTipoRes] = await Promise.all([
+  const [fatRes, compRes, metaRes, calRes, itensRes, fatTipoRes, mensalRes] = await Promise.all([
     supabase
       .from("v_faturado_diario")
       .select("dia, faturado_brl")
@@ -102,6 +110,8 @@ export default async function ResultadosPage({
       .select("dia, tipo_doc, valor_brl, qtd_docs")
       .gte("dia", iso(inicioMes))
       .lte("dia", iso(fimJanela)),
+    // Painel ANO 2026 — resultado mensal agregado (faturado/compras/%/semáforo) por mês
+    supabase.from("v_resultado_mensal").select("*"),
   ]);
   const fatRows = (fatRes.data ?? []) as { dia: string; faturado_brl: number }[];
   const compRows = (compRes.data ?? []) as CompraRow[];
@@ -109,6 +119,7 @@ export default async function ResultadosPage({
   const calRows = (calRes.data ?? []) as DiaCalendario[];
   const itensRows = (itensRes.data ?? []) as DrilldownItemRow[];
   const fatTipoRows = (fatTipoRes.data ?? []) as FatTipoRow[];
+  const mensalRows = (mensalRes.data ?? []) as MensalRow[];
 
   // MTD
   const faturadoMtd = fatRows.reduce((s, r) => s + Number(r.faturado_brl || 0), 0);
@@ -163,11 +174,10 @@ export default async function ResultadosPage({
     fontFamily: mono,
   };
   const mtdLabel = isMesCorrente ? "MTD" : "Realizado";
-  // Seletor: Jan..mês corrente de 2026 (não oferecer meses futuros)
-  const mesesDisponiveis = Array.from(
-    { length: hoje.getFullYear() === 2026 ? hoje.getMonth() + 1 : 12 },
-    (_, i) => i,
-  );
+  // Painel ANO 2026: 12 tiles. Mês corrente do calendário (para fechado/andamento/futuro).
+  const mesCorrenteNum = hoje.getFullYear() === 2026 ? hoje.getMonth() + 1 : 13; // se não for 2026, todos "fechados"
+  const mensalByNum = new Map(mensalRows.filter((r) => r.ano === 2026).map((r) => [r.mes_num, r]));
+  const brl0 = (n: number) => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -187,31 +197,64 @@ export default async function ResultadosPage({
         </span>
       </h1>
 
-      {/* Seletor de mês (links com ?mes=YYYY-MM) */}
-      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
-        <span style={{ ...labelS, marginRight: 4 }}>2026</span>
-        {mesesDisponiveis.map((i) => {
-          const ativo = i === mesSel && anoSel === 2026;
-          return (
-            <Link
-              key={i}
-              href={`?mes=2026-${String(i + 1).padStart(2, "0")}`}
-              style={{
-                fontFamily: mono,
-                fontSize: 11,
-                textDecoration: "none",
-                padding: "3px 9px",
-                borderRadius: 4,
-                border: `1px solid ${ativo ? "#2ea043" : "#1B2A6B"}`,
-                color: ativo ? "#FFFFFF" : "#8899aa",
-                background: ativo ? "rgba(46,160,67,.12)" : "transparent",
-                fontWeight: ativo ? 700 : 400,
-              }}
-            >
-              {MESES_PT[i]}
-            </Link>
-          );
-        })}
+      {/* Painel ANO 2026 — 12 tiles (faturado/compras/% + semáforo). Navega via ?mes= */}
+      <div>
+        <div style={{ ...labelS, marginBottom: 8 }}>Ano 2026</div>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",
+            gap: 8,
+          }}
+        >
+          {Array.from({ length: 12 }, (_, i) => {
+            const mn = i + 1; // 1-based
+            const row = mensalByNum.get(mn);
+            const ativo = mn === mesSel + 1 && anoSel === 2026;
+            const futuro = mn > mesCorrenteNum;
+            const corrente = mn === mesCorrenteNum;
+            const status = futuro ? "futuro" : corrente ? "em andamento" : "fechado";
+            const cor = row ? semCor(row.semaforo) : "#556677";
+
+            const tile = (
+              <div
+                style={{
+                  background: ativo ? "rgba(46,160,67,.10)" : "#0f1428",
+                  border: `1px solid ${ativo ? "#2ea043" : "#1B2A6B"}`,
+                  borderRadius: 6,
+                  padding: 10,
+                  opacity: futuro ? 0.45 : 1,
+                  fontFamily: mono,
+                  height: "100%",
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ color: ativo ? "#FFFFFF" : "#c8d8e8", fontSize: 12, fontWeight: 700 }}>{MESES_PT[i]}</span>
+                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: cor, flexShrink: 0 }} />
+                </div>
+                <div style={{ ...labelS, marginTop: 4, fontSize: 8, color: corrente ? "#d29922" : "#556677" }}>{status}</div>
+                {row ? (
+                  <div style={{ marginTop: 6, fontSize: 10, color: "#8899aa", lineHeight: 1.5 }}>
+                    <div>Fat: <b style={{ color: "#c8d8e8" }}>{brl0(Number(row.faturado_brl || 0))}</b></div>
+                    <div>Comp: <b style={{ color: "#c8d8e8" }}>{brl0(Number(row.compras_brl || 0))}</b></div>
+                    <div style={{ color: cor, fontWeight: 700 }}>{Number(row.pct_compras_faturado ?? 0).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%</div>
+                  </div>
+                ) : (
+                  <div style={{ marginTop: 6, fontSize: 9, color: "#556677" }}>{futuro ? "—" : "sem dados"}</div>
+                )}
+              </div>
+            );
+
+            // passados e corrente clicáveis; futuros não
+            return futuro ? (
+              <div key={mn}>{tile}</div>
+            ) : (
+              <Link key={mn} href={`?mes=2026-${String(mn).padStart(2, "0")}`} style={{ textDecoration: "none" }}>
+                {tile}
+              </Link>
+            );
+          })}
+        </div>
       </div>
 
       {/* Cards topo */}
