@@ -89,16 +89,8 @@ export default async function VendasPage() {
     .eq("data_inicio", primeiroDiaMes);
   const metas = (rawMetas ?? []) as unknown as Meta[];
 
-  // ── Query C: faturado REAL do mes (NF + Recibo) — ARES via faturamento_tipo_dia ──
-  // DEBT-088: FATURADO = faturamento realizado (NF+Recibo), MTD, cron 15min. Sem vendedor/status.
-  const { data: rawFat } = await supabase
-    .from("faturamento_tipo_dia")
-    .select("valor_brl")
-    .gte("dia", primeiroDiaMes)
-    .lte("dia", ultimoDiaMes);
-  const totalFaturadoReal = (rawFat ?? []).reduce(
-    (s, r) => s + (Number((r as { valor_brl: number | null }).valor_brl) || 0), 0,
-  );
+  // (Query C / faturamento_tipo_dia NF+Recibo removida do headline do /vendas: o KPI passou a
+  //  decompor o §5 em ASB+CNB — sem o NF+Recibo divergente. O fiscal NF+Recibo segue no /gerente.)
 
   // ── Aggregate per vendor ──────────────────────────────────────────────────
   type VendorAgg = {
@@ -170,7 +162,6 @@ export default async function VendasPage() {
 
   // Global totals (KPIs hero)
   const totalRealizado = vendorTeams.reduce((s, rt) => s + (agg[rt]?.realizado ?? 0), 0);
-  const totalFaturado = totalFaturadoReal;  // DEBT-088: NF+Recibo real do ARES (nao proxy status='faturado')
   const totalMeta = vendorTeams.reduce((s, rt) => s + (agg[rt]?.meta ?? 0), 0);
   const pctAtingido = totalMeta > 0 ? ((totalRealizado / totalMeta) * 100) : null;
   const pctAtingidoStr = pctAtingido !== null ? pctAtingido.toFixed(1) : null;
@@ -212,8 +203,12 @@ export default async function VendasPage() {
   );
   const pctFat = totalMeta > 0 ? (realizadoFatOficial / totalMeta) * 100 : null;
   const pctFatStr = pctFat !== null ? pctFat.toFixed(1) : null;
-  // Linha "não-atribuído" = card (faturamento_tipo_dia) − Σ faturado por vendedor. AO VIVO (encolhe c/ cobertura).
-  const naoAtribuido = Math.max(0, totalFaturado - realizadoFatOficial);
+  // Decomposição do §5 p/ os KPIs (corretude: ASB + CNB === TOTAL, sem discrepância):
+  //   TOTAL FATURADO = realizadoFatOficial (§5 = ARES faturamento + CNB)
+  //   FATURADO CNB   = Σ cnbByVendor (parte CNB do §5, mês corrente)
+  //   FATURADO ASB   = §5 − CNB (parte ARES do próprio §5 — NÃO faturamento_tipo_dia, p/ a soma fechar)
+  const totalCnb = Object.values(cnbByVendor).reduce((s, v) => s + Number(v ?? 0), 0);
+  const faturadoAsb = realizadoFatOficial - totalCnb;
 
   return (
     <VendasPrivacyShell>
@@ -228,13 +223,14 @@ export default async function VendasPage() {
         </p>
       </div>
 
-      {/* KPI cards topo */}
-      <div className="asb-grid-kpi">
+      {/* KPI cards topo (5: Meta · Faturado ASB · Faturado CNB · Total §5 · % Atingido) */}
+      <div className="asb-grid-kpi-5">
         {[
           { label: "Meta Total", value: totalMeta > 0 ? <span className="priv-brl">{fmtBRL(totalMeta)}</span> : "\u2014", accent: "#f59e0b", sub: undefined as string | undefined },
-          { label: "Realizado (faturado \u00a75)", value: <span className="priv-brl">{fmtBRL(realizadoFatOficial)}</span>, accent: "#C8102E", sub: `pr\u00e9via ciclo ${fmtBRL(totalCiclo)}` },
+          { label: "Faturado ASB", value: <span className="priv-brl">{fmtBRL(faturadoAsb)}</span>, accent: "#22c55e", sub: "ARES \u00b7 por dia de faturamento" },
+          { label: "Faturado CNB", value: <span className="priv-brl">{fmtBRL(totalCnb)}</span>, accent: "#185FA5", sub: "Carnes Nobres Boutique (m\u00eas)" },
+          { label: "Total Faturado (\u00a75)", value: <span className="priv-brl">{fmtBRL(realizadoFatOficial)}</span>, accent: "#C8102E", sub: `ASB + CNB \u00b7 pr\u00e9via ciclo ${fmtBRL(totalCiclo)}` },
           { label: "% Atingido", value: pctFatStr ? <span className="priv-pct">{`${pctFatStr}%`}</span> : "\u2014", accent: pctFat !== null ? (pctFat >= 100 ? "#22c55e" : pctFat >= 50 ? "#f59e0b" : "#C8102E") : "#556677", sub: undefined },
-          { label: "Faturado total (NF+Recibo)", value: <span className="priv-brl">{fmtBRL(totalFaturado)}</span>, accent: "#22c55e", sub: naoAtribuido > 0 ? `${fmtBRL(naoAtribuido)} n\u00e3o-atribu\u00eddo` : undefined },
         ].map(({ label, value, accent, sub }) => (
           <div key={label} style={{ ...S.card, padding: "20px", borderTop: `2px solid ${accent}` }}>
             <p style={{ ...S.label, color: accent }}>{label}</p>

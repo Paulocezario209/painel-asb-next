@@ -167,6 +167,16 @@
   .asb-grid-kpi { grid-template-columns: repeat(4, 1fr); }
 }
 
+/* Variante 5 colunas (KPIs do /vendas: Meta · ASB · CNB · Total §5 · %) — aditiva, não toca asb-grid-kpi */
+.asb-grid-kpi-5 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+@media (min-width: 640px) {
+  .asb-grid-kpi-5 { grid-template-columns: repeat(5, 1fr); }
+}
+
 .asb-kpi-hover:hover {
   opacity: 0.8;
 }
