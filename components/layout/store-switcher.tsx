@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { Briefcase, Package, ChevronDown, Check } from "lucide-react";
+import { Briefcase, Package, Megaphone, ChevronDown, Check } from "lucide-react";
 
 type Store = {
   id: string;
@@ -30,6 +30,14 @@ const STORES: Store[] = [
     root: "/compras/resultados",
     color: "#2ea043", // verde
     Icon: Package,
+  },
+  {
+    id: "marketing",
+    label: "Marketing",
+    desc: "Origem dos leads · anúncios · CAC",
+    root: "/marketing/origem",
+    color: "#C8102E", // vermelho
+    Icon: Megaphone,
   },
 ];
 
