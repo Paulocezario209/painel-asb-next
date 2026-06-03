@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { OverviewClient, type CacMensalRow, type FunilRow, type RankRow } from "./overview-client";
+import { OverviewClient, type CacMensalRow, type FunilRow, type RankRow, type AlertaRow } from "./overview-client";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +10,7 @@ export default async function OverviewPage() {
   // hidrata a sessão (views REVOKE anon / GRANT authenticated — DEBT-110)
   await supabase.auth.getUser();
 
-  const [cacRes, funilRes, rankRes] = await Promise.all([
+  const [cacRes, funilRes, rankRes, alertasRes] = await Promise.all([
     supabase
       .from("v_cac_mensal_canal")
       .select("mes, canal, leads, convertidos, receita_brl, gasto_total, cac_por_lead, roas")
@@ -22,13 +22,17 @@ export default async function OverviewPage() {
       .from("v_ranking_criativo")
       .select("ad_name, campaign_name, cpl, leads, spend")
       .eq("periodo", "30d"),
+    supabase
+      .from("v_marketing_alertas")
+      .select("flag, ad_id, ad_name, campaign_name, canal, valor_atual, valor_referencia, descricao, severidade"),
   ]);
 
   const cac = (cacRes.error ? [] : (cacRes.data ?? [])) as unknown as CacMensalRow[];
   const funil = (funilRes.error ? [] : (funilRes.data ?? [])) as unknown as FunilRow[];
   const rank = (rankRes.error ? [] : (rankRes.data ?? [])) as unknown as RankRow[];
+  const alertas = (alertasRes.error ? [] : (alertasRes.data ?? [])) as unknown as AlertaRow[];
 
-  const erro = cacRes.error?.message || funilRes.error?.message || rankRes.error?.message || null;
+  const erro = cacRes.error?.message || funilRes.error?.message || rankRes.error?.message || alertasRes.error?.message || null;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -47,7 +51,7 @@ export default async function OverviewPage() {
         </div>
       )}
 
-      <OverviewClient cac={cac} funil={funil} rank={rank} />
+      <OverviewClient cac={cac} funil={funil} rank={rank} alertas={alertas} />
     </div>
   );
 }

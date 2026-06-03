@@ -54,7 +54,7 @@ function StatusBadge({ status }: { status: string | null }) {
 type SortKey = "cpl" | "roas" | "spend";
 
 export function AnunciosClient({ rank, spark }: { rank: RankRow[]; spark: SparkRow[] }) {
-  const [periodo, setPeriodo] = useState<"30d" | "90d">("30d");
+  const [periodo, setPeriodo] = useState<string>("30d");
   const [campanha, setCampanha] = useState<string>("todas");
   const [sortKey, setSortKey] = useState<SortKey>("cpl");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
@@ -106,7 +106,7 @@ export function AnunciosClient({ rank, spark }: { rank: RankRow[]; spark: SparkR
       {/* Filtros */}
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
         <div style={{ display: "flex", gap: 6 }}>
-          {(["30d", "90d"] as const).map(p => {
+          {(["30d", "60d", "90d", "6m", "12m"] as const).map(p => {
             const active = periodo === p;
             return (
               <button key={p} onClick={() => setPeriodo(p)} style={{

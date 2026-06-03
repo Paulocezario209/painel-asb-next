@@ -18,6 +18,11 @@ export type RankRow = {
   ad_name: string | null; campaign_name: string | null;
   cpl: number | null; leads: number; spend: number;
 };
+export type AlertaRow = {
+  flag: string; ad_id: string | null; ad_name: string | null; campaign_name: string | null;
+  canal: string | null; valor_atual: number | null; valor_referencia: number | null;
+  descricao: string; severidade: "info" | "warning" | "critical";
+};
 
 const mono = "'Courier New', monospace";
 const RED = "#C8102E";
@@ -61,7 +66,7 @@ const PERIODOS = [
 ] as const;
 type PeriodoK = typeof PERIODOS[number]["k"];
 
-export function OverviewClient({ cac, funil, rank }: { cac: CacMensalRow[]; funil: FunilRow[]; rank: RankRow[] }) {
+export function OverviewClient({ cac, funil, rank, alertas }: { cac: CacMensalRow[]; funil: FunilRow[]; rank: RankRow[]; alertas: AlertaRow[] }) {
   const [periodo, setPeriodo] = useState<PeriodoK>("90d");
 
   // meses distintos ordenados (asc) presentes na cacMensal
@@ -147,6 +152,34 @@ export function OverviewClient({ cac, funil, rank }: { cac: CacMensalRow[]; funi
         <Kpi label="ROAS Médio" value={kpis.roas != null ? `${kpis.roas.toFixed(2)}×` : "—"} cor={kpis.roas != null && kpis.roas >= 1 ? GREEN : "#FFFFFF"} />
         <Kpi label="Leads" value={String(kpis.leads)} cor={BLUE === "#2A3F8F" ? "#8bb4ff" : BLUE} />
       </div>
+
+      {/* Alertas e insights (v_marketing_alertas) */}
+      <Card titulo="Alertas e Insights">
+        {alertas.length === 0 ? (
+          <p style={{ color: GREEN, fontSize: 11, fontFamily: mono, padding: 6 }}>✅ Sem alertas — mídia saudável.</p>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {alertas.map((a, i) => {
+              const icone = a.severidade === "critical" ? "🔴" : a.severidade === "warning" ? "⚠️" : "✅";
+              const corBorda = a.severidade === "critical" ? RED : a.severidade === "warning" ? YELLOW : GREEN;
+              return (
+                <div key={`${a.flag}-${a.ad_id ?? a.canal ?? i}`} style={{
+                  display: "flex", gap: 10, alignItems: "baseline", padding: "8px 12px",
+                  background: "#0d1117", borderLeft: `3px solid ${corBorda}`, borderRadius: 4,
+                }}>
+                  <span style={{ fontSize: 13 }}>{icone}</span>
+                  <span style={{ color: "#c8d8e8", fontSize: 11, fontFamily: mono, lineHeight: 1.5, flex: 1 }}>{a.descricao}</span>
+                  {a.valor_atual != null && (
+                    <span style={{ color: corBorda, fontSize: 11, fontFamily: mono, fontWeight: 700, whiteSpace: "nowrap" }}>
+                      {a.flag === "roas_negativo" ? `${Number(a.valor_atual).toFixed(2)}×` : fmtBRLc(Number(a.valor_atual))}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </Card>
 
       {/* Gráfico 1: gasto (barras) × CAC blendado (linha) por mês — eixo duplo */}
       <Card titulo="Gasto × CAC por mês">
