@@ -84,7 +84,7 @@ export function MarketingSidebar({
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <div style={{ width: 6, height: 6, borderRadius: "50%", background: RED, boxShadow: `0 0 6px ${RED}` }} />
           <p style={{ color: "#556677", fontSize: 9, letterSpacing: ".12em", textTransform: "uppercase", fontFamily: mono }}>
-            Marketing · F2
+            Marketing · F1·F2·F3
           </p>
         </div>
       </div>
