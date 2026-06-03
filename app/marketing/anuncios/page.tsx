@@ -11,8 +11,8 @@ export default async function AnunciosPage() {
   await supabase.auth.getUser();
 
   const { data, error } = await supabase
-    .from("v_leads_por_anuncio")
-    .select("ad_id, ad_name, campaign_name, leads, convertidos, receita_brl, primeiro_lead, ultimo_lead");
+    .from("v_cac_por_anuncio")
+    .select("ad_id, ad_name, campaign_name, leads, convertidos, receita_brl, gasto_total, cac_por_lead, custo_por_conversao, primeiro_dia_gasto, ultimo_dia_gasto");
 
   const rows = (error ? [] : (data ?? [])) as unknown as AnuncioRow[];
 
@@ -23,13 +23,13 @@ export default async function AnunciosPage() {
           Anúncios
         </h1>
         <p style={{ color: "#8899aa", fontSize: 11, fontFamily: mono }}>
-          Lado-lead do CAC · leads · convertidos · receita por anúncio (Meta Ads)
+          CAC por anúncio · leads · convertidos · receita · gasto · CAC/lead (Meta Ads)
         </p>
       </div>
 
       {error && (
         <div style={{ background: "#1a1a1a", border: "1px solid #C8102E", borderRadius: 6, padding: 16, color: "#C8102E", fontSize: 11, fontFamily: mono }}>
-          View <code>v_leads_por_anuncio</code> indisponível — aplicar a migration no Supabase (STOP GATE). {error.message}
+          View <code>v_cac_por_anuncio</code> indisponível — aplicar a migration no Supabase (STOP GATE). {error.message}
         </div>
       )}
 

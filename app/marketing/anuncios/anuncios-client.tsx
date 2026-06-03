@@ -9,8 +9,11 @@ export type AnuncioRow = {
   leads: number;
   convertidos: number;
   receita_brl: number;
-  primeiro_lead: string | null;
-  ultimo_lead: string | null;
+  gasto_total: number;
+  cac_por_lead: number | null;
+  custo_por_conversao: number | null;
+  primeiro_dia_gasto: string | null;
+  ultimo_dia_gasto: string | null;
 };
 
 const mono = "'Courier New', monospace";
@@ -18,6 +21,10 @@ const RED = "#C8102E";
 
 function fmtBRL(v: number) {
   return Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
+// gasto e CAC com centavos (valores pequenos — cents importam)
+function fmtBRLc(v: number) {
+  return Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 function fmtData(iso: string | null) {
   if (!iso) return "—";
@@ -30,17 +37,23 @@ export function AnunciosClient({ rows }: { rows: AnuncioRow[] }) {
     [rows],
   );
   const tot = useMemo(() => ordenadas.reduce(
-    (a, r) => ({ leads: a.leads + Number(r.leads), conv: a.conv + Number(r.convertidos), rec: a.rec + Number(r.receita_brl) }),
-    { leads: 0, conv: 0, rec: 0 },
+    (a, r) => ({
+      leads: a.leads + Number(r.leads),
+      conv: a.conv + Number(r.convertidos),
+      rec: a.rec + Number(r.receita_brl),
+      gasto: a.gasto + Number(r.gasto_total ?? 0),
+    }),
+    { leads: 0, conv: 0, rec: 0, gasto: 0 },
   ), [ordenadas]);
+  const cacTotal = tot.leads > 0 ? tot.gasto / tot.leads : null;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-      {/* Banner: captura ainda acumulando */}
+      {/* Banner: frente CAC completa (lead + gasto) */}
       <div style={{ background: "rgba(200,16,46,.06)", border: `1px solid rgba(200,16,46,.3)`, borderRadius: 6, padding: "10px 14px" }}>
         <p style={{ color: "#c0c8d8", fontSize: 11, fontFamily: mono, lineHeight: 1.6 }}>
           Captura de anúncio (<code>ad_id</code>) ativa desde <b style={{ color: RED }}>02/06 06:05 BRT</b> — volume acumulando.
-          <b>Gasto</b> e <b>CAC</b> aguardam o ETL de gasto do Engine (<b style={{ color: RED }}>DEBT-115</b>): hoje só o lado-lead do CAC está disponível.
+          <b>Gasto</b> e <b>CAC/lead</b> agora ao vivo via <code>v_cac_por_anuncio</code> (leads × gasto Meta por <code>ad_id</code>).
         </p>
       </div>
 
@@ -67,18 +80,22 @@ export function AnunciosClient({ rows }: { rows: AnuncioRow[] }) {
             <tbody>
               {ordenadas.map(r => {
                 const pct = Number(r.leads) > 0 ? Math.round((Number(r.convertidos) / Number(r.leads)) * 1000) / 10 : 0;
+                const cac = r.cac_por_lead != null ? Number(r.cac_por_lead) : null;
+                const cpConv = r.custo_por_conversao != null ? fmtBRLc(Number(r.custo_por_conversao)) : "—";
                 return (
                   <tr key={r.ad_id} style={{ borderTop: "1px solid #2a2a2a" }}>
                     <td style={{ ...td, color: "#c8d8e8" }}>{r.campaign_name ?? "—"}</td>
-                    <td style={{ ...td, color: "#FFFFFF" }} title={`ad_id ${r.ad_id} · ${fmtData(r.primeiro_lead)}→${fmtData(r.ultimo_lead)}`}>
+                    <td style={{ ...td, color: "#FFFFFF" }} title={`ad_id ${r.ad_id} · gasto ${fmtData(r.primeiro_dia_gasto)}→${fmtData(r.ultimo_dia_gasto)}`}>
                       {r.ad_name ?? <span style={{ color: "#556677" }}>{r.ad_id}</span>}
                     </td>
                     <td style={{ ...td, textAlign: "center" }}>{r.leads}</td>
                     <td style={{ ...td, textAlign: "center", color: "#22c55e" }}>{r.convertidos}</td>
                     <td style={{ ...td, textAlign: "center", color: "#8899aa" }}>{pct}%</td>
                     <td style={{ ...td, textAlign: "right", color: "#22c55e", fontWeight: 700 }}>{fmtBRL(Number(r.receita_brl))}</td>
-                    <td style={{ ...td, textAlign: "right", color: "#556677" }} title="Aguardando ETL de gasto do Engine (DEBT-115)">—</td>
-                    <td style={{ ...td, textAlign: "right", color: "#556677" }} title="Aguardando ETL de gasto do Engine (DEBT-115)">—</td>
+                    <td style={{ ...td, textAlign: "right", color: "#e8b923" }}>{fmtBRLc(Number(r.gasto_total ?? 0))}</td>
+                    <td style={{ ...td, textAlign: "right", color: cac != null ? "#FFFFFF" : "#556677", fontWeight: 700 }} title={`custo/conversão: ${cpConv}`}>
+                      {cac != null ? fmtBRLc(cac) : "—"}
+                    </td>
                   </tr>
                 );
               })}
@@ -88,15 +105,15 @@ export function AnunciosClient({ rows }: { rows: AnuncioRow[] }) {
                 <td style={{ ...td, textAlign: "center", color: "#22c55e", fontWeight: 700 }}>{tot.conv}</td>
                 <td style={{ ...td, textAlign: "center", color: "#8899aa", fontWeight: 700 }}>{tot.leads > 0 ? Math.round((tot.conv / tot.leads) * 1000) / 10 : 0}%</td>
                 <td style={{ ...td, textAlign: "right", color: "#22c55e", fontWeight: 700 }}>{fmtBRL(tot.rec)}</td>
-                <td style={{ ...td, textAlign: "right", color: "#556677" }}>—</td>
-                <td style={{ ...td, textAlign: "right", color: "#556677" }}>—</td>
+                <td style={{ ...td, textAlign: "right", color: "#e8b923", fontWeight: 700 }}>{fmtBRLc(tot.gasto)}</td>
+                <td style={{ ...td, textAlign: "right", color: cacTotal != null ? "#FFFFFF" : "#556677", fontWeight: 700 }}>{cacTotal != null ? fmtBRLc(cacTotal) : "—"}</td>
               </tr>
             </tbody>
           </table>
         )}
       </div>
       <p style={{ color: "#556677", fontSize: 9, fontFamily: mono }}>
-        Fonte: v_leads_por_anuncio (agregada no Postgres, enriquecida por dim_meta_ads). CAC = gasto Meta ÷ convertidos — gasto pendente DEBT-115 (Engine). Datas em BRT.
+        Fonte: v_cac_por_anuncio (leads de v_leads_por_anuncio × gasto de paid_media_daily, por ad_id). CAC/lead = gasto ÷ leads (tooltip = custo ÷ conversão). Datas em BRT.
       </p>
     </div>
   );
