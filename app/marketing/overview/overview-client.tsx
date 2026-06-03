@@ -54,8 +54,10 @@ const axisStyle = { fontSize: 10, fontFamily: mono, fill: MUT };
 
 const PERIODOS = [
   { k: "30d", label: "30d", meses: 1 },
+  { k: "60d", label: "60d", meses: 2 },
   { k: "90d", label: "90d", meses: 3 },
   { k: "6m", label: "6m", meses: 6 },
+  { k: "12m", label: "12m", meses: 12 },
 ] as const;
 type PeriodoK = typeof PERIODOS[number]["k"];
 
