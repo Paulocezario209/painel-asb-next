@@ -13,6 +13,8 @@ export type RankRow = {
   cpl: number | null;
   taxa_conversao: number | null;
   roas: number | null;
+  status_meta: string | null;
+  objetivo: string | null;
 };
 export type SparkRow = { ad_id: string; data: string; spend: number };
 
@@ -24,6 +26,29 @@ const MUT = "#556677";
 
 function fmtBRLc(v: number) {
   return Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+// status_meta → label + cor (ATIVO verde · PAUSADO/ADSET_PAUSED/CAMPAIGN_PAUSED cinza · WITH_ISSUES amarelo)
+function statusInfo(s: string | null): { label: string; cor: string } {
+  if (!s) return { label: "—", cor: MUT };
+  if (s === "ACTIVE") return { label: "ATIVO", cor: GREEN };
+  if (s === "WITH_ISSUES") return { label: "COM ISSUES", cor: YELLOW };
+  if (s.includes("PAUSED")) {
+    const lbl = s === "ADSET_PAUSED" ? "ADSET PAUS." : s === "CAMPAIGN_PAUSED" ? "CAMP. PAUS." : "PAUSADO";
+    return { label: lbl, cor: "#8899aa" };
+  }
+  return { label: s, cor: "#8899aa" };
+}
+
+function StatusBadge({ status }: { status: string | null }) {
+  const { label, cor } = statusInfo(status);
+  return (
+    <span style={{
+      display: "inline-block", padding: "2px 7px", borderRadius: 3, fontSize: 8.5,
+      fontFamily: mono, fontWeight: 700, letterSpacing: ".06em",
+      color: cor, border: `1px solid ${cor}`, background: `${cor}1a`,
+    }}>{label}</span>
+  );
 }
 
 type SortKey = "cpl" | "roas" | "spend";
@@ -123,6 +148,7 @@ export function AnunciosClient({ rank, spark }: { rank: RankRow[]; spark: SparkR
               <tr style={{ borderBottom: "1px solid #2a2a2a" }}>
                 <th style={{ ...th, textAlign: "left" }}>Campanha</th>
                 <th style={{ ...th, textAlign: "left" }}>Anúncio</th>
+                <th style={{ ...th, textAlign: "center" }}>Status</th>
                 <th style={{ ...th, textAlign: "right" }}>Gasto</th>
                 <th style={th}>Leads</th>
                 <th style={{ ...th, textAlign: "right" }}>CPL</th>
@@ -134,10 +160,16 @@ export function AnunciosClient({ rank, spark }: { rank: RankRow[]; spark: SparkR
               {linhas.map(r => {
                 const cpl = r.cpl != null ? Number(r.cpl) : null;
                 const roas = r.roas != null ? Number(r.roas) : null;
+                const semLead = Number(r.spend ?? 0) > 0 && Number(r.leads ?? 0) === 0;
                 return (
-                  <tr key={r.ad_id} style={{ borderTop: "1px solid #2a2a2a" }}>
+                  <tr key={r.ad_id} style={{ borderTop: "1px solid #2a2a2a", background: semLead ? "rgba(200,16,46,.12)" : "transparent" }}
+                    title={semLead ? "Gasto sem nenhum lead atribuído — considere revisar/pausar" : undefined}>
                     <td style={{ ...td, color: "#c8d8e8" }}>{r.campaign_name ?? "—"}</td>
-                    <td style={{ ...td, color: "#FFFFFF" }} title={`ad_id ${r.ad_id}`}>{r.ad_name ?? <span style={{ color: MUT }}>{r.ad_id}</span>}</td>
+                    <td style={{ ...td, color: "#FFFFFF" }} title={`ad_id ${r.ad_id}`}>
+                      {semLead && <span style={{ color: RED, marginRight: 5 }}>⚠</span>}
+                      {r.ad_name ?? <span style={{ color: MUT }}>{r.ad_id}</span>}
+                    </td>
+                    <td style={{ ...td, textAlign: "center" }}><StatusBadge status={r.status_meta} /></td>
                     <td style={{ ...td, textAlign: "right", color: YELLOW }}>{fmtBRLc(Number(r.spend ?? 0))}</td>
                     <td style={{ ...td, textAlign: "center" }}>{r.leads}</td>
                     <td style={{ ...td, textAlign: "right", color: cpl != null ? "#FFFFFF" : MUT, fontWeight: 700 }}>{cpl != null ? fmtBRLc(cpl) : "—"}</td>
@@ -147,7 +179,7 @@ export function AnunciosClient({ rank, spark }: { rank: RankRow[]; spark: SparkR
                 );
               })}
               <tr style={{ borderTop: "2px solid #2a2a2a" }}>
-                <td style={{ ...td, color: "#FFFFFF", fontWeight: 700 }} colSpan={2}>TOTAL ({linhas.length})</td>
+                <td style={{ ...td, color: "#FFFFFF", fontWeight: 700 }} colSpan={3}>TOTAL ({linhas.length})</td>
                 <td style={{ ...td, textAlign: "right", color: YELLOW, fontWeight: 700 }}>{fmtBRLc(tot.spend)}</td>
                 <td style={{ ...td, textAlign: "center", fontWeight: 700 }}>{tot.leads}</td>
                 <td style={{ ...td, textAlign: "right", color: cacTot != null ? "#FFFFFF" : MUT, fontWeight: 700 }}>{cacTot != null ? fmtBRLc(cacTot) : "—"}</td>

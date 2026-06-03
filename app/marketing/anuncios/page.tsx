@@ -15,7 +15,7 @@ export default async function AnunciosPage() {
   const [rankRes, sparkRes] = await Promise.all([
     supabase
       .from("v_ranking_criativo")
-      .select("ad_id, ad_name, campaign_name, periodo, spend, leads, conversoes, cpl, taxa_conversao, roas"),
+      .select("ad_id, ad_name, campaign_name, periodo, spend, leads, conversoes, cpl, taxa_conversao, roas, status_meta, objetivo"),
     supabase
       .from("v_performance_diaria")
       .select("ad_id, data, spend")
