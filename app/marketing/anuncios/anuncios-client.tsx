@@ -1,67 +1,121 @@
 "use client";
 
-import { useMemo } from "react";
+import { useState, useMemo } from "react";
 
-export type AnuncioRow = {
+export type RankRow = {
   ad_id: string;
   ad_name: string | null;
   campaign_name: string | null;
+  periodo: string;          // '30d' | '90d'
+  spend: number;
   leads: number;
-  convertidos: number;
-  receita_brl: number;
-  gasto_total: number;
-  cac_por_lead: number | null;
-  custo_por_conversao: number | null;
-  primeiro_dia_gasto: string | null;
-  ultimo_dia_gasto: string | null;
+  conversoes: number;
+  cpl: number | null;
+  taxa_conversao: number | null;
+  roas: number | null;
 };
+export type SparkRow = { ad_id: string; data: string; spend: number };
 
 const mono = "'Courier New', monospace";
 const RED = "#C8102E";
+const GREEN = "#22c55e";
+const YELLOW = "#e8b923";
+const MUT = "#556677";
 
-function fmtBRL(v: number) {
-  return Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0, maximumFractionDigits: 0 });
-}
-// gasto e CAC com centavos (valores pequenos — cents importam)
 function fmtBRLc(v: number) {
   return Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
-function fmtData(iso: string | null) {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", timeZone: "America/Sao_Paulo" });
-}
 
-export function AnunciosClient({ rows }: { rows: AnuncioRow[] }) {
-  const ordenadas = useMemo(
-    () => [...rows].sort((a, b) => Number(b.leads) - Number(a.leads)),
-    [rows],
+type SortKey = "cpl" | "roas" | "spend";
+
+export function AnunciosClient({ rank, spark }: { rank: RankRow[]; spark: SparkRow[] }) {
+  const [periodo, setPeriodo] = useState<"30d" | "90d">("30d");
+  const [campanha, setCampanha] = useState<string>("todas");
+  const [sortKey, setSortKey] = useState<SortKey>("cpl");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+
+  const campanhas = useMemo(
+    () => Array.from(new Set(rank.map(r => r.campaign_name).filter(Boolean) as string[])).sort(),
+    [rank],
   );
-  const tot = useMemo(() => ordenadas.reduce(
-    (a, r) => ({
-      leads: a.leads + Number(r.leads),
-      conv: a.conv + Number(r.convertidos),
-      rec: a.rec + Number(r.receita_brl),
-      gasto: a.gasto + Number(r.gasto_total ?? 0),
-    }),
-    { leads: 0, conv: 0, rec: 0, gasto: 0 },
-  ), [ordenadas]);
-  const cacTotal = tot.leads > 0 ? tot.gasto / tot.leads : null;
+
+  // sparkline: ad_id -> série de spend (7d)
+  const sparkMap = useMemo(() => {
+    const m = new Map<string, number[]>();
+    for (const s of spark) {
+      const arr = m.get(s.ad_id) ?? [];
+      arr.push(Number(s.spend ?? 0));
+      m.set(s.ad_id, arr);
+    }
+    return m;
+  }, [spark]);
+
+  const linhas = useMemo(() => {
+    let r = rank.filter(x => x.periodo === periodo);
+    if (campanha !== "todas") r = r.filter(x => x.campaign_name === campanha);
+    const dir = sortDir === "asc" ? 1 : -1;
+    return [...r].sort((a, b) => {
+      const va = a[sortKey] == null ? null : Number(a[sortKey]);
+      const vb = b[sortKey] == null ? null : Number(b[sortKey]);
+      if (va == null && vb == null) return 0;
+      if (va == null) return 1;   // nulls sempre por último
+      if (vb == null) return -1;
+      return (va - vb) * dir;
+    });
+  }, [rank, periodo, campanha, sortKey, sortDir]);
+
+  const tot = useMemo(() => linhas.reduce(
+    (a, r) => ({ spend: a.spend + Number(r.spend ?? 0), leads: a.leads + Number(r.leads ?? 0) }),
+    { spend: 0, leads: 0 },
+  ), [linhas]);
+  const cacTot = tot.leads > 0 ? tot.spend / tot.leads : null;
+
+  function toggleSort(k: SortKey) {
+    if (sortKey === k) setSortDir(d => (d === "asc" ? "desc" : "asc"));
+    else { setSortKey(k); setSortDir(k === "cpl" ? "asc" : "desc"); }
+  }
+  const seta = (k: SortKey) => (sortKey === k ? (sortDir === "asc" ? " ▲" : " ▼") : "");
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-      {/* Banner: frente CAC completa (lead + gasto) */}
-      <div style={{ background: "rgba(200,16,46,.06)", border: `1px solid rgba(200,16,46,.3)`, borderRadius: 6, padding: "10px 14px" }}>
-        <p style={{ color: "#c0c8d8", fontSize: 11, fontFamily: mono, lineHeight: 1.6 }}>
-          Captura de anúncio (<code>ad_id</code>) ativa desde <b style={{ color: RED }}>02/06 06:05 BRT</b> — volume acumulando.
-          <b>Gasto</b> e <b>CAC/lead</b> agora ao vivo via <code>v_cac_por_anuncio</code> (leads × gasto Meta por <code>ad_id</code>).
-        </p>
+      {/* Filtros */}
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+        <div style={{ display: "flex", gap: 6 }}>
+          {(["30d", "90d"] as const).map(p => {
+            const active = periodo === p;
+            return (
+              <button key={p} onClick={() => setPeriodo(p)} style={{
+                padding: "5px 12px", fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase",
+                fontFamily: mono, fontWeight: 700, cursor: "pointer", borderRadius: 3,
+                background: active ? RED : "transparent", color: active ? "#fff" : "#c0c8d8",
+                border: `1px solid ${active ? RED : "#2a2a2a"}`,
+              }}>{p}</button>
+            );
+          })}
+        </div>
+        <select value={campanha} onChange={e => setCampanha(e.target.value)} style={{
+          padding: "5px 10px", fontSize: 11, fontFamily: mono, background: "#1a1a1a",
+          color: "#c8d8e8", border: "1px solid #2a2a2a", borderRadius: 3,
+        }}>
+          <option value="todas">Todas as campanhas</option>
+          {campanhas.map(c => <option key={c} value={c}>{c}</option>)}
+        </select>
+        <span style={{ color: MUT, fontSize: 9, fontFamily: mono }}>ordenar:</span>
+        {(["cpl", "roas", "spend"] as const).map(k => (
+          <button key={k} onClick={() => toggleSort(k)} style={{
+            padding: "4px 9px", fontSize: 9, letterSpacing: ".08em", textTransform: "uppercase",
+            fontFamily: mono, fontWeight: 600, cursor: "pointer", borderRadius: 3,
+            background: sortKey === k ? "rgba(200,16,46,.14)" : "transparent",
+            color: sortKey === k ? "#fff" : "#8899aa", border: "1px solid #2a2a2a",
+          }}>{k}{seta(k)}</button>
+        ))}
       </div>
 
-      {/* Tabela anúncio × leads × convertidos × receita × gasto × CAC */}
+      {/* Tabela */}
       <div style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8, padding: 16, overflowX: "auto" }}>
-        {ordenadas.length === 0 ? (
-          <p style={{ color: "#556677", fontSize: 11, fontFamily: mono, textAlign: "center", padding: 20 }}>
-            Sem leads atribuídos a anúncio ainda — captura iniciada em 02/06, volume começando a acumular.
+        {linhas.length === 0 ? (
+          <p style={{ color: MUT, fontSize: 11, fontFamily: mono, textAlign: "center", padding: 20 }}>
+            Sem anúncios com gasto neste período/campanha.
           </p>
         ) : (
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12, fontFamily: mono }}>
@@ -69,53 +123,64 @@ export function AnunciosClient({ rows }: { rows: AnuncioRow[] }) {
               <tr style={{ borderBottom: "1px solid #2a2a2a" }}>
                 <th style={{ ...th, textAlign: "left" }}>Campanha</th>
                 <th style={{ ...th, textAlign: "left" }}>Anúncio</th>
-                <th style={th}>Leads</th>
-                <th style={th}>Convertidos</th>
-                <th style={th}>Conv. %</th>
-                <th style={{ ...th, textAlign: "right" }}>Receita</th>
                 <th style={{ ...th, textAlign: "right" }}>Gasto</th>
-                <th style={{ ...th, textAlign: "right" }}>CAC</th>
+                <th style={th}>Leads</th>
+                <th style={{ ...th, textAlign: "right" }}>CPL</th>
+                <th style={{ ...th, textAlign: "right" }}>ROAS</th>
+                <th style={{ ...th, textAlign: "center" }}>7d</th>
               </tr>
             </thead>
             <tbody>
-              {ordenadas.map(r => {
-                const pct = Number(r.leads) > 0 ? Math.round((Number(r.convertidos) / Number(r.leads)) * 1000) / 10 : 0;
-                const cac = r.cac_por_lead != null ? Number(r.cac_por_lead) : null;
-                const cpConv = r.custo_por_conversao != null ? fmtBRLc(Number(r.custo_por_conversao)) : "—";
+              {linhas.map(r => {
+                const cpl = r.cpl != null ? Number(r.cpl) : null;
+                const roas = r.roas != null ? Number(r.roas) : null;
                 return (
                   <tr key={r.ad_id} style={{ borderTop: "1px solid #2a2a2a" }}>
                     <td style={{ ...td, color: "#c8d8e8" }}>{r.campaign_name ?? "—"}</td>
-                    <td style={{ ...td, color: "#FFFFFF" }} title={`ad_id ${r.ad_id} · gasto ${fmtData(r.primeiro_dia_gasto)}→${fmtData(r.ultimo_dia_gasto)}`}>
-                      {r.ad_name ?? <span style={{ color: "#556677" }}>{r.ad_id}</span>}
-                    </td>
+                    <td style={{ ...td, color: "#FFFFFF" }} title={`ad_id ${r.ad_id}`}>{r.ad_name ?? <span style={{ color: MUT }}>{r.ad_id}</span>}</td>
+                    <td style={{ ...td, textAlign: "right", color: YELLOW }}>{fmtBRLc(Number(r.spend ?? 0))}</td>
                     <td style={{ ...td, textAlign: "center" }}>{r.leads}</td>
-                    <td style={{ ...td, textAlign: "center", color: "#22c55e" }}>{r.convertidos}</td>
-                    <td style={{ ...td, textAlign: "center", color: "#8899aa" }}>{pct}%</td>
-                    <td style={{ ...td, textAlign: "right", color: "#22c55e", fontWeight: 700 }}>{fmtBRL(Number(r.receita_brl))}</td>
-                    <td style={{ ...td, textAlign: "right", color: "#e8b923" }}>{fmtBRLc(Number(r.gasto_total ?? 0))}</td>
-                    <td style={{ ...td, textAlign: "right", color: cac != null ? "#FFFFFF" : "#556677", fontWeight: 700 }} title={`custo/conversão: ${cpConv}`}>
-                      {cac != null ? fmtBRLc(cac) : "—"}
-                    </td>
+                    <td style={{ ...td, textAlign: "right", color: cpl != null ? "#FFFFFF" : MUT, fontWeight: 700 }}>{cpl != null ? fmtBRLc(cpl) : "—"}</td>
+                    <td style={{ ...td, textAlign: "right", color: roas != null && roas >= 1 ? GREEN : "#c8d8e8" }}>{roas != null ? `${roas.toFixed(2)}×` : "—"}</td>
+                    <td style={{ ...td, textAlign: "center" }}><Sparkline serie={sparkMap.get(r.ad_id) ?? []} /></td>
                   </tr>
                 );
               })}
               <tr style={{ borderTop: "2px solid #2a2a2a" }}>
-                <td style={{ ...td, color: "#FFFFFF", fontWeight: 700 }} colSpan={2}>TOTAL</td>
+                <td style={{ ...td, color: "#FFFFFF", fontWeight: 700 }} colSpan={2}>TOTAL ({linhas.length})</td>
+                <td style={{ ...td, textAlign: "right", color: YELLOW, fontWeight: 700 }}>{fmtBRLc(tot.spend)}</td>
                 <td style={{ ...td, textAlign: "center", fontWeight: 700 }}>{tot.leads}</td>
-                <td style={{ ...td, textAlign: "center", color: "#22c55e", fontWeight: 700 }}>{tot.conv}</td>
-                <td style={{ ...td, textAlign: "center", color: "#8899aa", fontWeight: 700 }}>{tot.leads > 0 ? Math.round((tot.conv / tot.leads) * 1000) / 10 : 0}%</td>
-                <td style={{ ...td, textAlign: "right", color: "#22c55e", fontWeight: 700 }}>{fmtBRL(tot.rec)}</td>
-                <td style={{ ...td, textAlign: "right", color: "#e8b923", fontWeight: 700 }}>{fmtBRLc(tot.gasto)}</td>
-                <td style={{ ...td, textAlign: "right", color: cacTotal != null ? "#FFFFFF" : "#556677", fontWeight: 700 }}>{cacTotal != null ? fmtBRLc(cacTotal) : "—"}</td>
+                <td style={{ ...td, textAlign: "right", color: cacTot != null ? "#FFFFFF" : MUT, fontWeight: 700 }}>{cacTot != null ? fmtBRLc(cacTot) : "—"}</td>
+                <td style={td} colSpan={2} />
               </tr>
             </tbody>
           </table>
         )}
       </div>
-      <p style={{ color: "#556677", fontSize: 9, fontFamily: mono }}>
-        Fonte: v_cac_por_anuncio (leads de v_leads_por_anuncio × gasto de paid_media_daily, por ad_id). CAC/lead = gasto ÷ leads (tooltip = custo ÷ conversão). Datas em BRT.
+      <p style={{ color: MUT, fontSize: 9, fontFamily: mono }}>
+        Fonte: v_ranking_criativo (CPL/ROAS por ad_id, janela {periodo}) + v_performance_diaria (sparkline gasto 7d). CPL = gasto ÷ leads · ROAS = receita ÷ gasto. Anúncios sem leads atribuíveis (site/[LEAD]-SP — DEBT-119) ficam com CPL "—" no fim.
       </p>
     </div>
+  );
+}
+
+// Sparkline SVG minimalista (gasto dos últimos dias)
+function Sparkline({ serie }: { serie: number[] }) {
+  if (!serie || serie.length < 2) return <span style={{ color: MUT, fontSize: 10, fontFamily: mono }}>—</span>;
+  const w = 72, h = 22, pad = 2;
+  const max = Math.max(...serie, 1);
+  const min = Math.min(...serie, 0);
+  const rng = max - min || 1;
+  const step = (w - pad * 2) / (serie.length - 1);
+  const pts = serie.map((v, i) => {
+    const x = pad + i * step;
+    const y = h - pad - ((v - min) / rng) * (h - pad * 2);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(" ");
+  return (
+    <svg width={w} height={h} style={{ display: "inline-block", verticalAlign: "middle" }}>
+      <polyline points={pts} fill="none" stroke={RED} strokeWidth={1.5} />
+    </svg>
   );
 }
 

@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { AnunciosClient, type AnuncioRow } from "./anuncios-client";
+import { AnunciosClient, type RankRow, type SparkRow } from "./anuncios-client";
 
 export const dynamic = "force-dynamic";
 
@@ -7,14 +7,25 @@ const mono = "'Courier New', monospace";
 
 export default async function AnunciosPage() {
   const supabase = await createClient();
-  // hidrata a sessão (view é REVOKE anon / GRANT authenticated — DEBT-110)
+  // hidrata a sessão (views REVOKE anon / GRANT authenticated — DEBT-110)
   await supabase.auth.getUser();
 
-  const { data, error } = await supabase
-    .from("v_cac_por_anuncio")
-    .select("ad_id, ad_name, campaign_name, leads, convertidos, receita_brl, gasto_total, cac_por_lead, custo_por_conversao, primeiro_dia_gasto, ultimo_dia_gasto");
+  const desde7 = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
 
-  const rows = (error ? [] : (data ?? [])) as unknown as AnuncioRow[];
+  const [rankRes, sparkRes] = await Promise.all([
+    supabase
+      .from("v_ranking_criativo")
+      .select("ad_id, ad_name, campaign_name, periodo, spend, leads, conversoes, cpl, taxa_conversao, roas"),
+    supabase
+      .from("v_performance_diaria")
+      .select("ad_id, data, spend")
+      .gte("data", desde7)
+      .order("data", { ascending: true }),
+  ]);
+
+  const rank = (rankRes.error ? [] : (rankRes.data ?? [])) as unknown as RankRow[];
+  const spark = (sparkRes.error ? [] : (sparkRes.data ?? [])) as unknown as SparkRow[];
+  const erro = rankRes.error?.message || sparkRes.error?.message || null;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -23,17 +34,17 @@ export default async function AnunciosPage() {
           Anúncios
         </h1>
         <p style={{ color: "#8899aa", fontSize: 11, fontFamily: mono }}>
-          CAC por anúncio · leads · convertidos · receita · gasto · CAC/lead (Meta Ads)
+          Ranking de criativos · gasto · leads · CPL · ROAS · tendência 7d (Meta Ads)
         </p>
       </div>
 
-      {error && (
+      {erro && (
         <div style={{ background: "#1a1a1a", border: "1px solid #C8102E", borderRadius: 6, padding: 16, color: "#C8102E", fontSize: 11, fontFamily: mono }}>
-          View <code>v_cac_por_anuncio</code> indisponível — aplicar a migration no Supabase (STOP GATE). {error.message}
+          View <code>v_ranking_criativo</code> indisponível. {erro}
         </div>
       )}
 
-      <AnunciosClient rows={rows} />
+      <AnunciosClient rank={rank} spark={spark} />
     </div>
   );
 }

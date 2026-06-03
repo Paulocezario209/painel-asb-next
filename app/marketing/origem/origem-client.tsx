@@ -1,118 +1,137 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
+import {
+  ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+} from "recharts";
 
-export type CanalRow = {
+export type CanalConsolidado = {
   canal: string;
-  segmento: "atribuido" | "pre_captura";
   leads: number;
   convertidos: number;
-  faturamento_brl: number;
-  primeira_atribuicao: string | null;
+  receita_brl: number;
+  gasto_total: number;
+  cac_por_lead: number | null;
+  custo_por_conversao: number | null;
+  roas: number | null;
+};
+export type CacMensalRow = {
+  mes: string; canal: string;
+  leads: number; gasto_total: number; cac_por_lead: number | null; roas: number | null;
 };
 
 const mono = "'Courier New', monospace";
 const RED = "#C8102E";
+const BLUE = "#2A3F8F";
+const GREEN = "#22c55e";
+const YELLOW = "#e8b923";
+const MUT = "#556677";
+const GRID = "rgba(27,42,107,.35)";
 
-function fmtBRL(v: number) {
-  return Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0, maximumFractionDigits: 0 });
+const CANAL_COR: Record<string, string> = {
+  "instagram (ctwa)": RED,
+  "site (lp)": BLUE,
+  "organico": GREEN,
+};
+
+function fmtBRLc(v: number) {
+  return Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
-function fmtData(iso: string | null) {
-  if (!iso) return null;
-  return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "America/Sao_Paulo" });
+const MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+function fmtMes(iso: string) {
+  const m = Number(iso.slice(5, 7)) - 1;
+  return MESES[m] ?? iso.slice(0, 7);
 }
 
-export function OrigemClient({ rows, primeiraAtribuicao }: { rows: CanalRow[]; primeiraAtribuicao: string | null }) {
-  const [tab, setTab] = useState<"atribuido" | "pre_captura">(
-    rows.some(r => r.segmento === "atribuido") ? "atribuido" : "pre_captura",
+const tooltipStyle = {
+  contentStyle: { background: "#1a1a1a", border: `1px solid ${RED}`, borderRadius: 3, fontSize: 11, fontFamily: mono, color: "#c8d8e8" },
+  itemStyle: { color: "#c8d8e8" },
+  labelStyle: { color: MUT, fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase" as const },
+};
+const axisStyle = { fontSize: 10, fontFamily: mono, fill: MUT };
+
+export function OrigemClient({ canais, mensal }: { canais: CanalConsolidado[]; mensal: CacMensalRow[] }) {
+  // ordem fixa dos canais para os cards
+  const ordem = ["instagram (ctwa)", "site (lp)", "organico"];
+  const cards = useMemo(
+    () => [...canais].sort((a, b) => ordem.indexOf(a.canal) - ordem.indexOf(b.canal)),
+    [canais],
   );
 
-  const filtradas = useMemo(
-    () => rows.filter(r => r.segmento === tab).sort((a, b) => b.leads - a.leads),
-    [rows, tab],
+  const mesesOrdenados = useMemo(() => Array.from(new Set(mensal.map(r => r.mes))).sort(), [mensal]);
+  const lineData = useMemo(() => {
+    const cs = Array.from(new Set(mensal.map(r => r.canal)));
+    return mesesOrdenados.map(mes => {
+      const ponto: Record<string, number | string | null> = { mes: fmtMes(mes) };
+      for (const c of cs) {
+        const row = mensal.find(r => r.mes === mes && r.canal === c);
+        ponto[c] = row?.cac_por_lead != null ? Number(row.cac_por_lead) : null;
+      }
+      return ponto;
+    });
+  }, [mensal, mesesOrdenados]);
+  const canaisComCac = useMemo(
+    () => Array.from(new Set(mensal.filter(r => r.cac_por_lead != null).map(r => r.canal))),
+    [mensal],
   );
-  const tot = useMemo(() => filtradas.reduce(
-    (a, r) => ({ leads: a.leads + Number(r.leads), conv: a.conv + Number(r.convertidos), fat: a.fat + Number(r.faturamento_brl) }),
-    { leads: 0, conv: 0, fat: 0 },
-  ), [filtradas]);
-
-  const countAtrib = rows.filter(r => r.segmento === "atribuido").reduce((a, r) => a + Number(r.leads), 0);
-  const countPre = rows.filter(r => r.segmento === "pre_captura").reduce((a, r) => a + Number(r.leads), 0);
-  const dataAtrib = fmtData(primeiraAtribuicao);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-      {/* Nota de atribuição */}
-      <div style={{ background: "rgba(200,16,46,.06)", border: `1px solid rgba(200,16,46,.3)`, borderRadius: 6, padding: "10px 14px" }}>
-        <p style={{ color: "#c0c8d8", fontSize: 11, fontFamily: mono, lineHeight: 1.6 }}>
-          {dataAtrib
-            ? <>Atribuição de origem ativa desde <b style={{ color: RED }}>{dataAtrib}</b>. Leads anteriores não têm origem real (segmento <b>Pré-captura</b>).</>
-            : <>Atribuição de origem <b style={{ color: RED }}>recém-ativada</b> — ainda sem leads atribuídos. Os {countPre} leads atuais são <b>Pré-captura</b> (sem origem real, não confundir com orgânico).</>}
-        </p>
-      </div>
-
-      {/* Tabs Atribuído vs Pré-captura */}
-      <div style={{ display: "flex", gap: 8 }}>
-        {([["atribuido", `Atribuído (${countAtrib})`], ["pre_captura", `Pré-captura (${countPre})`]] as const).map(([k, label]) => {
-          const active = tab === k;
+    <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+      {/* Cards por canal */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14 }}>
+        {cards.length === 0 ? (
+          <p style={{ color: MUT, fontSize: 11, fontFamily: mono, padding: 20 }}>Sem canais ainda.</p>
+        ) : cards.map(c => {
+          const cor = CANAL_COR[c.canal] ?? MUT;
           return (
-            <button key={k} onClick={() => setTab(k)} style={{
-              padding: "6px 14px", fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase",
-              fontFamily: mono, fontWeight: 700, cursor: "pointer", borderRadius: 3,
-              background: active ? RED : "transparent", color: active ? "#fff" : "#c0c8d8",
-              border: `1px solid ${active ? RED : "#2a2a2a"}`, transition: "all .15s",
-            }}>{label}</button>
+            <div key={c.canal} style={{ background: "#1a1a1a", border: `1px solid #2a2a2a`, borderLeft: `3px solid ${cor}`, borderRadius: 8, padding: 16 }}>
+              <p style={{ color: cor, fontSize: 12, fontWeight: 700, fontFamily: mono, letterSpacing: ".06em", textTransform: "uppercase", marginBottom: 12 }}>{c.canal}</p>
+              <Linha label="Gasto" valor={fmtBRLc(Number(c.gasto_total ?? 0))} cor={YELLOW} />
+              <Linha label="Leads" valor={String(c.leads ?? 0)} cor="#c8d8e8" />
+              <Linha label="CAC / lead" valor={c.cac_por_lead != null ? fmtBRLc(Number(c.cac_por_lead)) : "—"} cor="#FFFFFF" forte />
+              <Linha label="ROAS" valor={c.roas != null ? `${Number(c.roas).toFixed(2)}×` : "—"} cor={c.roas != null && Number(c.roas) >= 1 ? GREEN : "#c8d8e8"} />
+            </div>
           );
         })}
       </div>
 
-      {/* Tabela canal × leads × convertidos × faturamento */}
-      <div style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8, padding: 16, overflowX: "auto" }}>
-        {filtradas.length === 0 ? (
-          <p style={{ color: "#556677", fontSize: 11, fontFamily: mono, textAlign: "center", padding: 20 }}>
-            Sem leads neste segmento.
+      {/* Linha: CAC por canal mês a mês */}
+      <div style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8, padding: 16 }}>
+        <p style={{ color: "#FFFFFF", fontSize: 11, fontWeight: 700, fontFamily: mono, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 12 }}>
+          CAC por canal — evolução mensal
+        </p>
+        {lineData.length === 0 || canaisComCac.length === 0 ? (
+          <p style={{ color: MUT, fontSize: 11, fontFamily: mono, textAlign: "center", padding: 30 }}>
+            Sem CAC mensal ainda (leads atribuídos só desde 02/06).
           </p>
         ) : (
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12, fontFamily: mono }}>
-            <thead>
-              <tr style={{ borderBottom: "1px solid #2a2a2a" }}>
-                <th style={{ ...th, textAlign: "left" }}>Canal</th>
-                <th style={th}>Leads</th>
-                <th style={th}>Convertidos</th>
-                <th style={th}>Conv. %</th>
-                <th style={{ ...th, textAlign: "right" }}>Faturamento</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtradas.map(r => {
-                const pct = Number(r.leads) > 0 ? Math.round((Number(r.convertidos) / Number(r.leads)) * 1000) / 10 : 0;
-                return (
-                  <tr key={r.canal} style={{ borderTop: "1px solid #2a2a2a" }}>
-                    <td style={{ ...td, color: "#FFFFFF", textTransform: "uppercase" }}>{r.canal}</td>
-                    <td style={{ ...td, textAlign: "center" }}>{r.leads}</td>
-                    <td style={{ ...td, textAlign: "center", color: "#22c55e" }}>{r.convertidos}</td>
-                    <td style={{ ...td, textAlign: "center", color: "#8899aa" }}>{pct}%</td>
-                    <td style={{ ...td, textAlign: "right", color: "#22c55e", fontWeight: 700 }}>{fmtBRL(Number(r.faturamento_brl))}</td>
-                  </tr>
-                );
-              })}
-              <tr style={{ borderTop: "2px solid #2a2a2a" }}>
-                <td style={{ ...td, color: "#FFFFFF", fontWeight: 700 }}>TOTAL</td>
-                <td style={{ ...td, textAlign: "center", fontWeight: 700 }}>{tot.leads}</td>
-                <td style={{ ...td, textAlign: "center", color: "#22c55e", fontWeight: 700 }}>{tot.conv}</td>
-                <td style={{ ...td, textAlign: "center", color: "#8899aa", fontWeight: 700 }}>{tot.leads > 0 ? Math.round((tot.conv / tot.leads) * 1000) / 10 : 0}%</td>
-                <td style={{ ...td, textAlign: "right", color: "#22c55e", fontWeight: 700 }}>{fmtBRL(tot.fat)}</td>
-              </tr>
-            </tbody>
-          </table>
+          <ResponsiveContainer width="100%" height={260}>
+            <LineChart data={lineData} margin={{ top: 6, right: 16, bottom: 0, left: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke={GRID} vertical={false} />
+              <XAxis dataKey="mes" tick={axisStyle} axisLine={{ stroke: GRID }} tickLine={false} />
+              <YAxis tick={axisStyle} axisLine={false} tickLine={false} tickFormatter={(v) => `R$${v}`} />
+              <Tooltip {...tooltipStyle} formatter={(v, n) => [v == null ? "—" : fmtBRLc(Number(v)), String(n)]} />
+              <Legend wrapperStyle={{ fontSize: 10, fontFamily: mono }} />
+              {canaisComCac.map(c => (
+                <Line key={c} type="monotone" dataKey={c} stroke={CANAL_COR[c] ?? MUT} strokeWidth={2} dot={{ r: 3 }} connectNulls isAnimationActive={false} />
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
         )}
       </div>
-      <p style={{ color: "#556677", fontSize: 9, fontFamily: mono }}>
-        Fonte: v_leads_por_canal (agregada no Postgres). CAC = gasto (F1 Anúncios) ÷ convertidos por canal.
+
+      <p style={{ color: MUT, fontSize: 9, fontFamily: mono }}>
+        Fontes: v_cac_por_canal (cards consolidados) + v_cac_mensal_canal (evolução). CAC = gasto ÷ leads · ROAS = receita ÷ gasto. Leads atribuídos desde 02/06.
       </p>
     </div>
   );
 }
 
-const th: React.CSSProperties = { fontSize: 9, color: "#556677", fontFamily: mono, letterSpacing: ".1em", textTransform: "uppercase", padding: "6px 10px", textAlign: "center" };
-const td: React.CSSProperties = { padding: "8px 10px", color: "#c8d8e8", fontFamily: mono };
+function Linha({ label, valor, cor, forte }: { label: string; valor: string; cor: string; forte?: boolean }) {
+  return (
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "3px 0" }}>
+      <span style={{ color: MUT, fontSize: 9, fontFamily: mono, letterSpacing: ".08em", textTransform: "uppercase" }}>{label}</span>
+      <span style={{ color: cor, fontSize: forte ? 15 : 12, fontWeight: forte ? 700 : 600, fontFamily: mono }}>{valor}</span>
+    </div>
+  );
+}

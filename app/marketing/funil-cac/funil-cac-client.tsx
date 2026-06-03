@@ -1,131 +1,175 @@
 "use client";
 
 import { useMemo } from "react";
+import {
+  ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
+} from "recharts";
 
-export type CampanhaRow = {
-  campaign_name: string | null;
-  leads: number;
-  convertidos: number;
-  conv_pct: number | null;
-  receita_brl: number;
-  gasto_total: number;
-  cac_por_lead: number | null;
-  custo_por_conversao: number | null;
-  roas: number | null;
-  primeiro_dia_gasto: string | null;
-  ultimo_dia_gasto: string | null;
-  is_canal_level?: boolean; // true = atribuição por CANAL (site/lp), não por ad_id (DEBT-119 fase 1)
+export type FunilRow = {
+  canal: string;
+  leads_total: number; qualificados: number; handoffs: number; convertidos: number;
+  pct_qualificacao: number | null; pct_handoff: number | null; pct_conversao: number | null;
 };
+export type ConvMensalRow = { mes: string; leads: number; convertidos: number };
 
 const mono = "'Courier New', monospace";
+const RED = "#C8102E";
+const BLUE = "#2A3F8F";
+const GREEN = "#22c55e";
+const YELLOW = "#e8b923";
+const MUT = "#556677";
+const GRID = "rgba(27,42,107,.35)";
 
-function fmtBRLc(v: number) {
-  return Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-function fmtPct(frac: number | null) {
-  if (frac == null) return "0%";
-  return (Number(frac) * 100).toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 1 }) + "%";
-}
-function fmtRoas(v: number | null) {
-  if (v == null || Number(v) <= 0) return "—";
-  return Number(v).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "x";
-}
-function fmtData(iso: string | null) {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", timeZone: "America/Sao_Paulo" });
+const MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+function fmtMes(iso: string) {
+  const m = Number(iso.slice(5, 7)) - 1;
+  return MESES[m] ?? iso.slice(0, 7);
 }
 
-export function FunilCacClient({ rows }: { rows: CampanhaRow[] }) {
-  // a view já vem ORDER BY gasto_total DESC; reordena defensivamente (fetch pode não preservar)
-  const ordenadas = useMemo(
-    () => [...rows].sort((a, b) => Number(b.gasto_total ?? 0) - Number(a.gasto_total ?? 0)),
-    [rows],
-  );
-  const tot = useMemo(() => ordenadas.reduce(
-    (a, r) => ({
-      leads: a.leads + Number(r.leads),
-      conv: a.conv + Number(r.convertidos),
-      rec: a.rec + Number(r.receita_brl),
-      gasto: a.gasto + Number(r.gasto_total ?? 0),
+const tooltipStyle = {
+  contentStyle: { background: "#1a1a1a", border: `1px solid ${RED}`, borderRadius: 3, fontSize: 11, fontFamily: mono, color: "#c8d8e8" },
+  itemStyle: { color: "#c8d8e8" },
+  labelStyle: { color: MUT, fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase" as const },
+};
+const axisStyle = { fontSize: 10, fontFamily: mono, fill: MUT };
+
+const ETAPAS = [
+  { key: "leads", label: "Leads", cor: BLUE },
+  { key: "qualificados", label: "Qualificados", cor: "#1B6BC8" },
+  { key: "handoffs", label: "Handoffs", cor: YELLOW },
+  { key: "convertidos", label: "Convertidos", cor: GREEN },
+] as const;
+
+export function FunilCacClient({ funil, mensal }: { funil: FunilRow[]; mensal: ConvMensalRow[] }) {
+  // Funil agregado (soma dos canais)
+  const agg = useMemo(() => funil.reduce(
+    (a, f) => ({
+      leads: a.leads + Number(f.leads_total),
+      qualificados: a.qualificados + Number(f.qualificados),
+      handoffs: a.handoffs + Number(f.handoffs),
+      convertidos: a.convertidos + Number(f.convertidos),
     }),
-    { leads: 0, conv: 0, rec: 0, gasto: 0 },
-  ), [ordenadas]);
-  const cacTotal = tot.leads > 0 ? tot.gasto / tot.leads : null;
-  const roasTotal = tot.gasto > 0 ? tot.rec / tot.gasto : null;
-  const convPctTotal = tot.leads > 0 ? tot.conv / tot.leads : null;
-  const temCanalLevel = ordenadas.some(r => r.is_canal_level);
+    { leads: 0, qualificados: 0, handoffs: 0, convertidos: 0 },
+  ), [funil]);
+  const topo = Math.max(agg.leads, 1);
+
+  // Conversão mensal blendada (Σconv / Σleads por mês)
+  const convMensal = useMemo(() => {
+    const byMes = new Map<string, { leads: number; conv: number }>();
+    for (const r of mensal) {
+      const cur = byMes.get(r.mes) ?? { leads: 0, conv: 0 };
+      cur.leads += Number(r.leads ?? 0);
+      cur.conv += Number(r.convertidos ?? 0);
+      byMes.set(r.mes, cur);
+    }
+    return Array.from(byMes.entries()).sort(([a], [b]) => a.localeCompare(b))
+      .map(([mes, v]) => ({ mes: fmtMes(mes), pct: v.leads > 0 ? Math.round((v.conv / v.leads) * 1000) / 10 : null }));
+  }, [mensal]);
+  const temConv = convMensal.some(d => d.pct != null);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-      <div style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8, padding: 16, overflowX: "auto" }}>
-        {ordenadas.length === 0 ? (
-          <p style={{ color: "#556677", fontSize: 11, fontFamily: mono, textAlign: "center", padding: 20 }}>
-            Sem campanhas com leads/gasto atribuídos ainda — captura e gasto começando a acumular.
+    <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+      {/* Funil visual agregado — barras decrescentes */}
+      <div style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8, padding: 16 }}>
+        <p style={{ color: "#FFFFFF", fontSize: 11, fontWeight: 700, fontFamily: mono, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 14 }}>
+          Funil de conversão (todos os canais)
+        </p>
+        {agg.leads === 0 ? (
+          <p style={{ color: MUT, fontSize: 11, fontFamily: mono, textAlign: "center", padding: 24 }}>
+            Sem leads atribuídos ainda (captura desde 02/06).
           </p>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {ETAPAS.map(e => {
+              const val = agg[e.key];
+              const pct = Math.round((val / topo) * 1000) / 10;
+              return (
+                <div key={e.key} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <span style={{ width: 96, color: MUT, fontSize: 10, fontFamily: mono, letterSpacing: ".06em", textTransform: "uppercase", textAlign: "right" }}>{e.label}</span>
+                  <div style={{ flex: 1, background: "#0d1117", borderRadius: 3, height: 30, position: "relative", overflow: "hidden" }}>
+                    <div style={{ width: `${Math.max(pct, 2)}%`, height: "100%", background: e.cor, borderRadius: 3, transition: "width .3s", display: "flex", alignItems: "center", paddingLeft: 10 }}>
+                      <span style={{ color: "#fff", fontSize: 12, fontWeight: 700, fontFamily: mono }}>{val}</span>
+                    </div>
+                  </div>
+                  <span style={{ width: 52, color: "#c8d8e8", fontSize: 11, fontFamily: mono, textAlign: "right" }}>{pct}%</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Breakdown por canal */}
+      <div style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8, padding: 16, overflowX: "auto" }}>
+        <p style={{ color: "#FFFFFF", fontSize: 11, fontWeight: 700, fontFamily: mono, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 12 }}>
+          Por canal
+        </p>
+        {funil.length === 0 ? (
+          <p style={{ color: MUT, fontSize: 11, fontFamily: mono, textAlign: "center", padding: 16 }}>Sem dados.</p>
         ) : (
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12, fontFamily: mono }}>
             <thead>
               <tr style={{ borderBottom: "1px solid #2a2a2a" }}>
-                <th style={{ ...th, textAlign: "left" }}>Campanha</th>
+                <th style={{ ...th, textAlign: "left" }}>Canal</th>
                 <th style={th}>Leads</th>
-                <th style={th}>Convertidos</th>
-                <th style={th}>Conv. %</th>
-                <th style={{ ...th, textAlign: "right" }}>Receita</th>
-                <th style={{ ...th, textAlign: "right" }}>Gasto</th>
-                <th style={{ ...th, textAlign: "right" }}>CAC</th>
-                <th style={{ ...th, textAlign: "right" }}>ROAS</th>
+                <th style={th}>Qualif.</th>
+                <th style={th}>Handoff</th>
+                <th style={th}>Convert.</th>
+                <th style={th}>% Qualif.</th>
+                <th style={th}>% Handoff</th>
+                <th style={th}>% Conv.</th>
               </tr>
             </thead>
             <tbody>
-              {ordenadas.map((r, i) => {
-                const cac = r.cac_por_lead != null ? Number(r.cac_por_lead) : null;
-                const cpConv = r.custo_por_conversao != null ? fmtBRLc(Number(r.custo_por_conversao)) : "—";
-                return (
-                  <tr key={r.campaign_name ?? `sem-campanha-${i}`} style={{ borderTop: "1px solid #2a2a2a" }}>
-                    <td style={{ ...td, color: "#FFFFFF" }} title={r.is_canal_level
-                      ? `atribuição por CANAL (correspondência declarada — DEBT-119 fase 1) · gasto ${fmtData(r.primeiro_dia_gasto)}→${fmtData(r.ultimo_dia_gasto)}`
-                      : `gasto ${fmtData(r.primeiro_dia_gasto)}→${fmtData(r.ultimo_dia_gasto)}`}>
-                      {r.campaign_name ?? <span style={{ color: "#556677" }}>(sem campanha)</span>}
-                      {r.is_canal_level && <sup style={{ color: "#e8b923", fontWeight: 700, marginLeft: 3 }}>†</sup>}
-                    </td>
-                    <td style={{ ...td, textAlign: "center" }}>{r.leads}</td>
-                    <td style={{ ...td, textAlign: "center", color: "#22c55e" }}>{r.convertidos}</td>
-                    <td style={{ ...td, textAlign: "center", color: "#8899aa" }}>{fmtPct(r.conv_pct)}</td>
-                    <td style={{ ...td, textAlign: "right", color: "#22c55e", fontWeight: 700 }}>{fmtBRLc(Number(r.receita_brl))}</td>
-                    <td style={{ ...td, textAlign: "right", color: "#e8b923" }}>{fmtBRLc(Number(r.gasto_total ?? 0))}</td>
-                    <td style={{ ...td, textAlign: "right", color: cac != null ? "#FFFFFF" : "#556677", fontWeight: 700 }} title={`custo/conversão: ${cpConv}`}>
-                      {cac != null ? fmtBRLc(cac) : "—"}
-                    </td>
-                    <td style={{ ...td, textAlign: "right", color: r.roas != null && Number(r.roas) > 0 ? "#FFFFFF" : "#556677", fontWeight: 700 }}>
-                      {fmtRoas(r.roas)}
-                    </td>
-                  </tr>
-                );
-              })}
-              <tr style={{ borderTop: "2px solid #2a2a2a" }}>
-                <td style={{ ...td, color: "#FFFFFF", fontWeight: 700 }}>TOTAL</td>
-                <td style={{ ...td, textAlign: "center", fontWeight: 700 }}>{tot.leads}</td>
-                <td style={{ ...td, textAlign: "center", color: "#22c55e", fontWeight: 700 }}>{tot.conv}</td>
-                <td style={{ ...td, textAlign: "center", color: "#8899aa", fontWeight: 700 }}>{fmtPct(convPctTotal)}</td>
-                <td style={{ ...td, textAlign: "right", color: "#22c55e", fontWeight: 700 }}>{fmtBRLc(tot.rec)}</td>
-                <td style={{ ...td, textAlign: "right", color: "#e8b923", fontWeight: 700 }}>{fmtBRLc(tot.gasto)}</td>
-                <td style={{ ...td, textAlign: "right", color: cacTotal != null ? "#FFFFFF" : "#556677", fontWeight: 700 }}>{cacTotal != null ? fmtBRLc(cacTotal) : "—"}</td>
-                <td style={{ ...td, textAlign: "right", color: roasTotal != null && roasTotal > 0 ? "#FFFFFF" : "#556677", fontWeight: 700 }}>{fmtRoas(roasTotal)}</td>
-              </tr>
+              {[...funil].sort((a, b) => Number(b.leads_total) - Number(a.leads_total)).map(f => (
+                <tr key={f.canal} style={{ borderTop: "1px solid #2a2a2a" }}>
+                  <td style={{ ...td, color: "#FFFFFF", textTransform: "uppercase" }}>{f.canal}</td>
+                  <td style={{ ...td, textAlign: "center" }}>{f.leads_total}</td>
+                  <td style={{ ...td, textAlign: "center", color: "#8bb4ff" }}>{f.qualificados}</td>
+                  <td style={{ ...td, textAlign: "center", color: YELLOW }}>{f.handoffs}</td>
+                  <td style={{ ...td, textAlign: "center", color: GREEN }}>{f.convertidos}</td>
+                  <td style={{ ...td, textAlign: "center", color: "#8899aa" }}>{pctFmt(f.pct_qualificacao)}</td>
+                  <td style={{ ...td, textAlign: "center", color: "#8899aa" }}>{pctFmt(f.pct_handoff)}</td>
+                  <td style={{ ...td, textAlign: "center", color: "#8899aa" }}>{pctFmt(f.pct_conversao)}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         )}
       </div>
-      {temCanalLevel && (
-        <p style={{ color: "#e8b923", fontSize: 9, fontFamily: mono, lineHeight: 1.6 }}>
-          <b>†</b> Atribuição por <b>CANAL</b> (correspondência declarada — DEBT-119 fase 1): o site (lp) não traz <code>ad_id</code>, então o gasto da campanha <code>[CRANIUM][LEAD] - SP</code> é cruzado com os leads do canal <code>lp_site</code>, <b>não por anúncio</b>. As demais linhas são CTWA, atribuídas por <code>ad_id</code>.
+
+      {/* Linha: conversão mensal */}
+      <div style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8, padding: 16 }}>
+        <p style={{ color: "#FFFFFF", fontSize: 11, fontWeight: 700, fontFamily: mono, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 12 }}>
+          Taxa de conversão — evolução mensal
         </p>
-      )}
-      <p style={{ color: "#556677", fontSize: 9, fontFamily: mono }}>
-        Fonte: v_cac_por_campanha (CTWA por ad_id) + v_cac_site (canal site, declarado). CAC=gasto/leads · ROAS=receita/gasto. Datas em BRT.
+        {!temConv ? (
+          <p style={{ color: MUT, fontSize: 11, fontFamily: mono, textAlign: "center", padding: 30 }}>
+            Sem conversão mensal ainda (leads atribuídos só desde 02/06).
+          </p>
+        ) : (
+          <ResponsiveContainer width="100%" height={240}>
+            <LineChart data={convMensal} margin={{ top: 6, right: 16, bottom: 0, left: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke={GRID} vertical={false} />
+              <XAxis dataKey="mes" tick={axisStyle} axisLine={{ stroke: GRID }} tickLine={false} />
+              <YAxis tick={axisStyle} axisLine={false} tickLine={false} unit="%" />
+              <Tooltip {...tooltipStyle} formatter={(v) => [v == null ? "—" : `${v}%`, "Conversão"]} />
+              <Line type="monotone" dataKey="pct" stroke={GREEN} strokeWidth={2} dot={{ r: 3 }} connectNulls isAnimationActive={false} />
+            </LineChart>
+          </ResponsiveContainer>
+        )}
+      </div>
+
+      <p style={{ color: MUT, fontSize: 9, fontFamily: mono }}>
+        Fonte: v_funil_por_canal (qualificado=qual_stage · handoff=seller_first_reply_at · convertido=first_order_at) + v_cac_mensal_canal (conversão mensal). % do funil = razão sobre Leads. Leads atribuídos desde 02/06.
       </p>
     </div>
   );
+}
+
+function pctFmt(p: number | null) {
+  if (p == null) return "—";
+  return `${(Number(p) * 100).toFixed(1)}%`;
 }
 
 const th: React.CSSProperties = { fontSize: 9, color: "#556677", fontFamily: mono, letterSpacing: ".1em", textTransform: "uppercase", padding: "6px 10px", textAlign: "center" };

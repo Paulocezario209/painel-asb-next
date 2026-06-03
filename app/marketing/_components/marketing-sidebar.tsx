@@ -3,9 +3,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Radar, Megaphone, DollarSign } from "lucide-react";
+import { LayoutDashboard, Radar, Megaphone, DollarSign } from "lucide-react";
 
 const navItems = [
+  { href: "/marketing/overview",  label: "Overview",         icon: LayoutDashboard },
   { href: "/marketing/origem",    label: "Origem dos Leads", icon: Radar },
   { href: "/marketing/anuncios",  label: "Anúncios",         icon: Megaphone },
   { href: "/marketing/funil-cac", label: "Funil CAC",        icon: DollarSign },
