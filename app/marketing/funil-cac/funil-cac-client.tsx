@@ -14,6 +14,7 @@ export type CampanhaRow = {
   roas: number | null;
   primeiro_dia_gasto: string | null;
   ultimo_dia_gasto: string | null;
+  is_canal_level?: boolean; // true = atribuição por CANAL (site/lp), não por ad_id (DEBT-119 fase 1)
 };
 
 const mono = "'Courier New', monospace";
@@ -52,6 +53,7 @@ export function FunilCacClient({ rows }: { rows: CampanhaRow[] }) {
   const cacTotal = tot.leads > 0 ? tot.gasto / tot.leads : null;
   const roasTotal = tot.gasto > 0 ? tot.rec / tot.gasto : null;
   const convPctTotal = tot.leads > 0 ? tot.conv / tot.leads : null;
+  const temCanalLevel = ordenadas.some(r => r.is_canal_level);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -80,8 +82,11 @@ export function FunilCacClient({ rows }: { rows: CampanhaRow[] }) {
                 const cpConv = r.custo_por_conversao != null ? fmtBRLc(Number(r.custo_por_conversao)) : "—";
                 return (
                   <tr key={r.campaign_name ?? `sem-campanha-${i}`} style={{ borderTop: "1px solid #2a2a2a" }}>
-                    <td style={{ ...td, color: "#FFFFFF" }} title={`gasto ${fmtData(r.primeiro_dia_gasto)}→${fmtData(r.ultimo_dia_gasto)}`}>
+                    <td style={{ ...td, color: "#FFFFFF" }} title={r.is_canal_level
+                      ? `atribuição por CANAL (correspondência declarada — DEBT-119 fase 1) · gasto ${fmtData(r.primeiro_dia_gasto)}→${fmtData(r.ultimo_dia_gasto)}`
+                      : `gasto ${fmtData(r.primeiro_dia_gasto)}→${fmtData(r.ultimo_dia_gasto)}`}>
                       {r.campaign_name ?? <span style={{ color: "#556677" }}>(sem campanha)</span>}
+                      {r.is_canal_level && <sup style={{ color: "#e8b923", fontWeight: 700, marginLeft: 3 }}>†</sup>}
                     </td>
                     <td style={{ ...td, textAlign: "center" }}>{r.leads}</td>
                     <td style={{ ...td, textAlign: "center", color: "#22c55e" }}>{r.convertidos}</td>
@@ -111,8 +116,13 @@ export function FunilCacClient({ rows }: { rows: CampanhaRow[] }) {
           </table>
         )}
       </div>
+      {temCanalLevel && (
+        <p style={{ color: "#e8b923", fontSize: 9, fontFamily: mono, lineHeight: 1.6 }}>
+          <b>†</b> Atribuição por <b>CANAL</b> (correspondência declarada — DEBT-119 fase 1): o site (lp) não traz <code>ad_id</code>, então o gasto da campanha <code>[CRANIUM][LEAD] - SP</code> é cruzado com os leads do canal <code>lp_site</code>, <b>não por anúncio</b>. As demais linhas são CTWA, atribuídas por <code>ad_id</code>.
+        </p>
+      )}
       <p style={{ color: "#556677", fontSize: 9, fontFamily: mono }}>
-        Fonte: v_cac_por_campanha (rollup de v_cac_por_anuncio por campanha). CAC=gasto/leads · ROAS=receita/gasto. Datas em BRT.
+        Fonte: v_cac_por_campanha (CTWA por ad_id) + v_cac_site (canal site, declarado). CAC=gasto/leads · ROAS=receita/gasto. Datas em BRT.
       </p>
     </div>
   );
