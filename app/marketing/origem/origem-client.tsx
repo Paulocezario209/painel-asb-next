@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import {
-  ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+  ResponsiveContainer, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
 } from "recharts";
 
 export type CanalConsolidado = {
@@ -74,6 +74,17 @@ export function OrigemClient({ canais, mensal }: { canais: CanalConsolidado[]; m
     () => Array.from(new Set(mensal.filter(r => r.cac_por_lead != null).map(r => r.canal))),
     [mensal],
   );
+  // Gasto mensal por canal (barras empilhadas) — visível mesmo sem CAC (jan→mai)
+  const canaisAll = useMemo(() => Array.from(new Set(mensal.map(r => r.canal))), [mensal]);
+  const gastoData = useMemo(() => mesesOrdenados.map(mes => {
+    const ponto: Record<string, number | string> = { mes: fmtMes(mes) };
+    for (const c of canaisAll) {
+      const row = mensal.find(r => r.mes === mes && r.canal === c);
+      ponto[c] = Number(row?.gasto_total ?? 0);
+    }
+    return ponto;
+  }), [mensal, mesesOrdenados, canaisAll]);
+  const temGasto = useMemo(() => gastoData.some(d => canaisAll.some(c => Number(d[c] ?? 0) > 0)), [gastoData, canaisAll]);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
@@ -93,6 +104,29 @@ export function OrigemClient({ canais, mensal }: { canais: CanalConsolidado[]; m
             </div>
           );
         })}
+      </div>
+
+      {/* Barras: gasto mensal por canal (visível mesmo sem CAC) */}
+      <div style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8, padding: 16 }}>
+        <p style={{ color: "#FFFFFF", fontSize: 11, fontWeight: 700, fontFamily: mono, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 12 }}>
+          Gasto mensal por canal
+        </p>
+        {!temGasto ? (
+          <p style={{ color: MUT, fontSize: 11, fontFamily: mono, textAlign: "center", padding: 30 }}>Sem gasto registrado.</p>
+        ) : (
+          <ResponsiveContainer width="100%" height={240}>
+            <BarChart data={gastoData} margin={{ top: 6, right: 16, bottom: 0, left: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke={GRID} vertical={false} />
+              <XAxis dataKey="mes" tick={axisStyle} axisLine={{ stroke: GRID }} tickLine={false} />
+              <YAxis tick={axisStyle} axisLine={false} tickLine={false} tickFormatter={(v) => `R$${v}`} />
+              <Tooltip {...tooltipStyle} formatter={(v, n) => [fmtBRLc(Number(v)), String(n)]} />
+              <Legend wrapperStyle={{ fontSize: 10, fontFamily: mono }} />
+              {canaisAll.map(c => (
+                <Bar key={c} dataKey={c} stackId="gasto" fill={CANAL_COR[c] ?? MUT} radius={[2, 2, 0, 0]} />
+              ))}
+            </BarChart>
+          </ResponsiveContainer>
+        )}
       </div>
 
       {/* Linha: CAC por canal mês a mês */}

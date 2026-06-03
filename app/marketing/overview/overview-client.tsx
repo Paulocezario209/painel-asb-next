@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import {
-  ResponsiveContainer, LineChart, Line, BarChart, Bar,
+  ResponsiveContainer, ComposedChart, Line, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
 } from "recharts";
 
@@ -83,22 +83,23 @@ export function OverviewClient({ cac, funil, rank }: { cac: CacMensalRow[]; funi
     };
   }, [cac, mesesOrdenados, periodo]);
 
-  // Gráfico 1: CAC por canal mês a mês (linha) — pivot por mes, 1 série por canal
-  const cacLineData = useMemo(() => {
-    const canais = Array.from(new Set(cac.map(r => r.canal)));
+  // Gráfico 1: gasto (barras empilhadas por canal) × CAC blendado (linha) por mês — eixo duplo
+  const canaisBars = useMemo(() => Array.from(new Set(cac.map(r => r.canal))), [cac]);
+  const gastoCacData = useMemo(() => {
     return mesesOrdenados.map(mes => {
       const ponto: Record<string, number | string | null> = { mes: fmtMes(mes) };
-      for (const c of canais) {
+      let gastoMes = 0, leadsMes = 0;
+      for (const c of canaisBars) {
         const row = cac.find(r => r.mes === mes && r.canal === c);
-        ponto[c] = row?.cac_por_lead != null ? Number(row.cac_por_lead) : null;
+        const g = Number(row?.gasto_total ?? 0);
+        ponto[c] = g;
+        gastoMes += g;
+        leadsMes += Number(row?.leads ?? 0);
       }
+      ponto.cac = leadsMes > 0 ? Math.round((gastoMes / leadsMes) * 100) / 100 : null;
       return ponto;
     });
-  }, [cac, mesesOrdenados]);
-  const canaisComCac = useMemo(
-    () => Array.from(new Set(cac.filter(r => r.cac_por_lead != null).map(r => r.canal))),
-    [cac],
-  );
+  }, [cac, mesesOrdenados, canaisBars]);
 
   // Gráfico 2: funil por canal (barras agrupadas por estágio)
   const funilData = useMemo(
@@ -145,22 +146,24 @@ export function OverviewClient({ cac, funil, rank }: { cac: CacMensalRow[]; funi
         <Kpi label="Leads" value={String(kpis.leads)} cor={BLUE === "#2A3F8F" ? "#8bb4ff" : BLUE} />
       </div>
 
-      {/* Gráfico 1: CAC por canal mês a mês */}
-      <Card titulo="CAC por canal — mês a mês">
-        {cacLineData.length === 0 || canaisComCac.length === 0 ? (
-          <Vazio texto="Sem CAC mensal ainda (leads atribuídos só desde 02/06)." />
+      {/* Gráfico 1: gasto (barras) × CAC blendado (linha) por mês — eixo duplo */}
+      <Card titulo="Gasto × CAC por mês">
+        {gastoCacData.length === 0 ? (
+          <Vazio texto="Sem gasto mensal ainda." />
         ) : (
-          <ResponsiveContainer width="100%" height={240}>
-            <LineChart data={cacLineData} margin={{ top: 6, right: 16, bottom: 0, left: 0 }}>
+          <ResponsiveContainer width="100%" height={250}>
+            <ComposedChart data={gastoCacData} margin={{ top: 6, right: 12, bottom: 0, left: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={GRID} vertical={false} />
               <XAxis dataKey="mes" tick={axisStyle} axisLine={{ stroke: GRID }} tickLine={false} />
-              <YAxis tick={axisStyle} axisLine={false} tickLine={false} tickFormatter={(v) => `R$${v}`} />
-              <Tooltip {...tooltipStyle} formatter={(v, n) => [v == null ? "—" : fmtBRLc(Number(v)), String(n)]} />
-              <Legend wrapperStyle={{ fontSize: 10, fontFamily: mono }} />
-              {canaisComCac.map(c => (
-                <Line key={c} type="monotone" dataKey={c} stroke={CANAL_COR[c] ?? MUT} strokeWidth={2} dot={{ r: 3 }} connectNulls isAnimationActive={false} />
+              <YAxis yAxisId="left" tick={axisStyle} axisLine={false} tickLine={false} tickFormatter={(v) => `R$${v}`} />
+              <YAxis yAxisId="right" orientation="right" tick={axisStyle} axisLine={false} tickLine={false} tickFormatter={(v) => `R$${v}`} />
+              <Tooltip {...tooltipStyle} formatter={(v, n) => [v == null ? "—" : fmtBRLc(Number(v)), n === "cac" ? "CAC blendado" : String(n)]} />
+              <Legend wrapperStyle={{ fontSize: 9, fontFamily: mono }} />
+              {canaisBars.map(c => (
+                <Bar key={c} yAxisId="left" dataKey={c} stackId="gasto" fill={CANAL_COR[c] ?? MUT} radius={[2, 2, 0, 0]} />
               ))}
-            </LineChart>
+              <Line yAxisId="right" type="monotone" dataKey="cac" name="CAC blendado" stroke="#FFFFFF" strokeWidth={2} dot={{ r: 3 }} connectNulls isAnimationActive={false} />
+            </ComposedChart>
           </ResponsiveContainer>
         )}
       </Card>
@@ -206,7 +209,7 @@ export function OverviewClient({ cac, funil, rank }: { cac: CacMensalRow[]; funi
       </div>
 
       <p style={{ color: MUT, fontSize: 9, fontFamily: mono }}>
-        Fontes: v_cac_mensal_canal (KPIs + CAC mês a mês), v_funil_por_canal (funil), v_ranking_criativo (top CPL 30d). Período dos KPIs ≈ últimos 1/3/6 meses. Leads atribuídos desde 02/06 (captura de origem).
+        Fontes: v_cac_mensal_canal (KPIs + gasto×CAC mês a mês), v_funil_por_canal (funil), v_ranking_criativo (top CPL 30d). Barras = gasto por canal (eixo esq.) · linha = CAC blendado (eixo dir.). Período dos KPIs ≈ últimos 1/3/6 meses. Leads atribuídos desde 02/06.
       </p>
     </div>
   );
