@@ -37,17 +37,20 @@ export default async function FollowupsPage({ searchParams }: { searchParams: Pr
       .order("sent_at", { ascending: false }),
     supabase
       .from("ai_sdr_leads")
-      .select("phone, name, city, routing_team, weekly_volume_kg"),
+      .select("phone, name, city, routing_team, weekly_volume_kg")
+      .eq("is_test", false),
     // Alerta: vencidos não disparados (next_followup_at <= NOW)
     supabase
       .from("ai_sdr_leads")
       .select("id", { count: "exact", head: true })
+      .eq("is_test", false)
       .eq("followup_eligible", true)
       .lte("next_followup_at", new Date().toISOString()),
     // Alerta: elegíveis sem data
     supabase
       .from("ai_sdr_leads")
       .select("id", { count: "exact", head: true })
+      .eq("is_test", false)
       .eq("followup_eligible", true)
       .is("next_followup_at", null),
   ]);

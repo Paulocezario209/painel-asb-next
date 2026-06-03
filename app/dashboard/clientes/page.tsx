@@ -56,6 +56,7 @@ export default async function ClientesPage({
       "id, phone, name, restaurant_name, city, weekly_volume_kg, funnel_stage, customer_health, routing_team, owner_seller_id, first_order_at, handoff_at"
     )
     .in("funnel_stage", ["cliente_em_ativacao", "cliente_ativo", "cliente_recorrente"])
+    .eq("is_test", false)
     .order("first_order_at", { ascending: false, nullsFirst: false });
 
   if (healthFilter !== "all") {

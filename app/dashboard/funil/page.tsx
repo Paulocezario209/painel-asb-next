@@ -89,7 +89,8 @@ export default async function FunilPage() {
   // Query A — todos os leads com funnel_stage
   const { data: rawLeads } = await supabase
     .from("ai_sdr_leads")
-    .select("funnel_stage");
+    .select("funnel_stage")
+    .eq("is_test", false);
   const leads = (rawLeads ?? []) as unknown as FunnelLead[];
   const total = leads.length;
 

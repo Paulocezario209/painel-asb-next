@@ -42,6 +42,7 @@ export default async function ChurnPage() {
     .select("id, phone, name, restaurant_name, city, weekly_volume_kg, funnel_stage, customer_health, recovered_at, owner_seller_id")
     .in("funnel_stage", ["cliente_em_ativacao", "cliente_ativo", "cliente_recorrente"])
     .in("customer_health", ["at_risk", "inactive", "recovered"])
+    .eq("is_test", false)
     .order("recovered_at", { ascending: false, nullsFirst: false });
 
   const { data: vendors } = await supabase.from("vendors").select("id, name");

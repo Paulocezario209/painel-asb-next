@@ -81,7 +81,8 @@ export default async function InsightsPage() {
     .select(
       "segment, city, pain_point, current_supplier, weekly_volume_kg, lead_temperature, " +
       "lead_status, routing_team, qual_stage, handoff_at, first_order_at, created_at"
-    );
+    )
+    .eq("is_test", false);
 
   if (error) throw new Error(error.message);
   const leads = (raw ?? []) as unknown as Lead[];

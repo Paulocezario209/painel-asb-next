@@ -20,6 +20,7 @@ export default async function HandoffsPage() {
       "phone, restaurant_name, city, segment, weekly_volume_kg, routing_team, " +
       "handoff_at, scheduled_at, pain_point, lead_temperature, qual_stage"
     )
+    .eq("is_test", false)
     .eq("human_active", true)
     .eq("handoff_confirmed", false)
     .not("handoff_at", "is", null)

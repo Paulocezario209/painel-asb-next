@@ -46,10 +46,10 @@ export default async function DashboardPage() {
     { count: qualifiedLeads },
     { data: allLeads },
   ] = await Promise.all([
-    supabase.from("ai_sdr_leads").select("*", { count: "exact", head: true }),
-    supabase.from("ai_sdr_leads").select("*", { count: "exact", head: true }).not("handoff_at", "is", null).eq("handoff_confirmed", false),
-    supabase.from("ai_sdr_leads").select("*", { count: "exact", head: true }).gte("qual_stage", 7),
-    supabase.from("ai_sdr_leads").select("id, phone, restaurant_name, qual_stage, first_order_at, routing_team, handoff_at, handoff_confirmed, weekly_volume_kg, city, product_groups, human_active, followup_eligible, next_followup_at"),
+    supabase.from("ai_sdr_leads").select("*", { count: "exact", head: true }).eq("is_test", false),
+    supabase.from("ai_sdr_leads").select("*", { count: "exact", head: true }).eq("is_test", false).not("handoff_at", "is", null).eq("handoff_confirmed", false),
+    supabase.from("ai_sdr_leads").select("*", { count: "exact", head: true }).eq("is_test", false).gte("qual_stage", 7),
+    supabase.from("ai_sdr_leads").select("id, phone, restaurant_name, qual_stage, first_order_at, routing_team, handoff_at, handoff_confirmed, weekly_volume_kg, city, product_groups, human_active, followup_eligible, next_followup_at").eq("is_test", false),
   ]);
 
   const leads = allLeads ?? [];
