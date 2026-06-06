@@ -1,4 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createServiceClient } from "@supabase/supabase-js";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getUserContext } from "@/lib/auth/get-user-role";
 import { MetasCalendarioGerente } from "@/components/dashboard/metas-calendario-gerente";
@@ -175,6 +177,22 @@ export default async function GerentePage() {
   // Bonus Fase 3: KPI Retention Carteira
   const { data: retention } = await supabase.from("v_retention_metrics").select("*").maybeSingle();
 
+  // ── E3 Sprint Fernando: worklist órfãos de atendimento (v_leads_orfaos) ────
+  // Leitura via SERVICE ROLE server-side (mesmo padrão do ciclo em /vendas —
+  // evita assimetria RLS de view security_invoker; página já é gestor-only pelo
+  // redirect acima). View: handoff + seller_first_reply_at NULL + >48h + não-teste.
+  const srkOrf = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const orfaosClient = srkOrf
+    ? createServiceClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, srkOrf)
+    : supabase;
+  const { data: rawOrfaos } = await orfaosClient
+    .from("v_leads_orfaos")
+    .select("phone, name, city, routing_team, handoff_at, horas_sem_atendimento")
+    .order("horas_sem_atendimento", { ascending: false })
+    .limit(20);
+  type OrfaoRow = { phone: string; name: string | null; city: string | null; routing_team: string; handoff_at: string; horas_sem_atendimento: number };
+  const orfaos = (rawOrfaos ?? []) as unknown as OrfaoRow[];
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {/* Header */}
@@ -195,6 +213,59 @@ export default async function GerentePage() {
           MTD &middot; por vendedor {fmtBRL(somaFatVendedores)}
           {naoAtribuido > 0 ? ` + não-atribuído ${fmtBRL(naoAtribuido)}` : ""}
         </p>
+      </div>
+
+      {/* ── E3 Sprint Fernando: Órfãos de atendimento (worklist gestor) ────── */}
+      <div style={{ ...S.card, padding: "20px 24px", borderTop: orfaos.length > 0 ? "2px solid #ef4444" : "2px solid #22c55e" }}>
+        <p style={S.section}>
+          <span style={{ color: orfaos.length > 0 ? "#ef4444" : "#22c55e", marginRight: 6 }}>{"●"}</span>
+          {orfaos.length > 0 ? `Órfãos de atendimento (${orfaos.length})` : "Órfãos de atendimento"}
+        </p>
+        {orfaos.length === 0 ? (
+          <p style={{ ...S.muted, color: "#22c55e" }}>✓ Nenhum lead órfão — todos os handoffs com resposta do vendedor.</p>
+        ) : (
+          <>
+            <p style={{ ...S.muted, fontSize: 9, marginBottom: 12 }}>
+              Handoff sem NENHUMA resposta do vendedor há +48h (IA já reativada; re-alerta automático a cada 7d). Ação: assumir, reatribuir ou marcar perdido.
+            </p>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr>
+                  {["Lead", "Sem resposta", "Setor", ""].map(h => (
+                    <th key={h} style={{ ...S.label, textAlign: h === "Lead" ? "left" : h === "" ? "right" : "left", paddingBottom: 8 }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {orfaos.map(o => {
+                  const dias = Math.floor((o.horas_sem_atendimento ?? 0) / 24);
+                  const diasColor = dias >= 14 ? "#ef4444" : dias >= 7 ? "#f59e0b" : "#c8d8e8";
+                  const vendor = VENDOR_LABELS[o.routing_team]?.name ?? o.routing_team;
+                  return (
+                    <tr key={o.phone} style={{ borderTop: "1px solid rgba(27,42,107,.3)" }}>
+                      <td style={{ color: "#c8d8e8", fontSize: 11, fontFamily: "'Courier New', monospace", padding: "7px 0" }}>
+                        {o.name || o.phone}
+                        <span style={{ color: "#556677", marginLeft: 6, fontSize: 9 }}>{o.city || "—"}</span>
+                      </td>
+                      <td style={{ color: diasColor, fontSize: 11, fontFamily: "'Courier New', monospace", padding: "7px 0", fontWeight: 700 }}>
+                        {dias}d
+                      </td>
+                      <td style={{ color: VENDOR_ACCENT[o.routing_team] ?? "#8899aa", fontSize: 10, fontFamily: "'Courier New', monospace", padding: "7px 0" }}>
+                        {vendor}
+                      </td>
+                      <td style={{ textAlign: "right", padding: "7px 0" }}>
+                        <Link href={`/dashboard/leads/${encodeURIComponent(o.phone)}`}
+                          style={{ color: "#3b82f6", fontSize: 10, fontFamily: "'Courier New', monospace", textDecoration: "none" }}>
+                          Ver lead →
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </>
+        )}
       </div>
 
       {/* ── Retention Carteira (Funil v2 Fase 3 — atualizado pelo worker daily) ── */}
