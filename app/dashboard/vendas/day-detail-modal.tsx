@@ -31,11 +31,17 @@ export function DayDetailModal({
   vendorLabel,
   pedidos,
   onClose,
+  header,
+  agendado,
 }: {
   dia: string;
   vendorLabel: string;
   pedidos: DayPedido[];
   onClose: () => void;
+  // DEBT-133: contexto meta×realizado da célula clicada (sem fetch extra)
+  header?: { meta: number; realizado: number; pct: number | null } | null;
+  // DEBT-133: dia futuro → lista de agendados por previsao_entrega
+  agendado?: boolean;
 }) {
   useEffect(() => {
     function onEsc(e: KeyboardEvent) {
@@ -82,9 +88,35 @@ export function DayDetailModal({
             </div>
             <h2 className="text-lg font-bold text-white mt-1">
               Pedidos {diaLabel}
+              {agendado && (
+                <span
+                  className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded align-middle"
+                  style={{ background: "#ff7b1c", color: "#fff", marginLeft: 8 }}
+                >
+                  Agendados
+                </span>
+              )}
             </h2>
+            {/* DEBT-133: contexto da célula — meta × realizado (fold §9) × % */}
+            {header && !agendado && (header.meta > 0 || header.realizado > 0) && (
+              <div className="text-xs mt-1" style={{ fontFamily: "'Courier New', monospace" }}>
+                {header.meta > 0 && (
+                  <span style={{ color: "#ff7b1c" }}>Meta <b className="priv-brl">{fmtBRL(header.meta)}</b></span>
+                )}
+                {header.meta > 0 && <span className="text-gray-600"> · </span>}
+                <span style={{ color: "#c8d8e8" }}>Realizado <b className="priv-brl">{fmtBRL(header.realizado)}</b></span>
+                {header.pct !== null && (
+                  <>
+                    <span className="text-gray-600"> · </span>
+                    <span style={{ color: header.pct >= 100 ? "#22c55e" : "#D4A017", fontWeight: 700 }}>
+                      <span className="priv-pct">{header.pct}%</span>
+                    </span>
+                  </>
+                )}
+              </div>
+            )}
             <div className="text-xs text-gray-400 mt-1">
-              {validos.length} pedido(s) válido(s) · <span className="font-semibold text-white"><span className="priv-brl">{fmtBRL(totalValido)}</span></span>
+              {validos.length} pedido(s) {agendado ? "agendado(s)" : "válido(s)"} · <span className="font-semibold text-white"><span className="priv-brl">{fmtBRL(totalValido)}</span></span>
               {totalCancelado > 0 && (
                 <span className="text-gray-500"> · {pedidos.length - validos.length} cancelado(s) <span className="priv-brl">{fmtBRL(totalCancelado)}</span></span>
               )}
@@ -126,6 +158,14 @@ export function DayDetailModal({
                           >
                             {s.label}
                           </span>
+                          {agendado && (
+                            <span
+                              className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded"
+                              style={{ background: "rgba(255,123,28,.15)", color: "#ff7b1c" }}
+                            >
+                              Agendado
+                            </span>
+                          )}
                         </div>
                         <div className="text-sm font-semibold text-white truncate">
                           {p.cliente_nome ?? "(sem nome)"}

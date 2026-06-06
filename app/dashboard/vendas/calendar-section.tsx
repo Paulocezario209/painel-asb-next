@@ -24,6 +24,7 @@ type DayCell = {
   dia_semana?: number;
   status_dia: "weekend" | "futuro" | "batida" | "abaixo" | "sem_dado" | "nao_rota";
   pct_atingido_dia: number | null;
+  realizado_meta_brl?: number; // DEBT-132: fold §9 (meta terminal combina até sexta)
 };
 
 type ResumoVendor = {
@@ -135,6 +136,7 @@ export function CalendarSection({
             faturado_brl: 0,
             pedidos_total: 0,
             clientes_total: 0,
+            realizado_meta_brl: 0,
           });
         }
         const cur = byDay.get(c.dia)!;
@@ -143,18 +145,23 @@ export function CalendarSection({
         cur.faturado_brl = Number(cur.faturado_brl) + Number(c.faturado_brl);
         cur.pedidos_total = Number(cur.pedidos_total) + Number(c.pedidos_total);
         cur.clientes_total = Number(cur.clientes_total) + Number(c.clientes_total);
+        cur.realizado_meta_brl = Number(cur.realizado_meta_brl ?? 0) + Number(c.realizado_meta_brl ?? 0);
       }
-      return Array.from(byDay.values()).map(c => ({
-        ...c,
-        // FIX: dia de meta tem prioridade sobre weekend (Alan SAB = dia-meta)
-        status_dia: (c.is_weekend && c.meta_diaria_brl === 0) ? "weekend" :
-                    c.is_futuro ? "futuro" :
-                    c.realizado_brl >= c.meta_diaria_brl && c.meta_diaria_brl > 0 ? "batida" :
-                    c.realizado_brl === 0 ? "sem_dado" : "abaixo",
-        pct_atingido_dia: c.meta_diaria_brl > 0 && c.realizado_brl > 0
-          ? Math.round((c.realizado_brl / c.meta_diaria_brl) * 1000) / 10
-          : null,
-      })) as DayCell[];
+      return Array.from(byDay.values()).map(c => {
+        // DEBT-132: ✓/✗ e % do consolidado sobre o realizado FOLD (igual à view)
+        const realMeta = Number(c.realizado_meta_brl ?? c.realizado_brl);
+        return {
+          ...c,
+          // FIX: dia de meta tem prioridade sobre weekend (Alan SAB = dia-meta)
+          status_dia: (c.is_weekend && c.meta_diaria_brl === 0) ? "weekend" :
+                      c.is_futuro ? "futuro" :
+                      realMeta >= c.meta_diaria_brl && c.meta_diaria_brl > 0 ? "batida" :
+                      realMeta === 0 ? "sem_dado" : "abaixo",
+          pct_atingido_dia: c.meta_diaria_brl > 0 && realMeta > 0
+            ? Math.round((realMeta / c.meta_diaria_brl) * 1000) / 10
+            : null,
+        };
+      }) as DayCell[];
     }
     return calendario.filter(c => c.vendedor_routing_team === vendor);
   }, [calendario, vendor]);
@@ -427,18 +434,33 @@ export function CalendarSection({
         )}
       </div>
 
-      {modalOpen && (
-        <DayDetailModal
-          dia={modalDia}
-          vendorLabel={
-            vendor === "all"
-              ? "Consolidado"
-              : VENDOR_LABELS[vendor]?.name ?? vendor
-          }
-          pedidos={pendingModal ? [] : modalPedidos}
-          onClose={() => setModalOpen(false)}
-        />
-      )}
+      {modalOpen && (() => {
+        // DEBT-133: contexto da célula clicada (meta × realizado fold × %) + flag futuro
+        const cell = diasOrdenados.find(d => d.dia === modalDia);
+        const header = cell
+          ? {
+              meta: Number(cell.meta_diaria_brl ?? 0),
+              realizado: cell.is_dia_meta
+                ? Number(cell.realizado_meta_brl ?? cell.realizado_brl ?? 0)
+                : Number(cell.realizado_brl ?? 0),
+              pct: cell.pct_atingido_dia,
+            }
+          : null;
+        return (
+          <DayDetailModal
+            dia={modalDia}
+            vendorLabel={
+              vendor === "all"
+                ? "Consolidado"
+                : VENDOR_LABELS[vendor]?.name ?? vendor
+            }
+            pedidos={pendingModal ? [] : modalPedidos}
+            onClose={() => setModalOpen(false)}
+            header={header}
+            agendado={!!cell?.is_futuro}
+          />
+        );
+      })()}
 
       {previewVendor && estrategias && (
         <PreviewMissaoModal

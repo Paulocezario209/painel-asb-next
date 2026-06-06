@@ -15,6 +15,7 @@ export type DayPedido = {
   previsao_entrega: string | null;
   data_emissao: string | null;
   data_meta: string | null;
+  data_faturamento: string | null;
 };
 
 export async function getDayPedidos(
@@ -23,15 +24,26 @@ export async function getDayPedidos(
 ): Promise<DayPedido[]> {
   noStore();
   const supabase = await createClient();
+  const hoje = new Date().toISOString().slice(0, 10);
 
   let q = supabase
     .from("pedidos_espelho")
     .select(
-      "ares_pedido_id, n_pedido, cliente_nome, ares_cliente_id, status_pedido, valor_total_brl, valor_faturado_brl, previsao_entrega, data_emissao, data_meta",
+      "ares_pedido_id, n_pedido, cliente_nome, ares_cliente_id, status_pedido, valor_total_brl, valor_faturado_brl, previsao_entrega, data_emissao, data_meta, data_faturamento",
     )
-    .eq("data_meta", dia)
     .or("is_excluded.is.null,is_excluded.eq.false")
     .order("n_pedido", { ascending: false });
+
+  // DEBT-133: a célula do calendário soma por DATA_FATURAMENTO (eixo §5, FASE C) —
+  // o drill-down precisa do MESMO eixo, senão o modal mostra conjunto ≠ número exibido.
+  if (dia > hoje) {
+    // dia futuro: agendados por previsão de entrega (badge AGENDADO no modal)
+    q = q.eq("previsao_entrega", dia).neq("status_pedido", "cancelado");
+  } else {
+    // eixo faturamento + fallback p/ ~3-4% com data_faturamento NULL (DEBT-105;
+    // conjuntos disjuntos — sem dupla contagem)
+    q = q.or(`data_faturamento.eq.${dia},and(data_faturamento.is.null,data_meta.eq.${dia})`);
+  }
 
   if (team && team !== "all") {
     q = q.eq("vendedor_routing_team", team);
