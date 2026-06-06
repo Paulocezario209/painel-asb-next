@@ -59,20 +59,25 @@ export function MetasCalendarioGerente() {
     for (const c of rows) {
       const ex = byDay.get(c.dia);
       if (!ex) {
-        byDay.set(c.dia, { dia: c.dia, is_today: c.is_today, is_futuro: c.is_futuro, is_weekend: c.is_weekend, status_dia: c.status_dia, meta_diaria_brl: 0, realizado_brl: 0, is_dia_meta: false });
+        byDay.set(c.dia, { dia: c.dia, is_today: c.is_today, is_futuro: c.is_futuro, is_weekend: c.is_weekend, status_dia: c.status_dia, meta_diaria_brl: 0, realizado_brl: 0, is_dia_meta: false, realizado_meta_brl: 0 });
       }
       const cur = byDay.get(c.dia)!;
       cur.meta_diaria_brl = Number(cur.meta_diaria_brl) + Number(c.meta_diaria_brl);
       cur.realizado_brl = Number(cur.realizado_brl) + Number(c.realizado_brl);
       cur.is_dia_meta = cur.is_dia_meta || !!c.is_dia_meta;
+      cur.realizado_meta_brl = Number(cur.realizado_meta_brl ?? 0) + Number(c.realizado_meta_brl ?? 0);
     }
-    return Array.from(byDay.values()).map(c => ({
-      ...c,
-      status_dia: (c.is_weekend && c.meta_diaria_brl === 0) ? "weekend" :
-                  c.is_futuro ? "futuro" :
-                  c.realizado_brl >= c.meta_diaria_brl && c.meta_diaria_brl > 0 ? "batida" :
-                  c.realizado_brl === 0 ? "sem_dado" : "abaixo",
-    })) as MetaCalDay[];
+    return Array.from(byDay.values()).map(c => {
+      // DEBT-132: status do consolidado sobre o realizado FOLD (igual à view/RPC)
+      const realMeta = Number(c.realizado_meta_brl ?? c.realizado_brl);
+      return {
+        ...c,
+        status_dia: (c.is_weekend && c.meta_diaria_brl === 0) ? "weekend" :
+                    c.is_futuro ? "futuro" :
+                    realMeta >= c.meta_diaria_brl && c.meta_diaria_brl > 0 ? "batida" :
+                    realMeta === 0 ? "sem_dado" : "abaixo",
+      };
+    }) as MetaCalDay[];
   }, [rows, vendor]);
 
   const metaMes = useMemo(() => days.reduce((s, d) => s + Number(d.meta_diaria_brl), 0), [days]);

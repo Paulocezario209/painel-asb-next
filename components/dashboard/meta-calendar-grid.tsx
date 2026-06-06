@@ -12,12 +12,18 @@ export type MetaCalDay = {
   meta_diaria_brl: number;
   realizado_brl: number;
   is_dia_meta?: boolean;
+  realizado_meta_brl?: number; // DEBT-132: fold §9 (meta terminal combina até sexta)
 };
 
 const DOW = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
 function fmtBRL(v: number): string {
   return Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
+
+// FIX 3 (DEBT-132): valor compacto pra célula estreita (55785 → "56k")
+function fmtK(v: number): string {
+  return `${Math.round(Number(v) / 1000)}k`;
 }
 
 export function MetaCalendarGrid({
@@ -113,7 +119,7 @@ export function MetaCalendarGrid({
                 color, padding: "6px 4px", textAlign: "center",
                 cursor: d.status_dia === "weekend" ? "default" : "pointer",
                 fontFamily: "'Courier New', monospace", fontSize: 11,
-                fontWeight: 700, position: "relative", minHeight: 44,
+                fontWeight: 700, position: "relative", minHeight: 52,
                 display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2,
                 transition: "all .15s",
               }}
@@ -123,6 +129,12 @@ export function MetaCalendarGrid({
               {marker && (
                 <span style={{ color: markerColor, fontSize: 13, fontWeight: 900, lineHeight: 1 }}>
                   {marker}
+                </span>
+              )}
+              {/* FIX 3 (DEBT-132): realizado(fold)/meta em dias-meta já decorridos */}
+              {d.is_dia_meta && !d.is_futuro && Number(d.meta_diaria_brl) > 0 && (
+                <span style={{ fontSize: 8, fontWeight: 700, color: "#8899aa", lineHeight: 1 }} className="priv-brl">
+                  {fmtK(Number(d.realizado_meta_brl ?? d.realizado_brl))}/{fmtK(Number(d.meta_diaria_brl))}
                 </span>
               )}
             </button>
