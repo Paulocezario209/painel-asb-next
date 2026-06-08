@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { theme } from "@/lib/theme";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CustomerActions } from "./customer-actions";
@@ -11,7 +12,7 @@ const HEALTH_COLORS: Record<string, string> = {
   healthy: "#22C55E",
   at_risk: "#BA7517",
   inactive: "#BA1717",
-  recovered: "#185FA5",
+  recovered: theme.colors.brandAsb,
 };
 
 const STAGE_LABELS: Record<string, string> = {
@@ -203,8 +204,8 @@ export default async function ClientePage({
               <div
                 className="text-2xl font-bold mt-1"
                 style={{
-                  color: lifecycleState.customer_tier === "A" ? "#D4A017" :
-                         lifecycleState.customer_tier === "B" ? "#185FA5" :
+                  color: lifecycleState.customer_tier === "A" ? theme.colors.warning :
+                         lifecycleState.customer_tier === "B" ? theme.colors.brandAsb :
                          lifecycleState.customer_tier === "C" ? "#9696AF" : "#555",
                 }}
               >
@@ -345,7 +346,7 @@ export default async function ClientePage({
           {tierUp && (
             <div
               className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4"
-              style={{ borderLeft: "3px solid #185FA5" }}
+              style={{ borderLeft: `3px solid ${theme.colors.brandAsb}` }}
             >
               <div className="flex items-center gap-2 mb-3">
                 <span style={{ fontSize: 18 }}>⬆</span>
@@ -367,7 +368,7 @@ export default async function ClientePage({
                   <span
                     className="px-2 py-0.5 rounded font-bold"
                     style={{
-                      background: tierUp.tier_sugerido === "A" ? "#D4A017" : "#185FA5",
+                      background: tierUp.tier_sugerido === "A" ? theme.colors.warning : theme.colors.brandAsb,
                       color: "#fff",
                     }}
                   >

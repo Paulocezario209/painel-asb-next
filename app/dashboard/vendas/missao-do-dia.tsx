@@ -1,6 +1,7 @@
 "use client";
 
 import type { EstrategiasResponse } from "./actions";
+import { theme } from "@/lib/theme";
 
 function fmtBRL(v: number, frac = 0): string {
   return Number(v).toLocaleString("pt-BR", {
@@ -69,11 +70,11 @@ export function MissaoDoDia({ data, vendor }: Props) {
   // Status pessoal (próxima meta)
   const meu = baterMetaFiltrado[0];
   const statusCor =
-    !meu ? "#556677" :
-    meu.pct >= 100 ? "#22c55e" :
-    meu.pct >= 80 ? "#D4A017" :
+    !meu ? theme.colors.neutral :
+    meu.pct >= 100 ? theme.colors.success :
+    meu.pct >= 80 ? theme.colors.warning :
     meu.pct >= 50 ? "#BA7517" :
-    "#C8102E";
+    theme.colors.critical;
   const statusEmoji =
     !meu ? "" :
     meu.pct >= 100 ? "💪🔥" :
@@ -85,7 +86,7 @@ export function MissaoDoDia({ data, vendor }: Props) {
     <div
       style={{
         background: "#1a1a1a",
-        border: "1px solid #2a2a2a",
+        border: `1px solid ${theme.colors.borderDefault}`,
         borderRadius: 8,
         padding: 20,
         maxHeight: 600,
@@ -93,7 +94,7 @@ export function MissaoDoDia({ data, vendor }: Props) {
       }}
     >
       {/* Cabeçalho com saudação */}
-      <div style={{ marginBottom: 16, paddingBottom: 12, borderBottom: "1px solid #2a2a2a" }}>
+      <div style={{ marginBottom: 16, paddingBottom: 12, borderBottom: `1px solid ${theme.colors.borderDefault}` }}>
         <p
           style={{
             fontSize: 14,
@@ -135,7 +136,7 @@ export function MissaoDoDia({ data, vendor }: Props) {
       )}
 
       {/* Checklist do dia */}
-      <p style={{ fontSize: 9, fontWeight: 700, color: "#ff7b1c", fontFamily: "'Courier New', monospace", letterSpacing: ".15em", marginBottom: 8, textTransform: "uppercase" }}>
+      <p style={{ fontSize: 9, fontWeight: 700, color: theme.colors.accent, fontFamily: "'Courier New', monospace", letterSpacing: ".15em", marginBottom: 8, textTransform: "uppercase" }}>
         ✓ CHECKLIST DO DIA
       </p>
       <ul style={{ listStyle: "none", padding: 0, margin: "0 0 16px 0", display: "flex", flexDirection: "column", gap: 6 }}>
@@ -160,12 +161,12 @@ export function MissaoDoDia({ data, vendor }: Props) {
       {/* Top dormentes do vendedor (lista personalizada — NUNCA misturar entre vendedores) */}
       {dormentesFiltrado.length > 0 && (
         <>
-          <p style={{ fontSize: 9, fontWeight: 700, color: "#185FA5", fontFamily: "'Courier New', monospace", letterSpacing: ".15em", marginBottom: 8, textTransform: "uppercase" }}>
+          <p style={{ fontSize: 9, fontWeight: 700, color: theme.colors.brandAsb, fontFamily: "'Courier New', monospace", letterSpacing: ".15em", marginBottom: 8, textTransform: "uppercase" }}>
             📞 REATIVAR HOJE ({nomeAlvo})
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 14 }}>
             {dormentesFiltrado.slice(0, 5).map((d, i) => {
-              const cor = d.prioridade === "alta" ? "#C8102E" : d.prioridade === "media" ? "#BA7517" : "#8899aa";
+              const cor = d.prioridade === "alta" ? theme.colors.critical : d.prioridade === "media" ? "#BA7517" : "#8899aa";
               return (
                 <div
                   key={`${d.cliente}-${i}`}
@@ -192,7 +193,7 @@ export function MissaoDoDia({ data, vendor }: Props) {
       {/* Pendentes do escritório (vendedor específico) */}
       {pendentesFiltrado.length > 0 && (
         <>
-          <p style={{ fontSize: 9, fontWeight: 700, color: "#D4A017", fontFamily: "'Courier New', monospace", letterSpacing: ".15em", marginBottom: 8, textTransform: "uppercase" }}>
+          <p style={{ fontSize: 9, fontWeight: 700, color: theme.colors.warning, fontFamily: "'Courier New', monospace", letterSpacing: ".15em", marginBottom: 8, textTransform: "uppercase" }}>
             ⏰ COBRAR ESCRITÓRIO
           </p>
           {pendentesFiltrado.map((p) => (
@@ -200,7 +201,7 @@ export function MissaoDoDia({ data, vendor }: Props) {
               key={p.vendedor}
               style={{
                 background: "rgba(212,160,23,.08)",
-                borderLeft: "3px solid #D4A017",
+                borderLeft: `3px solid ${theme.colors.warning}`,
                 borderRadius: 3,
                 padding: "6px 9px",
                 marginBottom: 14,
@@ -210,7 +211,7 @@ export function MissaoDoDia({ data, vendor }: Props) {
               }}
             >
               {p.qty} pedido(s) <span className="priv-brl">{fmtBRL(p.valor)}</span> aguardando NF/recibo
-              {p.mais_antigo_dias > 5 && <span style={{ color: "#C8102E", marginLeft: 4 }}>⚠ +{p.mais_antigo_dias}d</span>}
+              {p.mais_antigo_dias > 5 && <span style={{ color: theme.colors.critical, marginLeft: 4 }}>⚠ +{p.mais_antigo_dias}d</span>}
             </div>
           ))}
         </>
@@ -220,13 +221,13 @@ export function MissaoDoDia({ data, vendor }: Props) {
       <div
         style={{
           background: "#0a0f1f",
-          borderLeft: "3px solid #ff7b1c",
+          borderLeft: `3px solid ${theme.colors.accent}`,
           borderRadius: 4,
           padding: "10px 12px",
           marginBottom: 14,
         }}
       >
-        <p style={{ fontSize: 9, color: "#ff7b1c", fontWeight: 700, fontFamily: "'Courier New', monospace", letterSpacing: ".1em", marginBottom: 4, textTransform: "uppercase" }}>
+        <p style={{ fontSize: 9, color: theme.colors.accent, fontWeight: 700, fontFamily: "'Courier New', monospace", letterSpacing: ".1em", marginBottom: 4, textTransform: "uppercase" }}>
           💭 FILOSOFIA DO DIA
         </p>
         <p style={{ fontSize: 11, color: "#c8d8e8", fontStyle: "italic", lineHeight: 1.5 }}>
@@ -235,18 +236,18 @@ export function MissaoDoDia({ data, vendor }: Props) {
       </div>
 
       {/* Programa C/M/L */}
-      <div style={{ paddingTop: 10, borderTop: "1px solid #2a2a2a" }}>
-        <p style={{ fontSize: 9, fontWeight: 700, color: "#c0c8d8", fontFamily: "'Courier New', monospace", letterSpacing: ".15em", marginBottom: 8, textTransform: "uppercase" }}>
+      <div style={{ paddingTop: 10, borderTop: `1px solid ${theme.colors.borderDefault}` }}>
+        <p style={{ fontSize: 9, fontWeight: 700, color: theme.colors.textPrimary, fontFamily: "'Courier New', monospace", letterSpacing: ".15em", marginBottom: 8, textTransform: "uppercase" }}>
           🎯 PROGRAMA
         </p>
         <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 4, fontSize: 10, color: "#8899aa", fontFamily: "'Courier New', monospace" }}>
-          <li>▸ <strong style={{ color: "#22c55e" }}>CURTO:</strong> bater a próxima meta de entrega</li>
-          <li>▸ <strong style={{ color: "#D4A017" }}>MÉDIO:</strong> +10% ticket médio no mês</li>
-          <li>▸ <strong style={{ color: "#185FA5" }}>LONGO:</strong> dobrar recorrentes em 90 dias</li>
+          <li>▸ <strong style={{ color: theme.colors.success }}>CURTO:</strong> bater a próxima meta de entrega</li>
+          <li>▸ <strong style={{ color: theme.colors.warning }}>MÉDIO:</strong> +10% ticket médio no mês</li>
+          <li>▸ <strong style={{ color: theme.colors.brandAsb }}>LONGO:</strong> dobrar recorrentes em 90 dias</li>
         </ul>
       </div>
 
-      <p style={{ fontSize: 9, color: "#556677", textAlign: "center", marginTop: 14, fontStyle: "italic" }}>
+      <p style={{ fontSize: 9, color: theme.colors.neutral, textAlign: "center", marginTop: 14, fontStyle: "italic" }}>
         Boas vendas e sucesso! 🚀
       </p>
     </div>

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { theme } from "@/lib/theme";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -10,10 +11,10 @@ export const dynamic = "force-dynamic";
 
 // ── Design tokens ───────────────────────────────────────────────────────────
 const S = {
-  card:    { background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8 } as React.CSSProperties,
-  label:   { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#556677", fontFamily: "'Courier New', monospace" },
+  card:    { background: "#1a1a1a", border: `1px solid ${theme.colors.borderDefault}`, borderRadius: 8 } as React.CSSProperties,
+  label:   { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: theme.colors.neutral, fontFamily: "'Courier New', monospace" },
   value:   { fontSize: 28, fontWeight: 700, color: "#FFFFFF", fontFamily: "'Inter', system-ui, sans-serif", lineHeight: 1 },
-  section: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#c0c8d8", fontFamily: "'Courier New', monospace", marginBottom: 12 } as React.CSSProperties,
+  section: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: theme.colors.textPrimary, fontFamily: "'Courier New', monospace", marginBottom: 12 } as React.CSSProperties,
   muted:   { color: "#8899aa", fontSize: 11, fontFamily: "'Courier New', monospace" } as React.CSSProperties,
 };
 
@@ -26,9 +27,9 @@ const VENDOR_LABELS: Record<string, { name: string; region: string }> = {
 const VENDOR_ORDER = ["SETOR_SOROCABA_SAO_PAULO", "SETOR_CAMPINAS_JUNDIAI", "SETOR_CUIT"];
 
 const VENDOR_ACCENT: Record<string, string> = {
-  SETOR_SOROCABA_SAO_PAULO: "#C8102E",
-  SETOR_CAMPINAS_JUNDIAI: "#22c55e",
-  SETOR_CUIT: "#ff7b1c",
+  SETOR_SOROCABA_SAO_PAULO: theme.colors.critical,
+  SETOR_CAMPINAS_JUNDIAI: theme.colors.success,
+  SETOR_CUIT: theme.colors.accent,
 };
 
 // ── Interfaces ──────────────────────────────────────────────────────────────
@@ -42,15 +43,15 @@ function fmtBRL(v: number): string {
 }
 
 function pctColor(pct: number): string {
-  if (pct >= 100) return "#22c55e";
+  if (pct >= 100) return theme.colors.success;
   if (pct >= 50) return "#f59e0b";
-  return "#C8102E";
+  return theme.colors.critical;
 }
 
 function projColor(pct: number): string {
-  if (pct >= 100) return "#22c55e";
+  if (pct >= 100) return theme.colors.success;
   if (pct >= 80) return "#f59e0b";
-  return "#C8102E";
+  return theme.colors.critical;
 }
 
 export default async function GerentePage() {
@@ -206,8 +207,8 @@ export default async function GerentePage() {
       </div>
 
       {/* Faturado total real (NF+Recibo). Σ por vendedor (§5) + não-atribuído = total. */}
-      <div style={{ ...S.card, padding: "20px 24px", borderTop: "2px solid #22c55e", maxWidth: 360 }}>
-        <p style={{ ...S.label, color: "#22c55e" }}>Faturado total (NF+Recibo)</p>
+      <div style={{ ...S.card, padding: "20px 24px", borderTop: `2px solid ${theme.colors.success}`, maxWidth: 360 }}>
+        <p style={{ ...S.label, color: theme.colors.success }}>Faturado total (NF+Recibo)</p>
         <p style={{ ...S.value, marginTop: 12 }}>{fmtBRL(totalFaturadoReal)}</p>
         <p style={{ ...S.muted, fontSize: 9, marginTop: 6 }}>
           MTD &middot; por vendedor {fmtBRL(somaFatVendedores)}
@@ -216,13 +217,13 @@ export default async function GerentePage() {
       </div>
 
       {/* ── E3 Sprint Fernando: Órfãos de atendimento (worklist gestor) ────── */}
-      <div style={{ ...S.card, padding: "20px 24px", borderTop: orfaos.length > 0 ? "2px solid #ef4444" : "2px solid #22c55e" }}>
+      <div style={{ ...S.card, padding: "20px 24px", borderTop: orfaos.length > 0 ? "2px solid #ef4444" : `2px solid ${theme.colors.success}` }}>
         <p style={S.section}>
-          <span style={{ color: orfaos.length > 0 ? "#ef4444" : "#22c55e", marginRight: 6 }}>{"●"}</span>
+          <span style={{ color: orfaos.length > 0 ? "#ef4444" : theme.colors.success, marginRight: 6 }}>{"●"}</span>
           {orfaos.length > 0 ? `Órfãos de atendimento (${orfaos.length})` : "Órfãos de atendimento"}
         </p>
         {orfaos.length === 0 ? (
-          <p style={{ ...S.muted, color: "#22c55e" }}>✓ Nenhum lead órfão — todos os handoffs com resposta do vendedor.</p>
+          <p style={{ ...S.muted, color: theme.colors.success }}>✓ Nenhum lead órfão — todos os handoffs com resposta do vendedor.</p>
         ) : (
           <>
             <p style={{ ...S.muted, fontSize: 9, marginBottom: 12 }}>
@@ -245,7 +246,7 @@ export default async function GerentePage() {
                     <tr key={o.phone} style={{ borderTop: "1px solid rgba(27,42,107,.3)" }}>
                       <td style={{ color: "#c8d8e8", fontSize: 11, fontFamily: "'Courier New', monospace", padding: "7px 0" }}>
                         {o.name || o.phone}
-                        <span style={{ color: "#556677", marginLeft: 6, fontSize: 9 }}>{o.city || "—"}</span>
+                        <span style={{ color: theme.colors.neutral, marginLeft: 6, fontSize: 9 }}>{o.city || "—"}</span>
                       </td>
                       <td style={{ color: diasColor, fontSize: 11, fontFamily: "'Courier New', monospace", padding: "7px 0", fontWeight: 700 }}>
                         {dias}d
@@ -283,8 +284,8 @@ export default async function GerentePage() {
                 {retention.em_ativacao ?? 0} em ativação · {retention.ativos ?? 0} ativos · {retention.recorrentes ?? 0} recorrentes
               </p>
             </div>
-            <div style={{ ...S.card, padding: 16, borderTop: "2px solid #185FA5" }}>
-              <p style={{ ...S.label, color: "#185FA5" }}>Retention Rate</p>
+            <div style={{ ...S.card, padding: 16, borderTop: `2px solid ${theme.colors.brandAsb}` }}>
+              <p style={{ ...S.label, color: theme.colors.brandAsb }}>Retention Rate</p>
               <p style={{ ...S.value, marginTop: 6 }}>{retention.retention_rate_pct ?? 0}%</p>
               <p style={{ ...S.muted, fontSize: 9, marginTop: 6 }}>% da carteira já recorrente</p>
             </div>
@@ -293,8 +294,8 @@ export default async function GerentePage() {
               <p style={{ ...S.value, marginTop: 6 }}>{retention.activation_rate_pct ?? 0}%</p>
               <p style={{ ...S.muted, fontSize: 9, marginTop: 6 }}>% saiu de em_ativacao</p>
             </div>
-            <div style={{ ...S.card, padding: 16, borderTop: "2px solid #D4A017" }}>
-              <p style={{ ...S.label, color: "#D4A017" }}>Health Rate</p>
+            <div style={{ ...S.card, padding: 16, borderTop: `2px solid ${theme.colors.warning}` }}>
+              <p style={{ ...S.label, color: theme.colors.warning }}>Health Rate</p>
               <p style={{ ...S.value, marginTop: 6 }}>{retention.health_rate_pct ?? 0}%</p>
               <p style={{ ...S.muted, fontSize: 9, marginTop: 6 }}>
                 {retention.healthy ?? 0} healthy · {retention.at_risk ?? 0} risco · {retention.inactive ?? 0} inativos
@@ -307,7 +308,7 @@ export default async function GerentePage() {
       {/* ── B1 PRIORIDADES DO DIA (ranking pior em cima) ──────────────────── */}
       <div style={{ ...S.card, padding: "20px 24px" }}>
         <p style={S.section}>
-          <span style={{ color: "#C8102E", marginRight: 6 }}>{"\u25B2"}</span>
+          <span style={{ color: theme.colors.critical, marginRight: 6 }}>{"\u25B2"}</span>
           Prioridades do Dia
         </p>
         <p style={{ ...S.muted, fontSize: 9, marginBottom: 16 }}>
@@ -316,7 +317,7 @@ export default async function GerentePage() {
 
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {ranking.map((v, i) => {
-            const accent = VENDOR_ACCENT[v.rt] ?? "#556677";
+            const accent = VENDOR_ACCENT[v.rt] ?? theme.colors.neutral;
             const barColor = pctColor(v.pct);
             return (
               <div key={v.rt} style={{
@@ -330,7 +331,7 @@ export default async function GerentePage() {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10 }}>
                   <div>
                     <span style={{ color: accent, fontSize: 12, fontWeight: 700, fontFamily: "'Courier New', monospace" }}>{v.name}</span>
-                    <span style={{ color: "#556677", fontSize: 9, fontFamily: "'Courier New', monospace", marginLeft: 8 }}>{v.region}</span>
+                    <span style={{ color: theme.colors.neutral, fontSize: 9, fontFamily: "'Courier New', monospace", marginLeft: 8 }}>{v.region}</span>
                   </div>
                   <span style={{ color: barColor, fontSize: 18, fontWeight: 700, fontFamily: "'Inter', system-ui, sans-serif" }}>
                     {v.pct.toFixed(1)}%
@@ -338,7 +339,7 @@ export default async function GerentePage() {
                 </div>
 
                 {/* Progress bar */}
-                <div style={{ height: 6, background: "#2a2a2a", borderRadius: 3, overflow: "hidden", marginBottom: 10 }}>
+                <div style={{ height: 6, background: theme.colors.borderDefault, borderRadius: 3, overflow: "hidden", marginBottom: 10 }}>
                   <div style={{
                     width: `${Math.min(v.pct, 100)}%`,
                     height: "100%",
@@ -357,7 +358,7 @@ export default async function GerentePage() {
                     Meta <span style={{ color: "#c8d8e8", fontWeight: 700 }}>{v.meta > 0 ? fmtBRL(v.meta) : "\u2014"}</span>
                   </span>
                   <span style={{ ...S.muted, fontSize: 10 }}>
-                    Faltante <span style={{ color: v.faltante > 0 ? "#C8102E" : "#22c55e", fontWeight: 700 }}>{fmtBRL(v.faltante)}</span>
+                    Faltante <span style={{ color: v.faltante > 0 ? theme.colors.critical : theme.colors.success, fontWeight: 700 }}>{fmtBRL(v.faltante)}</span>
                   </span>
                   <span style={{ ...S.muted, fontSize: 10 }} title="Pr\u00e9via em tempo real por data de emiss\u00e3o (n\u00e3o-oficial). Oficial = por entrega.">
                     Pr\u00e9via emiss\u00e3o <span style={{ color: "#6a7a8a", fontWeight: 700 }}>{fmtBRL(v.emissao)}</span>
@@ -372,7 +373,7 @@ export default async function GerentePage() {
       {/* ── B2 COMPARATIVO MES ANTERIOR ──────────────────────────────────── */}
       <div style={{ ...S.card, padding: "20px 24px" }}>
         <p style={S.section}>
-          <span style={{ color: "#2a2a2a", marginRight: 6 }}>{"\u25C6"}</span>
+          <span style={{ color: theme.colors.borderDefault, marginRight: 6 }}>{"\u25C6"}</span>
           Comparativo Mes Anterior
         </p>
         <p style={{ ...S.muted, fontSize: 9, marginBottom: 16 }}>
@@ -385,7 +386,7 @@ export default async function GerentePage() {
             ...comparativo.map(c => ({ label: c.name, atual: c.atual, anterior: c.anterior, deltaPct: c.deltaPct })),
           ].map(({ label, atual, anterior, deltaPct }) => {
             const arrow = deltaPct === null ? "" : deltaPct > 0 ? "\u2191" : deltaPct < 0 ? "\u2193" : "\u2192";
-            const color = deltaPct === null ? "#556677" : deltaPct > 5 ? "#22c55e" : deltaPct < -5 ? "#C8102E" : "#c8d8e8";
+            const color = deltaPct === null ? theme.colors.neutral : deltaPct > 5 ? theme.colors.success : deltaPct < -5 ? theme.colors.critical : "#c8d8e8";
             return (
               <div key={label} style={{ ...S.card, padding: "16px", borderTop: `2px solid ${color}` }}>
                 <p style={{ ...S.label, color }}>{label}</p>
@@ -413,10 +414,10 @@ export default async function GerentePage() {
         {/* KPI cards */}
         <div className="asb-grid-kpi" style={{ marginBottom: 20 }}>
           {[
-            { label: "Dias Decorridos", value: `${diasDecorridos}/${totalDiasUteis}`, accent: "#185FA5" },
+            { label: "Dias Decorridos", value: `${diasDecorridos}/${totalDiasUteis}`, accent: theme.colors.brandAsb },
             { label: "Projecao Total", value: fmtBRL(projecaoTotal), accent: projColor(projecaoVsMeta) },
             { label: "vs Meta", value: totalMeta > 0 ? `${projecaoVsMeta.toFixed(1)}%` : "\u2014", accent: projColor(projecaoVsMeta) },
-            { label: "Delta", value: totalMeta > 0 ? `${deltaTotal >= 0 ? "+" : ""}${fmtBRL(deltaTotal)}` : "\u2014", accent: deltaTotal >= 0 ? "#22c55e" : "#C8102E" },
+            { label: "Delta", value: totalMeta > 0 ? `${deltaTotal >= 0 ? "+" : ""}${fmtBRL(deltaTotal)}` : "\u2014", accent: deltaTotal >= 0 ? theme.colors.success : theme.colors.critical },
           ].map(({ label, value, accent }) => (
             <div key={label} style={{ ...S.card, padding: "16px", borderTop: `2px solid ${accent}` }}>
               <p style={{ ...S.label, color: accent }}>{label}</p>
@@ -436,7 +437,7 @@ export default async function GerentePage() {
           </thead>
           <tbody>
             {projVendedores.map(v => {
-              const accent = VENDOR_ACCENT[v.rt] ?? "#556677";
+              const accent = VENDOR_ACCENT[v.rt] ?? theme.colors.neutral;
               return (
                 <tr key={v.rt} style={{ borderTop: "1px solid rgba(27,42,107,.3)" }}>
                   <td style={{ color: accent, fontSize: 11, fontFamily: "'Courier New', monospace", padding: "7px 0", fontWeight: 700 }}>{v.name}</td>
@@ -450,7 +451,7 @@ export default async function GerentePage() {
                 </tr>
               );
             })}
-            <tr style={{ borderTop: "2px solid #2a2a2a" }}>
+            <tr style={{ borderTop: `2px solid ${theme.colors.borderDefault}` }}>
               <td style={{ color: "#FFFFFF", fontSize: 11, fontFamily: "'Courier New', monospace", padding: "7px 0", fontWeight: 700 }}>TOTAL</td>
               <td style={{ color: "#c8d8e8", fontSize: 11, fontFamily: "'Courier New', monospace", textAlign: "right", padding: "7px 0" }}>{fmtBRL(totalRealizado)}</td>
               <td style={{ color: "#FFFFFF", fontSize: 11, fontFamily: "'Courier New', monospace", textAlign: "right", padding: "7px 0", fontWeight: 700 }}>{fmtBRL(projecaoTotal)}</td>

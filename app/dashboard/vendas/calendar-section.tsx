@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useTransition } from "react";
+import { theme } from "@/lib/theme";
 import Link from "next/link";
 import { getDayPedidos, getDayCnb, getDayAusentes, type EstrategiasResponse } from "./actions";
 import GerenteDayModal from "@/components/dashboard/gerente-day-modal";
@@ -50,17 +51,17 @@ type ResumoVendor = {
 };
 
 const VENDOR_LABELS: Record<string, { name: string; region: string; accent: string }> = {
-  SETOR_CUIT:                { name: "Paulo Cezario", region: "CUIT — key accounts",    accent: "#ff7b1c" },
-  SETOR_SOROCABA_SAO_PAULO:  { name: "Ana Paula",     region: "Sorocaba / Grande SP",   accent: "#C8102E" },
-  SETOR_CAMPINAS_JUNDIAI:    { name: "Alan",          region: "Campinas / Jundiai",     accent: "#22c55e" },
+  SETOR_CUIT:                { name: "Paulo Cezario", region: "CUIT — key accounts",    accent: theme.colors.accent },
+  SETOR_SOROCABA_SAO_PAULO:  { name: "Ana Paula",     region: "Sorocaba / Grande SP",   accent: theme.colors.critical },
+  SETOR_CAMPINAS_JUNDIAI:    { name: "Alan",          region: "Campinas / Jundiai",     accent: theme.colors.success },
 };
 const ORDER = ["SETOR_CUIT", "SETOR_SOROCABA_SAO_PAULO", "SETOR_CAMPINAS_JUNDIAI"];
 const COR_HEX: Record<string, string> = {
-  verde:    "#22c55e",
-  amarelo:  "#D4A017",
+  verde:    theme.colors.success,
+  amarelo:  theme.colors.warning,
   laranja:  "#BA7517",
-  vermelho: "#C8102E",
-  cinza:    "#556677",
+  vermelho: theme.colors.critical,
+  cinza:    theme.colors.neutral,
 };
 const DOW = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
@@ -215,12 +216,12 @@ export function CalendarSection({
       {/* Toggle vendedor — escondido pra vendedor (vê só os próprios dados) */}
       {!isRestricted && (
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <span style={{ fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", color: "#556677", fontFamily: "'Courier New', monospace" }}>
+          <span style={{ fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", color: theme.colors.neutral, fontFamily: "'Courier New', monospace" }}>
             Vendedor
           </span>
           {[{ k: "all", label: "Consolidado" }, ...ORDER.map(k => ({ k, label: VENDOR_LABELS[k]?.name ?? k }))].map(({ k, label }) => {
             const active = vendor === k;
-            const accent = k === "all" ? "#185FA5" : VENDOR_LABELS[k]?.accent ?? "#185FA5";
+            const accent = k === "all" ? theme.colors.brandAsb : VENDOR_LABELS[k]?.accent ?? theme.colors.brandAsb;
             return (
               <button
                 key={k}
@@ -230,8 +231,8 @@ export function CalendarSection({
                   fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase",
                   fontFamily: "'Courier New', monospace", fontWeight: 700,
                   background: active ? accent : "transparent",
-                  color: active ? "#FFFFFF" : "#c0c8d8",
-                  border: `1px solid ${active ? accent : "#2a2a2a"}`,
+                  color: active ? "#FFFFFF" : theme.colors.textPrimary,
+                  border: `1px solid ${active ? accent : theme.colors.borderDefault}`,
                   borderRadius: 3,
                   cursor: "pointer", transition: "all .15s",
                 }}
@@ -271,7 +272,7 @@ export function CalendarSection({
               key={rt}
               style={{
                 background: "#1a1a1a",
-                border: `1px solid ${vendor === rt ? v.accent : "#2a2a2a"}`,
+                border: `1px solid ${vendor === rt ? v.accent : theme.colors.borderDefault}`,
                 borderTop: `3px solid ${v.accent}`,
                 borderRadius: 4,
                 padding: 20,
@@ -306,27 +307,27 @@ export function CalendarSection({
                       ? `Meta ${new Date(r.proxima_data_meta + "T00:00:00").toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" }).replace(",", "").toUpperCase()}`
                       : "Meta próx.",
                     value: <span className="priv-brl">{fmtBRL(metaProx)}</span>,
-                    c: "#ff7b1c"
+                    c: theme.colors.accent
                   },
                   {
                     label: "Realizado (ciclo)",
                     value: <span className="priv-brl">{fmtBRL(realizadoCiclo)}</span>,
-                    c: realizadoCiclo >= metaProx && metaProx > 0 ? "#22c55e" : realizadoCiclo > 0 ? "#D4A017" : "#556677"
+                    c: realizadoCiclo >= metaProx && metaProx > 0 ? theme.colors.success : realizadoCiclo > 0 ? theme.colors.warning : theme.colors.neutral
                   },
                   {
                     label: "Saldo dia",
                     value: <span className="priv-brl">{(saldoDiaPositivo ? "+" : "") + fmtBRL(saldoDia)}</span>,
-                    c: saldoDiaPositivo ? "#22c55e" : "#C8102E"
+                    c: saldoDiaPositivo ? theme.colors.success : theme.colors.critical
                   },
                   { label: "Acumulado",  value: <span className="priv-brl">{fmtBRL(acumuladoEmissao)}</span>, c: "#FFFFFF" },
                   { label: "Esperado",   value: <span className="priv-brl">{fmtBRL(r.meta_acumulada_brl)}</span>, c: "#8899aa" },
-                  { label: "Saldo mês",  value: <span className="priv-brl">{(saldoPositivo ? "+" : "") + fmtBRL(saldoMes)}</span>, c: saldoPositivo ? "#22c55e" : "#C8102E" },
-                  { label: "Total §5 (ARES+CNB)", value: <span className="priv-brl">{fmtBRL(totalSf)}</span>, c: "#22c55e" },
+                  { label: "Saldo mês",  value: <span className="priv-brl">{(saldoPositivo ? "+" : "") + fmtBRL(saldoMes)}</span>, c: saldoPositivo ? theme.colors.success : theme.colors.critical },
+                  { label: "Total §5 (ARES+CNB)", value: <span className="priv-brl">{fmtBRL(totalSf)}</span>, c: theme.colors.success },
                   { label: "↳ ARES (fiscal)", value: <span className="priv-brl">{fmtBRL(aresPart)}</span>, c: "#8899aa" },
-                  { label: `↳ CNB ${v.name}`, value: <span className="priv-brl">{fmtBRL(cnbVend)}</span>, c: cnbVend > 0 ? "#ff7b1c" : "#556677" },
+                  { label: `↳ CNB ${v.name}`, value: <span className="priv-brl">{fmtBRL(cnbVend)}</span>, c: cnbVend > 0 ? theme.colors.accent : theme.colors.neutral },
                 ];})().map(row => (
                   <div key={row.label} style={{ display: "flex", justifyContent: "space-between", fontSize: 11 }}>
-                    <span style={{ color: "#556677", fontFamily: "'Courier New', monospace", fontSize: 9, letterSpacing: ".1em", textTransform: "uppercase" }}>{row.label}</span>
+                    <span style={{ color: theme.colors.neutral, fontFamily: "'Courier New', monospace", fontSize: 9, letterSpacing: ".1em", textTransform: "uppercase" }}>{row.label}</span>
                     <span style={{ color: row.c, fontWeight: 700, fontFamily: "'Courier New', monospace" }}>{row.value}</span>
                   </div>
                 ))}
@@ -334,8 +335,8 @@ export function CalendarSection({
 
               <div style={{ borderTop: "1px solid rgba(27,42,107,.3)", marginTop: 12, paddingTop: 10, display: "flex", justifyContent: "space-between", fontSize: 10 }}>
                 <span style={{ color: "#8899aa", fontFamily: "'Courier New', monospace" }}>
-                  ✓ <span style={{ color: "#22c55e", fontWeight: 700 }}>{r.dias_batidos}</span> &nbsp;
-                  ✗ <span style={{ color: "#C8102E", fontWeight: 700 }}>{r.dias_abaixo}</span>
+                  ✓ <span style={{ color: theme.colors.success, fontWeight: 700 }}>{r.dias_batidos}</span> &nbsp;
+                  ✗ <span style={{ color: theme.colors.critical, fontWeight: 700 }}>{r.dias_abaixo}</span>
                 </span>
                 <span style={{ color: "#8899aa", fontFamily: "'Courier New', monospace" }}>
                   {r.dias_uteis_decorridos}/{r.dias_uteis_mes} dias úteis
@@ -368,8 +369,8 @@ export function CalendarSection({
             <MissaoDoDia data={estrategias} vendor={vendor} />
           )
         ) : (
-        <div style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8, padding: 20, maxHeight: 540, overflowY: "auto", display: "none" }}>
-          <p style={{ fontSize: 11, fontWeight: 700, color: "#c0c8d8", fontFamily: "'Courier New', monospace", textTransform: "uppercase", letterSpacing: ".1em", marginBottom: 12 }}>
+        <div style={{ background: "#1a1a1a", border: `1px solid ${theme.colors.borderDefault}`, borderRadius: 8, padding: 20, maxHeight: 540, overflowY: "auto", display: "none" }}>
+          <p style={{ fontSize: 11, fontWeight: 700, color: theme.colors.textPrimary, fontFamily: "'Courier New', monospace", textTransform: "uppercase", letterSpacing: ".1em", marginBottom: 12 }}>
             Detalhe por dia (legacy — escondido se estrategias presente)
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -384,11 +385,11 @@ export function CalendarSection({
               const dow = DOW[dt.getDay()];
               const saldo = Number(d.realizado_brl) - Number(d.meta_diaria_brl);
               const isEncaixe = !d.is_dia_meta && Number(d.realizado_brl) > 0;
-              let accent = "#556677";
-              if (d.status_dia === "batida") accent = "#22c55e";
-              else if (d.status_dia === "abaixo") accent = "#C8102E";
-              else if (d.status_dia === "futuro") accent = Number(d.realizado_brl) > 0 ? "#ff7b1c" : "#2a2a2a";
-              else if (isEncaixe) accent = "#185FA5";
+              let accent: string = theme.colors.neutral;
+              if (d.status_dia === "batida") accent = theme.colors.success;
+              else if (d.status_dia === "abaixo") accent = theme.colors.critical;
+              else if (d.status_dia === "futuro") accent = Number(d.realizado_brl) > 0 ? theme.colors.accent : theme.colors.borderDefault;
+              else if (isEncaixe) accent = theme.colors.brandAsb;
 
               return (
                 <div
@@ -396,45 +397,45 @@ export function CalendarSection({
                   onClick={() => openDayModal(d.dia)}
                   style={{
                     background: isSelected ? "#15203d" : "#0a0f1f",
-                    border: `1px solid ${isSelected ? "#c0c8d8" : accent}`,
+                    border: `1px solid ${isSelected ? theme.colors.textPrimary : accent}`,
                     borderLeft: `3px solid ${accent}`,
                     borderRadius: 3, padding: "10px 12px",
                     cursor: "pointer", transition: "all .15s",
                   }}
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4 }}>
-                    <span style={{ color: "#c0c8d8", fontFamily: "'Courier New', monospace", fontSize: 11, fontWeight: 700 }}>
+                    <span style={{ color: theme.colors.textPrimary, fontFamily: "'Courier New', monospace", fontSize: 11, fontWeight: 700 }}>
                       {String(diaNum).padStart(2, "0")} ({dow})
                     </span>
                     <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-                      {d.is_today && <span style={{ background: "#ff7b1c", color: "#fff", padding: "1px 6px", borderRadius: 3, fontSize: 8, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'Courier New', monospace" }}>HOJE</span>}
-                      {isEncaixe && <span style={{ background: "rgba(24,95,165,.15)", color: "#185FA5", padding: "1px 6px", borderRadius: 3, fontSize: 8, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'Courier New', monospace" }}>ENCAIXE</span>}
-                      {d.is_dia_meta && !d.is_futuro && d.status_dia === "batida" && <span style={{ color: "#22c55e", fontSize: 13, fontWeight: 900 }}>✓</span>}
-                      {d.is_dia_meta && !d.is_futuro && d.status_dia === "abaixo" && <span style={{ color: "#C8102E", fontSize: 13, fontWeight: 900 }}>✗</span>}
-                      {d.is_dia_meta && d.is_futuro && Number(d.realizado_brl) > 0 && <span style={{ color: "#ff7b1c", fontSize: 13, fontWeight: 900 }}>▸</span>}
+                      {d.is_today && <span style={{ background: theme.colors.accent, color: "#fff", padding: "1px 6px", borderRadius: 3, fontSize: 8, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'Courier New', monospace" }}>HOJE</span>}
+                      {isEncaixe && <span style={{ background: "rgba(24,95,165,.15)", color: theme.colors.brandAsb, padding: "1px 6px", borderRadius: 3, fontSize: 8, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'Courier New', monospace" }}>ENCAIXE</span>}
+                      {d.is_dia_meta && !d.is_futuro && d.status_dia === "batida" && <span style={{ color: theme.colors.success, fontSize: 13, fontWeight: 900 }}>✓</span>}
+                      {d.is_dia_meta && !d.is_futuro && d.status_dia === "abaixo" && <span style={{ color: theme.colors.critical, fontSize: 13, fontWeight: 900 }}>✗</span>}
+                      {d.is_dia_meta && d.is_futuro && Number(d.realizado_brl) > 0 && <span style={{ color: theme.colors.accent, fontSize: 13, fontWeight: 900 }}>▸</span>}
                     </div>
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 4, fontSize: 10, fontFamily: "'Courier New', monospace" }}>
                     {d.is_dia_meta && (
                       <>
-                        <span style={{ color: "#556677" }}>Meta:</span>
+                        <span style={{ color: theme.colors.neutral }}>Meta:</span>
                         <span style={{ color: "#c8d8e8", textAlign: "right" }}><span className="priv-brl">{fmtBRL(d.meta_diaria_brl)}</span></span>
                       </>
                     )}
-                    <span style={{ color: "#556677" }}>{isEncaixe ? "Encaixe:" : "Real:"}</span>
+                    <span style={{ color: theme.colors.neutral }}>{isEncaixe ? "Encaixe:" : "Real:"}</span>
                     <span style={{ color: d.realizado_brl > 0 ? "#FFFFFF" : "#3a4555", textAlign: "right" }}><span className="priv-brl">{fmtBRL(d.realizado_brl)}</span></span>
                     {d.is_dia_meta && !d.is_futuro && (
                       <>
-                        <span style={{ color: "#556677" }}>{saldo >= 0 ? "Super." : "Déb.:"}</span>
-                        <span style={{ color: saldo >= 0 ? "#22c55e" : "#C8102E", fontWeight: 700, textAlign: "right" }}>
+                        <span style={{ color: theme.colors.neutral }}>{saldo >= 0 ? "Super." : "Déb.:"}</span>
+                        <span style={{ color: saldo >= 0 ? theme.colors.success : theme.colors.critical, fontWeight: 700, textAlign: "right" }}>
                           <span className="priv-brl">{(saldo >= 0 ? "+" : "") + fmtBRL(saldo)}</span>
                         </span>
                       </>
                     )}
                     {d.is_dia_meta && d.pct_atingido_dia !== null && (
                       <>
-                        <span style={{ color: "#556677" }}>%:</span>
-                        <span style={{ color: d.status_dia === "batida" ? "#22c55e" : d.is_futuro ? "#ff7b1c" : "#C8102E", fontWeight: 700, textAlign: "right" }}><span className="priv-pct">{d.pct_atingido_dia}%</span></span>
+                        <span style={{ color: theme.colors.neutral }}>%:</span>
+                        <span style={{ color: d.status_dia === "batida" ? theme.colors.success : d.is_futuro ? theme.colors.accent : theme.colors.critical, fontWeight: 700, textAlign: "right" }}><span className="priv-pct">{d.pct_atingido_dia}%</span></span>
                       </>
                     )}
                   </div>
@@ -465,7 +466,7 @@ export function CalendarSection({
       })()}
       {modalOpen && pendingModal && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 999, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <p style={{ color: "#c0c8d8", fontFamily: "'Courier New', monospace" }}>Carregando…</p>
+          <p style={{ color: theme.colors.textPrimary, fontFamily: "'Courier New', monospace" }}>Carregando…</p>
         </div>
       )}
 
