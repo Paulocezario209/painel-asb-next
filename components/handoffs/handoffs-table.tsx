@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Link from "next/link";
 
 export interface Handoff {
   phone: string;
@@ -166,7 +167,12 @@ export function HandoffsTable({ initial }: { initial: Handoff[] }) {
                 <tr key={r.phone} style={{ borderBottom: "1px solid rgba(27,42,107,.4)" }}>
                   {/* Lead */}
                   <td style={S.cell}>
-                    <span style={{ color: "#FFFFFF", fontWeight: 600 }}>{r.restaurant_name ?? "—"}</span>
+                    <Link
+                      href={`/dashboard/leads/${encodeURIComponent(r.phone)}`}
+                      style={{ color: "#FFFFFF", fontWeight: 600, textDecoration: "none" }}
+                    >
+                      {r.restaurant_name ?? "—"}
+                    </Link>
                     <br />
                     <span style={S.muted}>{r.phone}</span>
                   </td>
