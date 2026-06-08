@@ -7,6 +7,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { MetaCalendarGrid, type MetaCalDay } from "./meta-calendar-grid";
+import GerenteDayModal from "@/components/dashboard/gerente-day-modal";
+import { getDayPedidos, getDayCnb, getDayAusentes } from "@/app/dashboard/vendas/actions";
 
 type RpcRow = MetaCalDay & {
   vendedor_routing_team: string;
@@ -22,9 +24,6 @@ const VENDORS = [
   { k: "SETOR_CUIT", name: "Paulo Cezario", accent: "#ff7b1c" },
 ];
 
-function fmtBRL(v: number): string {
-  return Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0, maximumFractionDigits: 0 });
-}
 
 export function MetasCalendarioGerente() {
   const now = new Date();
@@ -35,6 +34,11 @@ export function MetasCalendarioGerente() {
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [diaSel, setDiaSel] = useState<string | null>(null);
+  const [modalDia, setModalDia] = useState<string | null>(null);
+  const [modalPedidos, setModalPedidos] = useState<any[]>([]);
+  const [modalCnb, setModalCnb] = useState<any[]>([]);
+  const [modalAusentes, setModalAusentes] = useState<any[]>([]);
+  const [modalLoading, setModalLoading] = useState(false);
 
   const fetchMes = useCallback(async (a: number, m: number) => {
     setLoading(true); setErro(null);
@@ -81,6 +85,24 @@ export function MetasCalendarioGerente() {
     }) as MetaCalDay[];
   }, [rows, vendor]);
 
+  const handleDayClick = useCallback(async (dia: string) => {
+    setDiaSel(dia);
+    const d = days.find(x => x.dia === dia);
+    if (!d || d.is_futuro) return;
+    setModalLoading(true);
+    setModalDia(dia);
+    const teamFilter = vendor === "all" ? "all" : vendor;
+    const [pedidos, cnb, ausentes] = await Promise.all([
+      getDayPedidos(dia, teamFilter),
+      getDayCnb(dia, teamFilter),
+      getDayAusentes(dia, teamFilter),
+    ]);
+    setModalPedidos(pedidos);
+    setModalCnb(cnb);
+    setModalAusentes(ausentes);
+    setModalLoading(false);
+  }, [days, vendor]);
+
   const metaMes = useMemo(() => days.reduce((s, d) => s + Number(d.meta_diaria_brl), 0), [days]);
   const realMes = useMemo(() => days.reduce((s, d) => s + Number(d.realizado_brl), 0), [days]);
   const temPassado = days.some(d => !d.is_futuro && d.status_dia !== "weekend");
@@ -91,7 +113,6 @@ export function MetasCalendarioGerente() {
   }, [metaMes, realMes, temPassado]);
 
   const mesLabel = `${MESES[mes - 1]} ${ano}`;
-  const detalhe = diaSel ? days.find(d => d.dia === diaSel) : null;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -132,43 +153,38 @@ export function MetasCalendarioGerente() {
           <MetaCalendarGrid
             days={days}
             selectedDay={diaSel}
-            onDayClick={setDiaSel}
+            onDayClick={handleDayClick}
             mesLabel={mesLabel}
             metaMesBrl={metaMes}
             corHex={corHex}
           />
 
-          {/* Detalhe do dia selecionado */}
-          {detalhe && (
-            <div style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 4, padding: 16, display: "flex", flexDirection: "column", gap: 8 }}>
-              <p style={{ fontSize: 11, fontWeight: 700, color: "#c0c8d8", fontFamily: "'Courier New', monospace", textTransform: "uppercase", letterSpacing: ".1em" }}>
-                {new Date(detalhe.dia + "T00:00:00").toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long", year: "numeric" })}
-              </p>
-              <Row label="Meta do dia" value={fmtBRL(Number(detalhe.meta_diaria_brl))} c="#ff7b1c" />
-              {detalhe.is_futuro ? (
-                <p style={{ fontSize: 10, color: "#556677", fontFamily: "'Courier New', monospace" }}>Dia futuro — só meta (realizado ainda não aconteceu).</p>
-              ) : (
-                <>
-                  <Row label="Realizado (ARES+CNB)" value={fmtBRL(Number(detalhe.realizado_brl))}
-                       c={detalhe.realizado_brl >= detalhe.meta_diaria_brl && detalhe.meta_diaria_brl > 0 ? "#22c55e" : detalhe.realizado_brl > 0 ? "#D4A017" : "#556677"} />
-                  {!detalhe.is_futuro && (
-                    <>
-                      <Row label="↳ ARES" value={fmtBRL(Number(detalhe.faturado_brl ?? 0))} c="#8899aa" />
-                      <Row label="↳ CNB"  value={fmtBRL(Number(detalhe.realizado_brl ?? 0) - Number(detalhe.faturado_brl ?? 0))} c="#8899aa" />
-                    </>
-                  )}
-                  <Row label="Saldo" value={(Number(detalhe.realizado_brl) - Number(detalhe.meta_diaria_brl) >= 0 ? "+" : "") + fmtBRL(Number(detalhe.realizado_brl) - Number(detalhe.meta_diaria_brl))}
-                       c={Number(detalhe.realizado_brl) - Number(detalhe.meta_diaria_brl) >= 0 ? "#22c55e" : "#C8102E"} />
-                </>
-              )}
-            </div>
-          )}
-          {!detalhe && (
-            <p style={{ fontSize: 10, color: "#556677", fontFamily: "'Courier New', monospace", textAlign: "center" }}>
-              Clique num dia pra ver a meta {temPassado ? "e o realizado" : "(mês futuro: só meta)"}.
-            </p>
-          )}
+          <p style={{ fontSize: 10, color: "#556677", fontFamily: "'Courier New', monospace", textAlign: "center" }}>
+            Clique num dia {temPassado ? "para ver pedidos, CNB e ausentes" : "(mês futuro: só meta)"}.
+          </p>
         </>
+      )}
+
+      {modalDia && !modalLoading && (() => {
+        const d = days.find(x => x.dia === modalDia);
+        return (
+          <GerenteDayModal
+            dia={modalDia}
+            vendorLabel={vendor === "all" ? "Consolidado" : vendor}
+            pedidos={modalPedidos}
+            cnb={modalCnb}
+            ausentes={modalAusentes}
+            meta={Number(d?.meta_diaria_brl ?? 0)}
+            realizado={Number(d?.realizado_brl ?? 0)}
+            faturado={Number(d?.faturado_brl ?? 0)}
+            onClose={() => setModalDia(null)}
+          />
+        );
+      })()}
+      {modalLoading && modalDia && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 999, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <p style={{ color: "#c0c8d8", fontFamily: "'Courier New', monospace" }}>Carregando...</p>
+        </div>
       )}
     </div>
   );
@@ -181,13 +197,4 @@ function navBtn(active: boolean): React.CSSProperties {
     background: active ? "#185FA5" : "transparent", color: active ? "#FFFFFF" : "#8899aa",
     border: `1px solid ${active ? "#185FA5" : "#2a2a2a"}`, borderRadius: 3, cursor: "pointer", transition: "all .15s",
   };
-}
-
-function Row({ label, value, c }: { label: string; value: string; c: string }) {
-  return (
-    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11 }}>
-      <span style={{ color: "#556677", fontFamily: "'Courier New', monospace", fontSize: 9, letterSpacing: ".1em", textTransform: "uppercase" }}>{label}</span>
-      <span style={{ color: c, fontWeight: 700, fontFamily: "'Courier New', monospace" }} className="priv-brl">{value}</span>
-    </div>
-  );
 }

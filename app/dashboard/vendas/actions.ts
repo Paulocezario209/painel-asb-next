@@ -512,3 +512,71 @@ export async function getClientesDormentes(limit = 5): Promise<ClienteDormenteRo
   }
   return (data ?? []) as ClienteDormenteRow[];
 }
+
+export async function getDayCnb(
+  dia: string,
+  team: string
+): Promise<{ cliente_nome: string; valor_total_brl: number; numero: string; forma_pagamento: string | null }[]> {
+  const { createClient } = await import("@/lib/supabase/server");
+  const supabase = await createClient();
+  let q = supabase
+    .from("vendas_cnb")
+    .select("cliente_nome, valor_total_brl, numero, forma_pagamento")
+    .eq("data_venda", dia)
+    .order("valor_total_brl", { ascending: false });
+  if (team && team !== "all") q = q.eq("vendedor_routing_team", team);
+  const { data, error } = await q;
+  if (error) { console.error("getDayCnb", error); return []; }
+  return data ?? [];
+}
+
+export async function getDayAusentes(
+  dia: string,
+  team: string
+): Promise<{ cliente_nome: string; ultima_compra: string; dias_ausente: number }[]> {
+  const { createClient } = await import("@/lib/supabase/server");
+  const supabase = await createClient();
+  // Clientes que compraram nos últimos 45 dias mas NÃO aparecem no dia clicado
+  const dataRef = new Date(dia);
+  const data45 = new Date(dataRef);
+  data45.setDate(data45.getDate() - 45);
+  const data45str = data45.toISOString().split("T")[0];
+
+  let q = supabase
+    .from("pedidos_espelho")
+    .select("cliente_nome, data_faturamento")
+    .gte("data_faturamento", data45str)
+    .lt("data_faturamento", dia)
+    .not("status_pedido", "eq", "cancelado")
+    .eq("is_excluded", false)
+    .order("data_faturamento", { ascending: false });
+  if (team && team !== "all") q = q.eq("vendedor_routing_team", team);
+  const { data, error } = await q;
+  if (error) { console.error("getDayAusentes", error); return []; }
+
+  // Clientes que compraram no dia clicado
+  let qDia = supabase
+    .from("pedidos_espelho")
+    .select("cliente_nome")
+    .or(`data_faturamento.eq.${dia},and(data_faturamento.is.null,data_meta.eq.${dia})`)
+    .eq("is_excluded", false);
+  if (team && team !== "all") qDia = qDia.eq("vendedor_routing_team", team);
+  const { data: dataDia } = await qDia;
+  const compraraDia = new Set((dataDia ?? []).map((r: { cliente_nome: string }) => r.cliente_nome));
+
+  // Dedupe: último registro por cliente, excluindo quem comprou no dia
+  const seen = new Map<string, string>();
+  for (const r of data ?? []) {
+    if (!compraraDia.has(r.cliente_nome) && !seen.has(r.cliente_nome)) {
+      seen.set(r.cliente_nome, r.data_faturamento);
+    }
+  }
+  return Array.from(seen.entries())
+    .map(([cliente_nome, ultima_compra]) => ({
+      cliente_nome,
+      ultima_compra,
+      dias_ausente: Math.floor((dataRef.getTime() - new Date(ultima_compra).getTime()) / 86400000),
+    }))
+    .sort((a, b) => a.dias_ausente - b.dias_ausente)
+    .slice(0, 15);
+}
