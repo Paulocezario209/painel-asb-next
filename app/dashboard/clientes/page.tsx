@@ -1,5 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
+import { theme } from "@/lib/theme";
+// ETAPA8: carteira unificada — abas reusam os server components já existentes das rotas
+// (sem reescrever, mover ou deletar; as rotas /recompra //up-sell //churn seguem ativas).
+import RecompraPage from "@/app/dashboard/recompra/page";
+import UpSellPage from "@/app/dashboard/up-sell/page";
+import ChurnPage from "@/app/dashboard/churn/page";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +30,16 @@ const HEALTH_COLORS: Record<string, string> = {
   recovered: "#185FA5",
 };
 
+// ETAPA8: abas da carteira unificada
+const TABS = [
+  { key: "ativos", label: "Ativos" },
+  { key: "recompra", label: "Recompra" },
+  { key: "upsell", label: "Up-sell" },
+  { key: "churn", label: "Churn" },
+] as const;
+
+type TabKey = (typeof TABS)[number]["key"];
+
 type Customer = {
   id: string;
   phone: string;
@@ -41,13 +57,8 @@ type Customer = {
 
 type Vendor = { id: string; name: string };
 
-export default async function ClientesPage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | undefined>>;
-}) {
-  const sp = await searchParams;
-  const healthFilter = sp.health ?? "all";
+// ── Aba ATIVOS — kanban da carteira (conteúdo original de /clientes, intacto) ──────
+async function AtivosPanel({ healthFilter }: { healthFilter: string }) {
   const supabase = await createClient();
 
   let query = supabase
@@ -81,19 +92,14 @@ export default async function ClientesPage({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white">Carteira de Clientes</h1>
-          <p className="text-sm text-gray-400 mt-1">
-            {totalCount} clientes na carteira
-          </p>
-        </div>
+        <p className="text-sm text-gray-400">{totalCount} clientes na carteira</p>
         <div className="flex gap-2">
           {HEALTH_OPTIONS.map((opt) => {
             const active = healthFilter === opt.key;
             return (
               <Link
                 key={opt.key}
-                href={`/dashboard/clientes?health=${opt.key}`}
+                href={`/dashboard/clientes?tab=ativos&health=${opt.key}`}
                 className={`px-3 py-1.5 text-xs font-semibold uppercase tracking-wider rounded-md transition-all ${
                   active
                     ? "bg-[#193264] text-white"
@@ -168,6 +174,73 @@ export default async function ClientesPage({
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+// ── Host /clientes — barra de abas + roteamento por ?tab= (server-side) ────────────
+export default async function ClientesPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | undefined>>;
+}) {
+  const sp = await searchParams;
+  const rawTab = sp.tab ?? "ativos";
+  const tab: TabKey = (TABS.some((t) => t.key === rawTab) ? rawTab : "ativos") as TabKey;
+  const healthFilter = sp.health ?? "all";
+
+  return (
+    <div className="space-y-4">
+      <h1 className="text-2xl font-bold text-white">Carteira de Clientes</h1>
+
+      {/* Abas — pill, ativa = brandAsb + branco + border-bottom 2px */}
+      <div
+        style={{
+          display: "flex",
+          gap: 4,
+          borderBottom: `1px solid ${theme.colors.borderDefault}`,
+        }}
+      >
+        {TABS.map((t) => {
+          const active = tab === t.key;
+          return (
+            <Link
+              key={t.key}
+              href={`/dashboard/clientes?tab=${t.key}`}
+              style={{
+                padding: "8px 16px",
+                fontFamily: theme.font.mono,
+                fontSize: 11,
+                letterSpacing: ".1em",
+                textTransform: "uppercase",
+                fontWeight: 700,
+                color: active ? "#fff" : theme.colors.neutral,
+                background: active ? theme.colors.brandAsb : "transparent",
+                borderTopLeftRadius: 4,
+                borderTopRightRadius: 4,
+                borderBottom: active
+                  ? `2px solid ${theme.colors.brandAsb}`
+                  : "2px solid transparent",
+                textDecoration: "none",
+                transition: "all .15s",
+              }}
+            >
+              {t.label}
+            </Link>
+          );
+        })}
+      </div>
+
+      {/* Conteúdo da aba — reusa os server components das rotas existentes */}
+      {tab === "recompra" ? (
+        <RecompraPage />
+      ) : tab === "upsell" ? (
+        <UpSellPage />
+      ) : tab === "churn" ? (
+        <ChurnPage />
+      ) : (
+        <AtivosPanel healthFilter={healthFilter} />
+      )}
     </div>
   );
 }

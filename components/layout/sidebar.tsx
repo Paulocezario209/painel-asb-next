@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, Bell, BarChart2, PhoneCall, FlaskConical, Upload, Flame, Filter, UserCheck, DollarSign, Target, Briefcase, HeartPulse, Repeat, TrendingUp } from "lucide-react";
+import { LayoutDashboard, Users, Bell, BarChart2, PhoneCall, FlaskConical, Upload, Flame, Filter, UserCheck, DollarSign, Target, Briefcase } from "lucide-react";
 
 const navItems = [
   { href: "/dashboard",            label: "Dashboard",   icon: LayoutDashboard },
@@ -12,9 +12,6 @@ const navItems = [
   { href: "/dashboard/gerente",   label: "Gerente",     icon: Target },
   { href: "/dashboard/leads",      label: "Leads",       icon: Users },
   { href: "/dashboard/clientes",   label: "Clientes",    icon: Briefcase },
-  { href: "/dashboard/recompra",   label: "Recompra",    icon: Repeat },
-  { href: "/dashboard/up-sell",    label: "Up-sell",     icon: TrendingUp },
-  { href: "/dashboard/churn",      label: "Churn",       icon: HeartPulse },
   { href: "/dashboard/handoffs",   label: "Handoffs",    icon: PhoneCall },
   { href: "/dashboard/followups",  label: "Follow-ups",  icon: Bell },
   { href: "/dashboard/insights",   label: "Inteligência", icon: BarChart2 },
