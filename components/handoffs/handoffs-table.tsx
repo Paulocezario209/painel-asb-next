@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { LeadScoreBadge } from "@/components/dashboard/lead-score-badge";
+import { createClient } from "@/lib/supabase/client";
+import { computeLeadScore, tierOf } from "@/lib/lead-score";
 
 export interface Handoff {
   phone: string;
@@ -94,6 +96,49 @@ export function HandoffsTable({ initial }: { initial: Handoff[] }) {
   const [urgentOnly, setUrgent]   = useState(false);
   const [loading, setLoading]     = useState<Record<string, boolean>>({});
   const [errors, setErrors]       = useState<Record<string, string>>({});
+  const [live, setLive]           = useState(false);   // ETAPA7: canal Realtime conectado
+
+  // ETAPA7 — Supabase Realtime: detecta novo/alterado handoff e re-busca a lista
+  // completa (refetch é mais seguro que mutar o array). ANON key (RLS authenticated).
+  // O fetch inicial continua no server component pai; aqui só reagimos a mudanças.
+  useEffect(() => {
+    const supabase = createClient();
+    const COLS = "phone, restaurant_name, city, segment, weekly_volume_kg, routing_team, " +
+                 "handoff_at, scheduled_at, pain_point, lead_temperature, qual_stage";
+
+    async function refetch() {
+      const { data } = await supabase
+        .from("ai_sdr_leads")
+        .select(COLS)
+        .eq("is_test", false)
+        .eq("human_active", true)
+        .eq("handoff_confirmed", false)
+        .not("handoff_at", "is", null)
+        .order("handoff_at", { ascending: true });
+      if (!data) return;
+      const fourHAgo = Date.now() - 4 * 60 * 60 * 1000;
+      const enriched = (data as unknown as Handoff[])
+        .map((h) => {
+          const score = computeLeadScore(h);              // fallback (view = server-only)
+          return { ...h, lead_score: score, lead_tier: tierOf(score) };
+        })
+        .sort((a, b) => {                                 // mesma ordem do server: críticos→score
+          const ca = new Date(a.handoff_at).getTime() < fourHAgo ? 1 : 0;
+          const cb = new Date(b.handoff_at).getTime() < fourHAgo ? 1 : 0;
+          if (ca !== cb) return cb - ca;
+          return (b.lead_score ?? 0) - (a.lead_score ?? 0);
+        });
+      setRows(enriched);
+    }
+
+    const channel = supabase
+      .channel("handoffs-fila-realtime")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "ai_sdr_leads", filter: "human_active=eq.true" }, () => refetch())
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "ai_sdr_leads", filter: "human_active=eq.true" }, () => refetch())
+      .subscribe((status) => setLive(status === "SUBSCRIBED"));
+
+    return () => { supabase.removeChannel(channel); };
+  }, []);
 
   const filtered = useMemo(() => {
     return rows.filter(r => {
@@ -146,6 +191,17 @@ export function HandoffsTable({ initial }: { initial: Handoff[] }) {
         <button style={btnFilter(urgentOnly)} onClick={() => setUrgent(p => !p)}>
           ⚡ Só críticos (&gt; 4h)
         </button>
+
+        {/* ETAPA7: indicador de canal Realtime conectado */}
+        {live && (
+          <span style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 6 }}>
+            <style>{`@keyframes asb-live{0%,100%{opacity:1}50%{opacity:.3}}.asb-live-dot{animation:asb-live 1.4s ease-in-out infinite}`}</style>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, color: "#22c55e", fontSize: 9, letterSpacing: ".12em", textTransform: "uppercase", fontFamily: "'Courier New', monospace", fontWeight: 700 }}>
+              <span className="asb-live-dot" style={{ width: 7, height: 7, borderRadius: "50%", background: "#22c55e", display: "inline-block" }} />
+              AO VIVO
+            </span>
+          </span>
+        )}
       </div>
 
       {/* Empty state */}
