@@ -45,6 +45,10 @@ export default async function CalendarioPage({
       )}
 
       <CalendarioClient ano={Number(ano)} rows={rows} />
+
+      <p style={{ color: "#556677", fontSize: 10, fontFamily: mono, textAlign: "right" }}>
+        Dados de gasto Meta Ads atualizados diariamente às 06:10 BRT
+      </p>
     </div>
   );
 }

@@ -45,6 +45,10 @@ export default async function AnunciosPage() {
       )}
 
       <AnunciosClient rank={rank} spark={spark} />
+
+      <p style={{ color: "#556677", fontSize: 10, fontFamily: mono, textAlign: "right" }}>
+        Dados de gasto Meta Ads atualizados diariamente às 06:10 BRT
+      </p>
     </div>
   );
 }

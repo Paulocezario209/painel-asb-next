@@ -42,6 +42,10 @@ export default async function OrigemPage() {
       )}
 
       <OrigemClient canais={canais} mensal={mensal} />
+
+      <p style={{ color: "#556677", fontSize: 10, fontFamily: mono, textAlign: "right" }}>
+        Dados de gasto Meta Ads atualizados diariamente às 06:10 BRT
+      </p>
     </div>
   );
 }

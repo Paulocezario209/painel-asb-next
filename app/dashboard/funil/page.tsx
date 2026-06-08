@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { QualificationFunnel } from "@/components/dashboard/charts";
+import { FunnelVisual, type FunnelStage } from "@/components/dashboard/funnel-visual";
 
 import { redirect } from "next/navigation";
 import { getUserContext, canAccess } from "@/lib/auth/get-user-role";
@@ -114,11 +114,16 @@ export default async function FunilPage() {
   const emHandoffPlus  = leads.filter(l => HANDOFF_PLUS.has(l.funnel_stage ?? "")).length;
   const taxaHandoff    = total > 0 ? ((emHandoffPlus / total) * 100).toFixed(1) : null;
 
-  // ── Chart data (15 etapas ordenadas) ──────────────────────────────────────────
-  const chartData = STAGE_ORDER.map(s => ({
-    label: STAGE_LABELS[s] ?? s,
-    count: stageCounts[s] ?? 0,
-  }));
+  // ── Chart data (15 etapas ordenadas) — enriquecido p/ FunnelVisual (FIX 4) ────
+  // fill semântico: handoff = âmbar; etapas pós-handoff = verde; qualificação = azul.
+  // pct = conversão vs etapa anterior (null na 1ª). FunnelChart afunila por count.
+  const chartData: FunnelStage[] = STAGE_ORDER.map((s, i) => {
+    const count = stageCounts[s] ?? 0;
+    const prev = i > 0 ? (stageCounts[STAGE_ORDER[i - 1]] ?? 0) : 0;
+    const pct = i > 0 && prev > 0 ? Math.round((count / prev) * 100) : null;
+    const fill = s === "handoff" ? "#D4A017" : HANDOFF_PLUS.has(s) ? "#22c55e" : "#185FA5";
+    return { label: STAGE_LABELS[s] ?? s, count, pct, fill };
+  });
 
   // ── Drop-off table ────────────────────────────────────────────────────────────
   const dropoff: { from: string; to: string; fromCount: number; toCount: number; rate: string }[] = [];
@@ -170,8 +175,8 @@ export default async function FunilPage() {
           <span style={{ color: "#C8102E", marginRight: 6 }}>{"\u25BC"}</span>
           Leads por Etapa
         </p>
-        <div style={{ height: 420 }}>
-          <QualificationFunnel data={chartData} />
+        <div style={{ height: 460 }}>
+          <FunnelVisual data={chartData} />
         </div>
       </div>
 
