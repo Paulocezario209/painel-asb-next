@@ -85,6 +85,11 @@ export function MetaCalendarGrid({
         ))}
         {diasOrdenados.map(d => {
           const dia = new Date(d.dia + "T00:00:00").getDate();
+          const dow = new Date(d.dia + "T00:00:00").getDay();
+          // FIX2 (fold §9 / DEBT-132): badge quando o realizado da meta combina dias
+          // (realizado_meta_brl ≠ realizado_brl) ou é a sexta terminal de meta.
+          const isFold = d.realizado_meta_brl != null && Number(d.realizado_meta_brl) !== Number(d.realizado_brl);
+          const showFold = !d.is_futuro && (isFold || (!!d.is_dia_meta && dow === 5));
           const selected = selectedDay === d.dia;
           const isToday = d.is_today;
           let bg = "#0a0f1f", border = "1px solid #2a2a2a", color = "#c8d8e8", marker = "", markerColor = "transparent";
@@ -126,6 +131,17 @@ export function MetaCalendarGrid({
               }}
               disabled={d.status_dia === "weekend"}
             >
+              {showFold && (
+                <span
+                  title="Fold §9 — meta terminal qui+sex combinadas (acumulado)"
+                  style={{
+                    position: "absolute", top: 2, right: 2,
+                    background: "#D4A017", color: "#fff", fontSize: 9, fontWeight: 700,
+                    lineHeight: 1, padding: "1px 3px", borderRadius: 2,
+                    fontFamily: "'Courier New', monospace", letterSpacing: ".02em",
+                  }}
+                >▲</span>
+              )}
               <span>{dia}</span>
               {marker && (
                 <span style={{ color: markerColor, fontSize: 13, fontWeight: 900, lineHeight: 1 }}>

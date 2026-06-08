@@ -264,8 +264,12 @@ export default async function ClientePage({
         </div>
       )}
 
-      {/* Bonus: cards de oportunidade lado a lado */}
-      {(upsellOp || downsellRisk || tierUp) && (
+      {/* FIX3: Oportunidades de expansão — seção sempre visível (cards ou empty state) */}
+      <div>
+        <h2 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">
+          Oportunidades de Expansão
+        </h2>
+        {(upsellOp || downsellRisk || tierUp) ? (
         <div className="grid grid-cols-2 gap-4">
           {upsellOp && (
             <div
@@ -301,6 +305,21 @@ export default async function ClientePage({
                     + R$ {Number(upsellOp.potencial_anual_brl).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </div>
                 </div>
+                {lead.phone && (
+                  <a
+                    href={`https://wa.me/${String(lead.phone).replace(/\D/g, "")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-3 inline-flex items-center justify-center gap-1 w-full rounded px-3 py-2 text-xs font-bold uppercase tracking-wider"
+                    style={{
+                      background: theme.colors.success,
+                      color: "#0a0f1f",
+                      fontFamily: theme.font.mono,
+                    }}
+                  >
+                    💬 Iniciar conversa
+                  </a>
+                )}
               </div>
             </div>
           )}
@@ -391,7 +410,12 @@ export default async function ClientePage({
             </div>
           )}
         </div>
-      )}
+        ) : (
+          <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4 text-xs text-gray-600 italic">
+            Sem oportunidades identificadas no momento.
+          </div>
+        )}
+      </div>
 
       {/* Timeline */}
       <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4">

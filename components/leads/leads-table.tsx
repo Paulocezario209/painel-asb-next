@@ -24,6 +24,7 @@ type Lead = {
   ai_active: boolean | null;
   human_active: boolean | null;
   created_at: string;
+  updated_at: string | null;        // FIX1: proxy de tempo-na-etapa (SLA)
   followup_count: number | null;
   pain_point: string | null;
   product_groups: string[] | null;
@@ -92,6 +93,42 @@ function derivedStatus(lead: Lead): string {
   if (lead.first_order_at) return "converted";
   if ((lead.qual_stage ?? 0) >= 7) return "qualified";
   return lead.lead_status ?? "new";
+}
+
+// FIX1: tempo-na-etapa + semáforo SLA. Proxy = updated_at (funnel_stage_updated_at
+// inexistente no schema). verde <24h · âmbar 24-72h · vermelho >72h (pulsa).
+function stageElapsed(ts: string | null): { label: string; color: string; pulse: boolean } | null {
+  if (!ts) return null;
+  const hrs = (Date.now() - new Date(ts).getTime()) / 3600000;
+  if (!isFinite(hrs) || hrs < 0) return null;
+  const d = Math.floor(hrs / 24);
+  const h = Math.floor(hrs % 24);
+  const label = d > 0 ? `${d}d ${h}h` : `${h}h`;
+  if (hrs < 24)  return { label, color: C.green, pulse: false };
+  if (hrs < 72)  return { label, color: C.amber, pulse: false };
+  return { label, color: C.red, pulse: true };
+}
+
+function StageTimeBadge({ ts }: { ts: string | null }) {
+  const s = stageElapsed(ts);
+  if (!s) return <span style={{ color: C.muted, fontSize: 10 }}>—</span>;
+  return (
+    <>
+      {s.pulse && (
+        <style>{`@keyframes asb-pulse-sla{0%,100%{opacity:1}50%{opacity:.45}}.asb-pulse-sla{animation:asb-pulse-sla 1.4s ease-in-out infinite}`}</style>
+      )}
+      <span
+        className={s.pulse ? "asb-pulse-sla" : undefined}
+        style={{
+          display: "inline-block", color: s.color, fontSize: 10, fontWeight: 700,
+          fontFamily: "'Courier New', monospace", whiteSpace: "nowrap",
+        }}
+        title={`Tempo desde a última atualização — semáforo SLA`}
+      >
+        ● {s.label}
+      </span>
+    </>
+  );
 }
 
 function Badge({ cfg }: { cfg: BadgeCfg }) {
@@ -308,6 +345,7 @@ export function LeadsTable({ leads: initialLeads, userEmail, initialStatus = "al
                 <span style={{ color: C.muted, fontSize: 9, fontFamily: "'Courier New', monospace" }}>
                   etapa {lead.qual_stage ?? 0}/9
                 </span>
+                <StageTimeBadge ts={lead.updated_at} />
               </div>
             </div>
           );
@@ -319,7 +357,7 @@ export function LeadsTable({ leads: initialLeads, userEmail, initialStatus = "al
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ background: "#0f0f0f" }}>
-              {["Lead", "Score", "Cidade", "Segmento", "Volume", "ABC", "Temp.", "Status", "Vendedor", "Etapa", "Handoff", "Ações"].map(h => (
+              {["Lead", "Score", "Cidade", "Segmento", "Volume", "ABC", "Temp.", "Status", "Vendedor", "Etapa", "Na etapa", "Handoff", "Ações"].map(h => (
                 <th key={h} style={TH}>{h}</th>
               ))}
             </tr>
@@ -327,7 +365,7 @@ export function LeadsTable({ leads: initialLeads, userEmail, initialStatus = "al
           <tbody>
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={12} style={{ ...TD, textAlign: "center", color: C.muted, padding: "32px 0" }}>
+                <td colSpan={13} style={{ ...TD, textAlign: "center", color: C.muted, padding: "32px 0" }}>
                   nenhum lead encontrado
                 </td>
               </tr>
@@ -374,6 +412,9 @@ export function LeadsTable({ leads: initialLeads, userEmail, initialStatus = "al
                     <span style={{ fontFamily: "'Courier New', monospace", color: C.muted, fontSize: 10 }}>
                       {lead.qual_stage ?? 0}/9
                     </span>
+                  </td>
+                  <td style={TD}>
+                    <StageTimeBadge ts={lead.updated_at} />
                   </td>
                   <td style={TD}>
                     {lead.handoff_at
