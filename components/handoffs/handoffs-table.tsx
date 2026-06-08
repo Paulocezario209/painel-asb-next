@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import { LeadScoreBadge } from "@/components/dashboard/lead-score-badge";
 
 export interface Handoff {
   phone: string;
@@ -15,6 +16,8 @@ export interface Handoff {
   pain_point: string | null;
   lead_temperature: string | null;
   qual_stage: number | null;
+  lead_score?: number | null;        // ETAPA 4
+  lead_tier?: "A" | "B" | "C" | null;
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -167,13 +170,17 @@ export function HandoffsTable({ initial }: { initial: Handoff[] }) {
                 <tr key={r.phone} style={{ borderBottom: "1px solid rgba(27,42,107,.4)" }}>
                   {/* Lead */}
                   <td style={S.cell}>
-                    <Link
-                      href={`/dashboard/leads/${encodeURIComponent(r.phone)}`}
-                      style={{ color: "#FFFFFF", fontWeight: 600, textDecoration: "none" }}
-                    >
-                      {r.restaurant_name ?? "—"}
-                    </Link>
-                    <br />
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <Link
+                        href={`/dashboard/leads/${encodeURIComponent(r.phone)}`}
+                        style={{ color: "#FFFFFF", fontWeight: 600, textDecoration: "none" }}
+                      >
+                        {r.restaurant_name ?? "—"}
+                      </Link>
+                      {r.lead_score != null && r.lead_tier && (
+                        <LeadScoreBadge score={r.lead_score} tier={r.lead_tier} size="sm" />
+                      )}
+                    </div>
                     <span style={S.muted}>{r.phone}</span>
                   </td>
 

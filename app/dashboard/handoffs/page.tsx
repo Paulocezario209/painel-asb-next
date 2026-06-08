@@ -1,5 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { HandoffsTable, type Handoff } from "@/components/handoffs/handoffs-table";
+import { getLeadScoreMap } from "@/lib/get-lead-scores";
+import { computeLeadScore, tierOf } from "@/lib/lead-score";
 
 export const dynamic = "force-dynamic";
 
@@ -14,24 +16,41 @@ const S = {
 export default async function HandoffsPage() {
   const supabase = await createClient();
 
-  const { data: raw, error } = await supabase
-    .from("ai_sdr_leads")
-    .select(
-      "phone, restaurant_name, city, segment, weekly_volume_kg, routing_team, " +
-      "handoff_at, scheduled_at, pain_point, lead_temperature, qual_stage"
-    )
-    .eq("is_test", false)
-    .eq("human_active", true)
-    .eq("handoff_confirmed", false)
-    .not("handoff_at", "is", null)
-    .order("handoff_at", { ascending: true });
+  const [{ data: raw, error }, scoreMap] = await Promise.all([
+    supabase
+      .from("ai_sdr_leads")
+      .select(
+        "phone, restaurant_name, city, segment, weekly_volume_kg, routing_team, " +
+        "handoff_at, scheduled_at, pain_point, lead_temperature, qual_stage"
+      )
+      .eq("is_test", false)
+      .eq("human_active", true)
+      .eq("handoff_confirmed", false)
+      .not("handoff_at", "is", null)
+      .order("handoff_at", { ascending: true }),
+    getLeadScoreMap(),  // ETAPA 4
+  ]);
 
   if (error) throw new Error(error.message);
-  const handoffs = (raw ?? []) as unknown as Handoff[];
 
   // ── KPI computations (server-side) ────────────────────────────────────────────
   const now      = Date.now();
   const fourHAgo = now - 4 * 60 * 60 * 1000;
+
+  // ETAPA 4: enriquece score (view/fallback) + ordena críticos(>4h) primeiro, depois score DESC
+  const handoffs = ((raw ?? []) as unknown as Handoff[])
+    .map((h) => {
+      const fromView = scoreMap[h.phone];
+      const score = fromView?.score ?? computeLeadScore(h);
+      const tier = fromView?.tier ?? tierOf(score);
+      return { ...h, lead_score: score, lead_tier: tier };
+    })
+    .sort((a, b) => {
+      const critA = new Date(a.handoff_at).getTime() < fourHAgo ? 1 : 0;
+      const critB = new Date(b.handoff_at).getTime() < fourHAgo ? 1 : 0;
+      if (critA !== critB) return critB - critA;                 // críticos primeiro
+      return (b.lead_score ?? 0) - (a.lead_score ?? 0);          // depois score DESC
+    });
 
   const totalPending  = handoffs.length;
   const criticalCount = handoffs.filter(h => new Date(h.handoff_at).getTime() < fourHAgo).length;

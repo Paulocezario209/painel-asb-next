@@ -1,5 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { LeadsTable } from "@/components/leads/leads-table";
+import { getLeadScoreMap } from "@/lib/get-lead-scores";
+import { computeLeadScore, tierOf } from "@/lib/lead-score";
 
 export const dynamic = "force-dynamic";
 
@@ -9,15 +11,28 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
 
   const { data: { user } } = await supabase.auth.getUser();
 
-  const { data: leads } = await supabase
-    .from("ai_sdr_leads")
-    .select(
-      "phone, name, city, segment, weekly_volume_kg, lead_temperature, lead_status, routing_team, qual_stage, handoff_at, handoff_confirmed, handoff_confirmed_at, first_order_at, ai_active, created_at, followup_count, pain_point, product_groups, scheduled_at, human_active"
-    )
-    .eq("is_test", false)
-    .order("created_at", { ascending: false })
-    .limit(100)
-    .range(0, 99);
+  const [{ data: rawLeads }, scoreMap] = await Promise.all([
+    supabase
+      .from("ai_sdr_leads")
+      .select(
+        "phone, name, city, segment, weekly_volume_kg, lead_temperature, lead_status, routing_team, qual_stage, handoff_at, handoff_confirmed, handoff_confirmed_at, first_order_at, ai_active, created_at, followup_count, pain_point, product_groups, scheduled_at, human_active"
+      )
+      .eq("is_test", false)
+      .order("created_at", { ascending: false })
+      .limit(100)
+      .range(0, 99),
+    getLeadScoreMap(),  // ETAPA 4: score por phone (v_lead_score via service role)
+  ]);
+
+  // ETAPA 4: enriquece com lead_score/lead_tier (view, fallback fórmula) + ordena por score DESC
+  const leads = (rawLeads ?? [])
+    .map((l) => {
+      const fromView = scoreMap[l.phone as string];
+      const score = fromView?.score ?? computeLeadScore(l);
+      const tier = fromView?.tier ?? tierOf(score);
+      return { ...l, lead_score: score, lead_tier: tier };
+    })
+    .sort((a, b) => (b.lead_score ?? 0) - (a.lead_score ?? 0));
 
   return (
     <div className="space-y-4">

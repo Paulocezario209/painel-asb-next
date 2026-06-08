@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { MessageCircle, CheckCircle, TrendingUp, AlertTriangle } from "lucide-react";
+import { LeadScoreBadge } from "@/components/dashboard/lead-score-badge";
 
 type Lead = {
   phone: string;
@@ -27,6 +28,8 @@ type Lead = {
   pain_point: string | null;
   product_groups: string[] | null;
   scheduled_at: string | null;
+  lead_score?: number | null;        // ETAPA 4: v_lead_score (via server) ou fallback
+  lead_tier?: "A" | "B" | "C" | null;
 };
 
 // ── Design tokens — ASB brand ────────────────────────────────────
@@ -281,6 +284,9 @@ export function LeadsTable({ leads: initialLeads, userEmail, initialStatus = "al
 
               {/* Badges row */}
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+                {lead.lead_score != null && lead.lead_tier && (
+                  <LeadScoreBadge score={lead.lead_score} tier={lead.lead_tier} size="sm" />
+                )}
                 <Badge cfg={ABC_CFG[abc]} />
                 <Badge cfg={TEMP_CFG[lead.lead_temperature ?? ""] ?? TEMP_CFG.COLD} />
                 <Badge cfg={STATUS_CFG[status] ?? STATUS_CFG.new} />
@@ -313,7 +319,7 @@ export function LeadsTable({ leads: initialLeads, userEmail, initialStatus = "al
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ background: "#0f0f0f" }}>
-              {["Lead", "Cidade", "Segmento", "Volume", "ABC", "Temp.", "Status", "Vendedor", "Etapa", "Handoff", "Ações"].map(h => (
+              {["Lead", "Score", "Cidade", "Segmento", "Volume", "ABC", "Temp.", "Status", "Vendedor", "Etapa", "Handoff", "Ações"].map(h => (
                 <th key={h} style={TH}>{h}</th>
               ))}
             </tr>
@@ -321,7 +327,7 @@ export function LeadsTable({ leads: initialLeads, userEmail, initialStatus = "al
           <tbody>
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={11} style={{ ...TD, textAlign: "center", color: C.muted, padding: "32px 0" }}>
+                <td colSpan={12} style={{ ...TD, textAlign: "center", color: C.muted, padding: "32px 0" }}>
                   nenhum lead encontrado
                 </td>
               </tr>
@@ -351,6 +357,11 @@ export function LeadsTable({ leads: initialLeads, userEmail, initialStatus = "al
                     </div>
                     <br />
                     <span style={{ color: C.muted, fontSize: 10 }}>{lead.phone}</span>
+                  </td>
+                  <td style={TD}>
+                    {lead.lead_score != null && lead.lead_tier
+                      ? <LeadScoreBadge score={lead.lead_score} tier={lead.lead_tier} size="sm" />
+                      : <span style={{ color: C.muted }}>—</span>}
                   </td>
                   <td style={TD}>{lead.city || "—"}</td>
                   <td style={{ ...TD, textTransform: "capitalize" }}>{lead.segment || "—"}</td>

@@ -3,6 +3,8 @@ import Link from "next/link";
 
 import { redirect } from "next/navigation";
 import { getUserContext, canAccess } from "@/lib/auth/get-user-role";
+import { getLeadScoreMap } from "@/lib/get-lead-scores";
+import { LeadScoreBadge } from "@/components/dashboard/lead-score-badge";
 
 export const dynamic = "force-dynamic";
 
@@ -56,11 +58,14 @@ export default async function VendedoresPage() {
   const ctx = await getUserContext();
   if (!ctx || !canAccess(ctx.role, "/dashboard/vendedores")) redirect("/dashboard");
 
-  const { data: raw } = await supabase
-    .from("ai_sdr_leads")
-    .select("phone, restaurant_name, city, routing_team, funnel_stage, handoff_at, seller_first_reply_at, first_order_at, is_test")
-    .eq("is_test", false)
-    .not("routing_team", "is", null);
+  const [{ data: raw }, scoreMap] = await Promise.all([
+    supabase
+      .from("ai_sdr_leads")
+      .select("phone, restaurant_name, city, routing_team, funnel_stage, handoff_at, seller_first_reply_at, first_order_at, is_test")
+      .eq("is_test", false)
+      .not("routing_team", "is", null),
+    getLeadScoreMap(),  // ETAPA 4: score por phone (v_lead_score via service role)
+  ]);
 
   const leads = (raw ?? []) as unknown as Lead[];
 
@@ -183,6 +188,9 @@ export default async function VendedoresPage() {
                 <span style={{ color: "#8899aa", fontSize: 11, fontFamily: "'Courier New', monospace", minWidth: 120 }}>
                   {w.name}
                 </span>
+                {scoreMap[w.phone] && (
+                  <LeadScoreBadge score={scoreMap[w.phone].score} tier={scoreMap[w.phone].tier} size="sm" />
+                )}
                 <span style={{ color: "#8899aa", fontSize: 10, fontFamily: "'Courier New', monospace" }}>
                   {VENDOR_LABELS[w.rt]?.name ?? w.rt}
                 </span>

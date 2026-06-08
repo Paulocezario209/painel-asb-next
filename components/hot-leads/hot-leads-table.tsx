@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Flame, ShoppingBag, Users, Search } from "lucide-react";
+import { LeadScoreBadge } from "@/components/dashboard/lead-score-badge";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -240,11 +241,11 @@ export function HotLeadsTable({ leads }: { leads: HotLead[] }) {
                     </span>
                   </td>
 
-                  {/* Score */}
+                  {/* Score (ETAPA 4: badge com tier derivado do score nativo da sdr_hot_leads) */}
                   <td style={{ padding: "7px 10px", textAlign: "center" }}>
-                    <span style={{ color: C.text, fontSize: 11, fontWeight: 600 }}>
-                      {lead.lead_score != null ? lead.lead_score.toFixed(0) : "—"}
-                    </span>
+                    {lead.lead_score != null
+                      ? <LeadScoreBadge score={Math.round(lead.lead_score)} tier={lead.lead_score >= 70 ? "A" : lead.lead_score >= 40 ? "B" : "C"} size="sm" />
+                      : <span style={{ color: C.label }}>—</span>}
                   </td>
 
                   {/* Último contato */}
