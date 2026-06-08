@@ -517,8 +517,12 @@ export async function getDayCnb(
   dia: string,
   team: string
 ): Promise<{ cliente_nome: string; valor_total_brl: number; numero: string; forma_pagamento: string | null }[]> {
-  const { createClient } = await import("@/lib/supabase/server");
-  const supabase = await createClient();
+  const { createClient } = await import("@supabase/supabase-js");
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { persistSession: false } }
+  );
   let q = supabase
     .from("vendas_cnb")
     .select("cliente_nome, valor_total_brl, numero, forma_pagamento")
@@ -534,9 +538,12 @@ export async function getDayAusentes(
   dia: string,
   team: string
 ): Promise<{ cliente_nome: string; ultima_compra: string; dias_ausente: number }[]> {
-  const { createClient } = await import("@/lib/supabase/server");
-  const supabase = await createClient();
-  // Clientes que compraram nos últimos 45 dias mas NÃO aparecem no dia clicado
+  const { createClient } = await import("@supabase/supabase-js");
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { persistSession: false } }
+  );
   const dataRef = new Date(dia);
   const data45 = new Date(dataRef);
   data45.setDate(data45.getDate() - 45);
