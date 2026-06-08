@@ -11,6 +11,7 @@ export type MetaCalDay = {
   status_dia: "weekend" | "futuro" | "batida" | "abaixo" | "sem_dado" | "nao_rota";
   meta_diaria_brl: number;
   realizado_brl: number;
+  faturado_brl?: number; // ARES puro (sem CNB)
   is_dia_meta?: boolean;
   realizado_meta_brl?: number; // DEBT-132: fold §9 (meta terminal combina até sexta)
 };

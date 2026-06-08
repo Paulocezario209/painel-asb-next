@@ -59,11 +59,12 @@ export function MetasCalendarioGerente() {
     for (const c of rows) {
       const ex = byDay.get(c.dia);
       if (!ex) {
-        byDay.set(c.dia, { dia: c.dia, is_today: c.is_today, is_futuro: c.is_futuro, is_weekend: c.is_weekend, status_dia: c.status_dia, meta_diaria_brl: 0, realizado_brl: 0, is_dia_meta: false, realizado_meta_brl: 0 });
+        byDay.set(c.dia, { dia: c.dia, is_today: c.is_today, is_futuro: c.is_futuro, is_weekend: c.is_weekend, status_dia: c.status_dia, meta_diaria_brl: 0, realizado_brl: 0, faturado_brl: 0, is_dia_meta: false, realizado_meta_brl: 0 });
       }
       const cur = byDay.get(c.dia)!;
       cur.meta_diaria_brl = Number(cur.meta_diaria_brl) + Number(c.meta_diaria_brl);
       cur.realizado_brl = Number(cur.realizado_brl) + Number(c.realizado_brl);
+      cur.faturado_brl = Number(cur.faturado_brl ?? 0) + Number((c as any).faturado_brl ?? 0);
       cur.is_dia_meta = cur.is_dia_meta || !!c.is_dia_meta;
       cur.realizado_meta_brl = Number(cur.realizado_meta_brl ?? 0) + Number(c.realizado_meta_brl ?? 0);
     }
@@ -150,6 +151,12 @@ export function MetasCalendarioGerente() {
                 <>
                   <Row label="Realizado (ARES+CNB)" value={fmtBRL(Number(detalhe.realizado_brl))}
                        c={detalhe.realizado_brl >= detalhe.meta_diaria_brl && detalhe.meta_diaria_brl > 0 ? "#22c55e" : detalhe.realizado_brl > 0 ? "#D4A017" : "#556677"} />
+                  {!detalhe.is_futuro && (
+                    <>
+                      <Row label="↳ ARES" value={fmtBRL(Number(detalhe.faturado_brl ?? 0))} c="#8899aa" />
+                      <Row label="↳ CNB"  value={fmtBRL(Number(detalhe.realizado_brl ?? 0) - Number(detalhe.faturado_brl ?? 0))} c="#8899aa" />
+                    </>
+                  )}
                   <Row label="Saldo" value={(Number(detalhe.realizado_brl) - Number(detalhe.meta_diaria_brl) >= 0 ? "+" : "") + fmtBRL(Number(detalhe.realizado_brl) - Number(detalhe.meta_diaria_brl))}
                        c={Number(detalhe.realizado_brl) - Number(detalhe.meta_diaria_brl) >= 0 ? "#22c55e" : "#C8102E"} />
                 </>
