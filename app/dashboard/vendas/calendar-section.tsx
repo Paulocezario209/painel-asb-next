@@ -2,8 +2,8 @@
 
 import { useState, useMemo, useTransition } from "react";
 import Link from "next/link";
-import { getDayPedidos, type DayPedido, type EstrategiasResponse } from "./actions";
-import { DayDetailModal } from "./day-detail-modal";
+import { getDayPedidos, getDayCnb, getDayAusentes, type EstrategiasResponse } from "./actions";
+import GerenteDayModal from "@/components/dashboard/gerente-day-modal";
 import { MetaCalendarGrid } from "@/components/dashboard/meta-calendar-grid";
 import { MissaoDoDia } from "./missao-do-dia";
 import { PainelGestor } from "./painel-gestor";
@@ -178,18 +178,30 @@ export function CalendarSection({
   // Drill-down: modal de pedidos do dia
   const [modalOpen, setModalOpen] = useState(false);
   const [modalDia, setModalDia] = useState<string>("");
-  const [modalPedidos, setModalPedidos] = useState<DayPedido[]>([]);
+  const [modalPedidos, setModalPedidos] = useState<any[]>([]);
+  const [modalCnb, setModalCnb] = useState<any[]>([]);
+  const [modalAusentes, setModalAusentes] = useState<any[]>([]);
   const [pendingModal, startModalTransition] = useTransition();
 
   function openDayModal(dia: string) {
     setDiaSelecionado(dia);
     setModalDia(dia);
     setModalPedidos([]);
+    setModalCnb([]);
+    setModalAusentes([]);
     setModalOpen(true);
-    const teamFilter = vendor === "all" ? null : vendor;
+    // FIX-ETAPA2: /vendas usa o modal completo do gerente (ARES+CNB+pizza+ausentes).
+    // teamFilter = vendedor logado (restrictedToVendor) ou o toggle; "all" no consolidado.
+    const teamFilter = restrictedToVendor ?? (vendor === "all" ? "all" : vendor);
     startModalTransition(async () => {
-      const list = await getDayPedidos(dia, teamFilter);
-      setModalPedidos(list);
+      const [pedidos, cnb, ausentes] = await Promise.all([
+        getDayPedidos(dia, teamFilter),
+        getDayCnb(dia, teamFilter),
+        getDayAusentes(dia, teamFilter),
+      ]);
+      setModalPedidos(pedidos);
+      setModalCnb(cnb);
+      setModalAusentes(ausentes);
     });
   }
 
@@ -434,33 +446,28 @@ export function CalendarSection({
         )}
       </div>
 
-      {modalOpen && (() => {
-        // DEBT-133: contexto da célula clicada (meta × realizado fold × %) + flag futuro
+      {modalOpen && !pendingModal && (() => {
+        // FIX-ETAPA2: modal completo (GerenteDayModal) — meta/realizado(fold)/faturado da célula
         const cell = diasOrdenados.find(d => d.dia === modalDia);
-        const header = cell
-          ? {
-              meta: Number(cell.meta_diaria_brl ?? 0),
-              realizado: cell.is_dia_meta
-                ? Number(cell.realizado_meta_brl ?? cell.realizado_brl ?? 0)
-                : Number(cell.realizado_brl ?? 0),
-              pct: cell.pct_atingido_dia,
-            }
-          : null;
         return (
-          <DayDetailModal
+          <GerenteDayModal
             dia={modalDia}
-            vendorLabel={
-              vendor === "all"
-                ? "Consolidado"
-                : VENDOR_LABELS[vendor]?.name ?? vendor
-            }
-            pedidos={pendingModal ? [] : modalPedidos}
+            vendorLabel={vendor === "all" ? "Consolidado" : VENDOR_LABELS[vendor]?.name ?? vendor}
+            pedidos={modalPedidos}
+            cnb={modalCnb}
+            ausentes={modalAusentes}
+            meta={Number(cell?.meta_diaria_brl ?? 0)}
+            realizado={cell?.is_dia_meta ? Number(cell?.realizado_meta_brl ?? cell?.realizado_brl ?? 0) : Number(cell?.realizado_brl ?? 0)}
+            faturado={Number(cell?.faturado_brl ?? 0)}
             onClose={() => setModalOpen(false)}
-            header={header}
-            agendado={!!cell?.is_futuro}
           />
         );
       })()}
+      {modalOpen && pendingModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 999, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <p style={{ color: "#c0c8d8", fontFamily: "'Courier New', monospace" }}>Carregando…</p>
+        </div>
+      )}
 
       {previewVendor && estrategias && (
         <PreviewMissaoModal

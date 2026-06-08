@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { FunnelVisual, type FunnelStage } from "@/components/dashboard/funnel-visual";
+import Link from "next/link";
 
 import { redirect } from "next/navigation";
 import { getUserContext, canAccess } from "@/lib/auth/get-user-role";
@@ -103,6 +104,18 @@ export default async function FunilPage() {
     .limit(20);
   const events = (rawEvents ?? []) as unknown as FunnelEvent[];
 
+  // Query C (FIX-ETAPA2) — leads individuais p/ bloco "Leads parados por etapa"
+  const { data: rawLeadRows } = await supabase
+    .from("ai_sdr_leads")
+    .select("phone, restaurant_name, city, qual_stage, created_at, funnel_stage")
+    .eq("is_test", false)
+    .order("created_at", { ascending: false })
+    .limit(1000);
+  const leadRows = (rawLeadRows ?? []) as unknown as {
+    phone: string | null; restaurant_name: string | null; city: string | null;
+    qual_stage: number | null; created_at: string; funnel_stage: string | null;
+  }[];
+
   // ── KPIs ──────────────────────────────────────────────────────────────────────
   const stageCounts: Record<string, number> = {};
   for (const l of leads) {
@@ -117,13 +130,26 @@ export default async function FunilPage() {
   // ── Chart data (15 etapas ordenadas) — enriquecido p/ FunnelVisual (FIX 4) ────
   // fill semântico: handoff = âmbar; etapas pós-handoff = verde; qualificação = azul.
   // pct = conversão vs etapa anterior (null na 1ª). FunnelChart afunila por count.
+  const N_STAGES = STAGE_ORDER.length;
   const chartData: FunnelStage[] = STAGE_ORDER.map((s, i) => {
     const count = stageCounts[s] ?? 0;
     const prev = i > 0 ? (stageCounts[STAGE_ORDER[i - 1]] ?? 0) : 0;
     const pct = i > 0 && prev > 0 ? Math.round((count / prev) * 100) : null;
     const fill = s === "handoff" ? "#D4A017" : HANDOFF_PLUS.has(s) ? "#22c55e" : "#185FA5";
-    return { label: STAGE_LABELS[s] ?? s, count, pct, fill };
+    // FIX-ETAPA2: largura decrescente por índice → funil sempre afunila (count real fica no label)
+    return { label: STAGE_LABELS[s] ?? s, count, pct, fill, funnelWidth: N_STAGES - i };
   });
+
+  // ── Leads parados por etapa (FIX-ETAPA2) — top 10 por etapa, etapas não-terminais ──
+  const TERMINAIS = new Set(["pedido_fechado", "cliente_ativo", "cliente_recorrente"]);
+  const leadsPorEtapa: Record<string, typeof leadRows> = {};
+  for (const r of leadRows) {
+    const s = r.funnel_stage ?? "lead_novo";
+    if (TERMINAIS.has(s)) continue;
+    (leadsPorEtapa[s] ??= []);
+    if (leadsPorEtapa[s].length < 10) leadsPorEtapa[s].push(r);
+  }
+  const etapasComLeads = STAGE_ORDER.filter(s => (leadsPorEtapa[s]?.length ?? 0) > 0);
 
   // ── Drop-off table ────────────────────────────────────────────────────────────
   const dropoff: { from: string; to: string; fromCount: number; toCount: number; rate: string }[] = [];
@@ -212,6 +238,45 @@ export default async function FunilPage() {
         )}
       </div>
 
+      {/* Leads parados por etapa (FIX-ETAPA2) — clicáveis */}
+      <div style={{ ...S.card, padding: "20px 24px" }}>
+        <p style={S.section}>
+          <span style={{ color: "#185FA5", marginRight: 6 }}>{"◉"}</span>
+          Leads Parados por Etapa
+        </p>
+        {etapasComLeads.length > 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            {etapasComLeads.map(s => (
+              <div key={s}>
+                <p style={{ ...S.muted, fontSize: 10, marginBottom: 6 }}>
+                  {STAGE_LABELS[s] ?? s} <span style={{ color: "#556677" }}>· {stageCounts[s] ?? 0} no total{(stageCounts[s] ?? 0) > 10 ? " (top 10)" : ""}</span>
+                </p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  {leadsPorEtapa[s].map((r, i) => {
+                    const nome = r.restaurant_name || r.city || (r.phone ? `...${r.phone.slice(-4)}` : "?");
+                    const dias = Math.floor((Date.now() - new Date(r.created_at).getTime()) / 86400000);
+                    const row = (
+                      <>
+                        <span style={{ color: "#c8d8e8", fontSize: 11, fontFamily: "'Courier New', monospace", minWidth: 160 }}>{nome}</span>
+                        <span style={{ color: "#556677", fontSize: 10, fontFamily: "'Courier New', monospace" }}>{r.city ?? "—"}</span>
+                        <span style={{ marginLeft: "auto", color: dias >= 7 ? "#C8102E" : dias >= 3 ? "#f59e0b" : "#8899aa", fontSize: 10, fontWeight: 700, fontFamily: "'Courier New', monospace" }}>{dias}d na base</span>
+                      </>
+                    );
+                    return r.phone ? (
+                      <Link key={r.phone + i} href={`/dashboard/leads/${encodeURIComponent(r.phone)}`} style={{ display: "flex", alignItems: "center", gap: 10, padding: "3px 0", textDecoration: "none", borderTop: i > 0 ? "1px solid rgba(27,42,107,.2)" : "none" }}>{row}</Link>
+                    ) : (
+                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "3px 0", borderTop: i > 0 ? "1px solid rgba(27,42,107,.2)" : "none" }}>{row}</div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p style={S.muted}>Nenhum lead parado em etapas ativas.</p>
+        )}
+      </div>
+
       {/* Timeline */}
       <div style={{ ...S.card, padding: "20px 24px" }}>
         <p style={S.section}>
@@ -233,9 +298,15 @@ export default async function FunilPage() {
                   <span style={{ color: "#556677", fontSize: 10, fontFamily: "'Courier New', monospace", minWidth: 80 }}>
                     {dia} {hora}
                   </span>
-                  <span style={{ color: "#c8d8e8", fontSize: 11, fontFamily: "'Courier New', monospace", minWidth: 100 }}>
-                    {nome}
-                  </span>
+                  {lead?.phone ? (
+                    <Link href={`/dashboard/leads/${encodeURIComponent(lead.phone)}`} style={{ color: "#c8d8e8", fontSize: 11, fontFamily: "'Courier New', monospace", minWidth: 100, textDecoration: "none" }}>
+                      {nome}
+                    </Link>
+                  ) : (
+                    <span style={{ color: "#c8d8e8", fontSize: 11, fontFamily: "'Courier New', monospace", minWidth: 100 }}>
+                      {nome}
+                    </span>
+                  )}
                   <span style={{ color: "#8899aa", fontSize: 10, fontFamily: "'Courier New', monospace" }}>
                     {e.from_stage ? `${STAGE_LABELS[e.from_stage] ?? e.from_stage} \u2192 ` : ""}{STAGE_LABELS[e.to_stage] ?? e.to_stage}
                   </span>

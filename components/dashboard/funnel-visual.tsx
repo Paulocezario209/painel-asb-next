@@ -12,6 +12,8 @@ export type FunnelStage = {
   count: number;
   pct: number | null;   // % de conversão vs etapa anterior (null na 1ª)
   fill: string;
+  funnelWidth: number;  // FIX-ETAPA2: largura decrescente por índice — funil SEMPRE afunila
+                        // (independe do count real, que pode subir entre etapas); count vai no label
 };
 
 const tooltipStyle = {
@@ -36,7 +38,7 @@ export function FunnelVisual({ data }: { data: FunnelStage[] }) {
             return [`${v} leads${pct}`, p?.label ?? ""];
           }}
         />
-        <Funnel dataKey="count" data={data} isAnimationActive={false} stroke="#1a1a1a" strokeWidth={2}>
+        <Funnel dataKey="funnelWidth" data={data} isAnimationActive={false} stroke="#1a1a1a" strokeWidth={2}>
           {data.map((d, i) => <Cell key={i} fill={d.fill} />)}
           <LabelList
             position="right"
