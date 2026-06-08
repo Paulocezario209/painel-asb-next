@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import Link from "next/link";
 
 import { redirect } from "next/navigation";
 import { getUserContext, canAccess } from "@/lib/auth/get-user-role";
@@ -175,7 +176,7 @@ export default async function VendedoresPage() {
         {waiting.length > 0 ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {waiting.map((w, i) => (
-              <div key={w.phone + i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "5px 0", borderTop: i > 0 ? "1px solid rgba(27,42,107,.2)" : "none" }}>
+              <Link key={w.phone + i} href={`/dashboard/leads/${encodeURIComponent(w.phone)}`} style={{ display: "flex", textDecoration: "none", cursor: "pointer", alignItems: "center", gap: 10, padding: "5px 0", borderTop: i > 0 ? "1px solid rgba(27,42,107,.2)" : "none" }}>
                 <span style={{ color: "#c8d8e8", fontSize: 11, fontFamily: "'Courier New', monospace", minWidth: 60 }}>
                   ...{w.phone.slice(-4)}
                 </span>
@@ -192,7 +193,7 @@ export default async function VendedoresPage() {
                 }}>
                   {fmtTime(w.hours)}
                 </span>
-              </div>
+              </Link>
             ))}
           </div>
         ) : (
