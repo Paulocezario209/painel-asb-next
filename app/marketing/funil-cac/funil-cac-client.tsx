@@ -4,6 +4,8 @@ import { useMemo } from "react";
 import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
 } from "recharts";
+import { FunnelVisual, type FunnelStage } from "@/components/dashboard/funnel-visual";
+import { theme } from "@/lib/theme";
 
 export type FunilRow = {
   canal: string;
@@ -13,12 +15,14 @@ export type FunilRow = {
 export type ConvMensalRow = { mes: string; leads: number; convertidos: number };
 
 const mono = "'Courier New', monospace";
-const RED = "#C8102E";
-const BLUE = "#2A3F8F";
-const GREEN = "#22c55e";
+// FIX3: cores mapeáveis migradas p/ theme (Etapa 3). BLUE/YELLOW/GRID sem token exato → mantidos.
+const RED = theme.colors.critical;     // #C8102E
+const GREEN = theme.colors.success;    // #22c55e
 const YELLOW = "#e8b923";
-const MUT = "#556677";
+const MUT = theme.colors.neutral;      // #556677
 const GRID = "rgba(27,42,107,.35)";
+// FIX2: cores semânticas do funil (topo→fundo)
+const FUNNEL_FILL = ["#185FA5", "#534AB7", "#1f7a6a", "#0F6E56"];
 
 const MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
 function fmtMes(iso: string) {
@@ -33,13 +37,6 @@ const tooltipStyle = {
 };
 const axisStyle = { fontSize: 10, fontFamily: mono, fill: MUT };
 
-const ETAPAS = [
-  { key: "leads", label: "Leads", cor: BLUE },
-  { key: "qualificados", label: "Qualificados", cor: "#1B6BC8" },
-  { key: "handoffs", label: "Handoffs", cor: YELLOW },
-  { key: "convertidos", label: "Convertidos", cor: GREEN },
-] as const;
-
 export function FunilCacClient({ funil, mensal }: { funil: FunilRow[]; mensal: ConvMensalRow[] }) {
   // Funil agregado (soma dos canais)
   const agg = useMemo(() => funil.reduce(
@@ -51,7 +48,21 @@ export function FunilCacClient({ funil, mensal }: { funil: FunilRow[]; mensal: C
     }),
     { leads: 0, qualificados: 0, handoffs: 0, convertidos: 0 },
   ), [funil]);
-  const topo = Math.max(agg.leads, 1);
+  // FIX2: estágios do funil p/ Recharts FunnelChart (afunila por funnelWidth; pct vs etapa anterior)
+  const funnelStages: FunnelStage[] = useMemo(() => {
+    const base = [
+      { label: "Leads", count: agg.leads },
+      { label: "Qualificados", count: agg.qualificados },
+      { label: "Handoffs", count: agg.handoffs },
+      { label: "Convertidos", count: agg.convertidos },
+    ];
+    const N = base.length;
+    return base.map((s, i) => {
+      const prev = i > 0 ? base[i - 1].count : 0;
+      const pct = i > 0 && prev > 0 ? Math.round((s.count / prev) * 100) : null;
+      return { ...s, pct, fill: FUNNEL_FILL[i] ?? MUT, funnelWidth: N - i };
+    });
+  }, [agg]);
 
   // Conversão mensal blendada (Σconv / Σleads por mês)
   const convMensal = useMemo(() => {
@@ -69,7 +80,7 @@ export function FunilCacClient({ funil, mensal }: { funil: FunilRow[]; mensal: C
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-      {/* Funil visual agregado — barras decrescentes */}
+      {/* FIX2: Funil visual (Recharts FunnelChart) — afunila topo→fundo, count nos labels */}
       <div style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8, padding: 16 }}>
         <p style={{ color: "#FFFFFF", fontSize: 11, fontWeight: 700, fontFamily: mono, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 14 }}>
           Funil de conversão (todos os canais)
@@ -79,24 +90,13 @@ export function FunilCacClient({ funil, mensal }: { funil: FunilRow[]; mensal: C
             Sem leads atribuídos ainda (captura desde 02/06).
           </p>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {ETAPAS.map(e => {
-              const val = agg[e.key];
-              const pct = Math.round((val / topo) * 1000) / 10;
-              return (
-                <div key={e.key} style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <span style={{ width: 96, color: MUT, fontSize: 10, fontFamily: mono, letterSpacing: ".06em", textTransform: "uppercase", textAlign: "right" }}>{e.label}</span>
-                  <div style={{ flex: 1, background: "#0d1117", borderRadius: 3, height: 30, position: "relative", overflow: "hidden" }}>
-                    <div style={{ width: `${Math.max(pct, 2)}%`, height: "100%", background: e.cor, borderRadius: 3, transition: "width .3s", display: "flex", alignItems: "center", paddingLeft: 10 }}>
-                      <span style={{ color: "#fff", fontSize: 12, fontWeight: 700, fontFamily: mono }}>{val}</span>
-                    </div>
-                  </div>
-                  <span style={{ width: 52, color: "#c8d8e8", fontSize: 11, fontFamily: mono, textAlign: "right" }}>{pct}%</span>
-                </div>
-              );
-            })}
+          <div style={{ height: 320 }}>
+            <FunnelVisual data={funnelStages} />
           </div>
         )}
+        <p style={{ color: MUT, fontSize: 9, fontFamily: mono, marginTop: 8 }}>
+          Impressões/Cliques não estão em <code>v_funil_por_canal</code> (vêm das views de ads Meta) — o funil inicia em Leads.
+        </p>
       </div>
 
       {/* Breakdown por canal */}

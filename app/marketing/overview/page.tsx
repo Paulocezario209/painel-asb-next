@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { OverviewClient, type CacMensalRow, type FunilRow, type RankRow, type AlertaRow } from "./overview-client";
+import { OverviewClient, type CacMensalRow, type RankRow, type AlertaRow } from "./overview-client";
 // ETAPA6 (DEBT-137): cache real das views globais de marketing (sem auth).
 import { unstable_cache } from "next/cache";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
@@ -44,12 +44,10 @@ export default async function OverviewPage() {
   // hidrata a sessão (views REVOKE anon / GRANT authenticated — DEBT-110)
   await supabase.auth.getUser();
 
-  // cac + alertas: cacheados (global, revalidate 300). funil + ranking: live (cookie).
-  const [cac, funilRes, rankRes, alertas] = await Promise.all([
+  // cac + alertas: cacheados (global, revalidate 300). ranking: live (cookie).
+  // Funil por canal foi REMOVIDO daqui (dedup) — vive só em /marketing/funil-cac.
+  const [cac, rankRes, alertas] = await Promise.all([
     getCachedCacMensal(),
-    supabase
-      .from("v_funil_por_canal")
-      .select("canal, leads_total, qualificados, handoffs, convertidos"),
     supabase
       .from("v_ranking_criativo")
       .select("ad_name, campaign_name, cpl, leads, spend")
@@ -57,10 +55,9 @@ export default async function OverviewPage() {
     getCachedAlertas(),
   ]);
 
-  const funil = (funilRes.error ? [] : (funilRes.data ?? [])) as unknown as FunilRow[];
   const rank = (rankRes.error ? [] : (rankRes.data ?? [])) as unknown as RankRow[];
 
-  const erro = funilRes.error?.message || rankRes.error?.message || null;
+  const erro = rankRes.error?.message || null;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -79,7 +76,7 @@ export default async function OverviewPage() {
         </div>
       )}
 
-      <OverviewClient cac={cac} funil={funil} rank={rank} alertas={alertas} />
+      <OverviewClient cac={cac} rank={rank} alertas={alertas} />
 
       <p style={{ color: "#556677", fontSize: 10, fontFamily: mono, textAlign: "right" }}>
         Dados de gasto Meta Ads atualizados diariamente às 06:10 BRT

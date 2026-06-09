@@ -1,18 +1,17 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Link from "next/link";
 import {
   ResponsiveContainer, ComposedChart, Line, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
 } from "recharts";
+import { theme } from "@/lib/theme";
 
 export type CacMensalRow = {
   mes: string; canal: string;
   leads: number; convertidos: number; receita_brl: number;
   gasto_total: number; cac_por_lead: number | null; roas: number | null;
-};
-export type FunilRow = {
-  canal: string; leads_total: number; qualificados: number; handoffs: number; convertidos: number;
 };
 export type RankRow = {
   ad_name: string | null; campaign_name: string | null;
@@ -25,11 +24,12 @@ export type AlertaRow = {
 };
 
 const mono = "'Courier New', monospace";
-const RED = "#C8102E";
+// FIX3: cores mapeáveis migradas p/ theme (Etapa 3). BLUE/YELLOW/GRID sem token exato → mantidos.
+const RED = theme.colors.critical;     // #C8102E
 const BLUE = "#2A3F8F";
-const GREEN = "#22c55e";
+const GREEN = theme.colors.success;    // #22c55e
 const YELLOW = "#e8b923";
-const MUT = "#556677";
+const MUT = theme.colors.neutral;      // #556677
 const GRID = "rgba(27,42,107,.35)";
 
 const CANAL_COR: Record<string, string> = {
@@ -66,7 +66,7 @@ const PERIODOS = [
 ] as const;
 type PeriodoK = typeof PERIODOS[number]["k"];
 
-export function OverviewClient({ cac, funil, rank, alertas }: { cac: CacMensalRow[]; funil: FunilRow[]; rank: RankRow[]; alertas: AlertaRow[] }) {
+export function OverviewClient({ cac, rank, alertas }: { cac: CacMensalRow[]; rank: RankRow[]; alertas: AlertaRow[] }) {
   const [periodo, setPeriodo] = useState<PeriodoK>("90d");
 
   // meses distintos ordenados (asc) presentes na cacMensal
@@ -107,16 +107,6 @@ export function OverviewClient({ cac, funil, rank, alertas }: { cac: CacMensalRo
       return ponto;
     });
   }, [cac, mesesOrdenados, canaisBars]);
-
-  // Gráfico 2: funil por canal (barras agrupadas por estágio)
-  const funilData = useMemo(
-    () => funil.map(f => ({
-      canal: f.canal,
-      Leads: Number(f.leads_total), Qualificados: Number(f.qualificados),
-      Handoffs: Number(f.handoffs), Convertidos: Number(f.convertidos),
-    })),
-    [funil],
-  );
 
   // Gráfico 3: top 5 criativos por CPL (menor primeiro)
   const top5 = useMemo(
@@ -203,45 +193,39 @@ export function OverviewClient({ cac, funil, rank, alertas }: { cac: CacMensalRo
         )}
       </Card>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 16 }}>
-        {/* Gráfico 2: funil por canal */}
-        <Card titulo="Funil por canal">
-          {funilData.length === 0 ? (
-            <Vazio texto="Sem funil atribuído ainda." />
-          ) : (
-            <ResponsiveContainer width="100%" height={240}>
-              <BarChart data={funilData} margin={{ top: 6, right: 12, bottom: 0, left: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={GRID} vertical={false} />
-                <XAxis dataKey="canal" tick={{ ...axisStyle, fontSize: 8 }} axisLine={{ stroke: GRID }} tickLine={false} />
-                <YAxis tick={axisStyle} axisLine={false} tickLine={false} allowDecimals={false} />
-                <Tooltip {...tooltipStyle} />
-                <Legend wrapperStyle={{ fontSize: 9, fontFamily: mono }} />
-                <Bar dataKey="Leads" fill={BLUE} radius={[2, 2, 0, 0]} />
-                <Bar dataKey="Qualificados" fill="#1B6BC8" radius={[2, 2, 0, 0]} />
-                <Bar dataKey="Handoffs" fill={YELLOW} radius={[2, 2, 0, 0]} />
-                <Bar dataKey="Convertidos" fill={GREEN} radius={[2, 2, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </Card>
+      {/* FIX1 dedup: funil por canal vive só em /marketing/funil-cac — aqui só o link */}
+      <Link href="/marketing/funil-cac" style={{ textDecoration: "none" }}>
+        <div style={{
+          background: "#1a1a1a", border: `1px solid ${theme.colors.borderDefault}`,
+          borderLeft: `3px solid ${theme.colors.brandAsb}`, borderRadius: 8,
+          padding: "14px 16px", display: "flex", alignItems: "center",
+          justifyContent: "space-between", gap: 12, cursor: "pointer",
+        }}>
+          <span style={{ color: "#c0c8d8", fontSize: 11, fontFamily: mono, letterSpacing: ".04em" }}>
+            Funil de conversão por canal — Leads → Qualificados → Handoffs → Convertidos
+          </span>
+          <span style={{ color: theme.colors.brandAsb, fontSize: 11, fontFamily: mono, fontWeight: 700, whiteSpace: "nowrap" }}>
+            Ver funil detalhado →
+          </span>
+        </div>
+      </Link>
 
-        {/* Gráfico 3: top 5 criativos por CPL */}
-        <Card titulo="Top 5 criativos por CPL (30d)">
-          {top5.length === 0 ? (
-            <Vazio texto="Sem CPL atribuível ainda (leads por anúncio só desde 02/06)." />
-          ) : (
-            <ResponsiveContainer width="100%" height={240}>
-              <BarChart data={top5} layout="vertical" margin={{ top: 6, right: 24, bottom: 0, left: 8 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={GRID} horizontal={false} />
-                <XAxis type="number" tick={axisStyle} axisLine={{ stroke: GRID }} tickLine={false} tickFormatter={(v) => `R$${v}`} />
-                <YAxis type="category" dataKey="nome" width={70} tick={{ ...axisStyle, fontSize: 9 }} axisLine={false} tickLine={false} />
-                <Tooltip {...tooltipStyle} formatter={(v) => [fmtBRLc(Number(v)), "CPL"]} />
-                <Bar dataKey="cpl" fill={RED} radius={[0, 3, 3, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </Card>
-      </div>
+      {/* Gráfico 3: top 5 criativos por CPL */}
+      <Card titulo="Top 5 criativos por CPL (30d)">
+        {top5.length === 0 ? (
+          <Vazio texto="Sem CPL atribuível ainda (leads por anúncio só desde 02/06)." />
+        ) : (
+          <ResponsiveContainer width="100%" height={240}>
+            <BarChart data={top5} layout="vertical" margin={{ top: 6, right: 24, bottom: 0, left: 8 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke={GRID} horizontal={false} />
+              <XAxis type="number" tick={axisStyle} axisLine={{ stroke: GRID }} tickLine={false} tickFormatter={(v) => `R$${v}`} />
+              <YAxis type="category" dataKey="nome" width={70} tick={{ ...axisStyle, fontSize: 9 }} axisLine={false} tickLine={false} />
+              <Tooltip {...tooltipStyle} formatter={(v) => [fmtBRLc(Number(v)), "CPL"]} />
+              <Bar dataKey="cpl" fill={RED} radius={[0, 3, 3, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
+      </Card>
 
       <p style={{ color: MUT, fontSize: 9, fontFamily: mono }}>
         Fontes: v_cac_mensal_canal (KPIs + gasto×CAC mês a mês), v_funil_por_canal (funil), v_ranking_criativo (top CPL 30d). Barras = gasto por canal (eixo esq.) · linha = CAC blendado (eixo dir.). Período dos KPIs ≈ últimos 1/3/6 meses. Leads atribuídos desde 02/06.
