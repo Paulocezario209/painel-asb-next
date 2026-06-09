@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { theme } from "@/lib/theme";
 
 export type RankRow = {
   ad_id: string;
@@ -19,10 +20,10 @@ export type RankRow = {
 export type SparkRow = { ad_id: string; data: string; spend: number };
 
 const mono = "'Courier New', monospace";
-const RED = "#C8102E";
-const GREEN = "#22c55e";
-const YELLOW = "#e8b923";
-const MUT = "#556677";
+const RED = theme.colors.critical;       // #C8102E
+const GREEN = theme.colors.success;      // #22c55e
+const YELLOW = theme.colors.chartYellow; // #e8b923
+const MUT = theme.colors.neutral;        // #556677
 
 function fmtBRLc(v: number) {
   return Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2 });

@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import {
   ResponsiveContainer, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
 } from "recharts";
+import { theme } from "@/lib/theme";
 
 export type CanalConsolidado = {
   canal: string;
@@ -21,12 +22,12 @@ export type CacMensalRow = {
 };
 
 const mono = "'Courier New', monospace";
-const RED = "#C8102E";
-const BLUE = "#2A3F8F";
-const GREEN = "#22c55e";
-const YELLOW = "#e8b923";
-const MUT = "#556677";
-const GRID = "rgba(27,42,107,.35)";
+const RED = theme.colors.critical;       // #C8102E
+const BLUE = theme.colors.chartNavy;     // #2A3F8F
+const GREEN = theme.colors.success;      // #22c55e
+const YELLOW = theme.colors.chartYellow; // #e8b923
+const MUT = theme.colors.neutral;        // #556677
+const GRID = theme.colors.gridLine;
 
 const CANAL_COR: Record<string, string> = {
   "instagram (ctwa)": RED,

@@ -24,13 +24,13 @@ export type AlertaRow = {
 };
 
 const mono = "'Courier New', monospace";
-// FIX3: cores mapeáveis migradas p/ theme (Etapa 3). BLUE/YELLOW/GRID sem token exato → mantidos.
-const RED = theme.colors.critical;     // #C8102E
-const BLUE = "#2A3F8F";
-const GREEN = theme.colors.success;    // #22c55e
-const YELLOW = "#e8b923";
-const MUT = theme.colors.neutral;      // #556677
-const GRID = "rgba(27,42,107,.35)";
+// Cores 100% via theme (tokens chartNavy/chartYellow/gridLine adicionados na migração marketing).
+const RED = theme.colors.critical;       // #C8102E
+const BLUE = theme.colors.chartNavy;     // #2A3F8F
+const GREEN = theme.colors.success;      // #22c55e
+const YELLOW = theme.colors.chartYellow; // #e8b923
+const MUT = theme.colors.neutral;        // #556677
+const GRID = theme.colors.gridLine;
 
 const CANAL_COR: Record<string, string> = {
   "instagram (ctwa)": RED,
@@ -140,7 +140,7 @@ export function OverviewClient({ cac, rank, alertas }: { cac: CacMensalRow[]; ra
         <Kpi label="Total Investido" value={fmtBRLc(kpis.gasto)} cor={YELLOW} />
         <Kpi label="CAC Médio" value={kpis.cac != null ? fmtBRLc(kpis.cac) : "—"} cor="#FFFFFF" />
         <Kpi label="ROAS Médio" value={kpis.roas != null ? `${kpis.roas.toFixed(2)}×` : "—"} cor={kpis.roas != null && kpis.roas >= 1 ? GREEN : "#FFFFFF"} />
-        <Kpi label="Leads" value={String(kpis.leads)} cor={BLUE === "#2A3F8F" ? "#8bb4ff" : BLUE} />
+        <Kpi label="Leads" value={String(kpis.leads)} cor={theme.colors.chartNavyLight} />
       </div>
 
       {/* Alertas e insights (v_marketing_alertas) */}

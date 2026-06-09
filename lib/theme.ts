@@ -27,6 +27,12 @@ export const theme = {
     // Específicos já usados no painel
     accent:     "#ff7b1c",
     accentBlue: "#185FA5",
+
+    // Gráficos / marketing (séries) — tokenizados na migração de cores marketing
+    chartNavy:      "#2A3F8F",  // ex-BLUE
+    chartNavyLight: "#8bb4ff",  // ex-azul claro (Leads/qualif)
+    chartYellow:    "#e8b923",  // ex-YELLOW (handoffs)
+    gridLine:       "rgba(27,42,107,.35)",  // linha de grade dos charts
   },
   font: {
     mono: "'Courier New', monospace",

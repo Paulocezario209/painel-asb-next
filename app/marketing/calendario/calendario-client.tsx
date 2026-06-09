@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import { theme } from "@/lib/theme";
 
 export type DiaRow = {
   data: string;            // YYYY-MM-DD
@@ -13,10 +14,10 @@ export type DiaRow = {
 };
 
 const mono = "'Courier New', monospace";
-const RED = "#C8102E";
-const GREEN = "#22c55e";
-const YELLOW = "#e8b923";
-const MUT = "#556677";
+const RED = theme.colors.critical;       // #C8102E
+const GREEN = theme.colors.success;      // #22c55e
+const YELLOW = theme.colors.chartYellow; // #e8b923
+const MUT = theme.colors.neutral;        // #556677
 
 const MESES_FULL = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 const MESES_ABR = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];

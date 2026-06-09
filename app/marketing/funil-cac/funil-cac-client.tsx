@@ -15,12 +15,12 @@ export type FunilRow = {
 export type ConvMensalRow = { mes: string; leads: number; convertidos: number };
 
 const mono = "'Courier New', monospace";
-// FIX3: cores mapeáveis migradas p/ theme (Etapa 3). BLUE/YELLOW/GRID sem token exato → mantidos.
-const RED = theme.colors.critical;     // #C8102E
-const GREEN = theme.colors.success;    // #22c55e
-const YELLOW = "#e8b923";
-const MUT = theme.colors.neutral;      // #556677
-const GRID = "rgba(27,42,107,.35)";
+// Cores 100% via theme (tokens chartYellow/gridLine adicionados na migração marketing).
+const RED = theme.colors.critical;       // #C8102E
+const GREEN = theme.colors.success;      // #22c55e
+const YELLOW = theme.colors.chartYellow; // #e8b923
+const MUT = theme.colors.neutral;        // #556677
+const GRID = theme.colors.gridLine;
 // FIX2: cores semânticas do funil (topo→fundo)
 const FUNNEL_FILL = ["#185FA5", "#534AB7", "#1f7a6a", "#0F6E56"];
 
@@ -125,7 +125,7 @@ export function FunilCacClient({ funil, mensal }: { funil: FunilRow[]; mensal: C
                 <tr key={f.canal} style={{ borderTop: "1px solid #2a2a2a" }}>
                   <td style={{ ...td, color: "#FFFFFF", textTransform: "uppercase" }}>{f.canal}</td>
                   <td style={{ ...td, textAlign: "center" }}>{f.leads_total}</td>
-                  <td style={{ ...td, textAlign: "center", color: "#8bb4ff" }}>{f.qualificados}</td>
+                  <td style={{ ...td, textAlign: "center", color: theme.colors.chartNavyLight }}>{f.qualificados}</td>
                   <td style={{ ...td, textAlign: "center", color: YELLOW }}>{f.handoffs}</td>
                   <td style={{ ...td, textAlign: "center", color: GREEN }}>{f.convertidos}</td>
                   <td style={{ ...td, textAlign: "center", color: "#8899aa" }}>{pctFmt(f.pct_qualificacao)}</td>
