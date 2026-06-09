@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, MapPin, Package, Thermometer, User, MessageCircle } from "lucide-react";
@@ -13,6 +14,7 @@ import { MarkAsLostButton } from "@/components/leads/mark-as-lost-button";
 import { ReassignVendorButton } from "@/components/leads/reassign-vendor-button";
 import { ReactivateAiButton } from "@/components/leads/reactivate-ai-button";
 import { MarkProposalSentButton } from "@/components/leads/mark-proposal-sent-button";
+import { FollowupCadence, type FollowupRow } from "@/components/leads/followup-cadence";
 import { getUserContext } from "@/lib/auth/get-user-role";
 
 // ── Design tokens ────────────────────────────────────────────────
@@ -108,6 +110,16 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
       .limit(100),
   ]);
 
+  // FIX4: cadência de follow-up via service role (followup_history é service-role-written)
+  const svc = process.env.SUPABASE_SERVICE_ROLE_KEY
+    ? createServiceClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } })
+    : supabase;
+  const { data: followupRows } = await svc
+    .from("followup_history")
+    .select("followup_sequence, phase, angle, message_sent, sent_at, responded")
+    .eq("phone", phone)
+    .order("sent_at", { ascending: true });
+
   const events = (eventsById ?? []) as { id: string; event_type: string; payload: Record<string, unknown>; created_at: string }[];
   const transitions = (fseById ?? []) as { id: string; from_stage: string | null; to_stage: string; actor: string; metadata: Record<string, unknown>; created_at: string }[];
   const vendorMsgs = (vmRows ?? []) as { direction: string; content: string | null; media_type: string | null; sent_at: string }[];
@@ -198,6 +210,15 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
               <span style={{ color: "#556677", marginLeft: 8 }}>({vmTotal ?? 0} msgs)</span>
             </p>
             <VendorConversation messages={vendorMsgs} total={vmTotal ?? 0} />
+          </div>
+
+          {/* FIX4: Cadência de Follow-up */}
+          <div style={{ ...CARD, padding: "20px 24px" }}>
+            <p style={{ ...LABEL, marginBottom: 16 }}>
+              Cadência de Follow-up
+              <span style={{ color: "#556677", marginLeft: 8 }}>({(followupRows ?? []).length} waves)</span>
+            </p>
+            <FollowupCadence rows={(followupRows ?? []) as FollowupRow[]} />
           </div>
         </div>
 

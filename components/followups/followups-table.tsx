@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { theme } from "@/lib/theme";
 
 type Row = {
   phone: string;
@@ -18,7 +19,19 @@ type Row = {
   city: string | null;
   routing_team: string | null;
   weekly_volume_kg: number | null;
+  next_followup_at: string | null;   // FIX2
 };
+
+// FIX2: diff até o próximo follow-up agendado
+function fmtProximo(iso: string | null): { label: string; color: string; pulse: boolean } {
+  if (!iso) return { label: "—", color: theme.colors.neutral, pulse: false };
+  const diffMs = new Date(iso).getTime() - Date.now();
+  const abs = Math.abs(diffMs);
+  const d = Math.floor(abs / 86400000);
+  const h = Math.floor((abs % 86400000) / 3600000);
+  if (diffMs >= 0) return { label: `em ${d}d ${h}h`, color: theme.colors.neutral, pulse: false };
+  return { label: `${d}d vencido`, color: theme.colors.critical, pulse: true };
+}
 
 // ── Design tokens ────────────────────────────────────────────────────────────
 const C = {
@@ -82,6 +95,7 @@ export function FollowupsTable({
   const [respondFilter,    setRespondFilter]    = useState(initialRespond);
   const [convertidoFilter, setConvertidoFilter] = useState(initialConvertido);
   const [search,           setSearch]           = useState("");
+  const [expandedKey,      setExpandedKey]       = useState<string | null>(null);  // FIX1: 1 por vez
   const router = useRouter();
 
   const filtered = initialRows.filter(r => {
@@ -108,6 +122,7 @@ export function FollowupsTable({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      <style>{`@keyframes fu-pulse{0%,100%{opacity:1}50%{opacity:.4}}.fu-pulse{animation:fu-pulse 1.4s ease-in-out infinite}`}</style>
       {/* Filters — horizontal scroll on mobile */}
       <div className="asb-filters-bar">
         <div style={{ position: "relative", minWidth: 160, flexShrink: 0 }}>
@@ -173,9 +188,13 @@ export function FollowupsTable({
             reposicionamento: C.muted,
           }[row.angle ?? ""] ?? C.muted;
 
+          const mRowKey = `${row.phone}-${row.followup_sequence}-${i}`;
+          const mIsExp = expandedKey === mRowKey;
+          const mProx = fmtProximo(row.next_followup_at);
+
           return (
             <Link
-              key={`${row.phone}-${row.followup_sequence}-${i}`}
+              key={mRowKey}
               href={`/dashboard/leads/${encodeURIComponent(row.phone)}`}
               style={{
                 textDecoration: "none",
@@ -228,15 +247,33 @@ export function FollowupsTable({
                 </span>
               </div>
 
-              {/* Date + vendor */}
-              <div style={{ display: "flex", gap: 16 }}>
+              {/* Date + vendor + próximo (FIX2) */}
+              <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "center" }}>
                 <span style={{ color: C.muted, fontSize: 9, fontFamily: "'Courier New', monospace" }}>
                   {fmt(row.sent_at)}
                 </span>
                 <span style={{ color: C.muted, fontSize: 9, fontFamily: "'Courier New', monospace" }}>
                   {VENDOR_LABELS[row.routing_team ?? ""] ?? row.routing_team ?? "—"}
                 </span>
+                <span className={mProx.pulse ? "fu-pulse" : undefined} style={{ color: mProx.color, fontSize: 9, fontFamily: "'Courier New', monospace" }}>
+                  {"⏱"} {mProx.label}
+                </span>
               </div>
+
+              {/* FIX1: ver mensagem (expand inline) */}
+              <button
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setExpandedKey(mIsExp ? null : mRowKey); }}
+                style={{ alignSelf: "flex-start", background: "transparent", border: `1px solid ${theme.colors.borderDefault}`, color: theme.colors.neutral, fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase", fontFamily: theme.font.mono, padding: "3px 8px", borderRadius: 3, cursor: "pointer" }}
+              >
+                {mIsExp ? "▲" : "▼"} Ver mensagem
+              </button>
+              {mIsExp && (
+                <div style={{ background: theme.colors.bgElevated, borderRadius: 4, padding: "10px 12px" }}>
+                  {row.message_sent
+                    ? <span style={{ color: theme.colors.textPrimary, fontFamily: theme.font.mono, fontSize: 12, whiteSpace: "pre-wrap", lineHeight: 1.5 }}>{row.message_sent}</span>
+                    : <span style={{ color: theme.colors.neutral, fontFamily: theme.font.mono, fontSize: 12, fontStyle: "italic" }}>Mensagem não registrada</span>}
+                </div>
+              )}
             </Link>
           );
         })}
@@ -247,15 +284,15 @@ export function FollowupsTable({
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ background: C.bg2 }}>
-              {["Lead", "Cidade", "Fase", "Ângulo", "#", "Enviado em", "Respondeu?", "Vendedor"].map(h => (
-                <th key={h} style={TH}>{h}</th>
+              {["Lead", "Cidade", "Fase", "Ângulo", "#", "Enviado em", "Próximo", "Respondeu?", "Vendedor", ""].map((h, hi) => (
+                <th key={h || `exp-${hi}`} style={TH}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={8} style={{ ...TD, textAlign: "center", color: C.muted, padding: "32px 0" }}>
+                <td colSpan={10} style={{ ...TD, textAlign: "center", color: C.muted, padding: "32px 0" }}>
                   nenhum registro encontrado
                 </td>
               </tr>
@@ -276,9 +313,12 @@ export function FollowupsTable({
                 reposicionamento: { color: C.muted },
               }[row.angle ?? ""] ?? { color: C.muted };
 
+              const rowKey = `${row.phone}-${row.followup_sequence}-${i}`;
+              const isExp = expandedKey === rowKey;
+              const prox = fmtProximo(row.next_followup_at);
               return (
+                <Fragment key={rowKey}>
                 <tr
-                  key={`${row.phone}-${row.followup_sequence}-${i}`}
                   style={{ background: rowBg, cursor: "pointer" }}
                   onClick={() => router.push(`/dashboard/leads/${encodeURIComponent(row.phone)}`)}
                   onMouseEnter={e => (e.currentTarget.style.background = "#131a2e")}
@@ -319,6 +359,11 @@ export function FollowupsTable({
                     {fmt(row.sent_at)}
                   </td>
                   <td style={TD}>
+                    <span className={prox.pulse ? "fu-pulse" : undefined} style={{ color: prox.color, fontSize: 10, fontFamily: "'Courier New', monospace" }}>
+                      {prox.label}
+                    </span>
+                  </td>
+                  <td style={TD}>
                     {row.responded
                       ? <span style={{ display: "inline-block", padding: "2px 6px", borderRadius: 3, fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase", fontFamily: "'Courier New', monospace", fontWeight: 700, color: C.green, background: "rgba(63,185,80,.1)", border: "1px solid rgba(63,185,80,.3)" }}>sim</span>
                       : <span style={{ display: "inline-block", padding: "2px 6px", borderRadius: 3, fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase", fontFamily: "'Courier New', monospace", fontWeight: 700, color: C.red, background: "rgba(248,81,73,.1)", border: "1px solid rgba(248,81,73,.3)" }}>não</span>
@@ -327,7 +372,25 @@ export function FollowupsTable({
                   <td style={{ ...TD, color: C.muted }}>
                     {VENDOR_LABELS[row.routing_team ?? ""] ?? row.routing_team ?? "—"}
                   </td>
+                  <td style={TD}>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setExpandedKey(isExp ? null : rowKey); }}
+                      style={{ background: "transparent", border: `1px solid ${theme.colors.borderDefault}`, color: theme.colors.neutral, fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase", fontFamily: theme.font.mono, padding: "3px 8px", borderRadius: 3, cursor: "pointer", whiteSpace: "nowrap" }}
+                    >
+                      {isExp ? "▲" : "▼"} Ver mensagem
+                    </button>
+                  </td>
                 </tr>
+                {isExp && (
+                  <tr>
+                    <td colSpan={10} style={{ background: theme.colors.bgElevated, padding: "12px 16px", borderBottom: `1px solid ${C.border}` }}>
+                      {row.message_sent
+                        ? <span style={{ color: theme.colors.textPrimary, fontFamily: theme.font.mono, fontSize: 12, whiteSpace: "pre-wrap", lineHeight: 1.5 }}>{row.message_sent}</span>
+                        : <span style={{ color: theme.colors.neutral, fontFamily: theme.font.mono, fontSize: 12, fontStyle: "italic" }}>Mensagem não registrada</span>}
+                    </td>
+                  </tr>
+                )}
+                </Fragment>
               );
             })}
           </tbody>

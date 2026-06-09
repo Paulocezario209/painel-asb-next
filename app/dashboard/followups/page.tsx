@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { FollowupsTable } from "@/components/followups/followups-table";
+import { theme } from "@/lib/theme";
 
 export const dynamic = "force-dynamic";
 
@@ -37,7 +38,7 @@ export default async function FollowupsPage({ searchParams }: { searchParams: Pr
       .order("sent_at", { ascending: false }),
     supabase
       .from("ai_sdr_leads")
-      .select("phone, name, city, routing_team, weekly_volume_kg")
+      .select("phone, name, city, routing_team, weekly_volume_kg, next_followup_at")
       .eq("is_test", false),
     // Alerta: vencidos não disparados (next_followup_at <= NOW)
     supabase
@@ -59,27 +60,14 @@ export default async function FollowupsPage({ searchParams }: { searchParams: Pr
   const leadsMap = Object.fromEntries((leads ?? []).map(l => [l.phone, l]));
 
   // ── KPIs ──────────────────────────────────────────────────────────────────
-  const total     = rows.length;
-  const responded = rows.filter(r => r.responded).length;
-  const converted = rows.filter(r => r.converted_after).length;
-  const responseRate = total > 0 ? Math.round((responded / total) * 100) : 0;
-
-  // Ângulo com mais resposta (absolute count)
-  const angleResponded: Record<string, number> = {};
-  for (const r of rows) {
-    if (r.responded && r.angle) {
-      angleResponded[r.angle] = (angleResponded[r.angle] ?? 0) + 1;
-    }
-  }
-  const topAngle = Object.entries(angleResponded).sort((a, b) => b[1] - a[1])[0];
-  const topAngleLabel = topAngle ? (ANGLE_LABELS[topAngle[0]] ?? topAngle[0]) : "—";
-
-  const topAngleKey = topAngle ? topAngle[0] : "";
+  const total = rows.length;
+  // FIX3: responded/converted_after NÃO têm writer no pipeline (auditoria 2026-06-09)
+  // → KPIs de efetividade são honestamente "—" até a instrumentação do webhook de resposta.
   const kpis = [
-    { label: "Total Enviados",     value: total,          accent: "#FFFFFF",  suffix: "",  href: "/dashboard/followups" },
-    { label: "Taxa de Resposta",   value: responseRate,   accent: "#22c55e",  suffix: "%", href: "/dashboard/followups?resposta=sim" },
-    { label: "Convertidos Após",   value: converted,      accent: "#f59e0b",  suffix: "",  href: "/dashboard/followups?convertido=true" },
-    { label: "Ângulo Top",         value: topAngleLabel,  accent: "#C8102E",  suffix: "",  href: topAngleKey ? `/dashboard/followups?angulo=${topAngleKey}` : "/dashboard/followups" },
+    { label: "Total Enviados",   display: String(total), accent: "#FFFFFF",          href: "/dashboard/followups", tooltip: undefined as string | undefined, note: "" },
+    { label: "Taxa de Resposta", display: "—",           accent: theme.colors.neutral, href: "/dashboard/followups", tooltip: "Aguardando instrumentação de resposta", note: "" },
+    { label: "Convertidos Após", display: "—",           accent: theme.colors.neutral, href: "/dashboard/followups", tooltip: "Aguardando instrumentação de resposta", note: "" },
+    { label: "Ângulo Top",       display: "—",           accent: theme.colors.neutral, href: "/dashboard/followups", tooltip: "Aguardando instrumentação de resposta", note: "(em breve)" },
   ];
 
   // Enrich rows with lead data for the table
@@ -89,6 +77,7 @@ export default async function FollowupsPage({ searchParams }: { searchParams: Pr
     city:         leadsMap[r.phone]?.city ?? null,
     routing_team: leadsMap[r.phone]?.routing_team ?? null,
     weekly_volume_kg: leadsMap[r.phone]?.weekly_volume_kg ?? null,
+    next_followup_at: leadsMap[r.phone]?.next_followup_at ?? null,  // FIX2
   }));
 
   return (
@@ -144,16 +133,23 @@ export default async function FollowupsPage({ searchParams }: { searchParams: Pr
 
       {/* KPI cards */}
       <div className="asb-grid-kpi">
-        {kpis.map(({ label, value, accent, suffix, href }) => (
+        {kpis.map(({ label, display, accent, href, tooltip, note }) => (
           <Link key={label} href={href} style={{ textDecoration: "none" }}>
-            <div style={{ ...S.card, padding: "20px 20px", minHeight: 100, borderTop: `2px solid ${accent}`, cursor: "pointer", transition: "opacity .15s", display: "flex", flexDirection: "column", justifyContent: "space-between" }} className="asb-kpi-hover">
-              <p style={{ ...S.label, color: accent }}>{label}</p>
+            <div title={tooltip} style={{ ...S.card, padding: "20px 20px", minHeight: 100, borderTop: `2px solid ${accent}`, cursor: "pointer", transition: "opacity .15s", display: "flex", flexDirection: "column", justifyContent: "space-between" }} className="asb-kpi-hover">
+              <p style={{ ...S.label, color: accent }}>
+                {label}{note ? <span style={{ color: theme.colors.neutral, marginLeft: 6 }}>{note}</span> : null}
+              </p>
               <p style={{ ...S.value, color: accent, marginTop: 12, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                {value}{suffix}
+                {display}
               </p>
             </div>
           </Link>
         ))}
+      </div>
+
+      {/* FIX3: banner honesto sobre métricas de resposta não instrumentadas */}
+      <div style={{ background: theme.colors.bgElevated, border: `1px solid ${theme.colors.warning}`, borderRadius: 6, padding: "8px 12px", color: theme.colors.neutral, fontSize: 11, fontFamily: theme.font.mono }}>
+        ℹ️ Métricas de resposta disponíveis após instrumentação do webhook de resposta
       </div>
 
       {/* Table (client component — handles filters) */}
