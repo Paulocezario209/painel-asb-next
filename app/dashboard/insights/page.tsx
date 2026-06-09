@@ -1,12 +1,34 @@
-import { createClient } from "@/lib/supabase/server";
 import { SegmentChart } from "@/components/insights/segment-chart";
 import { PainDonut }    from "@/components/insights/pain-donut";
 import { SupplierBar }  from "@/components/insights/supplier-bar";
 
 import { redirect } from "next/navigation";
 import { getUserContext, canAccess } from "@/lib/auth/get-user-role";
+// ETAPA6 (DEBT-137): cache real dos agregados históricos (dado global, sem auth).
+import { unstable_cache } from "next/cache";
+import { createClient as createServiceClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic";
+
+const getInsightsAgregados = unstable_cache(
+  async () => {
+    const supabase = createServiceClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { persistSession: false } },
+    );
+    const { data } = await supabase
+      .from("ai_sdr_leads")
+      .select(
+        "segment, city, pain_point, current_supplier, weekly_volume_kg, lead_temperature, " +
+        "lead_status, routing_team, qual_stage, handoff_at, first_order_at, created_at"
+      )
+      .eq("is_test", false);
+    return data ?? [];
+  },
+  ["insights-agregados"],
+  { revalidate: 3600, tags: ["insights-agregados"] },
+);
 
 // ── Lead shape (subset dos campos usados nesta página) ────────────────────────
 interface Lead {
@@ -71,20 +93,10 @@ const TEMP_META: Record<string, { color: string; bg: string; border: string; lab
 };
 
 export default async function InsightsPage() {
-  const supabase = await createClient();
-
   const ctx = await getUserContext();
   if (!ctx || !canAccess(ctx.role, "/dashboard/insights")) redirect("/dashboard");
 
-  const { data: raw, error } = await supabase
-    .from("ai_sdr_leads")
-    .select(
-      "segment, city, pain_point, current_supplier, weekly_volume_kg, lead_temperature, " +
-      "lead_status, routing_team, qual_stage, handoff_at, first_order_at, created_at"
-    )
-    .eq("is_test", false);
-
-  if (error) throw new Error(error.message);
+  const raw = await getInsightsAgregados();  // ETAPA6: cacheado (dado global, revalidate 1h)
   const leads = (raw ?? []) as unknown as Lead[];
   const total = leads.length;
 

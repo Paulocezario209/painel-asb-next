@@ -1,9 +1,33 @@
 import { createClient } from "@/lib/supabase/server";
 import { CalendarioClient, type DiaRow } from "./calendario-client";
+// ETAPA6 (DEBT-137): cache real da performance diária (view global, chave inclui o ano).
+import { unstable_cache } from "next/cache";
+import { createClient as createServiceClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic";
 
 const mono = "'Courier New', monospace";
+
+// unstable_cache inclui os argumentos (ano) na chave automaticamente → 1 entrada por ano.
+const getCachedPerfDiaria = unstable_cache(
+  async (ano: string) => {
+    const supabase = createServiceClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { persistSession: false } },
+    );
+    const { data } = await supabase
+      .from("v_performance_diaria")
+      .select("data, ad_id, ad_name, spend, leads, cpl")
+      .gte("data", `${ano}-01-01`)
+      .lte("data", `${ano}-12-31`)
+      .order("data", { ascending: true })
+      .limit(20000);
+    return (data ?? []) as unknown as DiaRow[];
+  },
+  ["marketing-performance-diaria"],
+  { revalidate: 300, tags: ["marketing-performance-diaria"] },
+);
 
 export default async function CalendarioPage({
   searchParams,
@@ -17,15 +41,7 @@ export default async function CalendarioPage({
   // hidrata a sessão (view REVOKE anon / GRANT authenticated — DEBT-110)
   await supabase.auth.getUser();
 
-  const { data, error } = await supabase
-    .from("v_performance_diaria")
-    .select("data, ad_id, ad_name, spend, leads, cpl")
-    .gte("data", `${ano}-01-01`)
-    .lte("data", `${ano}-12-31`)
-    .order("data", { ascending: true })
-    .limit(20000);
-
-  const rows = (error ? [] : (data ?? [])) as unknown as DiaRow[];
+  const rows = await getCachedPerfDiaria(ano);  // ETAPA6: cacheado por ano (revalidate 300)
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -37,12 +53,6 @@ export default async function CalendarioPage({
           Gasto diário por mês · heatmap · KPIs do dia (Meta Ads)
         </p>
       </div>
-
-      {error && (
-        <div style={{ background: "#1a1a1a", border: "1px solid #C8102E", borderRadius: 6, padding: 16, color: "#C8102E", fontSize: 11, fontFamily: mono }}>
-          View <code>v_performance_diaria</code> indisponível. {error.message}
-        </div>
-      )}
 
       <CalendarioClient ano={Number(ano)} rows={rows} />
 

@@ -1,20 +1,52 @@
 import { createClient } from "@/lib/supabase/server";
 import { OverviewClient, type CacMensalRow, type FunilRow, type RankRow, type AlertaRow } from "./overview-client";
+// ETAPA6 (DEBT-137): cache real das views globais de marketing (sem auth).
+import { unstable_cache } from "next/cache";
+import { createClient as createServiceClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic";
 
 const mono = "'Courier New', monospace";
+
+function svc() {
+  return createServiceClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { persistSession: false } },
+  );
+}
+
+const getCachedCacMensal = unstable_cache(
+  async () => {
+    const { data } = await svc()
+      .from("v_cac_mensal_canal")
+      .select("mes, canal, leads, convertidos, receita_brl, gasto_total, cac_por_lead, roas")
+      .order("mes", { ascending: true });
+    return (data ?? []) as unknown as CacMensalRow[];
+  },
+  ["marketing-cac-mensal"],
+  { revalidate: 300, tags: ["marketing-cac-mensal"] },
+);
+
+const getCachedAlertas = unstable_cache(
+  async () => {
+    const { data } = await svc()
+      .from("v_marketing_alertas")
+      .select("flag, ad_id, ad_name, campaign_name, canal, valor_atual, valor_referencia, descricao, severidade");
+    return (data ?? []) as unknown as AlertaRow[];
+  },
+  ["marketing-alertas"],
+  { revalidate: 300, tags: ["marketing-alertas"] },
+);
 
 export default async function OverviewPage() {
   const supabase = await createClient();
   // hidrata a sessão (views REVOKE anon / GRANT authenticated — DEBT-110)
   await supabase.auth.getUser();
 
-  const [cacRes, funilRes, rankRes, alertasRes] = await Promise.all([
-    supabase
-      .from("v_cac_mensal_canal")
-      .select("mes, canal, leads, convertidos, receita_brl, gasto_total, cac_por_lead, roas")
-      .order("mes", { ascending: true }),
+  // cac + alertas: cacheados (global, revalidate 300). funil + ranking: live (cookie).
+  const [cac, funilRes, rankRes, alertas] = await Promise.all([
+    getCachedCacMensal(),
     supabase
       .from("v_funil_por_canal")
       .select("canal, leads_total, qualificados, handoffs, convertidos"),
@@ -22,17 +54,13 @@ export default async function OverviewPage() {
       .from("v_ranking_criativo")
       .select("ad_name, campaign_name, cpl, leads, spend")
       .eq("periodo", "30d"),
-    supabase
-      .from("v_marketing_alertas")
-      .select("flag, ad_id, ad_name, campaign_name, canal, valor_atual, valor_referencia, descricao, severidade"),
+    getCachedAlertas(),
   ]);
 
-  const cac = (cacRes.error ? [] : (cacRes.data ?? [])) as unknown as CacMensalRow[];
   const funil = (funilRes.error ? [] : (funilRes.data ?? [])) as unknown as FunilRow[];
   const rank = (rankRes.error ? [] : (rankRes.data ?? [])) as unknown as RankRow[];
-  const alertas = (alertasRes.error ? [] : (alertasRes.data ?? [])) as unknown as AlertaRow[];
 
-  const erro = cacRes.error?.message || funilRes.error?.message || rankRes.error?.message || alertasRes.error?.message || null;
+  const erro = funilRes.error?.message || rankRes.error?.message || null;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>

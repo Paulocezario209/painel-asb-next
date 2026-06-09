@@ -1,9 +1,28 @@
 import { createClient } from "@/lib/supabase/server";
 import { AnunciosClient, type RankRow, type SparkRow } from "./anuncios-client";
+// ETAPA6 (DEBT-137): cache real do ranking de criativos (view global).
+import { unstable_cache } from "next/cache";
+import { createClient as createServiceClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic";
 
 const mono = "'Courier New', monospace";
+
+const getCachedRankingCriativo = unstable_cache(
+  async () => {
+    const supabase = createServiceClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { persistSession: false } },
+    );
+    const { data } = await supabase
+      .from("v_ranking_criativo")
+      .select("ad_id, ad_name, campaign_name, periodo, spend, leads, conversoes, cpl, taxa_conversao, roas, status_meta, objetivo");
+    return (data ?? []) as unknown as RankRow[];
+  },
+  ["marketing-ranking-criativo"],
+  { revalidate: 300, tags: ["marketing-ranking-criativo"] },
+);
 
 export default async function AnunciosPage() {
   const supabase = await createClient();
@@ -12,10 +31,9 @@ export default async function AnunciosPage() {
 
   const desde7 = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
 
-  const [rankRes, sparkRes] = await Promise.all([
-    supabase
-      .from("v_ranking_criativo")
-      .select("ad_id, ad_name, campaign_name, periodo, spend, leads, conversoes, cpl, taxa_conversao, roas, status_meta, objetivo"),
+  // ranking: cacheado (global, revalidate 300). spark 7d: live (janela rolante).
+  const [rank, sparkRes] = await Promise.all([
+    getCachedRankingCriativo(),
     supabase
       .from("v_performance_diaria")
       .select("ad_id, data, spend")
@@ -23,9 +41,8 @@ export default async function AnunciosPage() {
       .order("data", { ascending: true }),
   ]);
 
-  const rank = (rankRes.error ? [] : (rankRes.data ?? [])) as unknown as RankRow[];
   const spark = (sparkRes.error ? [] : (sparkRes.data ?? [])) as unknown as SparkRow[];
-  const erro = rankRes.error?.message || sparkRes.error?.message || null;
+  const erro = sparkRes.error?.message || null;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>

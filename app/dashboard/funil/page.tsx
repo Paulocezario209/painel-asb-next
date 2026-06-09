@@ -4,8 +4,30 @@ import Link from "next/link";
 
 import { redirect } from "next/navigation";
 import { getUserContext, canAccess } from "@/lib/auth/get-user-role";
+// ETAPA6 (DEBT-137): cache real da contagem global por etapa (sem auth — dado global).
+import { unstable_cache } from "next/cache";
+import { createClient as createServiceClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic";
+
+// Contagem por etapa NÃO depende do usuário (ai_sdr_leads sem RLS por routing_team).
+// Service role dentro do cache; auth permanece dinâmica fora (getUserContext abaixo).
+const getFunilContagem = unstable_cache(
+  async () => {
+    const supabase = createServiceClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { persistSession: false } },
+    );
+    const { data } = await supabase
+      .from("ai_sdr_leads")
+      .select("funnel_stage")
+      .eq("is_test", false);
+    return data ?? [];
+  },
+  ["funil-contagem-etapas"],
+  { revalidate: 300, tags: ["funil-contagem-etapas"] },
+);
 
 // ── Ordem canonica das 15 etapas (asb-funnel.md) ─────────────────────────────
 const STAGE_ORDER = [
@@ -87,11 +109,8 @@ export default async function FunilPage() {
   const ctx = await getUserContext();
   if (!ctx || !canAccess(ctx.role, "/dashboard/funil")) redirect("/dashboard");
 
-  // Query A — todos os leads com funnel_stage
-  const { data: rawLeads } = await supabase
-    .from("ai_sdr_leads")
-    .select("funnel_stage")
-    .eq("is_test", false);
+  // Query A — todos os leads com funnel_stage (ETAPA6: cacheada, dado global)
+  const rawLeads = await getFunilContagem();
   const leads = (rawLeads ?? []) as unknown as FunnelLead[];
   const total = leads.length;
 

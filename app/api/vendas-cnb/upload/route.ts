@@ -12,6 +12,7 @@
  * Padrão idêntico ao /api/metas/upload (DEBT-087).
  */
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import * as XLSX from "xlsx";
 import { createClient } from "@supabase/supabase-js";
 
@@ -173,6 +174,10 @@ export async function POST(req: NextRequest) {
     if (upErr) {
       return NextResponse.json({ error: `Falha ao gravar: ${upErr.message}`, invalidas }, { status: 500 });
     }
+
+    // ETAPA6 (DEBT-137): CNB alimenta o CAC mensal → invalida o cache da view.
+    // Next 16: Route Handler usa { expire: 0 } para expiração imediata (doc oficial).
+    revalidateTag("marketing-cac-mensal", { expire: 0 });
 
     return NextResponse.json({
       mode: "applied",
