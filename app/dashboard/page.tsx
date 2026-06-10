@@ -6,6 +6,7 @@ import {
   VendorPerformance,
 } from "@/components/dashboard/charts";
 import { CardTop10ClientesMes } from "@/components/dashboard/card-top10-clientes-mes";
+import { MotivosPerdaChart, type MotivoPerda } from "@/components/dashboard/motivos-perda-chart";
 
 export const dynamic = "force-dynamic";
 
@@ -45,14 +46,18 @@ export default async function DashboardPage() {
     { count: handoffPending },
     { count: qualifiedLeads },
     { data: allLeads },
+    { data: motivosPerda },
   ] = await Promise.all([
     supabase.from("ai_sdr_leads").select("*", { count: "exact", head: true }).eq("is_test", false),
     supabase.from("ai_sdr_leads").select("*", { count: "exact", head: true }).eq("is_test", false).not("handoff_at", "is", null).eq("handoff_confirmed", false),
     supabase.from("ai_sdr_leads").select("*", { count: "exact", head: true }).eq("is_test", false).gte("qual_stage", 7),
     supabase.from("ai_sdr_leads").select("id, phone, restaurant_name, qual_stage, first_order_at, routing_team, handoff_at, handoff_confirmed, weekly_volume_kg, city, product_groups, human_active, followup_eligible, next_followup_at").eq("is_test", false),
+    // P3: motivos de perda agregados (view Postgres — agregação server-side, asb-supabase-ops §7)
+    supabase.from("v_motivos_perda").select("*"),
   ]);
 
   const leads = allLeads ?? [];
+  const motivos = (motivosPerda ?? []) as MotivoPerda[];
 
   // ── Alertas operacionais ─────────────────────────────────────────────────────
   const _now        = new Date();
@@ -291,6 +296,15 @@ export default async function DashboardPage() {
 
       {/* TOP 10 clientes do mês por receita (substitui card reconciliar) */}
       <CardTop10ClientesMes />
+
+      {/* P3 — Motivos de perda (view v_motivos_perda) */}
+      <div style={{ ...S.card, padding: "20px 24px" }}>
+        <p style={{ ...S.section }}>
+          <span style={{ color: "#C8102E", marginRight: 6 }}>✕</span>
+          Motivos de Perda
+        </p>
+        <MotivosPerdaChart data={motivos} />
+      </div>
 
       {/* Onde Focar Agora */}
       <div style={{ ...S.card, padding: "20px 24px" }}>
