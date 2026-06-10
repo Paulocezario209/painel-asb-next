@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart2, Boxes, LineChart, ClipboardList, Factory } from "lucide-react";
+import { BarChart2, Boxes, LineChart, ClipboardList, Factory, TrendingUp } from "lucide-react";
 
 const navItems = [
   { href: "/compras/resultados", label: "Resultados",  icon: BarChart2 },
@@ -11,6 +11,7 @@ const navItems = [
   { href: "/compras/previsao",   label: "Previsão",    icon: LineChart },
   { href: "/compras/inventario", label: "Inventário",  icon: ClipboardList },
   { href: "/compras/custos",     label: "Custos",      icon: Factory },
+  { href: "/compras/mercado",    label: "Mercado",     icon: TrendingUp },
 ];
 
 const GREEN = "#2ea043";
