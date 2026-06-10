@@ -14,7 +14,7 @@ const VENDEDORES = [
   { v: "SETOR_CUIT", label: "CUIT" },
 ];
 
-export function DashboardFilters({ showMonth = true, maxMonth }: { showMonth?: boolean; maxMonth?: string }) {
+export function DashboardFilters({ showMonth = true, showVendedor = true, maxMonth }: { showMonth?: boolean; showVendedor?: boolean; maxMonth?: string }) {
   const router = useRouter();
   const sp = useSearchParams();
   const pathname = usePathname();
@@ -47,28 +47,30 @@ export function DashboardFilters({ showMonth = true, maxMonth }: { showMonth?: b
         </div>
       )}
 
-      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-        <span style={{ color: "#556677", fontSize: 9, fontFamily: mono, letterSpacing: ".12em", textTransform: "uppercase", marginRight: 2 }}>Vendedor</span>
-        {VENDEDORES.map(({ v, label }) => {
-          const active = vendedor === v || (!vendedor && v === "");
-          return (
-            <button
-              key={v || "todos"}
-              onClick={() => update("vendedor", v)}
-              style={{
-                background: active ? `rgba(46,160,67,.16)` : "transparent",
-                border: `1px solid ${active ? GREEN : "#2a2a2a"}`,
-                borderRadius: 5, padding: "5px 11px",
-                color: active ? "#fff" : "#8899aa",
-                fontSize: 10, fontFamily: mono, letterSpacing: ".06em", cursor: "pointer",
-                fontWeight: active ? 700 : 400,
-              }}
-            >
-              {label}
-            </button>
-          );
-        })}
-      </div>
+      {showVendedor && (
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <span style={{ color: "#556677", fontSize: 9, fontFamily: mono, letterSpacing: ".12em", textTransform: "uppercase", marginRight: 2 }}>Vendedor</span>
+          {VENDEDORES.map(({ v, label }) => {
+            const active = vendedor === v || (!vendedor && v === "");
+            return (
+              <button
+                key={v || "todos"}
+                onClick={() => update("vendedor", v)}
+                style={{
+                  background: active ? `rgba(46,160,67,.16)` : "transparent",
+                  border: `1px solid ${active ? GREEN : "#2a2a2a"}`,
+                  borderRadius: 5, padding: "5px 11px",
+                  color: active ? "#fff" : "#8899aa",
+                  fontSize: 10, fontFamily: mono, letterSpacing: ".06em", cursor: "pointer",
+                  fontWeight: active ? 700 : 400,
+                }}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

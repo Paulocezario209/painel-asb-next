@@ -47,6 +47,7 @@ type ModalState =
   | { tipo: "proposta"; lead: PipelineLead; from: string }
   | { tipo: "perdido"; lead: PipelineLead; from: string }
   | { tipo: "fechar"; lead: PipelineLead; from: string }
+  | { tipo: "lista"; stage: string }
   | null;
 
 export function PipelineBoard({
@@ -136,8 +137,12 @@ export function PipelineBoard({
                 borderRadius: 8, transition: "background .12s, border-color .12s",
               }}
             >
-              {/* Header da coluna */}
-              <div style={{ padding: "10px 12px", borderBottom: "1px solid #262626", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              {/* Header da coluna — clicável: abre modal com a lista da etapa */}
+              <div
+                onClick={() => { if (leads.length) setModal({ tipo: "lista", stage }); }}
+                title={leads.length ? "Ver lista da etapa" : undefined}
+                style={{ padding: "10px 12px", borderBottom: "1px solid #262626", display: "flex", alignItems: "center", justifyContent: "space-between", cursor: leads.length ? "pointer" : "default" }}
+              >
                 <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
                   <span style={{ width: 8, height: 8, borderRadius: 2, background: col.cor, flexShrink: 0 }} />
                   <span style={{ color: "#e0e6ef", fontSize: 10, fontFamily: mono, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase" }}>{col.label}</span>
@@ -161,6 +166,9 @@ export function PipelineBoard({
                       draggable={movable && !moving}
                       onDragStart={() => { setDragId(lead.id); setDragFrom(stage); }}
                       onDragEnd={() => { setDragId(null); setDragFrom(null); setOverCol(null); }}
+                      // Clique abre o lead (navegador suprime click após drag → não conflita). Param da rota = phone.
+                      onClick={() => { if (!moving && lead.phone) router.push(`/dashboard/leads/${encodeURIComponent(lead.phone)}`); }}
+                      title="Clique para abrir · arraste para mover de etapa"
                       style={{
                         background: dragId === lead.id ? "#0d1117" : "#1c1c1c",
                         border: `1px solid ${dragId === lead.id ? col.cor : "#2e2e2e"}`,
@@ -203,6 +211,12 @@ export function PipelineBoard({
       {modal?.tipo === "fechar" && (
         <ModalFechar lead={modal.lead} onCancel={() => setModal(null)}
           onConfirm={() => persistir(modal.lead, modal.from, "pedido_fechado", {})} />
+      )}
+      {/* Modal lista da etapa (só leitura; linhas abrem o lead) */}
+      {modal?.tipo === "lista" && (
+        <ModalLista stage={modal.stage} leads={board[modal.stage] ?? []}
+          onClose={() => setModal(null)}
+          onOpenLead={(phone) => { setModal(null); router.push(`/dashboard/leads/${encodeURIComponent(phone)}`); }} />
       )}
     </div>
   );
@@ -291,6 +305,42 @@ function ModalFechar({ lead, onConfirm, onCancel }: { lead: PipelineLead; onConf
         </button>
       </div>
     </Backdrop>
+  );
+}
+
+// Modal de lista expandida da etapa — só leitura; cada linha abre o lead.
+function ModalLista({ stage, leads, onClose, onOpenLead }: { stage: string; leads: PipelineLead[]; onClose: () => void; onOpenLead: (phone: string) => void }) {
+  const col = STAGE_COL[stage] ?? { label: stage, cor: "#8899aa" };
+  return (
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 60, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,.6)", backdropFilter: "blur(3px)" }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ width: "min(580px, calc(100vw - 32px))", maxHeight: "80vh", display: "flex", flexDirection: "column", background: "#141414", border: `1px solid ${col.cor}`, borderRadius: 10, boxShadow: "0 24px 48px rgba(0,0,0,.5)" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", borderBottom: "1px solid #262626" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ width: 9, height: 9, borderRadius: 2, background: col.cor }} />
+            <span style={{ color: "#fff", fontSize: 12, fontFamily: mono, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase" }}>{col.label}</span>
+            <span style={{ color: col.cor, fontSize: 12, fontFamily: mono, fontWeight: 700 }}>{leads.length}</span>
+          </div>
+          <button onClick={onClose} style={{ background: "none", border: "none", color: "#8899aa", fontSize: 18, cursor: "pointer", lineHeight: 1 }}>×</button>
+        </div>
+        <div style={{ overflowY: "auto", padding: 6 }}>
+          {leads.map((l) => {
+            const dias = diasDesde(l.handoff_at);
+            return (
+              <div key={l.id} onClick={() => l.phone && onOpenLead(l.phone)}
+                style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "10px 12px", borderRadius: 6, cursor: l.phone ? "pointer" : "default", borderBottom: "1px solid #1c1c1c" }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ color: "#fff", fontSize: 12, fontFamily: "'Inter', system-ui, sans-serif", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.restaurant_name || "Lead sem nome"}</div>
+                  <div style={{ color: "#8899aa", fontSize: 10, fontFamily: mono, marginTop: 2 }}>
+                    {l.weekly_volume_kg ? `${l.weekly_volume_kg}kg` : "—"}{l.city ? ` · ${l.city}` : ""}
+                  </div>
+                </div>
+                <span style={{ color: dias != null && dias > 7 ? "#f59e0b" : "#556677", fontSize: 10, fontFamily: mono, flexShrink: 0 }}>{dias != null ? `${dias}d` : ""}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
   );
 }
 
