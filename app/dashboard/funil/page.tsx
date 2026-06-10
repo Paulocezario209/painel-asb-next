@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { FunnelVisual, type FunnelStage } from "@/components/dashboard/funnel-visual";
+import { DashboardFilters } from "@/components/dashboard/dashboard-filters";
 import Link from "next/link";
 
 import { redirect } from "next/navigation";
@@ -103,7 +104,7 @@ interface FunnelEvent {
   } | null;
 }
 
-export default async function FunilPage() {
+export default async function FunilPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const supabase = await createClient();
 
   const ctx = await getUserContext();
@@ -135,9 +136,21 @@ export default async function FunilPage() {
     qual_stage: number | null; created_at: string; funnel_stage: string | null;
   }[];
 
-  // P5 — funil de conversão por MARCOS com timestamp confiável (view v_funil_marcos)
-  const { data: marcosRaw } = await supabase.from("v_funil_marcos").select("*").maybeSingle();
-  const _m = (marcosRaw ?? null) as { criados: number; qualificados: number; handoff: number; assumidos: number; pedidos: number } | null;
+  // P5/P2 — funil de marcos confiáveis. Sem filtro: view v_funil_marcos (simples).
+  // Com filtro (mês/vendedor): RPC get_funil_marcos (agregação parametrizada — asb-supabase-ops §7).
+  const sp = await searchParams;
+  const vend = sp?.vendedor && /^SETOR_[A-Z_]+$/.test(sp.vendedor) ? sp.vendedor : null;
+  const mesParam = sp?.mes && /^\d{4}-(0[1-9]|1[0-2])$/.test(sp.mes) ? sp.mes : null;
+  const temFiltro = !!(vend || mesParam);
+  type Marcos = { criados: number; qualificados: number; handoff: number; assumidos: number; pedidos: number };
+  let _m: Marcos | null;
+  if (temFiltro) {
+    const { data } = await supabase.rpc("get_funil_marcos", { p_vendedor: vend, p_mes: mesParam });
+    _m = ((Array.isArray(data) ? data[0] : data) ?? null) as Marcos | null;
+  } else {
+    const { data: marcosRaw } = await supabase.from("v_funil_marcos").select("*").maybeSingle();
+    _m = (marcosRaw ?? null) as Marcos | null;
+  }
   const marcos = _m ? [
     { label: "Leads criados",    count: _m.criados },
     { label: "Qualificados",     count: _m.qualificados },
@@ -209,6 +222,14 @@ export default async function FunilPage() {
         <p style={S.muted}>15 etapas · {total} leads · atualizado agora</p>
       </div>
 
+      {/* P2 — filtro mês+vendedor (afeta SÓ a seção "Conversão por Marcos") */}
+      <div style={{ ...S.card, padding: "12px 16px" }}>
+        <DashboardFilters showMonth />
+        <p style={{ ...S.muted, fontSize: 9, marginTop: 8 }}>
+          O filtro afeta apenas <span style={{ color: "#22c55e" }}>Conversão por Marcos</span> (coorte por mês/vendedor). O funil de 15 etapas e o drop-off abaixo são sempre globais (posição atual).
+        </p>
+      </div>
+
       {/* KPI row */}
       <div className="asb-grid-kpi">
         {[
@@ -225,12 +246,12 @@ export default async function FunilPage() {
         ))}
       </div>
 
-      {/* P5 \u2014 Convers\u00E3o por marcos (timestamps confi\u00E1veis) */}
+      {/* P5/P2 \u2014 Convers\u00E3o por marcos (timestamps confi\u00E1veis; filtr\u00E1vel por m\u00EAs/vendedor) */}
       {marcos.length > 0 && marcos[0].count > 0 && (
         <div style={{ ...S.card, padding: "20px 24px" }}>
           <p style={S.section}>
             <span style={{ color: "#22c55e", marginRight: 6 }}>{"\u2713"}</span>
-            Convers\u00E3o por Marcos (timestamps confi\u00E1veis)
+            Convers\u00E3o por Marcos {temFiltro ? <span style={{ color: "#22c55e" }}>\u00B7 filtrado{mesParam ? ` ${mesParam}` : ""}{vend ? " \u00B7 vendedor" : ""}</span> : "(timestamps confi\u00E1veis)"}
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {marcos.map((mk, i) => {
