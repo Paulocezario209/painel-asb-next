@@ -7,6 +7,7 @@ import { useMemo } from "react";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from "recharts";
+import MercadoChat from "./mercado-chat";
 
 export type Cotacao = {
   proteina: string; data_cotacao: string; valor: number;
@@ -279,6 +280,9 @@ export default function MercadoClient({
         Fonte cotações: indicador CEPEA via Notícias Agrícolas (boi R$/@, frango/suíno R$/kg · suíno = média das praças).
         Notícias: Google News classificadas por IA. Análise: gpt-4o-mini. Atualização diária 06h BRT (workflow ASB_MERCADO_INTELIGENCIA).
       </p>
+
+      {/* Lupa flutuante de inteligência de mercado (web search ao vivo) */}
+      <MercadoChat cotacoes={cotacoes} />
     </div>
   );
 }
