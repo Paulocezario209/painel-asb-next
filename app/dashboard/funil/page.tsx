@@ -135,6 +135,17 @@ export default async function FunilPage() {
     qual_stage: number | null; created_at: string; funnel_stage: string | null;
   }[];
 
+  // P5 — funil de conversão por MARCOS com timestamp confiável (view v_funil_marcos)
+  const { data: marcosRaw } = await supabase.from("v_funil_marcos").select("*").maybeSingle();
+  const _m = (marcosRaw ?? null) as { criados: number; qualificados: number; handoff: number; assumidos: number; pedidos: number } | null;
+  const marcos = _m ? [
+    { label: "Leads criados",    count: _m.criados },
+    { label: "Qualificados",     count: _m.qualificados },
+    { label: "Handoff",          count: _m.handoff },
+    { label: "Vendedor assumiu", count: _m.assumidos },
+    { label: "Pedido fechado",   count: _m.pedidos },
+  ] : [];
+
   // ── KPIs ──────────────────────────────────────────────────────────────────────
   const stageCounts: Record<string, number> = {};
   for (const l of leads) {
@@ -213,6 +224,40 @@ export default async function FunilPage() {
           </div>
         ))}
       </div>
+
+      {/* P5 \u2014 Convers\u00E3o por marcos (timestamps confi\u00E1veis) */}
+      {marcos.length > 0 && marcos[0].count > 0 && (
+        <div style={{ ...S.card, padding: "20px 24px" }}>
+          <p style={S.section}>
+            <span style={{ color: "#22c55e", marginRight: 6 }}>{"\u2713"}</span>
+            Convers\u00E3o por Marcos (timestamps confi\u00E1veis)
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {marcos.map((mk, i) => {
+              const base = marcos[0].count;
+              const prev = i > 0 ? marcos[i - 1].count : null;
+              const pctTotal = base > 0 ? Math.round((mk.count / base) * 100) : 0;
+              const pctPrev = prev && prev > 0 ? Math.round((mk.count / prev) * 100) : null;
+              return (
+                <div key={mk.label} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ width: 132, color: "#c8d8e8", fontSize: 11, fontFamily: "'Courier New', monospace", flexShrink: 0 }}>{mk.label}</span>
+                  <div style={{ flex: 1, background: "#0d1117", borderRadius: 3, height: 22, position: "relative", overflow: "hidden" }}>
+                    <div style={{ width: `${pctTotal}%`, height: "100%", background: "linear-gradient(90deg, #1B2A6B, #2ea043)", borderRadius: 3, minWidth: mk.count > 0 ? 3 : 0 }} />
+                    <span style={{ position: "absolute", left: 8, top: 3, color: "#fff", fontSize: 11, fontFamily: "'Courier New', monospace" }}>{mk.count}</span>
+                  </div>
+                  <span style={{ width: 42, textAlign: "right", color: "#8899aa", fontSize: 11, fontFamily: "'Courier New', monospace", flexShrink: 0 }}>{pctTotal}%</span>
+                  <span style={{ width: 74, textAlign: "right", color: pctPrev != null ? "#22c55e" : "#556677", fontSize: 10, fontFamily: "'Courier New', monospace", flexShrink: 0 }}>
+                    {pctPrev != null ? `${pctPrev}% ant.` : "\u2014"}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+          <p style={{ color: "#556677", fontSize: 9, fontFamily: "'Courier New', monospace", marginTop: 10, lineHeight: 1.5 }}>
+            Base: created_at \u2192 qual_stage\u22657 \u2192 handoff_at \u2192 seller_first_reply_at \u2192 first_order_at (campos com timestamp confi\u00E1vel, asb-funnel \u00A77). Cumulativo. Difere do funil de 15 etapas abaixo, que reflete a posi\u00E7\u00E3o ATUAL (snapshot, distorcido por etapas sem writer).
+          </p>
+        </div>
+      )}
 
       {/* Funnel chart */}
       <div style={{ ...S.card, padding: "20px 24px" }}>
