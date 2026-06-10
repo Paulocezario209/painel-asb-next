@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, MapPin, Package, Thermometer, User, MessageCircle } from "lucide-react";
+import { ArrowLeft, MapPin, Package, Thermometer, User, MessageCircle, Megaphone } from "lucide-react";
 import { LeadActions } from "@/components/leads/lead-actions";
 import { ProductGroupSelector } from "@/components/leads/product-group-selector";
 import { ConversationWithFeedback } from "@/components/leads/conversation-with-feedback";
@@ -42,6 +42,12 @@ const STATUS_CFG: Record<string, { label: string; color: string; bg: string; bor
 };
 
 const VENDOR_LABELS: Record<string, string> = { SETOR_SOROCABA_SAO_PAULO: "Ana Paula", SETOR_CAMPINAS_JUNDIAI: "Alan", SETOR_CUIT: "CUIT" };
+
+// P4: rótulos legíveis do canal de aquisição (origem_canal)
+const CANAL_LABELS: Record<string, string> = {
+  organico: "Orgânico", instagram: "Instagram (CTWA)", lp: "Landing Page",
+  site: "Site", whatsapp: "WhatsApp", sem_atribuicao: "Sem atribuição",
+};
 
 function derivedStatus(lead: { lead_status: string | null; first_order_at: string | null; qual_stage: number | null }): string {
   if (lead.lead_status === "optout") return "optout";
@@ -188,6 +194,8 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
               <CrmField icon={<Thermometer size={13} />} label="Temperatura" value={lead.lead_temperature} />
               <CrmField icon={<User size={13} />} label="Vendedor" value={VENDOR_LABELS[lead.routing_team ?? ""] ?? lead.routing_team} />
               <CrmField icon={<User size={13} />} label="Etapa qual." value={`${lead.qual_stage ?? 0}/9`} mono />
+              <CrmField icon={<Megaphone size={13} />} label="Origem" value={CANAL_LABELS[lead.origem_canal ?? ""] ?? lead.origem_canal} />
+              <CrmField icon={<Megaphone size={13} />} label="Campanha" value={lead.origem_utm_campaign || lead.ad_id || null} />
               {lead.pain_point && (
                 <div className="col-span-2">
                   <p style={LABEL}>Dor identificada</p>
