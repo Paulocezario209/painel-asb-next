@@ -7,6 +7,7 @@ import {
 } from "@/components/dashboard/charts";
 import { CardTop10ClientesMes } from "@/components/dashboard/card-top10-clientes-mes";
 import { MotivosPerdaChart, type MotivoPerda } from "@/components/dashboard/motivos-perda-chart";
+import { DashboardFilters } from "@/components/dashboard/dashboard-filters";
 
 export const dynamic = "force-dynamic";
 
@@ -38,8 +39,33 @@ const PRODUCT_LABELS: Record<string, string> = {
   molhos: "Molhos", defumados: "Defumados", paes: "Pães", embalagens: "Embalagens",
 };
 
-export default async function DashboardPage() {
+export default async function DashboardPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const supabase = await createClient();
+
+  // P2 — filtros: ?vendedor=SETOR_* (afeta tudo) + ?mes=YYYY-MM (afeta só KPIs de volume; alertas ficam "agora")
+  const sp = await searchParams;
+  const vend = sp?.vendedor && /^SETOR_[A-Z_]+$/.test(sp.vendedor) ? sp.vendedor : null;
+  const mesParam = sp?.mes && /^\d{4}-(0[1-9]|1[0-2])$/.test(sp.mes) ? sp.mes : null;
+  let mesIni: string | null = null, mesFimEx: string | null = null;
+  if (mesParam) {
+    const [y, m] = mesParam.split("-").map(Number);
+    mesIni = `${mesParam}-01`;
+    mesFimEx = `${m === 12 ? y + 1 : y}-${String(m === 12 ? 1 : m + 1).padStart(2, "0")}-01`;
+  }
+  // KPI VOLUME — criados (mês + vendedor)
+  let qTotal = supabase.from("ai_sdr_leads").select("*", { count: "exact", head: true }).eq("is_test", false);
+  if (vend) qTotal = qTotal.eq("routing_team", vend);
+  if (mesIni && mesFimEx) qTotal = qTotal.gte("created_at", mesIni).lt("created_at", mesFimEx);
+  // ALERTA — handoff pendente (estado "agora", só vendedor)
+  let qHandoff = supabase.from("ai_sdr_leads").select("*", { count: "exact", head: true }).eq("is_test", false).not("handoff_at", "is", null).eq("handoff_confirmed", false);
+  if (vend) qHandoff = qHandoff.eq("routing_team", vend);
+  // KPI VOLUME — qualificados (mês + vendedor)
+  let qQual = supabase.from("ai_sdr_leads").select("*", { count: "exact", head: true }).eq("is_test", false).gte("qual_stage", 7);
+  if (vend) qQual = qQual.eq("routing_team", vend);
+  if (mesIni && mesFimEx) qQual = qQual.gte("created_at", mesIni).lt("created_at", mesFimEx);
+  // LISTA — alertas/ABC/cidades (estado "agora", só vendedor)
+  let qLeads = supabase.from("ai_sdr_leads").select("id, phone, restaurant_name, qual_stage, first_order_at, routing_team, handoff_at, handoff_confirmed, weekly_volume_kg, city, product_groups, human_active, followup_eligible, next_followup_at").eq("is_test", false);
+  if (vend) qLeads = qLeads.eq("routing_team", vend);
 
   const [
     { count: totalLeads },
@@ -48,10 +74,7 @@ export default async function DashboardPage() {
     { data: allLeads },
     { data: motivosPerda },
   ] = await Promise.all([
-    supabase.from("ai_sdr_leads").select("*", { count: "exact", head: true }).eq("is_test", false),
-    supabase.from("ai_sdr_leads").select("*", { count: "exact", head: true }).eq("is_test", false).not("handoff_at", "is", null).eq("handoff_confirmed", false),
-    supabase.from("ai_sdr_leads").select("*", { count: "exact", head: true }).eq("is_test", false).gte("qual_stage", 7),
-    supabase.from("ai_sdr_leads").select("id, phone, restaurant_name, qual_stage, first_order_at, routing_team, handoff_at, handoff_confirmed, weekly_volume_kg, city, product_groups, human_active, followup_eligible, next_followup_at").eq("is_test", false),
+    qTotal, qHandoff, qQual, qLeads,
     // P3: motivos de perda agregados (view Postgres — agregação server-side, asb-supabase-ops §7)
     supabase.from("v_motivos_perda").select("*"),
   ]);
@@ -173,7 +196,15 @@ export default async function DashboardPage() {
         <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: "'Courier New', monospace", letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
           Dashboard
         </h1>
-        <p style={S.muted}>Visão geral do pipeline SDR</p>
+        <p style={S.muted}>
+          Visão geral do pipeline SDR
+          {mesParam ? ` · volume de ${mesParam}` : ""}{vend ? ` · vendedor filtrado` : ""}
+        </p>
+      </div>
+
+      {/* P2 — filtros mês (volume) + vendedor (tudo). Alertas permanecem "agora". */}
+      <div style={{ ...S.card, padding: "12px 16px" }}>
+        <DashboardFilters showMonth />
       </div>
 
       {/* ⚡ Alertas Operacionais */}
