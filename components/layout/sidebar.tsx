@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, Bell, BarChart2, PhoneCall, FlaskConical, Upload, Flame, Filter, UserCheck, DollarSign, Target, Briefcase } from "lucide-react";
+import { LayoutDashboard, Users, Bell, BarChart2, PhoneCall, FlaskConical, Upload, Flame, Filter, UserCheck, DollarSign, Target, Briefcase, Columns3 } from "lucide-react";
 
 const navItems = [
   { href: "/dashboard",            label: "Dashboard",   icon: LayoutDashboard },
   { href: "/dashboard/funil",     label: "Funil",       icon: Filter },
+  { href: "/dashboard/pipeline",  label: "Pipeline",    icon: Columns3 },
   { href: "/dashboard/vendedores", label: "Vendedores",  icon: UserCheck },
   { href: "/dashboard/vendas",     label: "Vendas",      icon: DollarSign },
   { href: "/dashboard/gerente",   label: "Gerente",     icon: Target },
