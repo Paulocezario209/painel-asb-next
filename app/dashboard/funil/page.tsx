@@ -202,7 +202,7 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
     const fromCount = stageCounts[fromStage] ?? 0;
     const toCount   = stageCounts[toStage] ?? 0;
     if (fromCount === 0 && toCount === 0) continue;
-    const rate = fromCount > 0 ? `${((toCount / fromCount) * 100).toFixed(0)}%` : "\u2014";
+    const rate = fromCount > 0 ? `${((toCount / fromCount) * 100).toFixed(0)}%` : "—";
     dropoff.push({
       from: STAGE_LABELS[fromStage] ?? fromStage,
       to:   STAGE_LABELS[toStage] ?? toStage,
@@ -236,7 +236,7 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
           { label: "Total Leads",          value: String(total),                                   accent: "#185FA5", sub: "na base" },
           { label: "Em Qualificacao",       value: String(emQualificacao),                         accent: "#f59e0b", sub: "etapas 2-6" },
           { label: "Handoff+",             value: String(emHandoffPlus),                           accent: "#22c55e", sub: "etapas 7-15" },
-          { label: "Taxa SDR \u2192 Handoff", value: taxaHandoff ? `${taxaHandoff}%` : "\u2014", accent: "#C8102E", sub: total > 0 ? `${emHandoffPlus} de ${total} leads` : "" },
+          { label: "Taxa SDR → Handoff", value: taxaHandoff ? `${taxaHandoff}%` : "—", accent: "#C8102E", sub: total > 0 ? `${emHandoffPlus} de ${total} leads` : "" },
         ].map(({ label, value, accent, sub }) => (
           <div key={label} style={{ ...S.card, padding: "20px", borderTop: `2px solid ${accent}` }}>
             <p style={{ ...S.label, color: accent }}>{label}</p>
@@ -246,12 +246,12 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
         ))}
       </div>
 
-      {/* P5/P2 \u2014 Convers\u00E3o por marcos (timestamps confi\u00E1veis; filtr\u00E1vel por m\u00EAs/vendedor) */}
+      {/* P5/P2 — Conversão por marcos (timestamps confiáveis; filtrável por mês/vendedor) */}
       {marcos.length > 0 && marcos[0].count > 0 && (
         <div style={{ ...S.card, padding: "20px 24px" }}>
           <p style={S.section}>
-            <span style={{ color: "#22c55e", marginRight: 6 }}>{"\u2713"}</span>
-            Convers\u00E3o por Marcos {temFiltro ? <span style={{ color: "#22c55e" }}>\u00B7 filtrado{mesParam ? ` ${mesParam}` : ""}{vend ? " \u00B7 vendedor" : ""}</span> : "(timestamps confi\u00E1veis)"}
+            <span style={{ color: "#22c55e", marginRight: 6 }}>{"✓"}</span>
+            Conversão por Marcos {temFiltro ? <span style={{ color: "#22c55e" }}>· filtrado{mesParam ? ` ${mesParam}` : ""}{vend ? " · vendedor" : ""}</span> : "(timestamps confiáveis)"}
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {marcos.map((mk, i) => {
@@ -268,14 +268,14 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
                   </div>
                   <span style={{ width: 42, textAlign: "right", color: "#8899aa", fontSize: 11, fontFamily: "'Courier New', monospace", flexShrink: 0 }}>{pctTotal}%</span>
                   <span style={{ width: 74, textAlign: "right", color: pctPrev != null ? "#22c55e" : "#556677", fontSize: 10, fontFamily: "'Courier New', monospace", flexShrink: 0 }}>
-                    {pctPrev != null ? `${pctPrev}% ant.` : "\u2014"}
+                    {pctPrev != null ? `${pctPrev}% ant.` : "—"}
                   </span>
                 </div>
               );
             })}
           </div>
           <p style={{ color: "#556677", fontSize: 9, fontFamily: "'Courier New', monospace", marginTop: 10, lineHeight: 1.5 }}>
-            Base: created_at \u2192 qual_stage\u22657 \u2192 handoff_at \u2192 seller_first_reply_at \u2192 first_order_at (campos com timestamp confi\u00E1vel, asb-funnel \u00A77). Cumulativo. Difere do funil de 15 etapas abaixo, que reflete a posi\u00E7\u00E3o ATUAL (snapshot, distorcido por etapas sem writer).
+            Base: created_at → qual_stage≥7 → handoff_at → seller_first_reply_at → first_order_at (campos com timestamp confiável, asb-funnel §7). Cumulativo. Difere do funil de 15 etapas abaixo, que reflete a posição ATUAL (snapshot, distorcido por etapas sem writer).
           </p>
         </div>
       )}
@@ -283,7 +283,7 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
       {/* Funnel chart */}
       <div style={{ ...S.card, padding: "20px 24px" }}>
         <p style={S.section}>
-          <span style={{ color: "#C8102E", marginRight: 6 }}>{"\u25BC"}</span>
+          <span style={{ color: "#C8102E", marginRight: 6 }}>{"▼"}</span>
           Leads por Etapa
         </p>
         <div style={{ height: 460 }}>
@@ -294,7 +294,7 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
       {/* Drop-off table */}
       <div style={{ ...S.card, padding: "20px 24px" }}>
         <p style={S.section}>
-          <span style={{ color: "#f59e0b", marginRight: 6 }}>{"\u25B6"}</span>
+          <span style={{ color: "#f59e0b", marginRight: 6 }}>{"▶"}</span>
           Drop-off entre Etapas
         </p>
         {dropoff.length > 0 ? (
@@ -365,7 +365,7 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
       {/* Timeline */}
       <div style={{ ...S.card, padding: "20px 24px" }}>
         <p style={S.section}>
-          <span style={{ color: "#22c55e", marginRight: 6 }}>{"\u25CF"}</span>
+          <span style={{ color: "#22c55e", marginRight: 6 }}>{"●"}</span>
           Timeline — Ultimas Transicoes
         </p>
         {events.length > 0 ? (
@@ -393,7 +393,7 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
                     </span>
                   )}
                   <span style={{ color: "#8899aa", fontSize: 10, fontFamily: "'Courier New', monospace" }}>
-                    {e.from_stage ? `${STAGE_LABELS[e.from_stage] ?? e.from_stage} \u2192 ` : ""}{STAGE_LABELS[e.to_stage] ?? e.to_stage}
+                    {e.from_stage ? `${STAGE_LABELS[e.from_stage] ?? e.from_stage} → ` : ""}{STAGE_LABELS[e.to_stage] ?? e.to_stage}
                   </span>
                   <span style={{
                     marginLeft: "auto",
