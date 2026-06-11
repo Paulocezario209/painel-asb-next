@@ -19,6 +19,9 @@ const COR_MOTIVO: Record<string, string> = {
 };
 const PALETA = ["#C8102E", "#D4A017", "#185FA5", "#8899aa", "#556677", "#D85A30", "#22c55e"];
 
+// Fix 2: categorias sempre visíveis (mesmo com 0) — espelham os motivos novos do dropdown.
+const CATEGORIAS_FIXAS = ["Preço", "Fora de rota"];
+
 function cor(motivo: string, i: number): string {
   return COR_MOTIVO[motivo] ?? PALETA[i % PALETA.length];
 }
@@ -34,14 +37,21 @@ export function MotivosPerdaChart({ data }: { data: MotivoPerda[] }) {
     );
   }
 
+  // garante Preço/Fora de rota como categoria (total 0) quando sem dado real
+  const presentes = new Set(data.map((d) => d.motivo));
+  const fixas = CATEGORIAS_FIXAS
+    .filter((m) => !presentes.has(m))
+    .map((m) => ({ motivo: m, total: 0, total_30d: 0 }));
+  const dataView = [...data, ...fixas];
+
   return (
     <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1.1fr)", gap: 12, alignItems: "center" }}>
       {/* Pizza */}
       <div style={{ width: "100%", height: 200 }}>
         <ResponsiveContainer>
           <PieChart>
-            <Pie data={data} dataKey="total" nameKey="motivo" cx="50%" cy="50%" innerRadius={42} outerRadius={75} paddingAngle={2} strokeWidth={0}>
-              {data.map((d, i) => (
+            <Pie data={dataView} dataKey="total" nameKey="motivo" cx="50%" cy="50%" innerRadius={42} outerRadius={75} paddingAngle={2} strokeWidth={0}>
+              {dataView.map((d, i) => (
                 <Cell key={d.motivo} fill={cor(d.motivo, i)} />
               ))}
             </Pie>
@@ -59,7 +69,7 @@ export function MotivosPerdaChart({ data }: { data: MotivoPerda[] }) {
 
       {/* Legenda + ranking (% e 30d) */}
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-        {data.map((d, i) => {
+        {dataView.map((d, i) => {
           const pct = Math.round((d.total / total) * 100);
           return (
             <div key={d.motivo} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
