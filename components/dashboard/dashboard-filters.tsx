@@ -2,6 +2,7 @@
 // Client Component: atualiza ?mes=YYYY-MM e ?vendedor=SETOR_* na URL (Server Component pai relê).
 "use client";
 
+import { useState, useEffect } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 
 const mono = "'Courier New', monospace";
@@ -21,6 +22,12 @@ export function DashboardFilters({ showMonth = true, showVendedor = true, maxMon
   const mes = sp.get("mes") ?? "";
   const vendedor = sp.get("vendedor") ?? "";
 
+  // BUGFIX: input month é controlado; router.push é assíncrono, então o input revertia a
+  // seleção visual antes do searchParams atualizar. Estado local reflete a seleção na hora;
+  // useEffect ressincroniza com a URL (reload/navegação externa/limpar).
+  const [mesLocal, setMesLocal] = useState(mes);
+  useEffect(() => { setMesLocal(mes); }, [mes]);
+
   function update(key: string, val: string) {
     const p = new URLSearchParams(sp.toString());
     if (val) p.set(key, val);
@@ -36,13 +43,13 @@ export function DashboardFilters({ showMonth = true, showVendedor = true, maxMon
           <span style={{ color: "#556677", fontSize: 9, fontFamily: mono, letterSpacing: ".12em", textTransform: "uppercase" }}>Mês</span>
           <input
             type="month"
-            value={mes}
+            value={mesLocal}
             max={maxMonth}
-            onChange={(e) => update("mes", e.target.value)}
+            onChange={(e) => { setMesLocal(e.target.value); update("mes", e.target.value); }}
             style={{ background: "#0d1117", border: "1px solid #2a2a2a", borderRadius: 5, padding: "5px 8px", color: "#c8d8e8", fontSize: 11, fontFamily: mono, colorScheme: "dark" }}
           />
-          {mes && (
-            <button onClick={() => update("mes", "")} style={{ background: "none", border: "none", color: "#8899aa", fontSize: 10, fontFamily: mono, cursor: "pointer" }}>limpar</button>
+          {mesLocal && (
+            <button onClick={() => { setMesLocal(""); update("mes", ""); }} style={{ background: "none", border: "none", color: "#8899aa", fontSize: 10, fontFamily: mono, cursor: "pointer" }}>limpar</button>
           )}
         </div>
       )}
