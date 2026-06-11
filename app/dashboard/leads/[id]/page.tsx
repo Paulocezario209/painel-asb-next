@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, MapPin, Package, Thermometer, User, MessageCircle, Megaphone } from "lucide-react";
 import { LeadActions } from "@/components/leads/lead-actions";
 import { ProductGroupSelector } from "@/components/leads/product-group-selector";
+import { OrigemSelector } from "@/components/leads/origem-selector";
 import { ConversationWithFeedback } from "@/components/leads/conversation-with-feedback";
 import { FunnelStageBadge } from "@/components/leads/funnel-stage-badge";
 import { LeadTimeline } from "@/components/leads/lead-timeline";
@@ -46,6 +47,7 @@ const VENDOR_LABELS: Record<string, string> = { SETOR_SOROCABA_SAO_PAULO: "Ana P
 // P4: rótulos legíveis do canal de aquisição (origem_canal)
 const CANAL_LABELS: Record<string, string> = {
   organico: "Orgânico", instagram: "Instagram (CTWA)", lp: "Landing Page",
+  indicacao: "Indicação",
   site: "Site", whatsapp: "WhatsApp", sem_atribuicao: "Sem atribuição",
 };
 
@@ -194,7 +196,15 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
               <CrmField icon={<Thermometer size={13} />} label="Temperatura" value={lead.lead_temperature} />
               <CrmField icon={<User size={13} />} label="Vendedor" value={VENDOR_LABELS[lead.routing_team ?? ""] ?? lead.routing_team} />
               <CrmField icon={<User size={13} />} label="Etapa qual." value={`${lead.qual_stage ?? 0}/9`} mono />
-              <CrmField icon={<Megaphone size={13} />} label="Origem" value={CANAL_LABELS[lead.origem_canal ?? ""] ?? lead.origem_canal} />
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                <span style={{ color: "#8b949e", marginTop: 1, flexShrink: 0 }}><Megaphone size={13} /></span>
+                <div>
+                  <p style={{ fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase", color: "#8b949e", fontFamily: "'Courier New', monospace" }}>Origem</p>
+                  <div style={{ marginTop: 4 }}>
+                    <OrigemSelector phone={lead.phone} initial={lead.origem_canal ?? null} />
+                  </div>
+                </div>
+              </div>
               <CrmField icon={<Megaphone size={13} />} label="Campanha" value={lead.origem_utm_campaign || lead.ad_id || null} />
               {lead.pain_point && (
                 <div className="col-span-2">

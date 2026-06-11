@@ -24,14 +24,22 @@ const SEG_LABELS: Record<string, string> = {
   steak_house: "Steak House", pub: "Pub", delivery: "Delivery",
 };
 
+// lost_reason é gravado cru pelo RPC (labels do dropdown). Reconhecimento por
+// substring (lowercase) cobre labels reais ("Preço", "Comprou concorrente",
+// "Fora de rota") e chaves legadas. Só inativo_30d_pre_handoff (cron) precisa de label.
 const REASON_LABELS: Record<string, string> = {
+  inativo_30d_pre_handoff: "Inativo 30d",
   preco: "Preço", concorrente: "Concorrente", sem_resposta: "Sem resposta",
   desinteressado: "Desinteressado", fora_de_alcance: "Fora de alcance",
 };
 
+const isPreco = (r: string | null) => /pre[çc]o|or[çc]amento/i.test(r ?? "");
+const isConcorrente = (r: string | null) => /concorrente/i.test(r ?? "");
+const isForaRota = (r: string | null) => /fora de rota|fora_de|alcance/i.test(r ?? "");
+
 function reasonColor(reason: string | null): string {
-  if (reason === "preco") return theme.colors.warning;
-  if (reason === "concorrente") return theme.colors.critical;
+  if (isPreco(reason)) return theme.colors.warning;
+  if (isConcorrente(reason)) return theme.colors.critical;
   return theme.colors.neutral;
 }
 
@@ -42,8 +50,9 @@ function diasDesde(iso: string | null): number {
 
 // Badge de reabordagem recomendada
 function reabordagem(reason: string | null, dias: number): { label: string; color: string } {
-  if (reason === "concorrente") return { label: "DIFÍCIL", color: theme.colors.neutral };
-  if (reason === "preco" && dias > 60) return { label: "REABORDAR AGORA", color: theme.colors.success };
+  if (isConcorrente(reason)) return { label: "DIFÍCIL", color: theme.colors.neutral };
+  if (isForaRota(reason)) return { label: "EXPANSÃO FUTURA", color: theme.colors.neutral };
+  if (isPreco(reason) && dias > 60) return { label: "REABORDAR AGORA", color: theme.colors.success };
   if (dias < 60) return { label: "AGUARDAR", color: theme.colors.warning };
   return { label: "AVALIAR", color: theme.colors.neutral };
 }
@@ -61,7 +70,7 @@ function Pill({ label, color }: { label: string; color: string }) {
 
 export function PerdidosList({ leads }: { leads: LostLead[] }) {
   const total = leads.length;
-  const precoCount = leads.filter(l => l.lost_reason === "preco").length;
+  const precoCount = leads.filter(l => isPreco(l.lost_reason)).length;
   const pctPreco = total > 0 ? Math.round((precoCount / total) * 100) : 0;
   const valorPotencial = leads.reduce((acc, l) => acc + Number(l.weekly_volume_kg ?? 0) * PRECO_KG, 0);
 

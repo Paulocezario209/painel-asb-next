@@ -3,11 +3,15 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+// Labels gravados crus em lost_reason (RPC mark_lead_lost não normaliza).
+// perdidos-list reconhece estes mesmos labels para cor/reabordagem.
 const REASONS = [
+  "Preço",
   "Sem orcamento",
   "Comprou concorrente",
   "Sem interesse",
   "Sem retorno",
+  "Fora de rota",
   "Outro",
 ];
 
