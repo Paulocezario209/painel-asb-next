@@ -15,11 +15,13 @@ const VENDEDORES = [
   { v: "SETOR_CUIT", label: "CUIT" },
 ];
 
-export function DashboardFilters({ showMonth = true, showVendedor = true, maxMonth }: { showMonth?: boolean; showVendedor?: boolean; maxMonth?: string }) {
+export function DashboardFilters({ showMonth = true, showVendedor = true, defaultMes, maxMonth }: { showMonth?: boolean; showVendedor?: boolean; defaultMes?: string; maxMonth?: string }) {
   const router = useRouter();
   const sp = useSearchParams();
   const pathname = usePathname();
-  const mes = sp.get("mes") ?? "";
+  const mesUrl = sp.get("mes") ?? "";
+  // defaultMes (ex.: mês corrente) é exibido quando a URL não tem ?mes= — telas com default de mês.
+  const mes = mesUrl || defaultMes || "";
   const vendedor = sp.get("vendedor") ?? "";
 
   // BUGFIX: input month é controlado; router.push é assíncrono, então o input revertia a
@@ -48,8 +50,10 @@ export function DashboardFilters({ showMonth = true, showVendedor = true, maxMon
             onChange={(e) => { setMesLocal(e.target.value); update("mes", e.target.value); }}
             style={{ background: "#0d1117", border: "1px solid #2a2a2a", borderRadius: 5, padding: "5px 8px", color: "#c8d8e8", fontSize: 11, fontFamily: mono, colorScheme: "dark" }}
           />
-          {mesLocal && (
-            <button onClick={() => { setMesLocal(""); update("mes", ""); }} style={{ background: "none", border: "none", color: "#8899aa", fontSize: 10, fontFamily: mono, cursor: "pointer" }}>limpar</button>
+          {(defaultMes ? (mesUrl && mesUrl !== defaultMes) : mesLocal) && (
+            <button onClick={() => { setMesLocal(defaultMes ?? ""); update("mes", ""); }} style={{ background: "none", border: "none", color: "#8899aa", fontSize: 10, fontFamily: mono, cursor: "pointer" }}>
+              {defaultMes ? "mês atual" : "limpar"}
+            </button>
           )}
         </div>
       )}

@@ -140,7 +140,10 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
   // Com filtro (mês/vendedor): RPC get_funil_marcos (agregação parametrizada — asb-supabase-ops §7).
   const sp = await searchParams;
   const vend = sp?.vendedor && /^SETOR_[A-Z_]+$/.test(sp.vendedor) ? sp.vendedor : null;
-  const mesParam = sp?.mes && /^\d{4}-(0[1-9]|1[0-2])$/.test(sp.mes) ? sp.mes : null;
+  // Default = mês corrente (Conversão por Marcos abre no coorte do mês atual)
+  const _hoje = new Date();
+  const mesCorrente = `${_hoje.getFullYear()}-${String(_hoje.getMonth() + 1).padStart(2, "0")}`;
+  const mesParam = sp?.mes && /^\d{4}-(0[1-9]|1[0-2])$/.test(sp.mes) ? sp.mes : mesCorrente;
   const temFiltro = !!(vend || mesParam);
   type Marcos = { criados: number; qualificados: number; handoff: number; assumidos: number; pedidos: number };
   let _m: Marcos | null;
@@ -224,7 +227,7 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
 
       {/* P2 — filtro mês+vendedor (afeta SÓ a seção "Conversão por Marcos") */}
       <div style={{ ...S.card, padding: "12px 16px" }}>
-        <DashboardFilters showMonth />
+        <DashboardFilters showMonth defaultMes={mesCorrente} />
         <p style={{ ...S.muted, fontSize: 9, marginTop: 8 }}>
           O filtro afeta apenas <span style={{ color: "#22c55e" }}>Conversão por Marcos</span> (coorte por mês/vendedor). O funil de 15 etapas e o drop-off abaixo são sempre globais (posição atual).
         </p>

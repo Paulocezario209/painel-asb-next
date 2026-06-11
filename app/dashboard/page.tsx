@@ -45,13 +45,13 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   // P2 — filtros: ?vendedor=SETOR_* (afeta tudo) + ?mes=YYYY-MM (afeta só KPIs de volume; alertas ficam "agora")
   const sp = await searchParams;
   const vend = sp?.vendedor && /^SETOR_[A-Z_]+$/.test(sp.vendedor) ? sp.vendedor : null;
-  const mesParam = sp?.mes && /^\d{4}-(0[1-9]|1[0-2])$/.test(sp.mes) ? sp.mes : null;
-  let mesIni: string | null = null, mesFimEx: string | null = null;
-  if (mesParam) {
-    const [y, m] = mesParam.split("-").map(Number);
-    mesIni = `${mesParam}-01`;
-    mesFimEx = `${m === 12 ? y + 1 : y}-${String(m === 12 ? 1 : m + 1).padStart(2, "0")}-01`;
-  }
+  // Default = mês corrente (abre filtrado no mês atual; usuário troca pelo seletor)
+  const _hoje = new Date();
+  const mesCorrente = `${_hoje.getFullYear()}-${String(_hoje.getMonth() + 1).padStart(2, "0")}`;
+  const mesParam = sp?.mes && /^\d{4}-(0[1-9]|1[0-2])$/.test(sp.mes) ? sp.mes : mesCorrente;
+  const [_my, _mm] = mesParam.split("-").map(Number);
+  const mesIni = `${mesParam}-01`;
+  const mesFimEx = `${_mm === 12 ? _my + 1 : _my}-${String(_mm === 12 ? 1 : _mm + 1).padStart(2, "0")}-01`;
   // KPI VOLUME — criados (mês + vendedor)
   let qTotal = supabase.from("ai_sdr_leads").select("*", { count: "exact", head: true }).eq("is_test", false);
   if (vend) qTotal = qTotal.eq("routing_team", vend);
@@ -204,7 +204,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
       {/* P2 — filtros mês (volume) + vendedor (tudo). Alertas permanecem "agora". */}
       <div style={{ ...S.card, padding: "12px 16px" }}>
-        <DashboardFilters showMonth />
+        <DashboardFilters showMonth defaultMes={mesCorrente} />
       </div>
 
       {/* ⚡ Alertas Operacionais */}
