@@ -62,8 +62,11 @@ const TEMP_CFG: Record<string, BadgeCfg> = {
 };
 
 const STATUS_CFG: Record<string, BadgeCfg> = {
-  new:       { label: "Novo",        color: "#8899bb", bg: "rgba(27,42,107,.27)",  border: "#2a2a2a" },
-  qualified: { label: "Qualificado", color: "#C8102E", bg: "rgba(200,16,46,.13)",  border: "rgba(200,16,46,.5)" },
+  new:              { label: "Novo",             color: "#8899bb", bg: "rgba(27,42,107,.27)",  border: "#2a2a2a" },
+  qualified:        { label: "Qualificado",      color: "#C8102E", bg: "rgba(200,16,46,.13)",  border: "rgba(200,16,46,.5)" },
+  handoff:          { label: "Handoff",          color: "#D4A017", bg: "rgba(212,160,23,.12)", border: "rgba(212,160,23,.45)" },
+  vendedor_assumiu: { label: "Vendedor assumiu", color: "#185FA5", bg: "rgba(24,95,165,.14)",  border: "rgba(24,95,165,.5)" },
+  pedido_fechado:   { label: "Pedido fechado",   color: "#22c55e", bg: "rgba(34,197,94,.1)",   border: "rgba(34,197,94,.3)" },
   converted: { label: "Convertido",  color: "#22c55e", bg: "rgba(34,197,94,.1)",   border: "rgba(34,197,94,.3)" },
   optout:    { label: "Opt-out",     color: C.muted,   bg: "rgba(136,153,170,.06)", border: "rgba(136,153,170,.2)" },
 };
@@ -88,9 +91,14 @@ function abcCurve(vol: number | null): "A" | "B" | "C" {
   return "C";
 }
 
+// Status derivado — precedência do mais avançado p/ o mais inicial.
+// handoff/vendedor_assumiu/pedido_fechado derivam de timestamps confiáveis
+// (handoff_at, handoff_confirmed, first_order_at) — alinhado aos marcos do /funil.
 function derivedStatus(lead: Lead): string {
   if (lead.lead_status === "optout") return "optout";
-  if (lead.first_order_at) return "converted";
+  if (lead.first_order_at) return "pedido_fechado";
+  if (lead.handoff_confirmed === true) return "vendedor_assumiu";
+  if (lead.handoff_at) return "handoff";
   if ((lead.qual_stage ?? 0) >= 7) return "qualified";
   return lead.lead_status ?? "new";
 }
@@ -221,7 +229,9 @@ export function LeadsTable({ leads: initialLeads, userEmail, initialStatus = "al
           <option value="all">status: todos</option>
           <option value="new">novo</option>
           <option value="qualified">qualificado</option>
-          <option value="converted">convertido</option>
+          <option value="handoff">handoff</option>
+          <option value="vendedor_assumiu">vendedor assumiu</option>
+          <option value="pedido_fechado">pedido fechado</option>
           <option value="optout">opt-out</option>
         </Select>
         <Select value={vendorFilter} onChange={setVendorFilter}>

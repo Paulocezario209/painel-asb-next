@@ -154,12 +154,14 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
     const { data: marcosRaw } = await supabase.from("v_funil_marcos").select("*").maybeSingle();
     _m = (marcosRaw ?? null) as Marcos | null;
   }
+  // status: marco clicável → /dashboard/leads?status=X (deriva os mesmos estados do dropdown de /leads).
+  // "Leads criados" abre sem filtro (todos). Qualificados/Handoff/Vendedor/Pedido filtram.
   const marcos = _m ? [
-    { label: "Leads criados",    count: _m.criados },
-    { label: "Qualificados",     count: _m.qualificados },
-    { label: "Handoff",          count: _m.handoff },
-    { label: "Vendedor assumiu", count: _m.assumidos },
-    { label: "Pedido fechado",   count: _m.pedidos },
+    { label: "Leads criados",    count: _m.criados,      status: "" },
+    { label: "Qualificados",     count: _m.qualificados, status: "qualified" },
+    { label: "Handoff",          count: _m.handoff,      status: "handoff" },
+    { label: "Vendedor assumiu", count: _m.assumidos,    status: "vendedor_assumiu" },
+    { label: "Pedido fechado",   count: _m.pedidos,      status: "pedido_fechado" },
   ] : [];
 
   // ── KPIs ──────────────────────────────────────────────────────────────────────
@@ -262,8 +264,14 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
               const prev = i > 0 ? marcos[i - 1].count : null;
               const pctTotal = base > 0 ? Math.round((mk.count / base) * 100) : 0;
               const pctPrev = prev && prev > 0 ? Math.round((mk.count / prev) * 100) : null;
+              const href = mk.status ? `/dashboard/leads?status=${mk.status}` : "/dashboard/leads";
               return (
-                <div key={mk.label} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <Link
+                  key={mk.label}
+                  href={href}
+                  title={`Ver leads — ${mk.label}`}
+                  style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", cursor: "pointer" }}
+                >
                   <span style={{ width: 132, color: "#c8d8e8", fontSize: 11, fontFamily: "'Courier New', monospace", flexShrink: 0 }}>{mk.label}</span>
                   <div style={{ flex: 1, background: "#0d1117", borderRadius: 3, height: 22, position: "relative", overflow: "hidden" }}>
                     <div style={{ width: `${pctTotal}%`, height: "100%", background: "linear-gradient(90deg, #1B2A6B, #2ea043)", borderRadius: 3, minWidth: mk.count > 0 ? 3 : 0 }} />
@@ -273,7 +281,7 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
                   <span style={{ width: 74, textAlign: "right", color: pctPrev != null ? "#22c55e" : "#556677", fontSize: 10, fontFamily: "'Courier New', monospace", flexShrink: 0 }}>
                     {pctPrev != null ? `${pctPrev}% ant.` : "—"}
                   </span>
-                </div>
+                </Link>
               );
             })}
           </div>
