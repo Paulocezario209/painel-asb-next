@@ -140,7 +140,7 @@ export default async function ResultadosPage({
   // Calendário/card-do-dia: sobrescreve o faturado (que vem por data_meta na v_calendario_compras_dia)
   // pelo faturado por EMISSÃO (fatDia, v_faturado_emissao_diario) + recalcula % margem e semáforo.
   const calRowsEmissao: DiaCalendario[] = calRows.map((r) => {
-    const fat = fatDia[r.dia] ?? Number(r.faturado_brl || 0);
+    const fat = fatDia[r.dia] ?? 0;
     const compras = Number(r.compras_brl || 0);
     const pctDia = fat > 0 ? Math.round((compras / fat) * 1000) / 10 : null;
     return {
