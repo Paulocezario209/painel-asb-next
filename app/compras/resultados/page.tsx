@@ -169,15 +169,14 @@ export default async function ResultadosPage({
   const duTotal = bizDays(inicioMes, fimMes);
   const duRestantes = Math.max(0, duTotal - duDecorridos);
 
-  // Faturado: previsão pela META dos vendedores × fator de ritmo (fase_1 §D.2 — "não engessado")
+  // Faturado: projeção por RITMO REAL (faturado MTD / dias úteis decorridos × dias úteis totais) — espelha compras
   const todayISO = iso(hoje);
   const metaAteHoje = metaRows.filter((r) => r.dia <= todayISO).reduce((s, r) => s + Number(r.meta_diaria_brl || 0), 0);
-  const metaRestante = metaRows.filter((r) => r.dia > todayISO).reduce((s, r) => s + Number(r.meta_diaria_brl || 0), 0);
   const fatorRitmo = metaAteHoje > 0 ? faturadoMtd / metaAteHoje : 1;
 
   // Compras: mediana 7 dias úteis × dias úteis restantes
   const projCompras = comprasMtd + medCompras * duRestantes;
-  const projFaturado = faturadoMtd + metaRestante * fatorRitmo;
+  const projFaturado = duDecorridos > 0 ? (faturadoMtd / duDecorridos) * duTotal : faturadoMtd;
   const pctProj = projFaturado > 0 ? Math.round((projCompras / projFaturado) * 1000) / 10 : 0;
   const semProj = semaforo(pctProj);
   const gap54 = projCompras - 0.54 * projFaturado;
@@ -313,7 +312,7 @@ export default async function ResultadosPage({
       {isMesCorrente ? (
         <div style={{ background: "#0f1428", border: `1px solid ${semProj.cor}`, borderRadius: 6, padding: 18 }}>
           <div style={{ ...labelS, marginBottom: 8 }}>
-            Projeção fechamento do mês (faturado: meta × ritmo · compras: mediana 7 dias úteis)
+            Projeção fechamento do mês (faturado: ritmo real até hoje · compras: mediana 7 dias úteis)
           </div>
           {metaRows.length === 0 ? (
             <div style={{ ...labelS, textTransform: "none", letterSpacing: 0 }}>Sem meta de vendedores neste período — projeção indisponível</div>
