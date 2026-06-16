@@ -72,7 +72,7 @@ export default async function ResultadosPage({
 
   const [fatRes, compRes, metaRes, calRes, itensRes, fatTipoRes, mensalRes] = await Promise.all([
     supabase
-      .from("v_faturado_diario")
+      .from("v_faturado_emissao_diario")  // faturado por EMISSÃO (data_faturamento), não data_meta/entrega
       .select("dia, faturado_brl")
       .gte("dia", iso(inicioMes))
       .lte("dia", iso(fimJanela)),
