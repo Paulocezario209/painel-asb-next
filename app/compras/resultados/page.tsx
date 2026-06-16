@@ -136,6 +136,22 @@ export default async function ResultadosPage({
   // diário (para projeção)
   const fatDia: Record<string, number> = {};
   for (const r of fatRows) fatDia[r.dia] = (fatDia[r.dia] || 0) + Number(r.faturado_brl || 0);
+
+  // Calendário/card-do-dia: sobrescreve o faturado (que vem por data_meta na v_calendario_compras_dia)
+  // pelo faturado por EMISSÃO (fatDia, v_faturado_emissao_diario) + recalcula % margem e semáforo.
+  const calRowsEmissao: DiaCalendario[] = calRows.map((r) => {
+    const fat = fatDia[r.dia] ?? Number(r.faturado_brl || 0);
+    const compras = Number(r.compras_brl || 0);
+    const pctDia = fat > 0 ? Math.round((compras / fat) * 1000) / 10 : null;
+    return {
+      ...r,
+      faturado_brl: fat,
+      pct_compras_faturado: pctDia,
+      semaforo: (fat > 0
+        ? (pctDia! <= 54 ? "verde" : pctDia! <= 65 ? "amarelo" : "vermelho")
+        : (compras > 0 ? "sem_dado" : r.semaforo)) as DiaCalendario["semaforo"],
+    };
+  });
   // compDia migrado p/ base de ENTREGA (DEBT-042): usa o agregado já keyed por `dia` da view do calendário
   const compDia: Record<string, number> = {};
   for (const r of calRows) compDia[r.dia] = Number(r.compras_brl || 0);
@@ -325,7 +341,7 @@ export default async function ResultadosPage({
           <span style={{ ...labelS, textTransform: "none", letterSpacing: 0 }}>Sem dados de calendário/compras neste período.</span>
         </div>
       ) : (
-        <CalendarDashboard days={calRows} itens={itensRows} fatTipo={fatTipoRows} isMesCorrente={isMesCorrente} />
+        <CalendarDashboard days={calRowsEmissao} itens={itensRows} fatTipo={fatTipoRows} isMesCorrente={isMesCorrente} />
       )}
     </div>
   );
