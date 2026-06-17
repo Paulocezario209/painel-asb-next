@@ -34,8 +34,9 @@ export function FunnelVisual({ data }: { data: FunnelStage[] }) {
           {...tooltipStyle}
           formatter={(v: unknown, _n: unknown, item: { payload?: FunnelStage }) => {
             const p = item?.payload;
-            const pct = p?.pct != null ? ` · ${p.pct}% da etapa anterior` : "";
-            return [`${v} leads${pct}`, p?.label ?? ""];
+            // BUG 1: ler count (mesmo número da barra), não `v` (= funnelWidth, dataKey do <Funnel>).
+            // BUG 2: removido "% da etapa anterior" (drop-off de snapshot é métrica inválida).
+            return [`${p?.count ?? v} leads`, p?.label ?? ""];
           }}
         />
         <Funnel dataKey="funnelWidth" data={data} isAnimationActive={false} stroke="#1a1a1a" strokeWidth={2}>

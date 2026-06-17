@@ -224,20 +224,20 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
   const etapasComLeads = STAGE_ORDER.filter(s => (leadsPorEtapa[s]?.length ?? 0) > 0);
 
   // ── Drop-off table ────────────────────────────────────────────────────────────
-  const dropoff: { from: string; to: string; fromCount: number; toCount: number; rate: string }[] = [];
+  const dropoff: { from: string; to: string; fromCount: number; toCount: number }[] = [];
   for (let i = 0; i < STAGE_ORDER.length - 1; i++) {
     const fromStage = STAGE_ORDER[i];
     const toStage   = STAGE_ORDER[i + 1];
     const fromCount = stageCounts[fromStage] ?? 0;
     const toCount   = stageCounts[toStage] ?? 0;
     if (fromCount === 0 && toCount === 0) continue;
-    const rate = fromCount > 0 ? `${((toCount / fromCount) * 100).toFixed(0)}%` : "—";
+    // BUG 2: taxa removida — drop-off entre etapas adjacentes do snapshot de posição
+    // não é conversão (baldes de permanência geram %>100). Ver "Conversão por Marcos".
     dropoff.push({
       from: STAGE_LABELS[fromStage] ?? fromStage,
       to:   STAGE_LABELS[toStage] ?? toStage,
       fromCount,
       toCount,
-      rate,
     });
   }
 
@@ -352,19 +352,18 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr>
-                {["De", "Para", "Leads De", "Leads Para", "Taxa"].map(h => (
+                {["De", "Para", "Leads De", "Leads Para"].map(h => (
                   <th key={h} style={{ ...S.label, textAlign: h === "De" || h === "Para" ? "left" : "right", paddingBottom: 8 }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {dropoff.map(({ from, to, fromCount, toCount, rate }) => (
+              {dropoff.map(({ from, to, fromCount, toCount }) => (
                 <tr key={`${from}-${to}`} style={{ borderTop: "1px solid rgba(27,42,107,.3)" }}>
                   <td style={{ color: "#c8d8e8", fontSize: 11, fontFamily: "'Courier New', monospace", padding: "7px 0" }}>{from}</td>
                   <td style={{ color: "#8899aa", fontSize: 11, fontFamily: "'Courier New', monospace", padding: "7px 0" }}>{to}</td>
                   <td style={{ color: "#c8d8e8", fontSize: 11, fontFamily: "'Courier New', monospace", textAlign: "right", padding: "7px 0" }}>{fromCount}</td>
                   <td style={{ color: "#c8d8e8", fontSize: 11, fontFamily: "'Courier New', monospace", textAlign: "right", padding: "7px 0" }}>{toCount}</td>
-                  <td style={{ color: "#C8102E", fontSize: 11, fontFamily: "'Courier New', monospace", textAlign: "right", padding: "7px 0", fontWeight: 700 }}>{rate}</td>
                 </tr>
               ))}
             </tbody>
