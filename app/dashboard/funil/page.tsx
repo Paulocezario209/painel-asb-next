@@ -30,46 +30,67 @@ const getFunilContagem = unstable_cache(
   { revalidate: 300, tags: ["funil-contagem-etapas"] },
 );
 
-// ── Ordem canonica das 15 etapas (asb-funnel.md) ─────────────────────────────
+// ── Ordem canonica do Funil v2 (14 etapas — docs/extensao-v2/FUNIL_V2_SPEC.md) ──
+// Camadas: SDR (lead_novo→handoff) · LEAD (lead_em_andamento→pedido_teste) · CLIENTE (cliente_em_ativacao→cliente_recorrente).
+// Removidas da vista: cobertura_validada + diagnostico_comercial (órfãs, sem writer). lead_perdido = bucket LATERAL (abaixo).
 const STAGE_ORDER = [
+  // Camada SDR
   "lead_novo",
   "atendido_sdr",
   "qualificacao_inicial",
-  "cobertura_validada",
   "produto_definido",
   "volume_definido",
   "lead_qualificado",
   "handoff",
-  "vendedor_assumiu",
-  "diagnostico_comercial",
-  "proposta_enviada",
+  // Camada LEAD (vendedor)
+  "lead_em_andamento",
   "negociacao",
-  "pedido_fechado",
+  "proposta_enviada",
+  "pedido_teste",
+  // Camada CLIENTE (carteira)
+  "cliente_em_ativacao",
   "cliente_ativo",
   "cliente_recorrente",
 ] as const;
+
+// STAGE_ALIAS — colapsa LEGACY ainda vivo no banco no equivalente v2, ANTES de contar.
+// PONTE até a Fase 3 do Funil v2 (drop dos legacy do CHECK) — ver DEBT-157.
+const STAGE_ALIAS: Record<string, string> = {
+  vendedor_assumiu:      "lead_em_andamento",   // legacy → LEAD
+  diagnostico_comercial: "lead_em_andamento",   // legacy → LEAD
+  pedido_fechado:        "cliente_em_ativacao", // legacy → CLIENTE
+};
+const aliasStage = (s: string) => STAGE_ALIAS[s] ?? s;
 
 const STAGE_LABELS: Record<string, string> = {
   lead_novo:              "Lead Novo",
   atendido_sdr:           "Atendido SDR",
   qualificacao_inicial:   "Qualif. Inicial",
-  cobertura_validada:     "Cobertura Valid.",
+  cobertura_validada:     "Cobertura Valid.",      // legacy/órfã — fora do STAGE_ORDER (só timeline histórica)
   produto_definido:       "Produto Definido",
   volume_definido:        "Volume Definido",
   lead_qualificado:       "Lead Qualificado",
   handoff:                "Handoff",
-  vendedor_assumiu:       "Vendedor Assumiu",
-  diagnostico_comercial:  "Diag. Comercial",
-  proposta_enviada:       "Proposta Enviada",
+  vendedor_assumiu:       "Vendedor Assumiu",      // legacy → aliased p/ lead_em_andamento (só timeline)
+  diagnostico_comercial:  "Diag. Comercial",       // legacy → aliased (só timeline)
+  lead_em_andamento:      "Lead em Andamento",     // v2 LEAD
   negociacao:             "Negociacao",
-  pedido_fechado:         "Pedido Fechado",
+  proposta_enviada:       "Proposta Enviada",
+  pedido_teste:           "Pedido Teste",          // v2 LEAD
+  pedido_fechado:         "Pedido Fechado",        // legacy → aliased p/ cliente_em_ativacao (só timeline)
+  cliente_em_ativacao:    "Cliente em Ativacao",   // v2 CLIENTE
   cliente_ativo:          "Cliente Ativo",
   cliente_recorrente:     "Cliente Recorrente",
+  lead_perdido:           "Perdidos",              // LATERAL
 };
 
 const HANDOFF_PLUS = new Set([
-  "lead_qualificado", "handoff", "vendedor_assumiu", "diagnostico_comercial",
-  "proposta_enviada", "negociacao", "pedido_fechado", "cliente_ativo", "cliente_recorrente",
+  "lead_qualificado", "handoff",
+  // v2 LEAD/CLIENTE
+  "lead_em_andamento", "negociacao", "proposta_enviada", "pedido_teste",
+  "cliente_em_ativacao", "cliente_ativo", "cliente_recorrente",
+  // legacy (KPI lê funnel_stage CRU → conta certo mesmo antes do alias)
+  "vendedor_assumiu", "diagnostico_comercial", "pedido_fechado",
 ]);
 
 const QUALIFICACAO = new Set([
@@ -167,9 +188,12 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
   // ── KPIs ──────────────────────────────────────────────────────────────────────
   const stageCounts: Record<string, number> = {};
   for (const l of leads) {
-    const s = l.funnel_stage ?? "lead_novo";
+    const s = aliasStage(l.funnel_stage ?? "lead_novo");   // colapsa legacy → v2 (PONTE, DEBT-157)
     stageCounts[s] = (stageCounts[s] ?? 0) + 1;
   }
+
+  // Perdidos — saída LATERAL (qualquer etapa → lead_perdido). Fora do cone. Maior balde da base.
+  const perdidos = leads.filter(l => l.funnel_stage === "lead_perdido").length;
 
   const emQualificacao = leads.filter(l => QUALIFICACAO.has(l.funnel_stage ?? "")).length;
   const emHandoffPlus  = leads.filter(l => HANDOFF_PLUS.has(l.funnel_stage ?? "")).length;
@@ -189,11 +213,11 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
   });
 
   // ── Leads parados por etapa (FIX-ETAPA2) — top 10 por etapa, etapas não-terminais ──
-  const TERMINAIS = new Set(["pedido_fechado", "cliente_ativo", "cliente_recorrente"]);
+  const TERMINAIS = new Set(["cliente_em_ativacao", "cliente_ativo", "cliente_recorrente"]);
   const leadsPorEtapa: Record<string, typeof leadRows> = {};
   for (const r of leadRows) {
-    const s = r.funnel_stage ?? "lead_novo";
-    if (TERMINAIS.has(s)) continue;
+    const s = aliasStage(r.funnel_stage ?? "lead_novo");
+    if (TERMINAIS.has(s) || s === "lead_perdido") continue;  // lateral, não "parado"
     (leadsPorEtapa[s] ??= []);
     if (leadsPorEtapa[s].length < 10) leadsPorEtapa[s].push(r);
   }
@@ -224,14 +248,14 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
         <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: "'Courier New', monospace", letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
           Funil de Vendas
         </h1>
-        <p style={S.muted}>15 etapas · {total} leads · atualizado agora</p>
+        <p style={S.muted}>14 etapas (Funil v2) · {total} leads · atualizado agora</p>
       </div>
 
       {/* P2 — filtro mês+vendedor (afeta SÓ a seção "Conversão por Marcos") */}
       <div style={{ ...S.card, padding: "12px 16px" }}>
         <DashboardFilters showMonth defaultMes={mesCorrente} />
         <p style={{ ...S.muted, fontSize: 9, marginTop: 8 }}>
-          O filtro afeta apenas <span style={{ color: "#22c55e" }}>Conversão por Marcos</span> (coorte por mês/vendedor). O funil de 15 etapas e o drop-off abaixo são sempre globais (posição atual).
+          O filtro afeta apenas <span style={{ color: "#22c55e" }}>Conversão por Marcos</span> (coorte por mês/vendedor). O funil de 14 etapas e o drop-off abaixo são sempre globais (posição atual).
         </p>
       </div>
 
@@ -286,7 +310,7 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
             })}
           </div>
           <p style={{ color: "#556677", fontSize: 9, fontFamily: "'Courier New', monospace", marginTop: 10, lineHeight: 1.5 }}>
-            Base: created_at → qual_stage≥7 → handoff_at → seller_first_reply_at → first_order_at (campos com timestamp confiável, asb-funnel §7). Cumulativo. Difere do funil de 15 etapas abaixo, que reflete a posição ATUAL (snapshot, distorcido por etapas sem writer).
+            Base: created_at → qual_stage≥7 → handoff_at → seller_first_reply_at → first_order_at (campos com timestamp confiável, asb-funnel §7). Cumulativo. Difere do funil de 14 etapas abaixo (posição ATUAL; legacy colapsado p/ v2 — DEBT-157).
           </p>
         </div>
       )}
@@ -301,6 +325,22 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
           <FunnelVisual data={chartData} />
         </div>
       </div>
+
+      {/* Perdidos — saída LATERAL (fora do cone). Destaque: maior balde da base. */}
+      {perdidos > 0 && (
+        <div style={{ ...S.card, padding: "20px 24px", borderTop: "2px solid #C8102E" }}>
+          <p style={S.section}>
+            <span style={{ color: "#C8102E", marginRight: 6 }}>{"✕"}</span>
+            Perdidos · saída lateral
+          </p>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 14 }}>
+            <span style={{ ...S.value, color: "#C8102E" }}>{perdidos}</span>
+            <span style={S.muted}>
+              {total > 0 ? `${((perdidos / total) * 100).toFixed(1)}% da base` : ""} · não faz parte do cone — lead pode sair de qualquer etapa (lead_perdido)
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Drop-off table */}
       <div style={{ ...S.card, padding: "20px 24px" }}>
