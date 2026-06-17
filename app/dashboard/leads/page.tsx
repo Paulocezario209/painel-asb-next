@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { LeadsTable } from "@/components/leads/leads-table";
 import { PerdidosList, type LostLead } from "@/components/leads/perdidos-list";
+import { ForaDeRotaTable, type ForaRotaLead } from "@/components/leads/fora-de-rota-table";
 import { getLeadScoreMap } from "@/lib/get-lead-scores";
 import { computeLeadScore, tierOf } from "@/lib/lead-score";
 import { theme } from "@/lib/theme";
@@ -12,11 +13,12 @@ export const dynamic = "force-dynamic";
 const VIEWS = [
   { key: "ativos", label: "Ativos" },
   { key: "perdidos", label: "Perdidos" },
+  { key: "fora_de_rota", label: "Fora de Rota" },
 ] as const;
 
 export default async function LeadsPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const sp = await searchParams;
-  const view = sp.view === "perdidos" ? "perdidos" : "ativos";
+  const view = sp.view === "perdidos" ? "perdidos" : sp.view === "fora_de_rota" ? "fora_de_rota" : "ativos";
   const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
@@ -59,12 +61,28 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
     lostLeads = (data ?? []) as LostLead[];
   }
 
+  // FORA_DE_ROTA: routing_team='fora_de_rota' (espelha fetch do hot-leads: server busca → tabela client)
+  let foraRotaLeads: ForaRotaLead[] = [];
+  if (view === "fora_de_rota") {
+    const { data } = await supabase
+      .from("ai_sdr_leads")
+      .select("phone, name, restaurant_name, city, segment, weekly_volume_kg, last_contact")
+      .eq("routing_team", "fora_de_rota")
+      .eq("is_test", false)
+      .order("weekly_volume_kg", { ascending: false, nullsFirst: false })
+      .order("last_contact", { ascending: false, nullsFirst: false })
+      .limit(100);
+    foraRotaLeads = (data ?? []) as ForaRotaLead[];
+  }
+
   return (
     <div className="space-y-4">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Leads</h1>
         <p className="text-sm text-gray-500 mt-1">
-          {view === "ativos" ? `${leads.length} leads encontrados` : "Fila de recuperação — perdidos nos últimos 180 dias"}
+          {view === "ativos" ? `${leads.length} leads encontrados`
+            : view === "perdidos" ? "Fila de recuperação — perdidos nos últimos 180 dias"
+            : "Fora de cobertura — registrados para expansão futura"}
         </p>
       </div>
 
@@ -100,6 +118,8 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
 
       {view === "perdidos" ? (
         <PerdidosList leads={lostLeads} />
+      ) : view === "fora_de_rota" ? (
+        <ForaDeRotaTable leads={foraRotaLeads} />
       ) : (
         <>
           <LeadsTable leads={leads ?? []} userEmail={user?.email ?? ""} initialStatus={sp.status ?? "all"} />
