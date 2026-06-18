@@ -55,8 +55,13 @@ export default async function FollowupsPage({ searchParams }: { searchParams: Pr
       .is("next_followup_at", null),
   ]);
 
-  const rows = followups ?? [];
   const leadsMap = Object.fromEntries((leads ?? []).map(l => [l.phone, l]));
+  // DEBT-167 4: fora_de_rota não aparece em follow-ups (NULL-safe — mantém em-rota + NULL).
+  // followup_history não tem routing_team → filtra client-side via leadsMap.
+  const rows = (followups ?? []).filter(r => {
+    const rt = leadsMap[r.phone]?.routing_team;
+    return rt == null || rt !== "fora_de_rota";
+  });
 
   // ── KPIs ──────────────────────────────────────────────────────────────────
   // responded é gravado em produção pelo node "Mark Follow-up Responded" do Orchestrator

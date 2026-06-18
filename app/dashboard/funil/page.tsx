@@ -23,7 +23,8 @@ const getFunilContagem = unstable_cache(
     const { data } = await supabase
       .from("ai_sdr_leads")
       .select("funnel_stage")
-      .eq("is_test", false);
+      .eq("is_test", false)
+      .or("routing_team.is.null,routing_team.neq.fora_de_rota");   // DEBT-167 4: Total Leads sem fora_de_rota (cone já excluía)
     return data ?? [];
   },
   ["funil-contagem-etapas"],

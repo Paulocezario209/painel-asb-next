@@ -53,18 +53,18 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const mesIni = `${mesParam}-01`;
   const mesFimEx = `${_mm === 12 ? _my + 1 : _my}-${String(_mm === 12 ? 1 : _mm + 1).padStart(2, "0")}-01`;
   // KPI VOLUME — criados (mês + vendedor)
-  let qTotal = supabase.from("ai_sdr_leads").select("*", { count: "exact", head: true }).eq("is_test", false);
+  let qTotal = supabase.from("ai_sdr_leads").select("*", { count: "exact", head: true }).eq("is_test", false).or("routing_team.is.null,routing_team.neq.fora_de_rota");  // DEBT-167 4
   if (vend) qTotal = qTotal.eq("routing_team", vend);
   if (mesIni && mesFimEx) qTotal = qTotal.gte("created_at", mesIni).lt("created_at", mesFimEx);
   // ALERTA — handoff pendente (estado "agora", só vendedor)
   let qHandoff = supabase.from("ai_sdr_leads").select("*", { count: "exact", head: true }).eq("is_test", false).not("handoff_at", "is", null).eq("handoff_confirmed", false);
   if (vend) qHandoff = qHandoff.eq("routing_team", vend);
   // KPI VOLUME — qualificados (mês + vendedor)
-  let qQual = supabase.from("ai_sdr_leads").select("*", { count: "exact", head: true }).eq("is_test", false).gte("qual_stage", 7);
+  let qQual = supabase.from("ai_sdr_leads").select("*", { count: "exact", head: true }).eq("is_test", false).gte("qual_stage", 7).or("routing_team.is.null,routing_team.neq.fora_de_rota");  // DEBT-167 4
   if (vend) qQual = qQual.eq("routing_team", vend);
   if (mesIni && mesFimEx) qQual = qQual.gte("created_at", mesIni).lt("created_at", mesFimEx);
   // LISTA — alertas/ABC/cidades (estado "agora", só vendedor)
-  let qLeads = supabase.from("ai_sdr_leads").select("id, phone, restaurant_name, qual_stage, first_order_at, routing_team, handoff_at, handoff_confirmed, weekly_volume_kg, city, product_groups, human_active, followup_eligible, next_followup_at").eq("is_test", false);
+  let qLeads = supabase.from("ai_sdr_leads").select("id, phone, restaurant_name, qual_stage, first_order_at, routing_team, handoff_at, handoff_confirmed, weekly_volume_kg, city, product_groups, human_active, followup_eligible, next_followup_at").eq("is_test", false).or("routing_team.is.null,routing_team.neq.fora_de_rota");  // DEBT-167 4: ABC+topCities+urgentA+alertas
   if (vend) qLeads = qLeads.eq("routing_team", vend);
 
   const [
