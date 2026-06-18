@@ -98,7 +98,7 @@ export async function getAlertasComerciais(): Promise<AlertasResponse> {
   // A1 — Saldo negativo + dias restantes
   const { data: resumos } = await supabase
     .from("v_resumo_mes_vendedor")
-    .select("vendedor_routing_team, saldo_brl, dias_uteis_decorridos, dias_uteis_mes, pct_atingido_mes");
+    .select("vendedor_routing_team, saldo_brl, dias_uteis_decorridos, dias_uteis_mes, pct_atingido_mes, proxima_data_meta, meta_proxima_data_brl, meta_diaria_brl");
   for (const r of resumos ?? []) {
     const saldo = Number(r.saldo_brl ?? 0);
     const restantes = Number(r.dias_uteis_mes ?? 0) - Number(r.dias_uteis_decorridos ?? 0);
@@ -211,27 +211,40 @@ export async function getAlertasComerciais(): Promise<AlertasResponse> {
     }
   }
 
-  // A5 — Meta do dia (se HOJE é dia de meta e pct < 50%)
-  const { data: calHoje } = await supabase
-    .from("v_calendario_metas")
-    .select("vendedor_routing_team, meta_diaria_brl, realizado_brl, pct_atingido_dia, is_dia_meta")
-    .eq("dia", hoje)
-    .eq("is_dia_meta", true);
-  for (const c of calHoje ?? []) {
-    const pct = Number(c.pct_atingido_dia ?? 0);
-    const meta = Number(c.meta_diaria_brl ?? 0);
-    const real = Number(c.realizado_brl ?? 0);
-    if (meta > 0 && pct < 50 && pct > 0) {
-      alertas.push({
-        tipo: "meta_dia",
-        severidade: pct < 30 ? "vermelho" : "laranja",
-        titulo: `Meta hoje em risco — ${vName(c.vendedor_routing_team)}`,
-        descricao: `${pct.toFixed(1)}% da meta diária · faltam R$ ${(meta - real).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`,
-        vendedor: c.vendedor_routing_team,
-        valor: real - meta,
-        href: "/dashboard/vendedores",
-      });
-    }
+  // A5 — Meta do dia em risco — MESMA fonte/eixo do card consolidado (EMISSÃO DE CICLO).
+  // pct E "faltam" derivam de realizadoCiclo (v_emissao_ciclo_vendedor.emissao_ciclo_brl) ÷
+  // metaProxima (v_resumo.meta_proxima_data_brl). NÃO usa realizado_brl cru nem o FOLD de
+  // faturamento (realizado_meta_brl) de v_calendario_metas — o alerta tem que bater com o card.
+  // v_emissao_ciclo_vendedor é security_invoker → ler via SERVICE ROLE (igual page.tsx/getDayCnb),
+  // senão o ciclo do setor do próprio gestor (CUIT) zera (DEBT-069c).
+  const { createClient: createServiceClient } = await import("@supabase/supabase-js");
+  const cicloClient = process.env.SUPABASE_SERVICE_ROLE_KEY
+    ? createServiceClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } })
+    : supabase;
+  const { data: ciclo } = await cicloClient
+    .from("v_emissao_ciclo_vendedor")
+    .select("vendedor_routing_team, emissao_ciclo_brl");
+  const cicloMap: Record<string, number> = {};
+  for (const c of ciclo ?? []) cicloMap[c.vendedor_routing_team] = Number(c.emissao_ciclo_brl ?? 0);
+
+  for (const r of resumos ?? []) {
+    // só dispara se HOJE é o dia-meta do vendedor (mesma semântica do antigo is_dia_meta)
+    if (r.proxima_data_meta !== hoje) continue;
+    const meta = Number(r.meta_proxima_data_brl ?? r.meta_diaria_brl ?? 0);
+    if (meta <= 0) continue;
+    const real = cicloMap[r.vendedor_routing_team] ?? 0;
+    const pct = (real / meta) * 100;
+    if (pct >= 80) continue;                           // ≥80% (card verde/amarelo) → sem alerta
+    const sev = pct < 50 ? "vermelho" : "laranja";     // <50 CRÍTICO · 50–80 AVISO
+    alertas.push({
+      tipo: "meta_dia",
+      severidade: sev,
+      titulo: `Meta hoje em risco — ${vName(r.vendedor_routing_team)}`,
+      descricao: `${pct.toFixed(1)}% da meta diária · faltam R$ ${Math.max(0, meta - real).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`,
+      vendedor: r.vendedor_routing_team,
+      valor: real - meta,
+      href: "/dashboard/vendedores",
+    });
   }
 
   const ordem = { vermelho: 0, laranja: 1, amarelo: 2, verde: 3 };
