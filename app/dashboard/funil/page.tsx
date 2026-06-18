@@ -63,6 +63,20 @@ const STAGE_ALIAS: Record<string, string> = {
 };
 const aliasStage = (s: string) => STAGE_ALIAS[s] ?? s;
 
+// FASE A redesenho: cone de 4 FASES (agrega funnel_stage CRU, cobre legados). Perdidos = lateral.
+// Cores: SÓ tokens existentes (#185FA5 ASB · #D4A017 âmbar · #22c55e sucesso).
+const FASES = [
+  { key: "qualificacao", label: "Em qualificação", fill: "#185FA5",
+    stages: ["lead_novo", "atendido_sdr", "qualificacao_inicial", "produto_definido", "volume_definido"] },
+  { key: "qualificado",  label: "Qualificado",     fill: "#185FA5",
+    stages: ["lead_qualificado"] },
+  { key: "com_vendedor", label: "Com vendedor",    fill: "#D4A017",
+    stages: ["handoff", "lead_em_andamento", "vendedor_assumiu", "negociacao", "proposta_enviada", "pedido_teste"] },
+  { key: "cliente",      label: "Cliente",         fill: "#22c55e",
+    stages: ["pedido_fechado", "cliente_em_ativacao", "cliente_ativo", "cliente_recorrente"] },
+] as const;
+const FASE_STAGES = new Set([...FASES.flatMap(f => f.stages), "lead_perdido"]);  // lateral incluso
+
 const STAGE_LABELS: Record<string, string> = {
   lead_novo:              "Lead Novo",
   atendido_sdr:           "Atendido SDR",
@@ -151,6 +165,7 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
     .from("ai_sdr_leads")
     .select("phone, restaurant_name, city, qual_stage, created_at, funnel_stage")
     .eq("is_test", false)
+    .or("routing_team.is.null,routing_team.neq.fora_de_rota")   // FASE A item 7: parados sem fora_de_rota
     .order("created_at", { ascending: false })
     .limit(1000);
   const leadRows = (rawLeadRows ?? []) as unknown as {
@@ -166,16 +181,10 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
   const _hoje = new Date();
   const mesCorrente = `${_hoje.getFullYear()}-${String(_hoje.getMonth() + 1).padStart(2, "0")}`;
   const mesParam = sp?.mes && /^\d{4}-(0[1-9]|1[0-2])$/.test(sp.mes) ? sp.mes : mesCorrente;
-  const temFiltro = !!(vend || mesParam);
+  // mesParam sempre tem default (mês corrente) → sempre RPC parametrizada; v_funil_marcos era dead branch.
   type Marcos = { criados: number; qualificados: number; handoff: number; assumidos: number; pedidos: number };
-  let _m: Marcos | null;
-  if (temFiltro) {
-    const { data } = await supabase.rpc("get_funil_marcos", { p_vendedor: vend, p_mes: mesParam });
-    _m = ((Array.isArray(data) ? data[0] : data) ?? null) as Marcos | null;
-  } else {
-    const { data: marcosRaw } = await supabase.from("v_funil_marcos").select("*").maybeSingle();
-    _m = (marcosRaw ?? null) as Marcos | null;
-  }
+  const { data: _md } = await supabase.rpc("get_funil_marcos", { p_vendedor: vend, p_mes: mesParam });
+  const _m = ((Array.isArray(_md) ? _md[0] : _md) ?? null) as Marcos | null;
   // status: marco clicável → /dashboard/leads?status=X (deriva os mesmos estados do dropdown de /leads).
   // "Leads criados" abre sem filtro (todos). Qualificados/Handoff/Vendedor/Pedido filtram.
   const marcos = _m ? [
@@ -187,30 +196,34 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
   ] : [];
 
   // ── KPIs ──────────────────────────────────────────────────────────────────────
+  // stageCounts (aliased) — ainda alimenta "Leads Parados por Etapa" (STAGE_ORDER).
   const stageCounts: Record<string, number> = {};
   for (const l of leads) {
-    const s = aliasStage(l.funnel_stage ?? "lead_novo");   // colapsa legacy → v2 (PONTE, DEBT-157)
+    const s = aliasStage(l.funnel_stage ?? "lead_novo");
     stageCounts[s] = (stageCounts[s] ?? 0) + 1;
   }
 
-  // Perdidos — saída LATERAL (qualquer etapa → lead_perdido). Fora do cone. Maior balde da base.
+  // Cone de 4 FASES sobre funnel_stage CRU (cobre legados). rawCounts ANTES dos KPIs (recompute por fase).
+  const rawCounts: Record<string, number> = {};
+  for (const l of leads) { const s = l.funnel_stage ?? "lead_novo"; rawCounts[s] = (rawCounts[s] ?? 0) + 1; }
+  const faseCount = (f: typeof FASES[number]) => f.stages.reduce((a, s) => a + (rawCounts[s] ?? 0), 0);
+  const orfaos = Object.keys(rawCounts).filter(s => !FASE_STAGES.has(s));  // não silenciar (catcher)
+
+  // Perdidos — saída LATERAL (fora do cone).
   const perdidos = leads.filter(l => l.funnel_stage === "lead_perdido").length;
 
-  const emQualificacao = leads.filter(l => QUALIFICACAO.has(l.funnel_stage ?? "")).length;
-  const emHandoffPlus  = leads.filter(l => HANDOFF_PLUS.has(l.funnel_stage ?? "")).length;
+  // KPIs recomputados sobre as fases (ajuste B): Em Qualificação = fase 0; Handoff+ = com_vendedor + cliente.
+  const emQualificacao = faseCount(FASES[0]);
+  const emHandoffPlus  = faseCount(FASES[2]) + faseCount(FASES[3]);
   const taxaHandoff    = total > 0 ? ((emHandoffPlus / total) * 100).toFixed(1) : null;
 
-  // ── Chart data (15 etapas ordenadas) — enriquecido p/ FunnelVisual (FIX 4) ────
-  // fill semântico: handoff = âmbar; etapas pós-handoff = verde; qualificação = azul.
-  // pct = conversão vs etapa anterior (null na 1ª). FunnelChart afunila por count.
-  const N_STAGES = STAGE_ORDER.length;
-  const chartData: FunnelStage[] = STAGE_ORDER.map((s, i) => {
-    const count = stageCounts[s] ?? 0;
-    const prev = i > 0 ? (stageCounts[STAGE_ORDER[i - 1]] ?? 0) : 0;
-    const pct = i > 0 && prev > 0 ? Math.round((count / prev) * 100) : null;
-    const fill = s === "handoff" ? "#D4A017" : HANDOFF_PLUS.has(s) ? "#22c55e" : "#185FA5";
-    // FIX-ETAPA2: largura decrescente por índice → funil sempre afunila (count real fica no label)
-    return { label: STAGE_LABELS[s] ?? s, count, pct, fill, funnelWidth: N_STAGES - i };
+  // ── Cone: 4 fases · pct = FATIA do pipe ativo (ajuste A), não vs fase anterior ──
+  const totalAtivos = FASES.reduce((a, f) => a + faseCount(f), 0);
+  const N_FASES = FASES.length;
+  const chartData: FunnelStage[] = FASES.map((f, i) => {
+    const count = faseCount(f);
+    const pct = totalAtivos > 0 ? Math.round((count / totalAtivos) * 100) : null;
+    return { label: f.label, count, pct, fill: f.fill, funnelWidth: N_FASES - i };
   });
 
   // ── Leads parados por etapa (FIX-ETAPA2) — top 10 por etapa, etapas não-terminais ──
@@ -224,23 +237,7 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
   }
   const etapasComLeads = STAGE_ORDER.filter(s => (leadsPorEtapa[s]?.length ?? 0) > 0);
 
-  // ── Drop-off table ────────────────────────────────────────────────────────────
-  const dropoff: { from: string; to: string; fromCount: number; toCount: number }[] = [];
-  for (let i = 0; i < STAGE_ORDER.length - 1; i++) {
-    const fromStage = STAGE_ORDER[i];
-    const toStage   = STAGE_ORDER[i + 1];
-    const fromCount = stageCounts[fromStage] ?? 0;
-    const toCount   = stageCounts[toStage] ?? 0;
-    if (fromCount === 0 && toCount === 0) continue;
-    // BUG 2: taxa removida — drop-off entre etapas adjacentes do snapshot de posição
-    // não é conversão (baldes de permanência geram %>100). Ver "Conversão por Marcos".
-    dropoff.push({
-      from: STAGE_LABELS[fromStage] ?? fromStage,
-      to:   STAGE_LABELS[toStage] ?? toStage,
-      fromCount,
-      toCount,
-    });
-  }
+  // FASE A: bloco "Drop-off entre Etapas" removido (snapshot adjacente não é conversão — sem significado).
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -263,9 +260,9 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
       {/* KPI row */}
       <div className="asb-grid-kpi">
         {[
-          { label: "Total Leads",          value: String(total),                                   accent: "#185FA5", sub: "na base" },
-          { label: "Em Qualificacao",       value: String(emQualificacao),                         accent: "#f59e0b", sub: "etapas 2-6" },
-          { label: "Handoff+",             value: String(emHandoffPlus),                           accent: "#22c55e", sub: "etapas 7-15" },
+          { label: "Total Leads",          value: String(total),                                   accent: "#185FA5", sub: "na base · inclui perdidos" },
+          { label: "Em Qualificacao",       value: String(emQualificacao),                         accent: "#f59e0b", sub: "fase: em qualificação" },
+          { label: "Handoff+",             value: String(emHandoffPlus),                           accent: "#22c55e", sub: "com vendedor + cliente" },
           { label: "Taxa SDR → Handoff", value: taxaHandoff ? `${taxaHandoff}%` : "—", accent: "#C8102E", sub: total > 0 ? `${emHandoffPlus} de ${total} leads` : "" },
         ].map(({ label, value, accent, sub }) => (
           <div key={label} style={{ ...S.card, padding: "20px", borderTop: `2px solid ${accent}` }}>
@@ -281,7 +278,7 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
         <div style={{ ...S.card, padding: "20px 24px" }}>
           <p style={S.section}>
             <span style={{ color: "#22c55e", marginRight: 6 }}>{"✓"}</span>
-            Conversão por Marcos {temFiltro ? <span style={{ color: "#22c55e" }}>· filtrado{mesParam ? ` ${mesParam}` : ""}{vend ? " · vendedor" : ""}</span> : "(timestamps confiáveis)"}
+            Conversão da coorte de {mesParam}{vend ? " · vendedor" : ""}
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {marcos.map((mk, i) => {
@@ -303,9 +300,13 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
                     <span style={{ position: "absolute", left: 8, top: 3, color: "#fff", fontSize: 11, fontFamily: "'Courier New', monospace" }}>{mk.count}</span>
                   </div>
                   <span style={{ width: 42, textAlign: "right", color: "#8899aa", fontSize: 11, fontFamily: "'Courier New', monospace", flexShrink: 0 }}>{pctTotal}%</span>
-                  <span style={{ width: 74, textAlign: "right", color: pctPrev != null ? "#22c55e" : "#556677", fontSize: 10, fontFamily: "'Courier New', monospace", flexShrink: 0 }}>
-                    {pctPrev != null ? `${pctPrev}% ant.` : "—"}
-                  </span>
+                  {/* item 4: drop-off = % que NÃO avançou da etapa anterior; cor semântica (tokens existentes) */}
+                  {(() => {
+                    if (pctPrev == null) return <span style={{ width: 96, textAlign: "right", color: "#556677", fontSize: 10, fontFamily: "'Courier New', monospace", flexShrink: 0 }}>—</span>;
+                    const drop = Math.max(0, 100 - pctPrev);
+                    const c = drop >= 50 ? "#C8102E" : drop >= 25 ? "#D4A017" : "#556677";
+                    return <span style={{ width: 96, textAlign: "right", color: c, fontSize: 10, fontFamily: "'Courier New', monospace", flexShrink: 0 }}>−{drop}% caiu</span>;
+                  })()}
                 </Link>
               );
             })}
@@ -320,8 +321,13 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
       <div style={{ ...S.card, padding: "20px 24px" }}>
         <p style={S.section}>
           <span style={{ color: "#C8102E", marginRight: 6 }}>{"▼"}</span>
-          Leads por Etapa
+          Onde estão os leads agora <span style={{ color: "#556677", textTransform: "none", letterSpacing: 0 }}>· % = fatia do pipe ativo ({totalAtivos})</span>
         </p>
+        {orfaos.length > 0 && (
+          <p style={{ ...S.muted, color: "#D4A017", fontSize: 10, marginBottom: 8 }}>
+            ⚠ {orfaos.length} funnel_stage órfão (fora das fases): {orfaos.join(", ")}
+          </p>
+        )}
         <div style={{ height: 460 }}>
           <FunnelVisual data={chartData} />
         </div>
@@ -343,42 +349,11 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
         </div>
       )}
 
-      {/* Drop-off table */}
-      <div style={{ ...S.card, padding: "20px 24px" }}>
-        <p style={S.section}>
-          <span style={{ color: "#f59e0b", marginRight: 6 }}>{"▶"}</span>
-          Drop-off entre Etapas
-        </p>
-        {dropoff.length > 0 ? (
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr>
-                {["De", "Para", "Leads De", "Leads Para"].map(h => (
-                  <th key={h} style={{ ...S.label, textAlign: h === "De" || h === "Para" ? "left" : "right", paddingBottom: 8 }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {dropoff.map(({ from, to, fromCount, toCount }) => (
-                <tr key={`${from}-${to}`} style={{ borderTop: "1px solid rgba(27,42,107,.3)" }}>
-                  <td style={{ color: "#c8d8e8", fontSize: 11, fontFamily: "'Courier New', monospace", padding: "7px 0" }}>{from}</td>
-                  <td style={{ color: "#8899aa", fontSize: 11, fontFamily: "'Courier New', monospace", padding: "7px 0" }}>{to}</td>
-                  <td style={{ color: "#c8d8e8", fontSize: 11, fontFamily: "'Courier New', monospace", textAlign: "right", padding: "7px 0" }}>{fromCount}</td>
-                  <td style={{ color: "#c8d8e8", fontSize: 11, fontFamily: "'Courier New', monospace", textAlign: "right", padding: "7px 0" }}>{toCount}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <p style={S.muted}>Sem dados de transicao</p>
-        )}
-      </div>
-
       {/* Leads parados por etapa (FIX-ETAPA2) — clicáveis */}
       <div style={{ ...S.card, padding: "20px 24px" }}>
         <p style={S.section}>
           <span style={{ color: "#185FA5", marginRight: 6 }}>{"◉"}</span>
-          Leads Parados por Etapa
+          Leads Parados por Etapa <span style={{ color: "#556677", textTransform: "none", letterSpacing: 0 }}>· tempo = dias na BASE (created_at), não na etapa</span>
         </p>
         {etapasComLeads.length > 0 ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
