@@ -20,7 +20,7 @@ const COR_MOTIVO: Record<string, string> = {
 const PALETA = ["#C8102E", "#D4A017", "#185FA5", "#8899aa", "#556677", "#D85A30", "#22c55e"];
 
 // Fix 2: categorias sempre visíveis (mesmo com 0) — espelham os motivos novos do dropdown.
-const CATEGORIAS_FIXAS = ["Preço", "Fora de rota"];
+const CATEGORIAS_FIXAS = ["Preço"];   // DEBT-167: "Fora de rota" não é motivo de perda (estado terminal próprio)
 
 function cor(motivo: string, i: number): string {
   return COR_MOTIVO[motivo] ?? PALETA[i % PALETA.length];
