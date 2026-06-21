@@ -176,7 +176,7 @@ export function PainelGestor({ data, onVendorClick }: Props) {
             {totalPendenteQty} ped
           </p>
           <p style={{ fontSize: 10, color: "#c8d8e8" }}>
-            <span className="priv-brl">{fmtBRL(totalPendenteValor)}</span> aguardando NF
+            <span className="priv-brl">{fmtBRL(totalPendenteValor)}</span> represado (faturamento vencido)
           </p>
         </div>
 

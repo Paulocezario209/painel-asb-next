@@ -372,11 +372,26 @@ export async function getEstrategiasComerciais(): Promise<EstrategiasResponse> {
   // ── Pedidos pendentes (escritório precisa fechar) ──────────────────
   const { data: pendentesRaw } = await supabase
     .from("pedidos_espelho")
-    .select("vendedor_routing_team, valor_total_brl, data_emissao")
+    .select("vendedor_routing_team, valor_total_brl, data_emissao, previsao_entrega")
     .in("status_pedido", ["pendente", "aprovado"]);
+
+  // Fix A (DEBT-174): "represado" = só pedido cujo dia de faturamento JÁ PASSOU.
+  // dia_fat = previsao_entrega − 1 dia; §9 (operação Dom–Sex) rola fim de semana p/ sexta.
+  // Pedido no prazo (dia_fat >= hoje) é fluxo normal e NÃO entra.
+  const hojeISO = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date());
+  const faturamentoVencido = (previsao: string | null): boolean => {
+    if (!previsao) return false;
+    const d = new Date(previsao.slice(0, 10) + "T00:00:00Z");
+    d.setUTCDate(d.getUTCDate() - 1);
+    const dow = d.getUTCDay();
+    if (dow === 0) d.setUTCDate(d.getUTCDate() - 2);      // domingo → sexta
+    else if (dow === 6) d.setUTCDate(d.getUTCDate() - 1); // sábado  → sexta
+    return d.toISOString().slice(0, 10) < hojeISO;
+  };
 
   const pendMap: Record<string, { qty: number; valor: number; maisAntigo: string }> = {};
   for (const p of pendentesRaw ?? []) {
+    if (!faturamentoVencido(p.previsao_entrega)) continue; // só represado real
     const t = p.vendedor_routing_team ?? "DESCONHECIDO";
     pendMap[t] = pendMap[t] ?? { qty: 0, valor: 0, maisAntigo: "" };
     pendMap[t].qty += 1;

@@ -210,7 +210,7 @@ export function MissaoDoDia({ data, vendor }: Props) {
                 fontFamily: "'Courier New', monospace",
               }}
             >
-              {p.qty} pedido(s) <span className="priv-brl">{fmtBRL(p.valor)}</span> aguardando NF/recibo
+              {p.qty} pedido(s) <span className="priv-brl">{fmtBRL(p.valor)}</span> represado (faturamento vencido)
               {p.mais_antigo_dias > 5 && <span style={{ color: theme.colors.critical, marginLeft: 4 }}>⚠ +{p.mais_antigo_dias}d</span>}
             </div>
           ))}
