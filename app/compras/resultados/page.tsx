@@ -70,7 +70,7 @@ export default async function ResultadosPage({
   const fimJanela = isMesCorrente ? hoje : fimMes;
   const iso = (d: Date) => d.toISOString().slice(0, 10);
 
-  const [fatRes, compRes, metaRes, calRes, itensRes, fatTipoRes, mensalRes] = await Promise.all([
+  const [fatRes, compRes, metaRes, calRes, itensRes, fatTipoRes, mensalRes, devolRes] = await Promise.all([
     supabase
       .from("v_faturado_emissao_diario")  // faturado por EMISSÃO (data_faturamento), não data_meta/entrega
       .select("dia, faturado_brl")
@@ -112,6 +112,13 @@ export default async function ResultadosPage({
       .lte("dia", iso(fimJanela)),
     // Painel ANO 2026 — resultado mensal agregado (faturado/compras/%/semáforo) por mês
     supabase.from("v_resultado_mensal").select("*"),
+    // DEBT-171 F2 — devolução de compra (fornecedor) p/ abater compras (líquido)
+    supabase
+      .from("devolucoes_compra_espelho")
+      .select("data_devolucao, valor_vnf")
+      .gte("data_devolucao", iso(inicioMes))
+      .lte("data_devolucao", iso(fimJanela))
+      .in("id_pessoa_emitente", [1, 2074]),
   ]);
   const fatRows = (fatRes.data ?? []) as { dia: string; faturado_brl: number }[];
   const compRows = (compRes.data ?? []) as CompraRow[];
@@ -120,14 +127,18 @@ export default async function ResultadosPage({
   const itensRows = (itensRes.data ?? []) as DrilldownItemRow[];
   const fatTipoRows = (fatTipoRes.data ?? []) as FatTipoRow[];
   const mensalRows = (mensalRes.data ?? []) as MensalRow[];
+  const devolRows = (devolRes.data ?? []) as { data_devolucao: string; valor_vnf: number }[];
+  const devolucaoMtd = devolRows.reduce((s, r) => s + Number(r.valor_vnf || 0), 0);
 
   // MTD
   const faturadoMtd = fatRows.reduce((s, r) => s + Number(r.faturado_brl || 0), 0);
-  const comprasMtd = compRows.reduce((s, r) => s + Number(r.valor_total_brl || 0), 0);
-  // split: recebido (entregue/NF=status 4) vs a chegar (pendente+aprovado=1,2)
+  // DEBT-171 F2: compras LÍQUIDAS = bruto − devolução de compra (fornecedor)
+  const comprasBrutoMtd = compRows.reduce((s, r) => s + Number(r.valor_total_brl || 0), 0);
+  const comprasMtd = comprasBrutoMtd - devolucaoMtd;
+  // split: recebido (entregue/NF) menos devolução vs a chegar (pendente+aprovado)
   const recebidoMtd = compRows
     .filter((r) => r.status_compra === "entregue")
-    .reduce((s, r) => s + Number(r.valor_total_brl || 0), 0);
+    .reduce((s, r) => s + Number(r.valor_total_brl || 0), 0) - devolucaoMtd;
   const aChegarMtd = comprasMtd - recebidoMtd;
 
   const pct = faturadoMtd > 0 ? Math.round((comprasMtd / faturadoMtd) * 1000) / 10 : 0;
@@ -295,6 +306,11 @@ export default async function ResultadosPage({
               <div style={{ ...labelS, marginTop: 8, color: "#8899aa", textTransform: "none", letterSpacing: 0 }}>
                 Recebido (NF): <b style={{ color: "#2ea043" }}>{brl(recebidoMtd)}</b> · A chegar: <b style={{ color: "#d29922" }}>{brl(aChegarMtd)}</b>
               </div>
+              {devolucaoMtd > 0 && (
+                <div style={{ ...labelS, marginTop: 4, color: "#8899aa", textTransform: "none", letterSpacing: 0 }}>
+                  (−) Devolução: <b style={{ color: "#d29922" }}>{brl(devolucaoMtd)}</b>
+                </div>
+              )}
             </>
           )}
         </div>
