@@ -15,7 +15,7 @@ export type DiaCalendario = {
   compras_a_chegar: number;
   qtd_fornecedores: number;
   pct_compras_faturado: number | null;
-  semaforo: "verde" | "amarelo" | "vermelho" | "sem_dado";
+  semaforo: "verde" | "amarelo" | "vermelho" | "sem_dado" | "credito";
   atingimento_meta_pct: number | null;
   flags: Record<string, boolean> | null;
   compras_brl_bruto?: number; // F3: bruto antes da devolução
@@ -51,7 +51,7 @@ export type FatTipoRow = {
 };
 
 const mono = "'Courier New', monospace";
-const SEM: Record<string, string> = { verde: "#2ea043", amarelo: "#d29922", vermelho: "#f85149", sem_dado: "#2a3340" };
+const SEM: Record<string, string> = { verde: "#2ea043", amarelo: "#d29922", vermelho: "#f85149", sem_dado: "#2a3340", credito: "#58a6ff" };
 const FLAG_EMOJI: Record<string, string> = {
   pico_compras: "🔥", top_faturado: "💰", margem_critica: "⚠️", abaixo_meta: "📉", acima_meta: "🎯",
 };
@@ -247,11 +247,13 @@ export function CalendarDashboard({
                 ["Faturado", brl(selDia.faturado_brl)],
                 ["Meta", selDia.meta_dia_brl > 0 ? brl(selDia.meta_dia_brl) : "—"],
                 ["Compras", brl(selDia.compras_brl)],
-                ["% Margem", selDia.pct_compras_faturado != null ? `${selDia.pct_compras_faturado}%` : "—"],
+                selDia.compras_brl < 0
+                  ? ["Crédito", brl(Math.abs(selDia.compras_brl))]
+                  : ["% Margem", selDia.pct_compras_faturado != null ? `${selDia.pct_compras_faturado}%` : "—"],
               ].map(([k, v]) => (
                 <div key={k} style={{ ...card, padding: 10 }}>
                   <div style={lbl}>{k}</div>
-                  <div style={{ color: k === "% Margem" ? SEM[selDia.semaforo] : "#FFFFFF", fontSize: 15, fontWeight: 700, fontFamily: "Inter, sans-serif", marginTop: 4 }}>{v}</div>
+                  <div style={{ color: (k === "% Margem" || k === "Crédito") ? SEM[selDia.semaforo] : "#FFFFFF", fontSize: 15, fontWeight: 700, fontFamily: "Inter, sans-serif", marginTop: 4 }}>{v}</div>
                 </div>
               ))}
             </div>

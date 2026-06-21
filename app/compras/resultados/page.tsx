@@ -158,9 +158,11 @@ export default async function ResultadosPage({
       ...r,
       faturado_brl: fat,
       pct_compras_faturado: pctDia,
-      semaforo: (fat > 0
-        ? (pctDia! <= 54 ? "verde" : pctDia! <= 65 ? "amarelo" : "vermelho")
-        : (compras > 0 ? "sem_dado" : r.semaforo)) as DiaCalendario["semaforo"],
+      semaforo: (compras < 0
+        ? "credito"
+        : fat > 0
+          ? (pctDia! <= 54 ? "verde" : pctDia! <= 65 ? "amarelo" : "vermelho")
+          : (compras > 0 ? "sem_dado" : r.semaforo)) as DiaCalendario["semaforo"],
     };
   });
   // compDia migrado p/ base de ENTREGA (DEBT-042): usa o agregado já keyed por `dia` da view do calendário
