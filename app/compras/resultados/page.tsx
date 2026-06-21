@@ -112,10 +112,10 @@ export default async function ResultadosPage({
       .lte("dia", iso(fimJanela)),
     // Painel ANO 2026 — resultado mensal agregado (faturado/compras/%/semáforo) por mês
     supabase.from("v_resultado_mensal").select("*"),
-    // DEBT-171 F2 — devolução de compra (fornecedor) p/ abater compras (líquido)
+    // DEBT-171 F2/F3 — devolução de compra (fornecedor): abate compras (F2) + drilldown (F3)
     supabase
       .from("devolucoes_compra_espelho")
-      .select("data_devolucao, valor_vnf")
+      .select("data_devolucao, valor_vnf, n_nf, fornecedor_nome, ref_nfe_chave")
       .gte("data_devolucao", iso(inicioMes))
       .lte("data_devolucao", iso(fimJanela))
       .in("id_pessoa_emitente", [1, 2074]),
@@ -127,7 +127,7 @@ export default async function ResultadosPage({
   const itensRows = (itensRes.data ?? []) as DrilldownItemRow[];
   const fatTipoRows = (fatTipoRes.data ?? []) as FatTipoRow[];
   const mensalRows = (mensalRes.data ?? []) as MensalRow[];
-  const devolRows = (devolRes.data ?? []) as { data_devolucao: string; valor_vnf: number }[];
+  const devolRows = (devolRes.data ?? []) as { data_devolucao: string; valor_vnf: number; n_nf: string | null; fornecedor_nome: string | null; ref_nfe_chave: string | null }[];
   const devolucaoMtd = devolRows.reduce((s, r) => s + Number(r.valor_vnf || 0), 0);
 
   // MTD
@@ -356,7 +356,7 @@ export default async function ResultadosPage({
           <span style={{ ...labelS, textTransform: "none", letterSpacing: 0 }}>Sem dados de calendário/compras neste período.</span>
         </div>
       ) : (
-        <CalendarDashboard days={calRowsEmissao} itens={itensRows} fatTipo={fatTipoRows} isMesCorrente={isMesCorrente} />
+        <CalendarDashboard days={calRowsEmissao} itens={itensRows} fatTipo={fatTipoRows} devolucoes={devolRows} isMesCorrente={isMesCorrente} />
       )}
     </div>
   );

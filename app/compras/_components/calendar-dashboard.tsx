@@ -18,6 +18,15 @@ export type DiaCalendario = {
   semaforo: "verde" | "amarelo" | "vermelho" | "sem_dado";
   atingimento_meta_pct: number | null;
   flags: Record<string, boolean> | null;
+  compras_brl_bruto?: number; // F3: bruto antes da devolução
+  devolucao_brl?: number;     // F3: devolução de compra abatida no dia
+};
+export type DevolucaoRow = {
+  data_devolucao: string;
+  n_nf: string | null;
+  fornecedor_nome: string | null;
+  valor_vnf: number;
+  ref_nfe_chave: string | null;
 };
 export type CompraRow = {
   data_emissao: string;
@@ -51,14 +60,16 @@ const brl = (n: number) => n.toLocaleString("pt-BR", { style: "currency", curren
 const ddmm = (iso: string) => iso.slice(8, 10) + "/" + iso.slice(5, 7);
 
 export function CalendarDashboard({
-  days, itens, fatTipo, isMesCorrente = false,
+  days, itens, fatTipo, devolucoes = [], isMesCorrente = false,
 }: {
   days: DiaCalendario[];
   itens: DrilldownItemRow[];
   fatTipo: FatTipoRow[];
+  devolucoes?: DevolucaoRow[];
   isMesCorrente?: boolean;
 }) {
   const [sel, setSel] = useState<string | null>(null);
+  const selDevol = useMemo(() => (sel ? devolucoes.filter((d) => d.data_devolucao === sel) : []), [sel, devolucoes]);
 
   // Donut NF/Recibo (MTD) — soma client-side (PostgREST bloqueia agregação no select)
   const donut = useMemo(() => {
@@ -249,6 +260,26 @@ export function CalendarDashboard({
               Compras: recebido <b style={{ color: "#2ea043" }}>{brl(selDia.compras_recebido)}</b> · a chegar <b style={{ color: "#d29922" }}>{brl(selDia.compras_a_chegar)}</b>
               {selDia.atingimento_meta_pct != null ? ` · meta ${selDia.atingimento_meta_pct}%` : ""}
             </div>
+
+            {(selDia.devolucao_brl ?? 0) > 0 && (
+              <div style={{ ...lbl, color: "#d29922" }}>
+                Compra bruta <b style={{ color: "#c8d8e8" }}>{brl(selDia.compras_brl_bruto ?? 0)}</b> · (−) Devolução <b>{brl(selDia.devolucao_brl ?? 0)}</b> · = líquido <b style={{ color: "#c8d8e8" }}>{brl(selDia.compras_brl)}</b>
+              </div>
+            )}
+
+            {selDevol.length > 0 && (
+              <div>
+                <div style={{ ...lbl, marginBottom: 6 }}>Devoluções do dia ({selDevol.length})</div>
+                {selDevol.map((d, idx) => (
+                  <div key={idx} style={{ display: "flex", justifyContent: "space-between", gap: 8, padding: "3px 0", fontSize: 10, fontFamily: mono, color: "#8899aa", borderBottom: "1px solid #1B2A6B" }}>
+                    <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 240 }}>
+                      NF {d.n_nf || "—"} · {d.fornecedor_nome || "—"}{d.ref_nfe_chave ? ` · ref ${d.ref_nfe_chave.slice(0, 12)}…` : ""}
+                    </span>
+                    <b style={{ color: "#d29922" }}>{brl(d.valor_vnf)}</b>
+                  </div>
+                ))}
+              </div>
+            )}
 
             <div>
               <div style={{ ...lbl, marginBottom: 6 }}>Fornecedores do dia ({selFornec.length}) · clique implícito: produtos abaixo de cada um</div>
