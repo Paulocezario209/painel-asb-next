@@ -6,37 +6,33 @@ export const dynamic = "force-dynamic";
 
 const STATUS_COLS = CHURN_STATES.map((k) => ({ key: k, ...CUSTOMER_STATUS[k] }));
 
+const brl = (n: number | null) =>
+  (n ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+
 type Customer = {
-  id: string;
-  phone: string;
+  ares_pessoa_id: number;
+  lead_id: string | null;
   name: string | null;
-  restaurant_name: string | null;
   city: string | null;
-  weekly_volume_kg: number | null;
-  funnel_stage: string;
   customer_status: string;
   customer_tier: string | null;
   total_orders: number | null;
   dias_sem_compra: number | null;
-  avg_order_interval_days: number | null;
-  owner_seller_id: string | null;
+  total_revenue_brl: number | null;
+  vendedor_nome: string | null;
 };
-
-type Vendor = { id: string; name: string };
 
 export default async function ChurnPage() {
   const supabase = await createClient();
 
-  // Fonte única: v_cliente_360 (customer_state ⋈ leads por ares_pessoa_id). Tier+health vivos.
+  // Fonte: v_carteira_360 — carteira REAL ARES (clientes faturados), não só os leads SDR.
+  // RBAC: a tela hoje não escopa por vendedor logado (mostra a carteira inteira); owner_seller_id/
+  // vendedor_nome vêm da view se vier a escopar.
   const { data: customers } = await supabase
-    .from("v_cliente_360")
-    .select("id:lead_id, phone, name, restaurant_name, city, weekly_volume_kg, funnel_stage, customer_status, customer_tier, total_orders, dias_sem_compra, avg_order_interval_days, last_order_at, owner_seller_id")
-    .in("funnel_stage", ["cliente_em_ativacao", "cliente_ativo", "cliente_recorrente"])
+    .from("v_carteira_360")
+    .select("ares_pessoa_id, lead_id, name, city, customer_status, customer_tier, total_orders, dias_sem_compra, total_revenue_brl, vendedor_nome")
     .in("customer_status", ["risco", "pre_churn", "churn_comercial", "inativo_definitivo"])
-    .order("dias_sem_compra", { ascending: false, nullsFirst: false });
-
-  const { data: vendors } = await supabase.from("vendors").select("id, name");
-  const vendorMap = new Map<string, string>((vendors ?? []).map((v: Vendor) => [v.id, v.name]));
+    .order("total_revenue_brl", { ascending: false, nullsFirst: false });
 
   const byStatus: Record<string, Customer[]> = { risco: [], pre_churn: [], churn_comercial: [], inativo_definitivo: [] };
   for (const c of (customers ?? []) as Customer[]) {
@@ -50,7 +46,7 @@ export default async function ChurnPage() {
       <div>
         <h1 className="text-2xl font-bold text-white">Churn — Carteira de Clientes</h1>
         <p className="text-sm text-gray-400 mt-1">
-          {total} clientes em risco/pré-churn/churn/inativo · régua absoluta por dias sem comprar (v_cliente_360)
+          {total} clientes em risco/pré-churn/churn/inativo · carteira real ARES (v_carteira_360) · maiores no topo
         </p>
       </div>
 
@@ -74,7 +70,7 @@ export default async function ChurnPage() {
         })}
       </div>
 
-      {/* Listas por health */}
+      {/* Listas por status */}
       <div className="space-y-4">
         {STATUS_COLS.map((col) => (
           <div key={col.key} className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4">
@@ -91,17 +87,15 @@ export default async function ChurnPage() {
             ) : (
               <div className="space-y-1.5">
                 {byStatus[col.key].map((c) => {
-                  return (
-                    <Link
-                      key={c.id}
-                      href={`/dashboard/cliente/${c.id}`}
-                      className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_auto] gap-2 items-center bg-[#0f0f0f] hover:bg-[#181818] border border-[#2a2a2a] hover:border-[#185FA5] rounded p-3 text-xs transition-all"
-                    >
+                  const row = (
+                    <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_auto] gap-2 items-center bg-[#0f0f0f] hover:bg-[#181818] border border-[#2a2a2a] hover:border-[#185FA5] rounded p-3 text-xs transition-all">
                       <div className="text-white font-semibold truncate">
-                        {c.restaurant_name || c.name || c.phone}
-                        <span className="text-gray-500 text-[10px] font-normal ml-2">
-                          {c.city ?? "—"} · {c.weekly_volume_kg ? `${c.weekly_volume_kg}kg/sem` : "—"}
-                        </span>
+                        {c.name || `cliente ${c.ares_pessoa_id}`}
+                        <span className="text-gray-500 text-[10px] font-normal ml-2">{c.city ?? "—"}</span>
+                      </div>
+                      <div className="text-gray-400">
+                        <span className="text-gray-500 text-[10px]">Receita:</span>{" "}
+                        <span className="text-white">{brl(c.total_revenue_brl)}</span>
                       </div>
                       <div className="text-gray-400">
                         <span className="text-gray-500 text-[10px]">Pedidos:</span>{" "}
@@ -112,19 +106,18 @@ export default async function ChurnPage() {
                         <span className="text-white">{c.dias_sem_compra ?? "—"}d</span>
                       </div>
                       <div className="text-gray-400">
-                        <span className="text-gray-500 text-[10px]">Avg:</span>{" "}
-                        <span className="text-white">
-                          {c.avg_order_interval_days ? `${Number(c.avg_order_interval_days).toFixed(1)}d` : "—"}
-                        </span>
-                      </div>
-                      <div className="text-gray-400">
                         <span className="text-gray-500 text-[10px]">Tier:</span>{" "}
                         <span className="text-white font-bold">{c.customer_tier ?? "—"}</span>
                       </div>
-                      <div className="text-gray-500">
-                        {c.owner_seller_id ? (vendorMap.get(c.owner_seller_id)?.split(" ")[0] ?? "—") : "—"}
-                      </div>
+                      <div className="text-gray-500">{c.vendedor_nome?.split(" ")[0] ?? "—"}</div>
+                    </div>
+                  );
+                  return c.lead_id ? (
+                    <Link key={c.ares_pessoa_id} href={`/dashboard/cliente/${c.lead_id}`} className="block">
+                      {row}
                     </Link>
+                  ) : (
+                    <div key={c.ares_pessoa_id}>{row}</div>
                   );
                 })}
               </div>
@@ -135,7 +128,7 @@ export default async function ChurnPage() {
 
       <div className="text-[10px] text-gray-600 text-center mt-4">
         Régua absoluta (dias sem comprar): risco 15–21 · pré-churn 22–30 · churn comercial 31–59 · inativo ≥60.
-        "Recuperado" volta na Fase A.2.
+        Carteira real ARES (faturados); "recuperado" volta na Fase A.2.
       </div>
     </div>
   );
