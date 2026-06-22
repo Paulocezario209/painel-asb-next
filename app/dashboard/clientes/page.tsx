@@ -61,7 +61,8 @@ type Vendor = { id: string; name: string };
 async function AtivosPanel({ healthFilter }: { healthFilter: string }) {
   const supabase = await createClient();
 
-  let query = supabase
+  // Carteira inteira (18) — o filtro de saúde é aplicado client-side sobre a saúde MERGED (v_cliente_360).
+  const { data: customers } = await supabase
     .from("ai_sdr_leads")
     .select(
       "id, phone, name, restaurant_name, city, weekly_volume_kg, funnel_stage, customer_health, routing_team, owner_seller_id, first_order_at, handoff_at"
@@ -69,25 +70,38 @@ async function AtivosPanel({ healthFilter }: { healthFilter: string }) {
     .in("funnel_stage", ["cliente_em_ativacao", "cliente_ativo", "cliente_recorrente"])
     .eq("is_test", false)
     .order("first_order_at", { ascending: false, nullsFirst: false });
-
-  if (healthFilter !== "all") {
-    query = query.eq("customer_health", healthFilter);
-  }
-
-  const { data: customers } = await query;
   const { data: vendors } = await supabase.from("vendors").select("id, name");
   const vendorMap = new Map<string, string>((vendors ?? []).map((v: Vendor) => [v.id, v.name]));
+
+  // Enriquece badge de saúde/tier via v_cliente_360 (merge por lead_id) — NÃO troca a fonte:
+  // a carteira segue de ai_sdr_leads (18). Vinculados por ares_pessoa_id ganham health/tier reais;
+  // os sem ares ficam neutros até a ponte por telefone (Fase A p4).
+  const leadIds = (customers ?? []).map((c: Customer) => c.id);
+  const { data: enrich } = leadIds.length > 0
+    ? await supabase.from("v_cliente_360").select("lead_id, customer_health, customer_tier").in("lead_id", leadIds)
+    : { data: [] };
+  const v360 = new Map<string, { customer_health: string | null; customer_tier: string | null }>(
+    (enrich ?? []).map((e: { lead_id: string; customer_health: string | null; customer_tier: string | null }) => [
+      e.lead_id, { customer_health: e.customer_health, customer_tier: e.customer_tier },
+    ])
+  );
+
+  // Filtro de saúde opera sobre a saúde MERGED (mesma fonte do badge), não ai_sdr_leads.customer_health.
+  // Sem chip: carteira inteira (18). Com chip: só quem casa a saúde real (os 8 neutros somem).
+  const visiveis = healthFilter === "all"
+    ? ((customers ?? []) as Customer[])
+    : ((customers ?? []) as Customer[]).filter((c) => v360.get(c.id)?.customer_health === healthFilter);
 
   const byStage: Record<string, Customer[]> = {
     cliente_em_ativacao: [],
     cliente_ativo: [],
     cliente_recorrente: [],
   };
-  for (const c of (customers ?? []) as Customer[]) {
+  for (const c of visiveis) {
     byStage[c.funnel_stage]?.push(c);
   }
 
-  const totalCount = customers?.length ?? 0;
+  const totalCount = visiveis.length;
 
   return (
     <div className="space-y-4">
@@ -148,17 +162,25 @@ async function AtivosPanel({ healthFilter }: { healthFilter: string }) {
                     <div className="text-sm font-semibold text-white truncate flex-1">
                       {c.restaurant_name || c.name || c.phone}
                     </div>
-                    {c.customer_health && (
-                      <span
-                        className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded shrink-0"
-                        style={{
-                          background: HEALTH_COLORS[c.customer_health] ?? "#9696AF",
-                          color: "#fff",
-                        }}
-                      >
-                        {c.customer_health}
-                      </span>
-                    )}
+                    {(() => {
+                      const m = v360.get(c.id);
+                      const health = m?.customer_health ?? null;
+                      return (
+                        <div className="flex items-center gap-1 shrink-0">
+                          {m?.customer_tier && (
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#193264] text-white">
+                              {m.customer_tier}
+                            </span>
+                          )}
+                          <span
+                            className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded"
+                            style={{ background: health ? (HEALTH_COLORS[health] ?? "#9696AF") : "#3a3a3a", color: "#fff" }}
+                          >
+                            {health ?? "—"}
+                          </span>
+                        </div>
+                      );
+                    })()}
                   </div>
                   <div className="text-[11px] text-gray-500 truncate">
                     {[c.city, c.weekly_volume_kg ? `${c.weekly_volume_kg}kg/sem` : null, c.phone]

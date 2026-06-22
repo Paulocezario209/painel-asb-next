@@ -18,43 +18,28 @@ type Customer = {
   weekly_volume_kg: number | null;
   funnel_stage: string;
   customer_health: string;
-  recovered_at: string | null;
+  customer_tier: string | null;
+  total_orders: number | null;
+  days_since_last_order: number | null;
+  avg_order_interval_days: number | null;
   owner_seller_id: string | null;
 };
 
 type Vendor = { id: string; name: string };
 
-type State = {
-  lead_id: string;
-  total_orders: number;
-  last_order_at: string | null;
-  days_since_last_order: number | null;
-  avg_order_interval_days: number | null;
-  total_revenue_brl: number;
-  customer_tier: string | null;
-};
-
 export default async function ChurnPage() {
   const supabase = await createClient();
 
+  // Fonte única: v_cliente_360 (customer_state ⋈ leads por ares_pessoa_id). Tier+health vivos.
   const { data: customers } = await supabase
-    .from("ai_sdr_leads")
-    .select("id, phone, name, restaurant_name, city, weekly_volume_kg, funnel_stage, customer_health, recovered_at, owner_seller_id")
+    .from("v_cliente_360")
+    .select("id:lead_id, phone, name, restaurant_name, city, weekly_volume_kg, funnel_stage, customer_health, customer_tier, total_orders, days_since_last_order, avg_order_interval_days, last_order_at, owner_seller_id")
     .in("funnel_stage", ["cliente_em_ativacao", "cliente_ativo", "cliente_recorrente"])
     .in("customer_health", ["at_risk", "inactive", "recovered"])
-    .eq("is_test", false)
-    .order("recovered_at", { ascending: false, nullsFirst: false });
+    .order("last_order_at", { ascending: false, nullsFirst: false });
 
   const { data: vendors } = await supabase.from("vendors").select("id, name");
   const vendorMap = new Map<string, string>((vendors ?? []).map((v: Vendor) => [v.id, v.name]));
-
-  const ids = (customers ?? []).map((c: Customer) => c.id);
-  const { data: states } = ids.length > 0
-    ? await supabase.from("customer_lifecycle_state")
-        .select("lead_id, total_orders, last_order_at, days_since_last_order, avg_order_interval_days, total_revenue_brl, customer_tier")
-        .in("lead_id", ids)
-    : { data: [] };
-  const stateMap = new Map<string, State>((states ?? []).map((s: State) => [s.lead_id, s]));
 
   const byHealth: Record<string, Customer[]> = { at_risk: [], inactive: [], recovered: [] };
   for (const c of (customers ?? []) as Customer[]) {
@@ -71,7 +56,7 @@ export default async function ChurnPage() {
       <div>
         <h1 className="text-2xl font-bold text-white">Churn — Carteira de Clientes</h1>
         <p className="text-sm text-gray-400 mt-1">
-          {total} clientes em estados de risco/inatividade/recuperação · atualizado automaticamente pelo worker daily 6h BRT
+          {total} clientes em estados de risco/inatividade/recuperação · saúde via v_cliente_360 (customer_state)
         </p>
       </div>
 
@@ -112,7 +97,6 @@ export default async function ChurnPage() {
             ) : (
               <div className="space-y-1.5">
                 {byHealth[col.key].map((c) => {
-                  const st = stateMap.get(c.id);
                   return (
                     <Link
                       key={c.id}
@@ -127,21 +111,21 @@ export default async function ChurnPage() {
                       </div>
                       <div className="text-gray-400">
                         <span className="text-gray-500 text-[10px]">Pedidos:</span>{" "}
-                        <span className="text-white">{st?.total_orders ?? "—"}</span>
+                        <span className="text-white">{c.total_orders ?? "—"}</span>
                       </div>
                       <div className="text-gray-400">
                         <span className="text-gray-500 text-[10px]">Sem comprar:</span>{" "}
-                        <span className="text-white">{st?.days_since_last_order ?? "—"}d</span>
+                        <span className="text-white">{c.days_since_last_order ?? "—"}d</span>
                       </div>
                       <div className="text-gray-400">
                         <span className="text-gray-500 text-[10px]">Avg:</span>{" "}
                         <span className="text-white">
-                          {st?.avg_order_interval_days ? `${Number(st.avg_order_interval_days).toFixed(1)}d` : "—"}
+                          {c.avg_order_interval_days ? `${Number(c.avg_order_interval_days).toFixed(1)}d` : "—"}
                         </span>
                       </div>
                       <div className="text-gray-400">
                         <span className="text-gray-500 text-[10px]">Tier:</span>{" "}
-                        <span className="text-white font-bold">{st?.customer_tier ?? "—"}</span>
+                        <span className="text-white font-bold">{c.customer_tier ?? "—"}</span>
                       </div>
                       <div className="text-gray-500">
                         {c.owner_seller_id ? (vendorMap.get(c.owner_seller_id)?.split(" ")[0] ?? "—") : "—"}
@@ -156,8 +140,8 @@ export default async function ChurnPage() {
       </div>
 
       <div className="text-[10px] text-gray-600 text-center mt-4">
-        Health calculado por <code>apply_lifecycle_transitions</code> (5 regras spec §14).
-        Worker SQL roda diariamente via cron n8n às 6h BRT.
+        Saúde de <code>v_cliente_360</code> (customer_state, ABC §14). Detector de transição
+        (recuperado/em risco) pendente — Fase A.2.
       </div>
     </div>
   );
