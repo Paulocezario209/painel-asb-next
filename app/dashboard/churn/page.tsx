@@ -1,13 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
+import { CUSTOMER_STATUS, CHURN_STATES } from "@/lib/customer-status";
 
 export const dynamic = "force-dynamic";
 
-const HEALTH_COLS = [
-  { key: "at_risk", label: "Em Risco", color: "#BA7517", desc: "sem pedido > 1.5× freq média ou 14d" },
-  { key: "inactive", label: "Inativos", color: "#BA1717", desc: "sem pedido > 3× freq média ou 60d" },
-  { key: "recovered", label: "Recuperados", color: "#185FA5", desc: "voltaram após inactive (TTL 90d → healthy)" },
-] as const;
+const STATUS_COLS = CHURN_STATES.map((k) => ({ key: k, ...CUSTOMER_STATUS[k] }));
 
 type Customer = {
   id: string;
@@ -17,10 +14,10 @@ type Customer = {
   city: string | null;
   weekly_volume_kg: number | null;
   funnel_stage: string;
-  customer_health: string;
+  customer_status: string;
   customer_tier: string | null;
   total_orders: number | null;
-  days_since_last_order: number | null;
+  dias_sem_compra: number | null;
   avg_order_interval_days: number | null;
   owner_seller_id: string | null;
 };
@@ -33,37 +30,34 @@ export default async function ChurnPage() {
   // Fonte única: v_cliente_360 (customer_state ⋈ leads por ares_pessoa_id). Tier+health vivos.
   const { data: customers } = await supabase
     .from("v_cliente_360")
-    .select("id:lead_id, phone, name, restaurant_name, city, weekly_volume_kg, funnel_stage, customer_health, customer_tier, total_orders, days_since_last_order, avg_order_interval_days, last_order_at, owner_seller_id")
+    .select("id:lead_id, phone, name, restaurant_name, city, weekly_volume_kg, funnel_stage, customer_status, customer_tier, total_orders, dias_sem_compra, avg_order_interval_days, last_order_at, owner_seller_id")
     .in("funnel_stage", ["cliente_em_ativacao", "cliente_ativo", "cliente_recorrente"])
-    .in("customer_health", ["at_risk", "inactive", "recovered"])
-    .order("last_order_at", { ascending: false, nullsFirst: false });
+    .in("customer_status", ["risco", "pre_churn", "churn_comercial", "inativo_definitivo"])
+    .order("dias_sem_compra", { ascending: false, nullsFirst: false });
 
   const { data: vendors } = await supabase.from("vendors").select("id, name");
   const vendorMap = new Map<string, string>((vendors ?? []).map((v: Vendor) => [v.id, v.name]));
 
-  const byHealth: Record<string, Customer[]> = { at_risk: [], inactive: [], recovered: [] };
+  const byStatus: Record<string, Customer[]> = { risco: [], pre_churn: [], churn_comercial: [], inativo_definitivo: [] };
   for (const c of (customers ?? []) as Customer[]) {
-    if (byHealth[c.customer_health]) byHealth[c.customer_health].push(c);
+    if (byStatus[c.customer_status]) byStatus[c.customer_status].push(c);
   }
 
-  const kpiAtRisk = byHealth.at_risk.length;
-  const kpiInactive = byHealth.inactive.length;
-  const kpiRecovered = byHealth.recovered.length;
-  const total = kpiAtRisk + kpiInactive + kpiRecovered;
+  const total = (customers ?? []).length;
 
   return (
     <div className="space-y-4">
       <div>
         <h1 className="text-2xl font-bold text-white">Churn — Carteira de Clientes</h1>
         <p className="text-sm text-gray-400 mt-1">
-          {total} clientes em estados de risco/inatividade/recuperação · saúde via v_cliente_360 (customer_state)
+          {total} clientes em risco/pré-churn/churn/inativo · régua absoluta por dias sem comprar (v_cliente_360)
         </p>
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-3 gap-4">
-        {HEALTH_COLS.map((col) => {
-          const count = byHealth[col.key].length;
+      <div className="grid grid-cols-4 gap-4">
+        {STATUS_COLS.map((col) => {
+          const count = byStatus[col.key].length;
           return (
             <div
               key={col.key}
@@ -82,21 +76,21 @@ export default async function ChurnPage() {
 
       {/* Listas por health */}
       <div className="space-y-4">
-        {HEALTH_COLS.map((col) => (
+        {STATUS_COLS.map((col) => (
           <div key={col.key} className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4">
             <div className="flex items-center gap-2 mb-3 pb-2 border-b border-[#2a2a2a]">
               <div className="w-3 h-3 rounded-full" style={{ background: col.color, boxShadow: `0 0 6px ${col.color}` }} />
               <h2 className="text-xs font-bold uppercase tracking-wider text-white">{col.label}</h2>
-              <span className="text-xs text-gray-500 ml-auto">{byHealth[col.key].length} clientes</span>
+              <span className="text-xs text-gray-500 ml-auto">{byStatus[col.key].length} clientes</span>
             </div>
 
-            {byHealth[col.key].length === 0 ? (
+            {byStatus[col.key].length === 0 ? (
               <div className="text-xs text-gray-600 italic py-4 text-center">
                 Nenhum cliente neste estado.
               </div>
             ) : (
               <div className="space-y-1.5">
-                {byHealth[col.key].map((c) => {
+                {byStatus[col.key].map((c) => {
                   return (
                     <Link
                       key={c.id}
@@ -115,7 +109,7 @@ export default async function ChurnPage() {
                       </div>
                       <div className="text-gray-400">
                         <span className="text-gray-500 text-[10px]">Sem comprar:</span>{" "}
-                        <span className="text-white">{c.days_since_last_order ?? "—"}d</span>
+                        <span className="text-white">{c.dias_sem_compra ?? "—"}d</span>
                       </div>
                       <div className="text-gray-400">
                         <span className="text-gray-500 text-[10px]">Avg:</span>{" "}
@@ -140,8 +134,8 @@ export default async function ChurnPage() {
       </div>
 
       <div className="text-[10px] text-gray-600 text-center mt-4">
-        Saúde de <code>v_cliente_360</code> (customer_state, ABC §14). Detector de transição
-        (recuperado/em risco) pendente — Fase A.2.
+        Régua absoluta (dias sem comprar): risco 15–21 · pré-churn 22–30 · churn comercial 31–59 · inativo ≥60.
+        "Recuperado" volta na Fase A.2.
       </div>
     </div>
   );

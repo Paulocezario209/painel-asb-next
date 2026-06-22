@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { theme } from "@/lib/theme";
+import { statusColor, statusLabel } from "@/lib/customer-status";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CustomerActions } from "./customer-actions";
@@ -65,6 +66,13 @@ export default async function ClientePage({
     .eq("lead_id", id)
     .maybeSingle();
 
+  // 3b: status oficial (régua absoluta fn_status_cliente) via v_cliente_360
+  const { data: cliente360 } = await supabase
+    .from("v_cliente_360")
+    .select("customer_status, dias_sem_compra")
+    .eq("lead_id", id)
+    .maybeSingle();
+
   // Bonus: up-sell oportunidade (se aplicável)
   const { data: upsellOp } = await supabase
     .from("v_upsell_oportunidades")
@@ -120,15 +128,15 @@ export default async function ClientePage({
             <span className="text-[10px] font-bold uppercase tracking-wider bg-white/20 text-white px-3 py-1 rounded">
               {STAGE_LABELS[lead.funnel_stage] ?? lead.funnel_stage}
             </span>
-            {lead.customer_health && (
+            {cliente360?.customer_status && (
               <span
                 className="text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded"
                 style={{
-                  background: HEALTH_COLORS[lead.customer_health] ?? "#9696AF",
+                  background: statusColor(cliente360.customer_status),
                   color: "#fff",
                 }}
               >
-                {lead.customer_health}
+                {statusLabel(cliente360.customer_status)}
               </span>
             )}
           </div>

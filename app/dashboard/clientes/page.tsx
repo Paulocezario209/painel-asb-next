@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { theme } from "@/lib/theme";
+import { CUSTOMER_STATUS, STATUS_FILTER_KEYS, statusColor, statusLabel } from "@/lib/customer-status";
 // ETAPA8: carteira unificada — abas reusam os server components já existentes das rotas
 // (sem reescrever, mover ou deletar; as rotas /recompra //up-sell //churn seguem ativas).
 import RecompraPage from "@/app/dashboard/recompra/page";
@@ -15,20 +16,10 @@ const STAGE_COLS = [
   { key: "cliente_recorrente", label: "Recorrente", color: "#064E3B" },
 ] as const;
 
-const HEALTH_OPTIONS = [
+const STATUS_OPTIONS: { key: string; label: string }[] = [
   { key: "all", label: "Todos" },
-  { key: "healthy", label: "Healthy" },
-  { key: "at_risk", label: "At Risk" },
-  { key: "inactive", label: "Inactive" },
-  { key: "recovered", label: "Recovered" },
-] as const;
-
-const HEALTH_COLORS: Record<string, string> = {
-  healthy: "#22C55E",
-  at_risk: "#BA7517",
-  inactive: "#BA1717",
-  recovered: "#185FA5",
-};
+  ...STATUS_FILTER_KEYS.map((k) => ({ key: k as string, label: CUSTOMER_STATUS[k].label })),
+];
 
 // ETAPA8: abas da carteira unificada
 const TABS = [
@@ -78,19 +69,19 @@ async function AtivosPanel({ healthFilter }: { healthFilter: string }) {
   // os sem ares ficam neutros até a ponte por telefone (Fase A p4).
   const leadIds = (customers ?? []).map((c: Customer) => c.id);
   const { data: enrich } = leadIds.length > 0
-    ? await supabase.from("v_cliente_360").select("lead_id, customer_health, customer_tier").in("lead_id", leadIds)
+    ? await supabase.from("v_cliente_360").select("lead_id, customer_status, customer_tier, dias_sem_compra").in("lead_id", leadIds)
     : { data: [] };
-  const v360 = new Map<string, { customer_health: string | null; customer_tier: string | null }>(
-    (enrich ?? []).map((e: { lead_id: string; customer_health: string | null; customer_tier: string | null }) => [
-      e.lead_id, { customer_health: e.customer_health, customer_tier: e.customer_tier },
+  const v360 = new Map<string, { customer_status: string | null; customer_tier: string | null; dias_sem_compra: number | null }>(
+    (enrich ?? []).map((e: { lead_id: string; customer_status: string | null; customer_tier: string | null; dias_sem_compra: number | null }) => [
+      e.lead_id, { customer_status: e.customer_status, customer_tier: e.customer_tier, dias_sem_compra: e.dias_sem_compra },
     ])
   );
 
-  // Filtro de saúde opera sobre a saúde MERGED (mesma fonte do badge), não ai_sdr_leads.customer_health.
-  // Sem chip: carteira inteira (18). Com chip: só quem casa a saúde real (os 8 neutros somem).
+  // Filtro de saúde opera sobre o customer_status MERGED (régua absoluta, mesma fonte do badge).
+  // Sem chip: carteira inteira (18). Com chip: só quem casa o status real (os sem vínculo somem).
   const visiveis = healthFilter === "all"
     ? ((customers ?? []) as Customer[])
-    : ((customers ?? []) as Customer[]).filter((c) => v360.get(c.id)?.customer_health === healthFilter);
+    : ((customers ?? []) as Customer[]).filter((c) => v360.get(c.id)?.customer_status === healthFilter);
 
   const byStage: Record<string, Customer[]> = {
     cliente_em_ativacao: [],
@@ -108,7 +99,7 @@ async function AtivosPanel({ healthFilter }: { healthFilter: string }) {
       <div className="flex items-center justify-between">
         <p className="text-sm text-gray-400">{totalCount} clientes na carteira</p>
         <div className="flex gap-2">
-          {HEALTH_OPTIONS.map((opt) => {
+          {STATUS_OPTIONS.map((opt) => {
             const active = healthFilter === opt.key;
             return (
               <Link
@@ -152,7 +143,10 @@ async function AtivosPanel({ healthFilter }: { healthFilter: string }) {
                   Nenhum cliente nesta coluna
                 </div>
               )}
-              {byStage[col.key].map((c) => (
+              {byStage[col.key].map((c) => {
+                const m = v360.get(c.id);
+                const status = m?.customer_status ?? null;
+                return (
                 <Link
                   key={c.id}
                   href={`/dashboard/cliente/${c.id}`}
@@ -162,28 +156,23 @@ async function AtivosPanel({ healthFilter }: { healthFilter: string }) {
                     <div className="text-sm font-semibold text-white truncate flex-1">
                       {c.restaurant_name || c.name || c.phone}
                     </div>
-                    {(() => {
-                      const m = v360.get(c.id);
-                      const health = m?.customer_health ?? null;
-                      return (
-                        <div className="flex items-center gap-1 shrink-0">
-                          {m?.customer_tier && (
-                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#193264] text-white">
-                              {m.customer_tier}
-                            </span>
-                          )}
-                          <span
-                            className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded"
-                            style={{ background: health ? (HEALTH_COLORS[health] ?? "#9696AF") : "#3a3a3a", color: "#fff" }}
-                          >
-                            {health ?? "—"}
-                          </span>
-                        </div>
-                      );
-                    })()}
+                    <div className="flex items-center gap-1 shrink-0">
+                      {m?.customer_tier && (
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#193264] text-white">
+                          {m.customer_tier}
+                        </span>
+                      )}
+                      <span
+                        className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded"
+                        style={{ background: statusColor(status), color: "#fff" }}
+                      >
+                        {statusLabel(status)}
+                      </span>
+                    </div>
                   </div>
                   <div className="text-[11px] text-gray-500 truncate">
-                    {[c.city, c.weekly_volume_kg ? `${c.weekly_volume_kg}kg/sem` : null, c.phone]
+                    {[c.city, c.weekly_volume_kg ? `${c.weekly_volume_kg}kg/sem` : null,
+                      m?.dias_sem_compra != null ? `${m.dias_sem_compra}d s/ comprar` : null, c.phone]
                       .filter(Boolean)
                       .join(" · ")}
                   </div>
@@ -191,7 +180,8 @@ async function AtivosPanel({ healthFilter }: { healthFilter: string }) {
                     Vendor: {c.owner_seller_id ? vendorMap.get(c.owner_seller_id) ?? "—" : "—"}
                   </div>
                 </Link>
-              ))}
+                );
+              })}
             </div>
           </div>
         ))}
