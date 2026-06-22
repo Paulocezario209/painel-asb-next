@@ -11,15 +11,15 @@ const BUCKETS = [
 ] as const;
 
 type Row = {
-  lead_id: string;
+  ares_pessoa_id: number;
+  lead_id: string | null;
   phone: string;
   name: string | null;
   restaurant_name: string | null;
   city: string | null;
-  weekly_volume_kg: number | null;
-  funnel_stage: string;
   customer_health: string | null;
   owner_seller_id: string | null;
+  vendedor_nome: string | null;
   total_orders: number;
   last_order_at: string | null;
   next_expected_order_at: string | null;
@@ -27,17 +27,17 @@ type Row = {
   days_since_last_order: number | null;
   customer_tier: string | null;
   avg_ticket_brl: number | null;
+  total_revenue_brl: number | null;
   bucket: string;
   dias_pra_proximo: number;
 };
 
-type Vendor = { id: string; name: string };
-
 export default async function RecompraPage() {
   const supabase = await createClient();
-  const { data: rows } = await supabase.from("v_recompra_prevista").select("*");
-  const { data: vendors } = await supabase.from("vendors").select("id, name");
-  const vendorMap = new Map<string, string>((vendors ?? []).map((v: Vendor) => [v.id, v.name]));
+  const { data: rows } = await supabase
+    .from("v_recompra_prevista")
+    .select("*")
+    .order("next_expected_order_at", { ascending: true, nullsFirst: false });
 
   const byBucket: Record<string, Row[]> = { atrasado: [], hoje: [], proximos_3d: [], proximos_7d: [] };
   for (const r of (rows ?? []) as Row[]) {
@@ -50,7 +50,7 @@ export default async function RecompraPage() {
       <div>
         <h1 className="text-2xl font-bold text-white">Recompra Prevista</h1>
         <p className="text-sm text-gray-400 mt-1">
-          {total} clientes com recompra esperada nos próximos 7 dias · cálculo do worker daily 6h BRT (last_order + avg_interval)
+          {total} clientes com recompra esperada nos próximos 7 dias · carteira real ARES (last_order + avg_interval do faturado)
         </p>
       </div>
 
@@ -77,41 +77,42 @@ export default async function RecompraPage() {
               <div className="text-xs text-gray-600 italic py-3 text-center">Nenhum cliente neste bucket.</div>
             ) : (
               <div className="space-y-1.5">
-                {byBucket[b.key].map((r) => (
-                  <Link
-                    key={r.lead_id}
-                    href={`/dashboard/cliente/${r.lead_id}`}
-                    className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_auto] gap-2 items-center bg-[#0f0f0f] hover:bg-[#181818] border border-[#2a2a2a] hover:border-[#185FA5] rounded p-3 text-xs transition-all"
-                  >
-                    <div className="text-white font-semibold truncate">
-                      {r.restaurant_name || r.name || r.phone}
-                      <span className="text-gray-500 text-[10px] font-normal ml-2">
-                        {r.city ?? "—"} · {r.weekly_volume_kg ? `${r.weekly_volume_kg}kg/sem` : "—"}
-                      </span>
+                {byBucket[b.key].map((r) => {
+                  const row = (
+                    <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_auto] gap-2 items-center bg-[#0f0f0f] hover:bg-[#181818] border border-[#2a2a2a] hover:border-[#185FA5] rounded p-3 text-xs transition-all">
+                      <div className="text-white font-semibold truncate">
+                        {r.name || r.phone}
+                        <span className="text-gray-500 text-[10px] font-normal ml-2">{r.city ?? "—"}</span>
+                      </div>
+                      <div className="text-gray-400">
+                        <span className="text-gray-500 text-[10px]">Pedidos:</span>{" "}
+                        <span className="text-white">{r.total_orders}</span>
+                      </div>
+                      <div className="text-gray-400">
+                        <span className="text-gray-500 text-[10px]">Avg:</span>{" "}
+                        <span className="text-white">{r.avg_order_interval_days ? `${Number(r.avg_order_interval_days).toFixed(1)}d` : "—"}</span>
+                      </div>
+                      <div className="text-gray-400">
+                        <span className="text-gray-500 text-[10px]">Esperada:</span>{" "}
+                        <span className="text-white font-bold">
+                          {r.next_expected_order_at ? new Date(r.next_expected_order_at).toLocaleDateString("pt-BR") : "—"}
+                        </span>
+                      </div>
+                      <div className="text-gray-400">
+                        <span className="text-gray-500 text-[10px]">Tier:</span>{" "}
+                        <span className="text-white font-bold">{r.customer_tier ?? "—"}</span>
+                      </div>
+                      <div className="text-gray-500 text-right">{r.vendedor_nome?.split(" ")[0] ?? "—"}</div>
                     </div>
-                    <div className="text-gray-400">
-                      <span className="text-gray-500 text-[10px]">Pedidos:</span>{" "}
-                      <span className="text-white">{r.total_orders}</span>
-                    </div>
-                    <div className="text-gray-400">
-                      <span className="text-gray-500 text-[10px]">Avg:</span>{" "}
-                      <span className="text-white">{r.avg_order_interval_days ? `${Number(r.avg_order_interval_days).toFixed(1)}d` : "—"}</span>
-                    </div>
-                    <div className="text-gray-400">
-                      <span className="text-gray-500 text-[10px]">Esperada:</span>{" "}
-                      <span className="text-white font-bold">
-                        {r.next_expected_order_at ? new Date(r.next_expected_order_at).toLocaleDateString("pt-BR") : "—"}
-                      </span>
-                    </div>
-                    <div className="text-gray-400">
-                      <span className="text-gray-500 text-[10px]">Tier:</span>{" "}
-                      <span className="text-white font-bold">{r.customer_tier ?? "—"}</span>
-                    </div>
-                    <div className="text-gray-500 text-right">
-                      {r.owner_seller_id ? (vendorMap.get(r.owner_seller_id)?.split(" ")[0] ?? "—") : "—"}
-                    </div>
-                  </Link>
-                ))}
+                  );
+                  return r.lead_id ? (
+                    <Link key={r.ares_pessoa_id} href={`/dashboard/cliente/${r.lead_id}`} className="block">
+                      {row}
+                    </Link>
+                  ) : (
+                    <div key={r.ares_pessoa_id}>{row}</div>
+                  );
+                })}
               </div>
             )}
           </div>
