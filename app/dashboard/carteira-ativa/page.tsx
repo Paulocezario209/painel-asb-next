@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getUserContext } from "@/lib/auth/get-user-role";
 import { RecompraLista, type RecompraRow } from "./recompra-lista";
 import { SaudeCarteira, type SaudeVendedor } from "./saude-carteira";
+import { CarteiraKpisRow } from "./carteira-kpis";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +23,15 @@ export default async function CarteiraAtivaPage() {
     carteiraQ = carteiraQ.eq("routing_team", ctx.routing_team!);
   }
   const [{ data: rows }, { data: cart }] = await Promise.all([recompraQ, carteiraQ]);
+  const list = (rows ?? []) as RecompraRow[];
+
+  // KPIs (server-side, sobre a lista já escopada por acesso).
+  const kpis = {
+    total: list.length,
+    atencao: list.filter((r) => r.customer_status === "atencao").length,
+    ativos: list.filter((r) => r.customer_status === "ativo").length,
+    cesta: list.reduce((s, r) => s + (Number(r.cesta_valor_90d) || 0), 0),
+  };
 
   // Saúde da carteira agregada server-side por vendedor (sem view nova).
   const map = new Map<string, Record<string, number>>();
@@ -35,7 +45,8 @@ export default async function CarteiraAtivaPage() {
 
   return (
     <div className="space-y-6">
-      <RecompraLista rows={(rows ?? []) as RecompraRow[]} />
+      <CarteiraKpisRow kpis={kpis} />
+      <RecompraLista rows={list} />
       <SaudeCarteira saude={saude} />
     </div>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { CSSProperties } from "react";
 import { statusColor, statusLabel } from "@/lib/customer-status";
 
 type CestaItem = {
@@ -20,27 +21,27 @@ export type RecompraRow = {
   name: string | null;
   city: string | null;
   vendedor_nome: string | null;
+  routing_team: string | null;
   customer_status: string;
   customer_tier: string | null;
   total_orders: number;
+  last_order_at: string | null;
   next_expected_order_at: string | null;
-  bucket: string;
-  dias_pra_proximo: number;
+  days_since_last_order: number | null;
+  proxima_data_meta: string | null;
   cesta_qtd_produtos: number;
   cesta_valor_90d: number;
   cesta: CestaItem[];
 };
 
-const BUCKET: Record<string, { label: string; color: string }> = {
-  atrasado: { label: "Atrasado", color: "#BA1717" },
-  hoje: { label: "Hoje", color: "#D4A017" },
-  proximos_3d: { label: "Próx. 3d", color: "#BA7517" },
-  proximos_7d: { label: "Próx. 7d", color: "#185FA5" },
+// Tokens do design-system (padrão Inteligência).
+const S = {
+  card: { background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8 } as CSSProperties,
+  section: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", color: "#c0c8d8", fontFamily: "'Courier New', monospace" } as CSSProperties,
+  muted: { color: "#8899aa", fontSize: 10, fontFamily: "'Courier New', monospace" } as CSSProperties,
 };
-const ORDER = ["atrasado", "hoje", "proximos_3d", "proximos_7d"];
 
-const brl = (n: number) =>
-  (n ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+const brl = (n: number) => (n ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 const num = (n: number) => (n ?? 0).toLocaleString("pt-BR", { maximumFractionDigits: 2 });
 const dt = (s: string | null) => (s ? new Date(s).toLocaleDateString("pt-BR") : "—");
 
@@ -54,7 +55,7 @@ export function RecompraLista({ rows }: { rows: RecompraRow[] }) {
       return n;
     });
 
-  // Agrupa por vendedor (carteira separada, nunca misturada) → 1 coluna por vendedor (kanban).
+  // Agrupa por vendedor (carteira separada) → 1 coluna por vendedor (kanban).
   const byVend = new Map<string, RecompraRow[]>();
   for (const r of rows) {
     const k = r.vendedor_nome ?? "Sem vendedor";
@@ -65,74 +66,64 @@ export function RecompraLista({ rows }: { rows: RecompraRow[] }) {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold text-white">Recompra Prevista</h1>
-        <p className="text-sm text-gray-400 mt-1">
-          {rows.length} clientes · carteira real ARES · cesta sugerida (média 90d, unidade nativa)
-        </p>
-      </div>
+      <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: "'Courier New', monospace", letterSpacing: ".1em", textTransform: "uppercase" }}>
+        Carteira Ativa
+      </h1>
 
-      {/* Kanban: 1 coluna por vendedor, responsivo (empilha no mobile) */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {vendedores.map(([vend, list]) => {
-          // Ordena CADA carteira por urgência (bucket) e depois data esperada.
+          // Ordena: EM ATENÇÃO no topo (esfriando), depois dias_sem_compra DESC.
           const sorted = [...list].sort(
             (a, b) =>
-              ORDER.indexOf(a.bucket) - ORDER.indexOf(b.bucket) ||
-              (a.next_expected_order_at ?? "").localeCompare(b.next_expected_order_at ?? "")
+              (a.customer_status === "ativo" ? 1 : 0) - (b.customer_status === "ativo" ? 1 : 0) ||
+              (b.days_since_last_order ?? 0) - (a.days_since_last_order ?? 0)
           );
+          const proxMeta = sorted[0]?.proxima_data_meta ?? null;
           return (
-            <div key={vend} className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4 flex flex-col">
-              <div className="flex items-center gap-2 mb-3 pb-2 border-b border-[#2a2a2a]">
-                <h2 className="text-xs font-bold uppercase tracking-wider text-white truncate">{vend}</h2>
-                <span className="text-xs text-gray-500 ml-auto shrink-0">{sorted.length} clientes</span>
+            <div key={vend} style={{ ...S.card }} className="p-4 flex flex-col">
+              <div className="flex items-center gap-2 mb-3 pb-2" style={{ borderBottom: "1px solid #2a2a2a" }}>
+                <span style={S.section}>{vend}</span>
+                <span style={{ ...S.muted, marginLeft: "auto" }}>
+                  {proxMeta ? `próx meta ${dt(proxMeta)} · ` : ""}
+                  {sorted.length}
+                </span>
               </div>
 
               <div className="space-y-1.5 max-h-[75vh] overflow-y-auto pr-1">
                 {sorted.map((r) => {
-                  const b = BUCKET[r.bucket] ?? { label: r.bucket, color: "#556677" };
                   const isOpen = open.has(r.ares_pessoa_id);
+                  const col = statusColor(r.customer_status);
                   return (
-                    <div
-                      key={r.ares_pessoa_id}
-                      className="bg-[#0f0f0f] border border-[#2a2a2a] rounded-md overflow-hidden"
-                    >
+                    <div key={r.ares_pessoa_id} style={{ background: "#0f0f0f", border: "1px solid #2a2a2a", borderRadius: 6 }} className="overflow-hidden">
                       <button
                         onClick={() => toggle(r.ares_pessoa_id)}
-                        className="w-full flex items-center gap-2 p-3 text-xs text-left hover:bg-[#181818] transition-colors"
+                        className="w-full flex items-center gap-2 p-3 text-left hover:bg-[#181818] transition-colors"
                       >
-                        <span
-                          className="w-2 h-2 rounded-full shrink-0"
-                          style={{ background: b.color, boxShadow: `0 0 6px ${b.color}` }}
-                        />
+                        <span className="w-2 h-2 rounded-full shrink-0" style={{ background: col, boxShadow: `0 0 6px ${col}` }} />
                         <span className="flex-1 min-w-0">
-                          <span className="block text-white font-semibold truncate">
+                          <span className="block truncate" style={{ color: "#FFFFFF", fontSize: 12, fontWeight: 600 }}>
                             {r.name || `cliente ${r.ares_pessoa_id}`}
                           </span>
-                          <span className="block text-gray-500 text-[10px] truncate">
-                            {[r.city, `${r.cesta_qtd_produtos} prod · ${brl(r.cesta_valor_90d)}`]
+                          <span className="block truncate" style={S.muted}>
+                            {[
+                              r.city,
+                              r.days_since_last_order != null ? `${r.days_since_last_order}d s/ comprar` : null,
+                              `${r.cesta_qtd_produtos} prod · ${brl(r.cesta_valor_90d)}`,
+                            ]
                               .filter(Boolean)
                               .join(" · ")}
                           </span>
                         </span>
-                        <span className="text-right shrink-0">
-                          <span className="block font-bold text-[11px]" style={{ color: b.color }}>
-                            {dt(r.next_expected_order_at)}
-                          </span>
-                          <span className="flex items-center gap-1 justify-end mt-0.5">
-                            {r.customer_tier && (
-                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#193264] text-white">
-                                {r.customer_tier}
-                              </span>
-                            )}
-                            <span
-                              className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded"
-                              style={{ background: statusColor(r.customer_status), color: "#fff" }}
-                            >
-                              {statusLabel(r.customer_status)}
+                        <span className="text-right shrink-0 flex items-center gap-1">
+                          {r.customer_tier && (
+                            <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 3, background: "#193264", color: "#fff" }}>
+                              {r.customer_tier}
                             </span>
-                            <span className="text-gray-500 text-[10px] w-3 text-center">{isOpen ? "−" : "+"}</span>
+                          )}
+                          <span style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", padding: "2px 6px", borderRadius: 3, background: col, color: "#fff" }}>
+                            {statusLabel(r.customer_status)}
                           </span>
+                          <span style={{ ...S.muted, width: 12, textAlign: "center" }}>{isOpen ? "−" : "+"}</span>
                         </span>
                       </button>
 
@@ -154,7 +145,7 @@ function CestaView({ cesta, pedidos }: { cesta: CestaItem[]; pedidos: number }) 
     return <div className="px-3 pb-3 text-[11px] text-gray-600 italic">Sem cesta nos últimos 90d.</div>;
   return (
     <div className="px-3 pb-3 pt-1 border-t border-[#2a2a2a] space-y-1">
-      <div className="text-[10px] text-gray-500 uppercase tracking-wider mt-1 mb-1">
+      <div className="text-[10px] text-gray-500 uppercase tracking-wider mt-1 mb-1" style={{ fontFamily: "'Courier New', monospace" }}>
         Sugestão de pedido — média por compra · {pedidos} pedidos/90d
       </div>
       {cesta.map((p) => (

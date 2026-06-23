@@ -1,9 +1,18 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { CUSTOMER_STATUS, STATUS_FILTER_KEYS } from "@/lib/customer-status";
 
 export type SaudeVendedor = { vendedor: string; dist: Record<string, number> };
+
+// Tokens do design-system (padrão Inteligência).
+const S = {
+  card: { background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8 } as CSSProperties,
+  h2: { color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: "'Courier New', monospace", letterSpacing: ".1em", textTransform: "uppercase" } as CSSProperties,
+  section: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", color: "#c0c8d8", fontFamily: "'Courier New', monospace" } as CSSProperties,
+  muted: { color: "#8899aa", fontSize: 10, fontFamily: "'Courier New', monospace" } as CSSProperties,
+};
 
 const totalOf = (d: Record<string, number>) => Object.values(d).reduce((a, b) => a + b, 0);
 
@@ -16,8 +25,8 @@ export function SaudeCarteira({ saude }: { saude: SaudeVendedor[] }) {
 
   return (
     <div>
-      <h2 className="text-lg font-bold text-white mb-1">Saúde da carteira por vendedor</h2>
-      <p className="text-sm text-gray-400 mb-3">
+      <h2 style={{ ...S.h2, marginBottom: 4 }}>Saúde da carteira por vendedor</h2>
+      <p style={{ ...S.muted, marginBottom: 12 }}>
         Carteira real ARES por status (régua absoluta, 6 faixas de dias sem comprar)
       </p>
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -31,35 +40,22 @@ export function SaudeCarteira({ saude }: { saude: SaudeVendedor[] }) {
           })).filter((d) => d.value > 0);
 
           return (
-            <div key={s.vendedor} className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4">
+            <div key={s.vendedor} style={{ ...S.card }} className="p-4">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-white truncate">{s.vendedor}</h3>
-                <span className="text-xs text-gray-500 shrink-0 ml-2">{total} clientes</span>
+                <span style={S.section}>{s.vendedor}</span>
+                <span style={S.muted}>{total} clientes</span>
               </div>
 
               <div className="h-44">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
-                    <Pie
-                      data={data}
-                      dataKey="value"
-                      nameKey="name"
-                      innerRadius={42}
-                      outerRadius={64}
-                      paddingAngle={2}
-                      stroke="none"
-                    >
+                    <Pie data={data} dataKey="value" nameKey="name" innerRadius={42} outerRadius={64} paddingAngle={2} stroke="none">
                       {data.map((d) => (
                         <Cell key={d.key} fill={d.color} />
                       ))}
                     </Pie>
                     <Tooltip
-                      contentStyle={{
-                        background: "#0f0f0f",
-                        border: "1px solid #2a2a2a",
-                        borderRadius: 8,
-                        fontSize: 12,
-                      }}
+                      contentStyle={{ background: "#0f0f0f", border: "1px solid #2a2a2a", borderRadius: 8, fontSize: 12 }}
                       formatter={(v, n) => {
                         const val = Number(v) || 0;
                         return [`${val} (${Math.round((100 * val) / total)}%)`, String(n)];
@@ -71,11 +67,11 @@ export function SaudeCarteira({ saude }: { saude: SaudeVendedor[] }) {
 
               <div className="mt-2 space-y-1">
                 {data.map((d) => (
-                  <div key={d.key} className="flex items-center gap-2 text-[11px]">
+                  <div key={d.key} className="flex items-center gap-2" style={{ fontSize: 11, fontFamily: "'Courier New', monospace" }}>
                     <span className="w-2 h-2 rounded-full shrink-0" style={{ background: d.color }} />
-                    <span className="text-gray-300 flex-1 truncate">{d.name}</span>
-                    <span className="text-white font-mono tabular-nums">{d.value}</span>
-                    <span className="text-gray-500 w-9 text-right">{Math.round((100 * d.value) / total)}%</span>
+                    <span className="flex-1 truncate" style={{ color: "#c8d8e8" }}>{d.name}</span>
+                    <span className="tabular-nums" style={{ color: "#FFFFFF" }}>{d.value}</span>
+                    <span className="w-9 text-right" style={{ color: "#8899aa" }}>{Math.round((100 * d.value) / total)}%</span>
                   </div>
                 ))}
               </div>
