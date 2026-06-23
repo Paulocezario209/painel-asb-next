@@ -89,7 +89,7 @@ export function RecompraLista({ rows }: { rows: RecompraRow[] }) {
                 </span>
               </div>
 
-              <div className="space-y-1.5 max-h-[75vh] overflow-y-auto pr-1">
+              <div className="space-y-1.5">
                 {sorted.map((r) => {
                   const isOpen = open.has(r.ares_pessoa_id);
                   const col = statusColor(r.customer_status);
