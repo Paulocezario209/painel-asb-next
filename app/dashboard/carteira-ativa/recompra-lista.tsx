@@ -34,7 +34,11 @@ export type RecompraRow = {
   cesta: CestaItem[];
 };
 
-// Camada OPERAÇÃO: sóbria (sem glow forte), contrasta com a camada de inteligência (cards elevados+glow).
+// Cards de vendedor com PRESENÇA (Paulo): elevados + glow tech, mesmo estilo p/ todos (sem cor por vendedor).
+const cardPresenca: CSSProperties = {
+  background: "#16161c", border: "1px solid #2a2a35", borderRadius: 10,
+  boxShadow: "0 0 26px -10px rgba(79,125,240,.55), inset 0 1px 0 0 rgba(79,125,240,.10)",
+};
 const S = {
   card: { background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8 } as CSSProperties,
   h1: { color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: "'Courier New', monospace", letterSpacing: ".1em", textTransform: "uppercase" } as CSSProperties,
@@ -78,20 +82,24 @@ export function RecompraLista({ rows }: { rows: RecompraRow[] }) {
           const proxMeta = sorted[0]?.proxima_data_meta ?? null;
           const isVendOpen = openVend.has(vend);
           return (
-            <div key={vend} style={{ ...S.card }} className="p-4 flex flex-col">
-              {/* Header colapsável */}
+            <div key={vend} style={{ ...cardPresenca }} className="p-5 flex flex-col">
+              {/* Header colapsável (presença tech) */}
               <button
                 onClick={() => toggleVend(vend)}
-                className="w-full flex items-center gap-2 text-left"
-                style={{ paddingBottom: isVendOpen ? 8 : 0, borderBottom: isVendOpen ? "1px solid #2a2a2a" : "none", marginBottom: isVendOpen ? 12 : 0 }}
+                className="w-full flex items-center gap-3 text-left"
+                style={{ paddingBottom: isVendOpen ? 10 : 0, borderBottom: isVendOpen ? "1px solid #2a2a35" : "none", marginBottom: isVendOpen ? 12 : 0 }}
               >
                 <span
-                  style={{ ...S.muted, width: 14, textAlign: "center", fontSize: 13, color: "#c0c8d8" }}
+                  style={{
+                    width: 22, height: 22, flexShrink: 0, display: "inline-flex", alignItems: "center", justifyContent: "center",
+                    borderRadius: 6, background: "#0c0c12", border: "1px solid #2a2a35", color: "#4f7df0",
+                    fontSize: 14, fontWeight: 700, boxShadow: "0 0 8px -2px #4f7df0",
+                  }}
                   aria-hidden
                 >
                   {isVendOpen ? "−" : "+"}
                 </span>
-                <span style={S.section}>{vend}</span>
+                <span style={{ ...S.section, fontSize: 11, color: "#FFFFFF" }}>{vend}</span>
                 <span style={{ ...S.muted, marginLeft: "auto" }}>
                   {proxMeta ? `próx meta ${dt(proxMeta)} · ` : ""}
                   {sorted.length} clientes

@@ -1,7 +1,21 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from "recharts";
+
+// Padrões reusados da aba Inteligência (components/insights/segment-chart.tsx): barra horizontal
+// gradiente + tooltip estilizado + eixos mono. Adaptado ao tema tech (glow azul ASB).
+const GRID = "rgba(27,42,107,.35)";
+const axisStyle = { fontSize: 10, fontFamily: "'Courier New', monospace", fill: "#556677" };
+const tooltipStyle = {
+  contentStyle: {
+    background: "#16161c", border: "1px solid #4f7df0", borderRadius: 4,
+    fontSize: 11, fontFamily: "'Courier New', monospace", color: "#c8d8e8",
+    boxShadow: "0 4px 20px rgba(79,125,240,.20)",
+  },
+  itemStyle: { color: "#c8d8e8" },
+  labelStyle: { color: "#556677", fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase" as const },
+};
 
 // Tokens do design-system (padrão Inteligência) + camada de glow tech sutil.
 const S = {
@@ -14,7 +28,6 @@ const S = {
 };
 // glow sutil por accent (camada de inteligência = "painel de comando")
 const glow = (hex: string): CSSProperties => ({ boxShadow: `0 0 22px -8px ${hex}, inset 0 1px 0 0 ${hex}1a` });
-const GRUPO_COLORS = ["#4f7df0", "#C8102E", "#D4A017", "#22c55e", "#9333ea", "#D85A30", "#60a5fa", "#f59e0b"];
 
 const brl = (n: number) => (n ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 const dt = (s: string | null) => (s ? new Date(s).toLocaleDateString("pt-BR") : "—");
@@ -133,7 +146,7 @@ export function TopProdutosSection({ meta, top }: { meta: MetaRow[]; top: TopRow
   );
 }
 
-// ── (e) Mix por grupo de produto ──
+// ── (e) Mix por grupo de produto — BARRAS HORIZONTAIS (estilo Inteligência) ──
 export function GruposSection({ meta, grupos }: { meta: MetaRow[]; grupos: GrupoRow[] }) {
   const grupoBy = groupBy(grupos);
   return (
@@ -146,29 +159,31 @@ export function GruposSection({ meta, grupos }: { meta: MetaRow[]; grupos: Grupo
           const data = gs
             .slice()
             .sort((a, b) => b.valor_total - a.valor_total)
-            .map((g, i) => ({ name: g.grupo_nome, value: Number(g.valor_total), pct: g.pct, color: GRUPO_COLORS[i % GRUPO_COLORS.length] }));
+            .map((g) => ({ name: g.grupo_nome, value: Number(g.valor_total), pct: g.pct }));
+          const h = Math.max(140, data.length * 30);
           return (
             <div key={rt} style={{ ...S.card, ...glow("#4f7df0") }} className="p-4">
               <div style={{ ...S.section, marginBottom: 8 }}>{nome}</div>
-              <div className="h-40" style={{ filter: "drop-shadow(0 0 6px rgba(79,125,240,.25))" }}>
+              <div style={{ height: h, filter: "drop-shadow(0 0 6px rgba(79,125,240,.25))" }}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie data={data} dataKey="value" nameKey="name" innerRadius={38} outerRadius={58} paddingAngle={2} stroke="none">
-                      {data.map((d) => (
-                        <Cell key={d.name} fill={d.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      contentStyle={{ background: "#0c0c12", border: "1px solid #2a2a35", borderRadius: 8, fontSize: 12 }}
-                      formatter={(v, n) => [`${brl(Number(v) || 0)}`, String(n)]}
-                    />
-                  </PieChart>
+                  <BarChart data={data} layout="vertical" margin={{ left: 8, right: 16, top: 4, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id={`grupoBar-${rt}`} x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stopColor="#0d1a3a" />
+                        <stop offset="100%" stopColor="#4f7df0" />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke={GRID} horizontal={false} />
+                    <XAxis type="number" tick={axisStyle} axisLine={{ stroke: GRID }} tickLine={false} hide />
+                    <YAxis type="category" dataKey="name" width={96} tick={axisStyle} axisLine={false} tickLine={false} />
+                    <Tooltip {...tooltipStyle} cursor={{ fill: "rgba(79,125,240,.08)" }} formatter={(v) => [brl(Number(v) || 0), "Valor 30d"]} />
+                    <Bar dataKey="value" fill={`url(#grupoBar-${rt})`} radius={[0, 3, 3, 0]} />
+                  </BarChart>
                 </ResponsiveContainer>
               </div>
-              <div className="mt-2 space-y-1">
+              <div className="mt-1 space-y-1">
                 {data.slice(0, 5).map((d) => (
                   <div key={d.name} className="flex items-center gap-2" style={{ fontSize: 11, fontFamily: "'Courier New', monospace" }}>
-                    <span className="w-2 h-2 rounded-full shrink-0" style={{ background: d.color, boxShadow: `0 0 6px ${d.color}` }} />
                     <span className="flex-1 truncate" style={{ color: "#c8d8e8" }}>{d.name}</span>
                     <span style={{ color: "#8899aa", width: 36, textAlign: "right" }}>{d.pct}%</span>
                   </div>
