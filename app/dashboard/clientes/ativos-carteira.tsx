@@ -17,14 +17,14 @@ export type Carteira = {
   total_orders: number | null;
 };
 
-// chips: default = carteira VIVA (ativo/atencao); a tab COMPLETA passa os 6 status.
+// default = carteira VIVA (ativo/atencao); a tab COMPLETA passa os 7 (6 + sem_movimentacao).
 const LIVE_STATUS: readonly string[] = ["ativo", "atencao"];
 
 const brl = (n: number | null) =>
   (n ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 
-// rows já vêm filtradas pelo chip (server) e ordenadas por receita DESC.
-// tab/statusKeys parametrizam o reuso: ATIVOS (2 status) e COMPLETA (6 status).
+// rows = universo COMPLETO da tab (todos os statusKeys); filtro de status + busca = client-side.
+// statusKeys parametriza: ATIVOS (2) e COMPLETA (7). KPIs no topo no MESMO padrão de CHURN/UP-SELL.
 export function AtivosCarteira({
   rows,
   healthFilter,
@@ -36,23 +36,37 @@ export function AtivosCarteira({
   tab?: string;
   statusKeys?: readonly string[];
 }) {
-  const STATUS_OPTIONS: { key: string; label: string }[] = [
-    { key: "all", label: "Todos" },
-    ...statusKeys.map((k) => ({ key: k, label: CUSTOMER_STATUS[k]?.label ?? k })),
-  ];
   const [q, setQ] = useState("");
   const termo = q.trim().toLowerCase();
 
-  // Busca 100% client-side (zero chamada nova): casa por name OU city, case-insensitive.
+  // contagem por status (sobre o universo completo) — alimenta os KPI-cards do topo.
+  const counts = new Map<string, number>();
+  for (const c of rows) counts.set(c.customer_status, (counts.get(c.customer_status) ?? 0) + 1);
+
+  // KPI-cards: "Todos" + um por status (count + cor + clicável p/ filtrar via ?health=).
+  const KPIS = [
+    { key: "all", label: "Todos", color: "#185FA5", desc: "toda a carteira", count: rows.length },
+    ...statusKeys.map((k) => ({
+      key: k,
+      label: CUSTOMER_STATUS[k]?.label ?? k,
+      color: CUSTOMER_STATUS[k]?.color ?? "#556677",
+      desc: CUSTOMER_STATUS[k]?.desc ?? "",
+      count: counts.get(k) ?? 0,
+    })),
+  ];
+
+  // filtro de status (client-side) → depois a busca por nome/cidade.
+  const statusBase =
+    healthFilter && healthFilter !== "all" ? rows.filter((c) => c.customer_status === healthFilter) : rows;
   const filtradas = termo
-    ? rows.filter(
+    ? statusBase.filter(
         (c) => (c.name ?? "").toLowerCase().includes(termo) || (c.city ?? "").toLowerCase().includes(termo)
       )
-    : rows;
+    : statusBase;
 
-  // Ordem de colunas ESTÁVEL = receita da carteira completa (não muda durante a busca).
+  // Ordem de colunas ESTÁVEL = receita do status base (não muda durante a busca).
   const revTotal = new Map<string, number>();
-  for (const c of rows) {
+  for (const c of statusBase) {
     const k = c.vendedor_nome ?? "Sem vendedor";
     revTotal.set(k, (revTotal.get(k) ?? 0) + (c.total_revenue_brl ?? 0));
   }
@@ -70,28 +84,35 @@ export function AtivosCarteira({
 
   return (
     <div className="space-y-4">
+      {/* KPIs por status (mesmo padrão de CHURN/UP-SELL) — clicáveis p/ filtrar */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {KPIS.map((k) => {
+          const active = (healthFilter || "all") === k.key;
+          return (
+            <Link
+              key={k.key}
+              href={`/dashboard/clientes?tab=${tab}&health=${k.key}`}
+              className="bg-[#16161c] border rounded-lg p-4 transition-all block"
+              style={{
+                borderColor: active ? k.color : "#2a2a35",
+                borderTop: `3px solid ${k.color}`,
+                boxShadow: active ? `0 0 28px -6px ${k.color}` : "0 0 24px -8px rgba(79,125,240,0.45)",
+              }}
+            >
+              <div className="text-[10px] uppercase tracking-wider font-bold truncate" style={{ color: k.color }}>
+                {k.label}
+              </div>
+              <div className="text-3xl font-bold text-white mt-2">{k.count}</div>
+              <div className="text-[10px] text-gray-500 mt-2 leading-tight truncate">{k.desc}</div>
+            </Link>
+          );
+        })}
+      </div>
+
       <div className="flex items-center justify-between flex-wrap gap-2">
         <p className="text-sm text-gray-400">
-          {filtradas.length} de {rows.length} clientes ativos · {brl(totalReceita)} faturado
+          {filtradas.length} de {rows.length} clientes · {brl(totalReceita)} faturado
         </p>
-        <div className="flex gap-2 flex-wrap">
-          {STATUS_OPTIONS.map((opt) => {
-            const active = healthFilter === opt.key;
-            return (
-              <Link
-                key={opt.key}
-                href={`/dashboard/clientes?tab=${tab}&health=${opt.key}`}
-                className={`px-3 py-1.5 text-xs font-semibold uppercase tracking-wider rounded-md transition-all ${
-                  active
-                    ? "bg-[#193264] text-white"
-                    : "bg-[#1a1a1a] text-gray-400 hover:bg-[#2a2a2a] hover:text-white"
-                }`}
-              >
-                {opt.label}
-              </Link>
-            );
-          })}
-        </div>
       </div>
 
       <input
@@ -99,10 +120,10 @@ export function AtivosCarteira({
         value={q}
         onChange={(e) => setQ(e.target.value)}
         placeholder="Buscar por nome ou cidade…"
-        className="w-full bg-[#0f0f0f] border border-[#2a2a2a] focus:border-[#185FA5] rounded-md px-3 py-2 text-sm text-white placeholder:text-gray-600 outline-none transition-colors"
+        className="w-full bg-[#0f0f0f] border border-[#2a2a35] focus:border-[#4f7df0] rounded-md px-3 py-2 text-sm text-white placeholder:text-gray-600 outline-none transition-colors"
       />
 
-      {/* Colunas por vendedor (carteira viva), receita DESC dentro de cada */}
+      {/* Colunas por vendedor, receita DESC dentro de cada */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {colunas.map((col) => (
           <div key={col.nome} className="bg-[#16161c] border border-[#2a2a35] rounded-lg p-4 shadow-[0_0_26px_-10px_rgba(79,125,240,0.55)]">

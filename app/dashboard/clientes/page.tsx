@@ -29,11 +29,11 @@ async function AtivosPanel({ healthFilter }: { healthFilter: string }) {
   // risco/churn/inativo NÃO aparecem aqui (vivem na aba Churn). Chip aplicado no server; a busca por
   // nome/cidade é client-side (zero chamada nova) no AtivosCarteira.
   // RBAC: a aba hoje não escopa por vendedor logado (mostra a carteira inteira).
-  const want = healthFilter === "ativo" || healthFilter === "atencao" ? [healthFilter] : ["ativo", "atencao"];
+  // universo VIVO completo (ativo+atencao); o filtro por status é client-side no AtivosCarteira.
   const { data: carteira } = await supabase
     .from("v_carteira_360")
     .select("ares_pessoa_id, lead_id, name, city, vendedor_nome, customer_status, customer_tier, dias_sem_compra, total_revenue_brl, total_orders")
-    .in("customer_status", want)
+    .in("customer_status", ["ativo", "atencao"])
     .order("total_revenue_brl", { ascending: false, nullsFirst: false });
 
   return <AtivosCarteira rows={(carteira ?? []) as Carteira[]} healthFilter={healthFilter} />;
@@ -51,15 +51,15 @@ async function CompletaPanel({ healthFilter }: { healthFilter: string }) {
   const isVendedorRestrito = !!ctx && ctx.isVendedor && !!ctx.routing_team && ctx.routing_team !== "SETOR_CUIT";
 
   const ALL = COMPLETA_STATUS as readonly string[];
-  const want = ALL.includes(healthFilter) ? [healthFilter] : [...ALL];
 
+  // universo COMPLETO (todos os 7 status); filtro por status é client-side no AtivosCarteira.
   const PAGE = 1000;
   let all: Carteira[] = [];
   for (let off = 0; ; off += PAGE) {
     let q = supabase
       .from("v_carteira_completa")
       .select("ares_pessoa_id, lead_id, name, city, vendedor_nome, customer_status, customer_tier, dias_sem_compra, total_revenue_brl, total_orders")
-      .in("customer_status", want)
+      .in("customer_status", [...ALL])
       .order("total_revenue_brl", { ascending: false, nullsFirst: false })
       .range(off, off + PAGE - 1);
     if (isVendedorRestrito) q = q.eq("routing_team", ctx!.routing_team!);
