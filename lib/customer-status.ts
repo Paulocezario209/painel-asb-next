@@ -9,6 +9,8 @@ export const CUSTOMER_STATUS: Record<string, { label: string; color: string; des
   pre_churn:          { label: "PRÉ-CHURN",          color: theme.colors.brandCnb, desc: "22–30d sem comprar" },
   churn_comercial:    { label: "CHURN COMERCIAL",    color: theme.colors.critical, desc: "31–59d sem comprar" },
   inativo_definitivo: { label: "INATIVO DEFINITIVO", color: theme.colors.neutral,  desc: "≥60d sem comprar" },
+  // aba COMPLETA (carteira vinculada): cliente atribuído ao vendedor sem faturado na carteira ativa.
+  sem_movimentacao:   { label: "SEM MOVIMENTAÇÃO",  color: theme.colors.textMuted, desc: "vinculado, sem faturado na carteira ativa" },
 };
 
 // estados de churn (telas de churn/risco) — ordem de severidade

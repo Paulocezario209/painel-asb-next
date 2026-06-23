@@ -2,6 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { theme } from "@/lib/theme";
 import { AtivosCarteira, type Carteira } from "./ativos-carteira";
+import { getUserContext } from "@/lib/auth/get-user-role";
+import { STATUS_FILTER_KEYS } from "@/lib/customer-status";
 // ETAPA8: carteira unificada — abas reusam os server components das rotas /up-sell /churn.
 // Recompra saiu daqui na Fase 0 (virou a camada própria /dashboard/carteira-ativa).
 import UpSellPage from "@/app/dashboard/up-sell/page";
@@ -14,6 +16,7 @@ const TABS = [
   { key: "ativos", label: "Ativos" },
   { key: "upsell", label: "Up-sell" },
   { key: "churn", label: "Churn" },
+  { key: "completa", label: "Completa" },
 ] as const;
 
 type TabKey = (typeof TABS)[number]["key"];
@@ -34,6 +37,46 @@ async function AtivosPanel({ healthFilter }: { healthFilter: string }) {
     .order("total_revenue_brl", { ascending: false, nullsFirst: false });
 
   return <AtivosCarteira rows={(carteira ?? []) as Carteira[]} healthFilter={healthFilter} />;
+}
+
+// ── Aba COMPLETA — carteira INTEIRA por vendedor (1259, todos os status + sem_movimentacao) ──────
+// Fonte: v_carteira_completa (ares_pessoas atribuídos ⋈ v_carteira_360). Reusa AtivosCarteira.
+// Acesso por vendedor: gestor vê 1259; restrito (≠ CUIT) só a própria (.eq routing_team).
+// ⚠️ PostgREST trunca em 1000 (DEBT-P2) e a COMPLETA tem 1259 (gestor) → PAGINAR via .range().
+const COMPLETA_STATUS = [...STATUS_FILTER_KEYS, "sem_movimentacao"] as const;
+
+async function CompletaPanel({ healthFilter }: { healthFilter: string }) {
+  const supabase = await createClient();
+  const ctx = await getUserContext();
+  const isVendedorRestrito = !!ctx && ctx.isVendedor && !!ctx.routing_team && ctx.routing_team !== "SETOR_CUIT";
+
+  const ALL = COMPLETA_STATUS as readonly string[];
+  const want = ALL.includes(healthFilter) ? [healthFilter] : [...ALL];
+
+  const PAGE = 1000;
+  let all: Carteira[] = [];
+  for (let off = 0; ; off += PAGE) {
+    let q = supabase
+      .from("v_carteira_completa")
+      .select("ares_pessoa_id, lead_id, name, city, vendedor_nome, customer_status, customer_tier, dias_sem_compra, total_revenue_brl, total_orders")
+      .in("customer_status", want)
+      .order("total_revenue_brl", { ascending: false, nullsFirst: false })
+      .range(off, off + PAGE - 1);
+    if (isVendedorRestrito) q = q.eq("routing_team", ctx!.routing_team!);
+    const { data } = await q;
+    const batch = (data ?? []) as Carteira[];
+    all = all.concat(batch);
+    if (batch.length < PAGE) break; // última página
+  }
+
+  return (
+    <AtivosCarteira
+      rows={all}
+      healthFilter={healthFilter}
+      tab="completa"
+      statusKeys={ALL}
+    />
+  );
 }
 
 // ── Host /clientes — barra de abas + roteamento por ?tab= (server-side) ────────────
@@ -94,6 +137,8 @@ export default async function ClientesPage({
         <UpSellPage />
       ) : tab === "churn" ? (
         <ChurnPage />
+      ) : tab === "completa" ? (
+        <CompletaPanel healthFilter={healthFilter} />
       ) : (
         <AtivosPanel healthFilter={healthFilter} />
       )}

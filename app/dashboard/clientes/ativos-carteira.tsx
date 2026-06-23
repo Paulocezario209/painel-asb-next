@@ -17,18 +17,29 @@ export type Carteira = {
   total_orders: number | null;
 };
 
-// chips da carteira VIVA — risco/churn vivem na aba Churn
-const LIVE_STATUS = ["ativo", "atencao"] as const;
-const STATUS_OPTIONS: { key: string; label: string }[] = [
-  { key: "all", label: "Todos" },
-  ...LIVE_STATUS.map((k) => ({ key: k as string, label: CUSTOMER_STATUS[k].label })),
-];
+// chips: default = carteira VIVA (ativo/atencao); a tab COMPLETA passa os 6 status.
+const LIVE_STATUS: readonly string[] = ["ativo", "atencao"];
 
 const brl = (n: number | null) =>
   (n ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 
 // rows já vêm filtradas pelo chip (server) e ordenadas por receita DESC.
-export function AtivosCarteira({ rows, healthFilter }: { rows: Carteira[]; healthFilter: string }) {
+// tab/statusKeys parametrizam o reuso: ATIVOS (2 status) e COMPLETA (6 status).
+export function AtivosCarteira({
+  rows,
+  healthFilter,
+  tab = "ativos",
+  statusKeys = LIVE_STATUS,
+}: {
+  rows: Carteira[];
+  healthFilter: string;
+  tab?: string;
+  statusKeys?: readonly string[];
+}) {
+  const STATUS_OPTIONS: { key: string; label: string }[] = [
+    { key: "all", label: "Todos" },
+    ...statusKeys.map((k) => ({ key: k, label: CUSTOMER_STATUS[k]?.label ?? k })),
+  ];
   const [q, setQ] = useState("");
   const termo = q.trim().toLowerCase();
 
@@ -69,7 +80,7 @@ export function AtivosCarteira({ rows, healthFilter }: { rows: Carteira[]; healt
             return (
               <Link
                 key={opt.key}
-                href={`/dashboard/clientes?tab=ativos&health=${opt.key}`}
+                href={`/dashboard/clientes?tab=${tab}&health=${opt.key}`}
                 className={`px-3 py-1.5 text-xs font-semibold uppercase tracking-wider rounded-md transition-all ${
                   active
                     ? "bg-[#193264] text-white"
