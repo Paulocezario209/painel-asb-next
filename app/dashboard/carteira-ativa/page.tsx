@@ -4,6 +4,7 @@ import { getUserContext } from "@/lib/auth/get-user-role";
 import { RecompraLista, type RecompraRow } from "./recompra-lista";
 import { SaudeCarteira, type SaudeVendedor } from "./saude-carteira";
 import { CarteiraKpisRow } from "./carteira-kpis";
+import { CarteiraAnalytics, type MetaRow, type TopRow, type GrupoRow } from "./carteira-analytics";
 
 export const dynamic = "force-dynamic";
 
@@ -13,16 +14,29 @@ export default async function CarteiraAtivaPage() {
   if (!ctx) redirect("/dashboard");
 
   // ACESSO (padrão idêntico a /dashboard/vendas): gestor/manager veem os 3 vendedores;
-  // vendedor restrito (≠ CUIT) só a própria carteira, filtrando por routing_team.
+  // vendedor restrito (≠ CUIT) só a própria carteira, filtrando por routing_team em TODAS as queries.
   const isVendedorRestrito = ctx.isVendedor && !!ctx.routing_team && ctx.routing_team !== "SETOR_CUIT";
 
   let recompraQ = supabase.from("v_recompra_com_sugestao").select("*");
   let carteiraQ = supabase.from("v_carteira_360").select("customer_status, vendedor_nome, routing_team");
+  let metaQ = supabase.from("v_recompra_meta_dia").select("*");
+  let topQ = supabase.from("v_produtos_top").select("*");
+  let gruposQ = supabase.from("v_recompra_grupos").select("*");
   if (isVendedorRestrito) {
-    recompraQ = recompraQ.eq("routing_team", ctx.routing_team!);
-    carteiraQ = carteiraQ.eq("routing_team", ctx.routing_team!);
+    const rt = ctx.routing_team!;
+    recompraQ = recompraQ.eq("routing_team", rt);
+    carteiraQ = carteiraQ.eq("routing_team", rt);
+    metaQ = metaQ.eq("routing_team", rt);
+    topQ = topQ.eq("routing_team", rt);
+    gruposQ = gruposQ.eq("routing_team", rt);
   }
-  const [{ data: rows }, { data: cart }] = await Promise.all([recompraQ, carteiraQ]);
+  const [{ data: rows }, { data: cart }, { data: metaD }, { data: topD }, { data: gruposD }] = await Promise.all([
+    recompraQ,
+    carteiraQ,
+    metaQ,
+    topQ,
+    gruposQ,
+  ]);
   const list = (rows ?? []) as RecompraRow[];
 
   // KPIs (server-side, sobre a lista já escopada por acesso).
@@ -47,6 +61,11 @@ export default async function CarteiraAtivaPage() {
     <div className="space-y-6">
       <CarteiraKpisRow kpis={kpis} />
       <RecompraLista rows={list} />
+      <CarteiraAnalytics
+        meta={(metaD ?? []) as MetaRow[]}
+        top={(topD ?? []) as TopRow[]}
+        grupos={(gruposD ?? []) as GrupoRow[]}
+      />
       <SaudeCarteira saude={saude} />
     </div>
   );
