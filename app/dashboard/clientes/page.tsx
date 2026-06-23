@@ -2,9 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { theme } from "@/lib/theme";
 import { AtivosCarteira, type Carteira } from "./ativos-carteira";
-// ETAPA8: carteira unificada — abas reusam os server components já existentes das rotas
-// (sem reescrever, mover ou deletar; as rotas /recompra //up-sell //churn seguem ativas).
-import RecompraPage from "@/app/dashboard/recompra/page";
+// ETAPA8: carteira unificada — abas reusam os server components das rotas /up-sell /churn.
+// Recompra saiu daqui na Fase 0 (virou a camada própria /dashboard/carteira-ativa).
 import UpSellPage from "@/app/dashboard/up-sell/page";
 import ChurnPage from "@/app/dashboard/churn/page";
 
@@ -13,7 +12,6 @@ export const dynamic = "force-dynamic";
 // ETAPA8: abas da carteira unificada
 const TABS = [
   { key: "ativos", label: "Ativos" },
-  { key: "recompra", label: "Recompra" },
   { key: "upsell", label: "Up-sell" },
   { key: "churn", label: "Churn" },
 ] as const;
@@ -92,9 +90,7 @@ export default async function ClientesPage({
       </div>
 
       {/* Conteúdo da aba — reusa os server components das rotas existentes */}
-      {tab === "recompra" ? (
-        <RecompraPage />
-      ) : tab === "upsell" ? (
+      {tab === "upsell" ? (
         <UpSellPage />
       ) : tab === "churn" ? (
         <ChurnPage />
