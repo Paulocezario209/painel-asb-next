@@ -6,6 +6,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { MessageCircle, CheckCircle, TrendingUp, AlertTriangle } from "lucide-react";
 import { LeadScoreBadge } from "@/components/dashboard/lead-score-badge";
+import { resolveOrigem, origemDetalhe, ORIGEM_FILTER_OPTIONS } from "@/lib/origem-canal";
 
 type Lead = {
   phone: string;
@@ -29,6 +30,10 @@ type Lead = {
   pain_point: string | null;
   product_groups: string[] | null;
   scheduled_at: string | null;
+  origem_canal: string | null;
+  origem_utm_source: string | null;
+  origem_utm_campaign: string | null;
+  ad_id: string | null;
   lead_score?: number | null;        // ETAPA 4: v_lead_score (via server) ou fallback
   lead_tier?: "A" | "B" | "C" | null;
 };
@@ -150,6 +155,24 @@ function Badge({ cfg }: { cfg: BadgeCfg }) {
   );
 }
 
+// Badge de ORIGEM (helper centralizado lib/origem-canal). Tooltip = campanha/ad_id quando houver.
+function OrigemBadge({ lead }: { lead: Lead }) {
+  const cfg = resolveOrigem(lead);
+  const det = origemDetalhe(lead);
+  return (
+    <span
+      title={det ? `${cfg.label} — ${det}` : cfg.label}
+      style={{
+        display: "inline-block", padding: "2px 5px", borderRadius: 3,
+        fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase",
+        fontFamily: "'Courier New', monospace", fontWeight: 700,
+        color: cfg.color, background: cfg.bg, border: `1px solid ${cfg.border}`,
+        cursor: det ? "help" : "default",
+      }}
+    >{cfg.label}</span>
+  );
+}
+
 function Select({ value, onChange, children }: { value: string; onChange: (v: string) => void; children: React.ReactNode }) {
   return (
     <select
@@ -175,6 +198,7 @@ export function LeadsTable({ leads: initialLeads, userEmail, initialStatus = "al
   const [vendorFilter, setVendorFilter] = useState("all");
   const [abcFilter, setAbcFilter] = useState("all");
   const [productFilter, setProductFilter] = useState("all");
+  const [origemFilter, setOrigemFilter] = useState("all");
   const [isPending, startTransition] = useTransition();
 
   const filtered = leads.filter((l) => {
@@ -184,7 +208,8 @@ export function LeadsTable({ leads: initialLeads, userEmail, initialStatus = "al
     const matchVendor  = vendorFilter === "all" || l.routing_team === vendorFilter;
     const matchAbc     = abcFilter === "all" || abcCurve(l.weekly_volume_kg) === abcFilter;
     const matchProduct = productFilter === "all" || (l.product_groups ?? []).includes(productFilter);
-    return matchSearch && matchStatus && matchVendor && matchAbc && matchProduct;
+    const matchOrigem  = origemFilter === "all" || resolveOrigem(l).key === origemFilter;
+    return matchSearch && matchStatus && matchVendor && matchAbc && matchProduct && matchOrigem;
   });
 
   async function confirmHandoff(phone: string) {
@@ -249,6 +274,9 @@ export function LeadsTable({ leads: initialLeads, userEmail, initialStatus = "al
         <Select value={productFilter} onChange={setProductFilter}>
           <option value="all">produto: todos</option>
           {Object.entries(PRODUCT_LABELS).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
+        </Select>
+        <Select value={origemFilter} onChange={setOrigemFilter}>
+          {ORIGEM_FILTER_OPTIONS.map((o) => <option key={o.key} value={o.key}>{o.label}</option>)}
         </Select>
         <button
           onClick={() => startTransition(() => router.refresh())}
@@ -337,6 +365,7 @@ export function LeadsTable({ leads: initialLeads, userEmail, initialStatus = "al
                 <Badge cfg={ABC_CFG[abc]} />
                 <Badge cfg={TEMP_CFG[lead.lead_temperature ?? ""] ?? TEMP_CFG.COLD} />
                 <Badge cfg={STATUS_CFG[status] ?? STATUS_CFG.new} />
+                <OrigemBadge lead={lead} />
                 {lead.city && (
                   <span style={{ color: C.muted, fontSize: 9, fontFamily: "'Courier New', monospace" }}>
                     {lead.city}
@@ -367,7 +396,7 @@ export function LeadsTable({ leads: initialLeads, userEmail, initialStatus = "al
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ background: "#0f0f0f" }}>
-              {["Lead", "Score", "Cidade", "Segmento", "Volume", "ABC", "Temp.", "Status", "Vendedor", "Etapa", "Na etapa", "Handoff", "Ações"].map(h => (
+              {["Lead", "Score", "Cidade", "Segmento", "Volume", "ABC", "Temp.", "Status", "Origem", "Vendedor", "Etapa", "Na etapa", "Handoff", "Ações"].map(h => (
                 <th key={h} style={TH}>{h}</th>
               ))}
             </tr>
@@ -375,7 +404,7 @@ export function LeadsTable({ leads: initialLeads, userEmail, initialStatus = "al
           <tbody>
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={13} style={{ ...TD, textAlign: "center", color: C.muted, padding: "32px 0" }}>
+                <td colSpan={14} style={{ ...TD, textAlign: "center", color: C.muted, padding: "32px 0" }}>
                   nenhum lead encontrado
                 </td>
               </tr>
@@ -417,6 +446,7 @@ export function LeadsTable({ leads: initialLeads, userEmail, initialStatus = "al
                   <td style={TD}><Badge cfg={ABC_CFG[abc]} /></td>
                   <td style={TD}><Badge cfg={TEMP_CFG[lead.lead_temperature ?? ""] ?? TEMP_CFG.COLD} /></td>
                   <td style={TD}><Badge cfg={STATUS_CFG[status] ?? STATUS_CFG.new} /></td>
+                  <td style={TD}><OrigemBadge lead={lead} /></td>
                   <td style={TD}>{VENDOR_LABELS[lead.routing_team ?? ""] ?? lead.routing_team ?? "—"}</td>
                   <td style={TD}>
                     <span style={{ fontFamily: "'Courier New', monospace", color: C.muted, fontSize: 10 }}>
