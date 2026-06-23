@@ -34,28 +34,28 @@ export type RecompraRow = {
   cesta: CestaItem[];
 };
 
-// Tokens do design-system (padrão Inteligência).
+// Camada OPERAÇÃO: sóbria (sem glow forte), contrasta com a camada de inteligência (cards elevados+glow).
 const S = {
   card: { background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8 } as CSSProperties,
+  h1: { color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: "'Courier New', monospace", letterSpacing: ".1em", textTransform: "uppercase" } as CSSProperties,
   section: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", color: "#c0c8d8", fontFamily: "'Courier New', monospace" } as CSSProperties,
   muted: { color: "#8899aa", fontSize: 10, fontFamily: "'Courier New', monospace" } as CSSProperties,
 };
+const ORDER = ["atrasado", "hoje", "proximos_3d", "proximos_7d"];
 
 const brl = (n: number) => (n ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 const num = (n: number) => (n ?? 0).toLocaleString("pt-BR", { maximumFractionDigits: 2 });
 const dt = (s: string | null) => (s ? new Date(s).toLocaleDateString("pt-BR") : "—");
 
 export function RecompraLista({ rows }: { rows: RecompraRow[] }) {
-  const [open, setOpen] = useState<Set<number>>(new Set());
+  const [open, setOpen] = useState<Set<number>>(new Set()); // cesta por cliente
+  const [openVend, setOpenVend] = useState<Set<string>>(new Set()); // coluna por vendedor (fechado por padrão)
   const toggle = (id: number) =>
-    setOpen((p) => {
-      const n = new Set(p);
-      if (n.has(id)) n.delete(id);
-      else n.add(id);
-      return n;
-    });
+    setOpen((p) => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const toggleVend = (v: string) =>
+    setOpenVend((p) => { const n = new Set(p); n.has(v) ? n.delete(v) : n.add(v); return n; });
 
-  // Agrupa por vendedor (carteira separada) → 1 coluna por vendedor (kanban).
+  // Agrupa por vendedor (carteira separada) → 1 coluna colapsável por vendedor.
   const byVend = new Map<string, RecompraRow[]>();
   for (const r of rows) {
     const k = r.vendedor_nome ?? "Sem vendedor";
@@ -66,72 +66,84 @@ export function RecompraLista({ rows }: { rows: RecompraRow[] }) {
 
   return (
     <div className="space-y-4">
-      <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: "'Courier New', monospace", letterSpacing: ".1em", textTransform: "uppercase" }}>
-        Carteira Ativa
-      </h1>
+      <h1 style={S.h1}>Clientes por vendedor</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {vendedores.map(([vend, list]) => {
-          // Ordena: EM ATENÇÃO no topo (esfriando), depois dias_sem_compra DESC.
           const sorted = [...list].sort(
             (a, b) =>
               (a.customer_status === "ativo" ? 1 : 0) - (b.customer_status === "ativo" ? 1 : 0) ||
               (b.days_since_last_order ?? 0) - (a.days_since_last_order ?? 0)
           );
           const proxMeta = sorted[0]?.proxima_data_meta ?? null;
+          const isVendOpen = openVend.has(vend);
           return (
             <div key={vend} style={{ ...S.card }} className="p-4 flex flex-col">
-              <div className="flex items-center gap-2 mb-3 pb-2" style={{ borderBottom: "1px solid #2a2a2a" }}>
+              {/* Header colapsável */}
+              <button
+                onClick={() => toggleVend(vend)}
+                className="w-full flex items-center gap-2 text-left"
+                style={{ paddingBottom: isVendOpen ? 8 : 0, borderBottom: isVendOpen ? "1px solid #2a2a2a" : "none", marginBottom: isVendOpen ? 12 : 0 }}
+              >
+                <span
+                  style={{ ...S.muted, width: 14, textAlign: "center", fontSize: 13, color: "#c0c8d8" }}
+                  aria-hidden
+                >
+                  {isVendOpen ? "−" : "+"}
+                </span>
                 <span style={S.section}>{vend}</span>
                 <span style={{ ...S.muted, marginLeft: "auto" }}>
                   {proxMeta ? `próx meta ${dt(proxMeta)} · ` : ""}
-                  {sorted.length}
+                  {sorted.length} clientes
                 </span>
-              </div>
+              </button>
 
-              <div className="space-y-1.5">
-                {sorted.map((r) => {
-                  const isOpen = open.has(r.ares_pessoa_id);
-                  const col = statusColor(r.customer_status);
-                  return (
-                    <div key={r.ares_pessoa_id} style={{ background: "#0f0f0f", border: "1px solid #2a2a2a", borderRadius: 6 }} className="overflow-hidden">
-                      <button
-                        onClick={() => toggle(r.ares_pessoa_id)}
-                        className="w-full flex items-center gap-2 p-3 text-left hover:bg-[#181818] transition-colors"
-                      >
-                        <span className="w-2 h-2 rounded-full shrink-0" style={{ background: col, boxShadow: `0 0 6px ${col}` }} />
-                        <span className="flex-1 min-w-0">
-                          <span className="block truncate" style={{ color: "#FFFFFF", fontSize: 12, fontWeight: 600 }}>
-                            {r.name || `cliente ${r.ares_pessoa_id}`}
-                          </span>
-                          <span className="block truncate" style={S.muted}>
-                            {[
-                              r.city,
-                              r.days_since_last_order != null ? `${r.days_since_last_order}d s/ comprar` : null,
-                              `${r.cesta_qtd_produtos} prod · ${brl(r.cesta_valor_90d)}`,
-                            ]
-                              .filter(Boolean)
-                              .join(" · ")}
-                          </span>
-                        </span>
-                        <span className="text-right shrink-0 flex items-center gap-1">
-                          {r.customer_tier && (
-                            <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 3, background: "#193264", color: "#fff" }}>
-                              {r.customer_tier}
+              {/* Lista (só quando aberto) */}
+              {isVendOpen && (
+                <div className="space-y-1.5">
+                  {sorted.map((r) => {
+                    const isOpen = open.has(r.ares_pessoa_id);
+                    const col = statusColor(r.customer_status);
+                    return (
+                      <div key={r.ares_pessoa_id} style={{ background: "#0f0f0f", border: "1px solid #2a2a2a", borderRadius: 6 }} className="overflow-hidden">
+                        <button
+                          onClick={() => toggle(r.ares_pessoa_id)}
+                          className="w-full flex items-center gap-2 p-3 text-left hover:bg-[#181818] transition-colors"
+                        >
+                          <span className="w-2 h-2 rounded-full shrink-0" style={{ background: col, boxShadow: `0 0 6px ${col}` }} />
+                          <span className="flex-1 min-w-0">
+                            <span className="block truncate" style={{ color: "#FFFFFF", fontSize: 12, fontWeight: 600 }}>
+                              {r.name || `cliente ${r.ares_pessoa_id}`}
                             </span>
-                          )}
-                          <span style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", padding: "2px 6px", borderRadius: 3, background: col, color: "#fff" }}>
-                            {statusLabel(r.customer_status)}
+                            <span className="block truncate" style={S.muted}>
+                              {[
+                                r.city,
+                                r.days_since_last_order != null ? `${r.days_since_last_order}d s/ comprar` : null,
+                                `${r.cesta_qtd_produtos} prod · ${brl(r.cesta_valor_90d)}`,
+                              ]
+                                .filter(Boolean)
+                                .join(" · ")}
+                            </span>
                           </span>
-                          <span style={{ ...S.muted, width: 12, textAlign: "center" }}>{isOpen ? "−" : "+"}</span>
-                        </span>
-                      </button>
+                          <span className="text-right shrink-0 flex items-center gap-1">
+                            {r.customer_tier && (
+                              <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 3, background: "#193264", color: "#fff" }}>
+                                {r.customer_tier}
+                              </span>
+                            )}
+                            <span style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", padding: "2px 6px", borderRadius: 3, background: col, color: "#fff" }}>
+                              {statusLabel(r.customer_status)}
+                            </span>
+                            <span style={{ ...S.muted, width: 12, textAlign: "center" }}>{isOpen ? "−" : "+"}</span>
+                          </span>
+                        </button>
 
-                      {isOpen && <CestaView cesta={r.cesta} pedidos={r.total_orders} />}
-                    </div>
-                  );
-                })}
-              </div>
+                        {isOpen && <CestaView cesta={r.cesta} pedidos={r.total_orders} />}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           );
         })}

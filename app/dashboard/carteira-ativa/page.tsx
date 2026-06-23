@@ -4,7 +4,7 @@ import { getUserContext } from "@/lib/auth/get-user-role";
 import { RecompraLista, type RecompraRow } from "./recompra-lista";
 import { SaudeCarteira, type SaudeVendedor } from "./saude-carteira";
 import { CarteiraKpisRow } from "./carteira-kpis";
-import { CarteiraAnalytics, type MetaRow, type TopRow, type GrupoRow } from "./carteira-analytics";
+import { RecompraMetaSection, TopProdutosSection, GruposSection, type MetaRow, type TopRow, type GrupoRow } from "./carteira-analytics";
 
 export const dynamic = "force-dynamic";
 
@@ -57,15 +57,18 @@ export default async function CarteiraAtivaPage() {
   }
   const saude: SaudeVendedor[] = [...map.entries()].map(([vendedor, dist]) => ({ vendedor, dist }));
 
+  const metaRows = (metaD ?? []) as MetaRow[];
+  const topRows = (topD ?? []) as TopRow[];
+  const gruposRows = (gruposD ?? []) as GrupoRow[];
+
+  // Nova ordem (Paulo): (a) KPIs → (b) Recompra×Meta → (c) Colunas clientes → (d) Top10 → (e) Grupos → (f) Saúde.
   return (
     <div className="space-y-6">
       <CarteiraKpisRow kpis={kpis} />
+      <RecompraMetaSection meta={metaRows} top={topRows} grupos={gruposRows} />
       <RecompraLista rows={list} />
-      <CarteiraAnalytics
-        meta={(metaD ?? []) as MetaRow[]}
-        top={(topD ?? []) as TopRow[]}
-        grupos={(gruposD ?? []) as GrupoRow[]}
-      />
+      <TopProdutosSection meta={metaRows} top={topRows} />
+      <GruposSection meta={metaRows} grupos={gruposRows} />
       <SaudeCarteira saude={saude} />
     </div>
   );
