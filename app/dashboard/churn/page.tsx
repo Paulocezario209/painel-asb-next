@@ -57,7 +57,7 @@ export default async function ChurnPage() {
           return (
             <div
               key={col.key}
-              className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4"
+              className="bg-[#16161c] border border-[#2a2a35] rounded-lg p-4 shadow-[0_0_24px_-8px_rgba(79,125,240,0.45)]"
               style={{ borderTop: `3px solid ${col.color}` }}
             >
               <div className="text-[10px] uppercase tracking-wider font-bold" style={{ color: col.color }}>
@@ -73,7 +73,7 @@ export default async function ChurnPage() {
       {/* Listas por status */}
       <div className="space-y-4">
         {STATUS_COLS.map((col) => (
-          <div key={col.key} className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4">
+          <div key={col.key} className="bg-[#16161c] border border-[#2a2a35] rounded-lg p-4 shadow-[0_0_24px_-8px_rgba(79,125,240,0.45)]">
             <div className="flex items-center gap-2 mb-3 pb-2 border-b border-[#2a2a2a]">
               <div className="w-3 h-3 rounded-full" style={{ background: col.color, boxShadow: `0 0 6px ${col.color}` }} />
               <h2 className="text-xs font-bold uppercase tracking-wider text-white">{col.label}</h2>
@@ -88,7 +88,7 @@ export default async function ChurnPage() {
               <div className="space-y-1.5">
                 {byStatus[col.key].map((c) => {
                   const row = (
-                    <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_auto] gap-2 items-center bg-[#0f0f0f] hover:bg-[#181818] border border-[#2a2a2a] hover:border-[#185FA5] rounded p-3 text-xs transition-all">
+                    <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_auto] gap-2 items-center bg-[#0f0f0f] hover:bg-[#181818] border border-[#2a2a35] hover:border-[#185FA5] rounded p-3 text-xs transition-all shadow-[0_0_12px_-9px_rgba(79,125,240,0.6)]">
                       <div className="text-white font-semibold truncate">
                         {c.name || `cliente ${c.ares_pessoa_id}`}
                         <span className="text-gray-500 text-[10px] font-normal ml-2">{c.city ?? "—"}</span>

@@ -105,7 +105,7 @@ export function AtivosCarteira({
       {/* Colunas por vendedor (carteira viva), receita DESC dentro de cada */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {colunas.map((col) => (
-          <div key={col.nome} className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4">
+          <div key={col.nome} className="bg-[#16161c] border border-[#2a2a35] rounded-lg p-4 shadow-[0_0_26px_-10px_rgba(79,125,240,0.55)]">
             <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#2a2a2a]">
               <h2 className="text-xs font-bold uppercase tracking-wider text-white truncate">{col.nome}</h2>
               <span className="text-xs text-gray-500 font-semibold shrink-0 ml-2">{col.list.length}</span>
@@ -117,7 +117,7 @@ export function AtivosCarteira({
               ) : (
                 col.list.map((c) => {
                   const card = (
-                    <div className="bg-[#0f0f0f] border border-[#2a2a2a] hover:border-[#185FA5] rounded-md p-3 transition-all">
+                    <div className="bg-[#0f0f0f] border border-[#2a2a35] hover:border-[#4f7df0] rounded-md p-3 transition-all shadow-[0_0_12px_-9px_rgba(79,125,240,0.6)]">
                       <div className="flex items-start justify-between gap-2 mb-1">
                         <div className="text-sm font-semibold text-white truncate flex-1">
                           {c.name || `cliente ${c.ares_pessoa_id}`}
@@ -130,7 +130,7 @@ export function AtivosCarteira({
                           )}
                           <span
                             className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded"
-                            style={{ background: statusColor(c.customer_status), color: "#fff" }}
+                            style={{ background: statusColor(c.customer_status), color: "#fff", boxShadow: `0 0 8px -2px ${statusColor(c.customer_status)}` }}
                           >
                             {statusLabel(c.customer_status)}
                           </span>

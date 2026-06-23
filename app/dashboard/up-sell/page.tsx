@@ -95,22 +95,22 @@ export default async function UpSellPage() {
 
       {/* KPIs */}
       <div className="grid grid-cols-4 gap-4">
-        <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4" style={{ borderTop: "3px solid #BA7517" }}>
+        <div className="bg-[#16161c] border border-[#2a2a35] rounded-lg p-4 shadow-[0_0_24px_-8px_rgba(79,125,240,0.45)]" style={{ borderTop: "3px solid #BA7517" }}>
           <div className="text-[10px] uppercase tracking-wider font-bold text-[#BA7517]">Up-sell Ticket</div>
           <div className="text-3xl font-bold text-white mt-1">{upsellRows.length}</div>
           <div className="text-[10px] text-gray-500 mt-1">clientes &lt; 70% da média do tier</div>
         </div>
-        <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4" style={{ borderTop: "3px solid #BA1717" }}>
+        <div className="bg-[#16161c] border border-[#2a2a35] rounded-lg p-4 shadow-[0_0_24px_-8px_rgba(79,125,240,0.45)]" style={{ borderTop: "3px solid #BA1717" }}>
           <div className="text-[10px] uppercase tracking-wider font-bold text-[#BA1717]">Risco Queda</div>
           <div className="text-3xl font-bold text-white mt-1">{downsellRows.length}</div>
           <div className="text-[10px] text-gray-500 mt-1">clientes &gt; 130% da média do tier</div>
         </div>
-        <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4" style={{ borderTop: "3px solid #185FA5" }}>
+        <div className="bg-[#16161c] border border-[#2a2a35] rounded-lg p-4 shadow-[0_0_24px_-8px_rgba(79,125,240,0.45)]" style={{ borderTop: "3px solid #185FA5" }}>
           <div className="text-[10px] uppercase tracking-wider font-bold text-[#185FA5]">Tier Upgrade</div>
           <div className="text-3xl font-bold text-white mt-1">{upgradeRows.length}</div>
           <div className="text-[10px] text-gray-500 mt-1">volume justifica tier maior</div>
         </div>
-        <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4" style={{ borderTop: "3px solid #22C55E" }}>
+        <div className="bg-[#16161c] border border-[#2a2a35] rounded-lg p-4 shadow-[0_0_24px_-8px_rgba(79,125,240,0.45)]" style={{ borderTop: "3px solid #22C55E" }}>
           <div className="text-[10px] uppercase tracking-wider font-bold text-[#22C55E]">Potencial Anual</div>
           <div className="text-2xl font-bold text-white mt-1">{fmtBRL(potencialTotal)}</div>
           <div className="text-[10px] text-gray-500 mt-1">se up-sell subir pra média</div>
@@ -118,7 +118,7 @@ export default async function UpSellPage() {
       </div>
 
       {/* Up-sell ticket */}
-      <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4">
+      <div className="bg-[#16161c] border border-[#2a2a35] rounded-lg p-4 shadow-[0_0_24px_-8px_rgba(79,125,240,0.45)]">
         <h2 className="text-xs font-bold uppercase tracking-wider text-[#BA7517] mb-3 pb-2 border-b border-[#2a2a2a]">
           🎯 Up-sell — Ticket abaixo da média do tier
         </h2>
@@ -128,7 +128,7 @@ export default async function UpSellPage() {
           <div className="space-y-1.5">
             {upsellRows.map((r) => {
               const row = (
-                <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_auto] gap-2 items-center bg-[#0f0f0f] hover:bg-[#181818] border border-[#2a2a2a] hover:border-[#BA7517] rounded p-3 text-xs transition-all">
+                <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_auto] gap-2 items-center bg-[#0f0f0f] hover:bg-[#181818] border border-[#2a2a35] hover:border-[#BA7517] rounded p-3 text-xs transition-all shadow-[0_0_12px_-9px_rgba(79,125,240,0.6)]">
                   <div className="text-white font-semibold truncate">
                     {r.name || r.phone}
                     <span className="text-gray-500 text-[10px] font-normal ml-2">
@@ -165,7 +165,7 @@ export default async function UpSellPage() {
       </div>
 
       {/* Risco de queda (downsell) */}
-      <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4">
+      <div className="bg-[#16161c] border border-[#2a2a35] rounded-lg p-4 shadow-[0_0_24px_-8px_rgba(79,125,240,0.45)]">
         <h2 className="text-xs font-bold uppercase tracking-wider text-[#E84545] mb-3 pb-2 border-b border-[#2a2a2a]">
           🔻 Risco de Queda — Ticket acima da média do tier
         </h2>
@@ -175,7 +175,7 @@ export default async function UpSellPage() {
           <div className="space-y-1.5">
             {downsellRows.map((r) => {
               const row = (
-                <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_auto] gap-2 items-center bg-[#0f0f0f] hover:bg-[#181818] border border-[#2a2a2a] hover:border-[#BA1717] rounded p-3 text-xs transition-all">
+                <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_auto] gap-2 items-center bg-[#0f0f0f] hover:bg-[#181818] border border-[#2a2a35] hover:border-[#BA1717] rounded p-3 text-xs transition-all shadow-[0_0_12px_-9px_rgba(79,125,240,0.6)]">
                   <div className="text-white font-semibold truncate">
                     {r.name || r.phone}
                     <span className="text-gray-500 text-[10px] font-normal ml-2">
@@ -212,7 +212,7 @@ export default async function UpSellPage() {
       </div>
 
       {/* Tier upgrade */}
-      <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4">
+      <div className="bg-[#16161c] border border-[#2a2a35] rounded-lg p-4 shadow-[0_0_24px_-8px_rgba(79,125,240,0.45)]">
         <h2 className="text-xs font-bold uppercase tracking-wider text-[#185FA5] mb-3 pb-2 border-b border-[#2a2a2a]">
           ⬆ Tier Upgrade — Volume justifica reclassificação
         </h2>
@@ -222,7 +222,7 @@ export default async function UpSellPage() {
           <div className="space-y-1.5">
             {upgradeRows.map((r) => {
               const row = (
-                <div className="grid grid-cols-[2fr_1fr_auto_auto_1fr_auto] gap-2 items-center bg-[#0f0f0f] hover:bg-[#181818] border border-[#2a2a2a] hover:border-[#185FA5] rounded p-3 text-xs transition-all">
+                <div className="grid grid-cols-[2fr_1fr_auto_auto_1fr_auto] gap-2 items-center bg-[#0f0f0f] hover:bg-[#181818] border border-[#2a2a35] hover:border-[#185FA5] rounded p-3 text-xs transition-all shadow-[0_0_12px_-9px_rgba(79,125,240,0.6)]">
                   <div className="text-white font-semibold truncate">
                     {r.name || r.phone}
                     <span className="text-gray-500 text-[10px] font-normal ml-2">{r.city ?? "—"}</span>
