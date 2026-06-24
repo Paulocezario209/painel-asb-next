@@ -6,6 +6,7 @@ import {
   VendorPerformance,
 } from "@/components/dashboard/charts";
 import { CardTop10ClientesMes } from "@/components/dashboard/card-top10-clientes-mes";
+import { CardReconciliarAres } from "@/components/dashboard/card-reconciliar-ares";
 import { MotivosPerdaChart, type MotivoPerda } from "@/components/dashboard/motivos-perda-chart";
 import { DashboardFilters } from "@/components/dashboard/dashboard-filters";
 
@@ -327,6 +328,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
       {/* TOP 10 clientes do mês por receita (substitui card reconciliar) */}
       <CardTop10ClientesMes />
+
+      {/* MOV.2b — worklist reconciliar lead↔ARES por telefone (só gestor) */}
+      <CardReconciliarAres />
 
       {/* P3 — Motivos de perda (view v_motivos_perda) */}
       <div style={{ ...S.card, padding: "20px 24px" }}>
