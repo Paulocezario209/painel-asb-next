@@ -21,7 +21,6 @@ export type CacMensalRow = {
   leads: number; gasto_total: number; cac_por_lead: number | null; roas: number | null;
 };
 
-const mono = "'Courier New', monospace";
 const RED = theme.colors.critical;       // #C8102E
 const BLUE = theme.colors.chartNavy;     // #2A3F8F
 const GREEN = theme.colors.success;      // #22c55e
@@ -45,11 +44,11 @@ function fmtMes(iso: string) {
 }
 
 const tooltipStyle = {
-  contentStyle: { background: "#1a1a1a", border: `1px solid ${RED}`, borderRadius: 3, fontSize: 11, fontFamily: mono, color: "#c8d8e8" },
+  contentStyle: { background: "#1a1a1a", border: `1px solid ${RED}`, borderRadius: 3, fontSize: 11, fontFamily: theme.font.num, color: "#c8d8e8" },
   itemStyle: { color: "#c8d8e8" },
   labelStyle: { color: MUT, fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase" as const },
 };
-const axisStyle = { fontSize: 10, fontFamily: mono, fill: MUT };
+const axisStyle = { fontSize: 10, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" as const, fill: MUT };
 
 export function OrigemClient({ canais, mensal }: { canais: CanalConsolidado[]; mensal: CacMensalRow[] }) {
   // ordem fixa dos canais para os cards
@@ -97,12 +96,12 @@ export function OrigemClient({ canais, mensal }: { canais: CanalConsolidado[]; m
       {/* Cards por canal */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14 }}>
         {cards.length === 0 ? (
-          <p style={{ color: MUT, fontSize: 11, fontFamily: mono, padding: 20 }}>Sem canais ainda.</p>
+          <p style={{ color: MUT, fontSize: 11, fontFamily: theme.font.label, padding: 20 }}>Sem canais ainda.</p>
         ) : cards.map(c => {
           const cor = CANAL_COR[c.canal] ?? MUT;
           return (
             <div key={c.canal} style={{ background: "#1a1a1a", border: `1px solid #2a2a2a`, borderLeft: `3px solid ${cor}`, borderRadius: 8, padding: 16 }}>
-              <p style={{ color: cor, fontSize: 12, fontWeight: 700, fontFamily: mono, letterSpacing: ".06em", textTransform: "uppercase", marginBottom: 12 }}>{c.canal}</p>
+              <p style={{ color: cor, fontSize: 12, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".06em", textTransform: "uppercase", marginBottom: 12 }}>{c.canal}</p>
               <Linha label="Gasto" valor={fmtBRLc(Number(c.gasto_total ?? 0))} cor={YELLOW} />
               <Linha label="Leads" valor={String(c.leads ?? 0)} cor="#c8d8e8" />
               <Linha label="CAC / lead" valor={c.cac_por_lead != null ? fmtBRLc(Number(c.cac_por_lead)) : "—"} cor="#FFFFFF" forte />
@@ -114,11 +113,11 @@ export function OrigemClient({ canais, mensal }: { canais: CanalConsolidado[]; m
 
       {/* Barras: gasto mensal por canal (visível mesmo sem CAC) */}
       <div style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8, padding: 16 }}>
-        <p style={{ color: "#FFFFFF", fontSize: 11, fontWeight: 700, fontFamily: mono, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 12 }}>
+        <p style={{ color: "#FFFFFF", fontSize: 11, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 12 }}>
           Gasto mensal por canal
         </p>
         {!temGasto ? (
-          <p style={{ color: MUT, fontSize: 11, fontFamily: mono, textAlign: "center", padding: 30 }}>Sem gasto registrado.</p>
+          <p style={{ color: MUT, fontSize: 11, fontFamily: theme.font.label, textAlign: "center", padding: 30 }}>Sem gasto registrado.</p>
         ) : (
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={gastoData} margin={{ top: 6, right: 16, bottom: 0, left: 0 }}>
@@ -126,7 +125,7 @@ export function OrigemClient({ canais, mensal }: { canais: CanalConsolidado[]; m
               <XAxis dataKey="mes" tick={axisStyle} axisLine={{ stroke: GRID }} tickLine={false} />
               <YAxis tick={axisStyle} axisLine={false} tickLine={false} tickFormatter={(v) => `R$${v}`} />
               <Tooltip {...tooltipStyle} formatter={(v, n) => [fmtBRLc(Number(v)), String(n)]} />
-              <Legend wrapperStyle={{ fontSize: 10, fontFamily: mono }} />
+              <Legend wrapperStyle={{ fontSize: 10, fontFamily: theme.font.label }} />
               {canaisAll.map(c => (
                 <Bar key={c} dataKey={c} stackId="gasto" fill={CANAL_COR[c] ?? MUT} radius={[2, 2, 0, 0]} />
               ))}
@@ -137,11 +136,11 @@ export function OrigemClient({ canais, mensal }: { canais: CanalConsolidado[]; m
 
       {/* Linha: CAC por canal mês a mês */}
       <div style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8, padding: 16 }}>
-        <p style={{ color: "#FFFFFF", fontSize: 11, fontWeight: 700, fontFamily: mono, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 12 }}>
+        <p style={{ color: "#FFFFFF", fontSize: 11, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 12 }}>
           CAC por canal — evolução mensal
         </p>
         {lineData.length === 0 || canaisComCac.length === 0 || mesesComCac < 2 ? (
-          <p style={{ color: MUT, fontSize: 11, fontFamily: mono, textAlign: "center", padding: 30 }}>
+          <p style={{ color: MUT, fontSize: 11, fontFamily: theme.font.label, textAlign: "center", padding: 30 }}>
             Evolução mensal aparece com ≥2 meses de CAC válido (atribuição só desde 02/06).
           </p>
         ) : (
@@ -151,7 +150,7 @@ export function OrigemClient({ canais, mensal }: { canais: CanalConsolidado[]; m
               <XAxis dataKey="mes" tick={axisStyle} axisLine={{ stroke: GRID }} tickLine={false} />
               <YAxis tick={axisStyle} axisLine={false} tickLine={false} tickFormatter={(v) => `R$${v}`} />
               <Tooltip {...tooltipStyle} formatter={(v, n) => [v == null ? "—" : fmtBRLc(Number(v)), String(n)]} />
-              <Legend wrapperStyle={{ fontSize: 10, fontFamily: mono }} />
+              <Legend wrapperStyle={{ fontSize: 10, fontFamily: theme.font.label }} />
               {canaisComCac.map(c => (
                 <Line key={c} type="monotone" dataKey={c} stroke={CANAL_COR[c] ?? MUT} strokeWidth={2} dot={{ r: 3 }} connectNulls isAnimationActive={false} />
               ))}
@@ -160,7 +159,7 @@ export function OrigemClient({ canais, mensal }: { canais: CanalConsolidado[]; m
         )}
       </div>
 
-      <p style={{ color: MUT, fontSize: 9, fontFamily: mono }}>
+      <p style={{ color: MUT, fontSize: 9, fontFamily: theme.font.label }}>
         Fontes: v_cac_por_canal (cards consolidados) + v_cac_mensal_canal (evolução). CAC = gasto ÷ leads · ROAS = receita ÷ gasto. Leads atribuídos desde 02/06.
       </p>
     </div>
@@ -170,8 +169,8 @@ export function OrigemClient({ canais, mensal }: { canais: CanalConsolidado[]; m
 function Linha({ label, valor, cor, forte }: { label: string; valor: string; cor: string; forte?: boolean }) {
   return (
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "3px 0" }}>
-      <span style={{ color: MUT, fontSize: 9, fontFamily: mono, letterSpacing: ".08em", textTransform: "uppercase" }}>{label}</span>
-      <span style={{ color: cor, fontSize: forte ? 15 : 12, fontWeight: forte ? 700 : 600, fontFamily: mono }}>{valor}</span>
+      <span style={{ color: MUT, fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".08em", textTransform: "uppercase" }}>{label}</span>
+      <span style={{ color: cor, fontSize: forte ? 15 : 12, fontWeight: forte ? 700 : 600, fontFamily: theme.font.num }}>{valor}</span>
     </div>
   );
 }

@@ -14,7 +14,7 @@ const navItems = [
 ];
 
 const RED = "#C8102E";
-const mono = "'Courier New', monospace";
+import { theme } from "@/lib/theme";
 
 export function MarketingSidebar({
   isOpen = false,
@@ -37,7 +37,7 @@ export function MarketingSidebar({
           <span style={{ fontFamily: "Georgia, serif", fontSize: 42, fontWeight: 900, color: RED, lineHeight: 1 }}>S</span>
           <span style={{ fontFamily: "Georgia, serif", fontSize: 42, fontWeight: 900, color: "#FFFFFF", lineHeight: 1 }}>B</span>
         </div>
-        <div style={{ color: RED, fontSize: 9, letterSpacing: "3px", marginTop: 6, fontFamily: mono, textTransform: "uppercase" }}>
+        <div style={{ color: RED, fontSize: 9, letterSpacing: "3px", marginTop: 6, fontFamily: theme.font.label, textTransform: "uppercase" }}>
           Marketing
         </div>
       </div>
@@ -58,7 +58,7 @@ export function MarketingSidebar({
                 background: isActive ? "rgba(200,16,46,.14)" : "transparent",
                 color: isActive ? "#FFFFFF" : "#8899aa",
                 fontSize: 10, letterSpacing: ".14em", textTransform: "uppercase",
-                fontFamily: mono, fontWeight: 600,
+                fontFamily: theme.font.label, fontWeight: 600,
                 transition: "all .15s", textDecoration: "none",
               }}
               onMouseEnter={(e) => {
@@ -85,7 +85,7 @@ export function MarketingSidebar({
       <div className="px-4 py-3" style={{ borderTop: `1px solid ${RED}` }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <div style={{ width: 6, height: 6, borderRadius: "50%", background: RED, boxShadow: `0 0 6px ${RED}` }} />
-          <p style={{ color: "#556677", fontSize: 9, letterSpacing: ".12em", textTransform: "uppercase", fontFamily: mono }}>
+          <p style={{ color: "#556677", fontSize: 9, letterSpacing: ".12em", textTransform: "uppercase", fontFamily: theme.font.label }}>
             Marketing · F1·F2·F3
           </p>
         </div>

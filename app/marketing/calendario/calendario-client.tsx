@@ -13,7 +13,6 @@ export type DiaRow = {
   cpl: number | null;
 };
 
-const mono = "'Courier New', monospace";
 const RED = theme.colors.critical;       // #C8102E
 const GREEN = theme.colors.success;      // #22c55e
 const YELLOW = theme.colors.chartYellow; // #e8b923
@@ -86,20 +85,20 @@ export function CalendarioClient({ ano, rows }: { ano: number; rows: DiaRow[] })
       {/* Nav de ano */}
       <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
         <Link href={`?ano=${ano - 1}`} style={navBtn}>← {ano - 1}</Link>
-        <span style={{ color: "#fff", fontSize: 14, fontWeight: 700, fontFamily: mono, letterSpacing: ".1em" }}>{ano}</span>
+        <span style={{ color: "#fff", fontSize: 14, fontWeight: 700, fontFamily: theme.font.num, letterSpacing: ".1em" }}>{ano}</span>
         <Link href={`?ano=${ano + 1}`} style={navBtn}>{ano + 1} →</Link>
-        {rows.length === 0 && <span style={{ color: MUT, fontSize: 10, fontFamily: mono }}>sem dado de gasto neste ano</span>}
+        {rows.length === 0 && <span style={{ color: MUT, fontSize: 10, fontFamily: theme.font.label }}>sem dado de gasto neste ano</span>}
       </div>
 
       {/* Comparativo automático */}
       {comp && (
         <div style={{ background: "rgba(200,16,46,.06)", border: "1px solid rgba(200,16,46,.3)", borderRadius: 6, padding: "10px 14px", display: "flex", gap: 18, flexWrap: "wrap", alignItems: "center" }}>
-          <span style={{ color: "#fff", fontSize: 11, fontFamily: mono, fontWeight: 700 }}>
+          <span style={{ color: "#fff", fontSize: 11, fontFamily: theme.font.label, fontWeight: 700 }}>
             {MESES_ABR[comp.cur]} vs {MESES_ABR[comp.prev]}
           </span>
           <Delta label="CAC" valor={comp.dCac} inverso />
           <Delta label="Gasto" valor={comp.dGasto} />
-          <span style={{ color: comp.dLeads >= 0 ? GREEN : RED, fontSize: 11, fontFamily: mono }}>
+          <span style={{ color: comp.dLeads >= 0 ? GREEN : RED, fontSize: 11, fontFamily: theme.font.label }}>
             Leads {comp.dLeads >= 0 ? "+" : ""}{comp.dLeads}
           </span>
         </div>
@@ -117,9 +116,9 @@ export function CalendarioClient({ ano, rows }: { ano: number; rows: DiaRow[] })
               border: `1px solid ${ativo ? RED : "#2a2a2a"}`, borderRadius: 8, padding: "10px 12px", transition: "all .15s",
               opacity: temDado ? 1 : 0.5,
             }}>
-              <div style={{ color: ativo ? "#fff" : "#c8d8e8", fontSize: 11, fontWeight: 700, fontFamily: mono, letterSpacing: ".06em", textTransform: "uppercase" }}>{nome}</div>
-              <div style={{ color: YELLOW, fontSize: 13, fontFamily: mono, fontWeight: 700, marginTop: 4 }}>{mm ? fmtBRL(mm.gasto) : "—"}</div>
-              <div style={{ color: MUT, fontSize: 9, fontFamily: mono, marginTop: 2 }}>{mm ? (mm.leads > 0 ? `${mm.leads} leads` : "sem atribuição") : "sem gasto"}</div>
+              <div style={{ color: ativo ? "#fff" : "#c8d8e8", fontSize: 11, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".06em", textTransform: "uppercase" }}>{nome}</div>
+              <div style={{ color: YELLOW, fontSize: 13, fontFamily: theme.font.num, fontWeight: 700, marginTop: 4 }}>{mm ? fmtBRL(mm.gasto) : "—"}</div>
+              <div style={{ color: MUT, fontSize: 9, fontFamily: theme.font.label, marginTop: 2 }}>{mm ? (mm.leads > 0 ? `${mm.leads} leads` : "sem atribuição") : "sem gasto"}</div>
             </button>
           );
         })}
@@ -128,7 +127,7 @@ export function CalendarioClient({ ano, rows }: { ano: number; rows: DiaRow[] })
       {/* Mês expandido: heatmap diário + detalhe */}
       {mesAberto != null && (
         <div style={{ background: "#1a1a1a", border: `1px solid ${RED}`, borderRadius: 8, padding: 16 }}>
-          <p style={{ color: "#fff", fontSize: 12, fontWeight: 700, fontFamily: mono, letterSpacing: ".06em", textTransform: "uppercase", marginBottom: 12 }}>
+          <p style={{ color: "#fff", fontSize: 12, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".06em", textTransform: "uppercase", marginBottom: 12 }}>
             {MESES_FULL[mesAberto]} {ano} — gasto diário
           </p>
           <MonthGrid ano={ano} mes={mesAberto} byDia={byDia} maxGastoDia={maxGastoDia} diaSel={diaSel} onSel={setDiaSel} />
@@ -137,7 +136,7 @@ export function CalendarioClient({ ano, rows }: { ano: number; rows: DiaRow[] })
           <div style={{ marginTop: 14, borderTop: "1px solid #2a2a2a", paddingTop: 12 }}>
             {detalheDia ? (
               <div style={{ display: "flex", gap: 22, flexWrap: "wrap", alignItems: "baseline" }}>
-                <span style={{ color: "#fff", fontSize: 12, fontFamily: mono, fontWeight: 700 }}>{fmtDiaBR(diaSel!)}</span>
+                <span style={{ color: "#fff", fontSize: 12, fontFamily: theme.font.num, fontWeight: 700 }}>{fmtDiaBR(diaSel!)}</span>
                 <KV label="Gasto" valor={fmtBRLc(detalheDia.gasto)} cor={YELLOW} />
                 <KV label="Leads" valor={String(detalheDia.leads)} cor="#c8d8e8" />
                 <KV label="CPL" valor={detalheDia.leads > 0 ? fmtBRLc(detalheDia.gasto / detalheDia.leads) : "—"} cor="#fff" />
@@ -145,13 +144,13 @@ export function CalendarioClient({ ano, rows }: { ano: number; rows: DiaRow[] })
                 <KV label="Melhor criativo" valor={detalheDia.bestName ? `${detalheDia.bestName} (${fmtBRLc(detalheDia.bestCpl)})` : "—"} cor={GREEN} />
               </div>
             ) : (
-              <p style={{ color: MUT, fontSize: 10, fontFamily: mono }}>Clique num dia para ver gasto · leads · CPL · melhor criativo.</p>
+              <p style={{ color: MUT, fontSize: 10, fontFamily: theme.font.label }}>Clique num dia para ver gasto · leads · CPL · melhor criativo.</p>
             )}
           </div>
         </div>
       )}
 
-      <p style={{ color: MUT, fontSize: 9, fontFamily: mono }}>
+      <p style={{ color: MUT, fontSize: 9, fontFamily: theme.font.label }}>
         Fonte: v_performance_diaria (agregada por dia no cliente). Intensidade da célula = gasto do dia ÷ maior gasto diário do ano. Melhor criativo = menor CPL do dia. Leads atribuídos desde 02/06.
       </p>
     </div>
@@ -171,7 +170,7 @@ function MonthGrid({ ano, mes, byDia, maxGastoDia, diaSel, onSel }: {
   return (
     <div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4, marginBottom: 4 }}>
-        {DOW.map((d, i) => <div key={i} style={{ textAlign: "center", color: MUT, fontSize: 8, fontFamily: mono }}>{d}</div>)}
+        {DOW.map((d, i) => <div key={i} style={{ textAlign: "center", color: MUT, fontSize: 8, fontFamily: theme.font.label }}>{d}</div>)}
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
         {celulas.map((d, i) => {
@@ -187,7 +186,7 @@ function MonthGrid({ ano, mes, byDia, maxGastoDia, diaSel, onSel }: {
               style={{
                 aspectRatio: "1", borderRadius: 3, cursor: agg ? "pointer" : "default",
                 background: bg, border: sel ? `2px solid ${YELLOW}` : "1px solid #2a2a2a",
-                color: intensidade > 0.45 ? "#fff" : "#8899aa", fontSize: 9, fontFamily: mono,
+                color: intensidade > 0.45 ? "#fff" : "#8899aa", fontSize: 9, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums",
                 display: "flex", alignItems: "center", justifyContent: "center",
               }}>{d}</button>
           );
@@ -198,17 +197,17 @@ function MonthGrid({ ano, mes, byDia, maxGastoDia, diaSel, onSel }: {
 }
 
 function Delta({ label, valor, inverso }: { label: string; valor: number | null; inverso?: boolean }) {
-  if (valor == null) return <span style={{ color: MUT, fontSize: 11, fontFamily: mono }}>{label} —</span>;
+  if (valor == null) return <span style={{ color: MUT, fontSize: 11, fontFamily: theme.font.label }}>{label} —</span>;
   // inverso=true (CAC): cair é bom (verde)
   const bom = inverso ? valor < 0 : valor > 0;
   const cor = valor === 0 ? "#c8d8e8" : bom ? GREEN : RED;
-  return <span style={{ color: cor, fontSize: 11, fontFamily: mono }}>{label} {valor > 0 ? "+" : ""}{valor}%</span>;
+  return <span style={{ color: cor, fontSize: 11, fontFamily: theme.font.label }}>{label} {valor > 0 ? "+" : ""}{valor}%</span>;
 }
 function KV({ label, valor, cor }: { label: string; valor: string; cor: string }) {
   return (
     <span style={{ display: "inline-flex", flexDirection: "column" }}>
-      <span style={{ color: MUT, fontSize: 8, fontFamily: mono, letterSpacing: ".08em", textTransform: "uppercase" }}>{label}</span>
-      <span style={{ color: cor, fontSize: 12, fontFamily: mono, fontWeight: 700 }}>{valor}</span>
+      <span style={{ color: MUT, fontSize: 8, fontFamily: theme.font.label, letterSpacing: ".08em", textTransform: "uppercase" }}>{label}</span>
+      <span style={{ color: cor, fontSize: 12, fontFamily: theme.font.num, fontWeight: 700 }}>{valor}</span>
     </span>
   );
 }
@@ -217,6 +216,6 @@ function fmtDiaBR(iso: string) {
 }
 
 const navBtn: React.CSSProperties = {
-  padding: "5px 12px", fontSize: 10, fontFamily: mono, fontWeight: 700, letterSpacing: ".06em",
+  padding: "5px 12px", fontSize: 10, fontFamily: theme.font.label, fontWeight: 700, letterSpacing: ".06em",
   color: "#c0c8d8", background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 3, textDecoration: "none",
 };

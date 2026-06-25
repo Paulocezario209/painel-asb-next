@@ -23,7 +23,6 @@ export type AlertaRow = {
   descricao: string; severidade: "info" | "warning" | "critical";
 };
 
-const mono = "'Courier New', monospace";
 // Cores 100% via theme (tokens chartNavy/chartYellow/gridLine adicionados na migração marketing).
 const RED = theme.colors.critical;       // #C8102E
 const BLUE = theme.colors.chartNavy;     // #2A3F8F
@@ -51,11 +50,11 @@ function fmtMes(iso: string) {
 }
 
 const tooltipStyle = {
-  contentStyle: { background: "#1a1a1a", border: `1px solid ${RED}`, borderRadius: 3, fontSize: 11, fontFamily: mono, color: "#c8d8e8" },
+  contentStyle: { background: "#1a1a1a", border: `1px solid ${RED}`, borderRadius: 3, fontSize: 11, fontFamily: theme.font.num, color: "#c8d8e8" },
   itemStyle: { color: "#c8d8e8" },
   labelStyle: { color: MUT, fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase" as const },
 };
-const axisStyle = { fontSize: 10, fontFamily: mono, fill: MUT };
+const axisStyle = { fontSize: 10, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" as const, fill: MUT };
 
 const PERIODOS = [
   { k: "30d", label: "30d", meses: 1 },
@@ -121,13 +120,13 @@ export function OverviewClient({ cac, rank, alertas }: { cac: CacMensalRow[]; ra
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
       {/* Seletor de período */}
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-        <span style={{ color: MUT, fontSize: 9, fontFamily: mono, letterSpacing: ".1em", textTransform: "uppercase" }}>Período (KPIs):</span>
+        <span style={{ color: MUT, fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase" }}>Período (KPIs):</span>
         {PERIODOS.map(p => {
           const active = periodo === p.k;
           return (
             <button key={p.k} onClick={() => setPeriodo(p.k)} style={{
               padding: "5px 12px", fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase",
-              fontFamily: mono, fontWeight: 700, cursor: "pointer", borderRadius: 3,
+              fontFamily: theme.font.label, fontWeight: 700, cursor: "pointer", borderRadius: 3,
               background: active ? RED : "transparent", color: active ? "#fff" : "#c0c8d8",
               border: `1px solid ${active ? RED : "#2a2a2a"}`, transition: "all .15s",
             }}>{p.label}</button>
@@ -146,7 +145,7 @@ export function OverviewClient({ cac, rank, alertas }: { cac: CacMensalRow[]; ra
       {/* Alertas e insights (v_marketing_alertas) */}
       <Card titulo="Alertas e Insights">
         {alertas.length === 0 ? (
-          <p style={{ color: GREEN, fontSize: 11, fontFamily: mono, padding: 6 }}>✅ Sem alertas — mídia saudável.</p>
+          <p style={{ color: GREEN, fontSize: 11, fontFamily: theme.font.label, padding: 6 }}>✅ Sem alertas — mídia saudável.</p>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {alertas.map((a, i) => {
@@ -158,9 +157,9 @@ export function OverviewClient({ cac, rank, alertas }: { cac: CacMensalRow[]; ra
                   background: "#0d1117", borderLeft: `3px solid ${corBorda}`, borderRadius: 4,
                 }}>
                   <span style={{ fontSize: 13 }}>{icone}</span>
-                  <span style={{ color: "#c8d8e8", fontSize: 11, fontFamily: mono, lineHeight: 1.5, flex: 1 }}>{a.descricao}</span>
+                  <span style={{ color: "#c8d8e8", fontSize: 11, fontFamily: theme.font.label, lineHeight: 1.5, flex: 1 }}>{a.descricao}</span>
                   {a.valor_atual != null && (
-                    <span style={{ color: corBorda, fontSize: 11, fontFamily: mono, fontWeight: 700, whiteSpace: "nowrap" }}>
+                    <span style={{ color: corBorda, fontSize: 11, fontFamily: theme.font.num, fontWeight: 700, whiteSpace: "nowrap" }}>
                       {a.flag === "roas_negativo" ? `${Number(a.valor_atual).toFixed(2)}×` : fmtBRLc(Number(a.valor_atual))}
                     </span>
                   )}
@@ -183,7 +182,7 @@ export function OverviewClient({ cac, rank, alertas }: { cac: CacMensalRow[]; ra
               <YAxis yAxisId="left" tick={axisStyle} axisLine={false} tickLine={false} tickFormatter={(v) => `R$${v}`} />
               <YAxis yAxisId="right" orientation="right" tick={axisStyle} axisLine={false} tickLine={false} tickFormatter={(v) => `R$${v}`} />
               <Tooltip {...tooltipStyle} formatter={(v, n) => [v == null ? "—" : fmtBRLc(Number(v)), n === "cac" ? "CAC blendado" : String(n)]} />
-              <Legend wrapperStyle={{ fontSize: 9, fontFamily: mono }} />
+              <Legend wrapperStyle={{ fontSize: 9, fontFamily: theme.font.label }} />
               {canaisBars.map(c => (
                 <Bar key={c} yAxisId="left" dataKey={c} stackId="gasto" fill={CANAL_COR[c] ?? MUT} radius={[2, 2, 0, 0]} />
               ))}
@@ -201,10 +200,10 @@ export function OverviewClient({ cac, rank, alertas }: { cac: CacMensalRow[]; ra
           padding: "14px 16px", display: "flex", alignItems: "center",
           justifyContent: "space-between", gap: 12, cursor: "pointer",
         }}>
-          <span style={{ color: "#c0c8d8", fontSize: 11, fontFamily: mono, letterSpacing: ".04em" }}>
+          <span style={{ color: "#c0c8d8", fontSize: 11, fontFamily: theme.font.label, letterSpacing: ".04em" }}>
             Funil de conversão por canal — Leads → Qualificados → Handoffs → Convertidos
           </span>
-          <span style={{ color: theme.colors.brandAsb, fontSize: 11, fontFamily: mono, fontWeight: 700, whiteSpace: "nowrap" }}>
+          <span style={{ color: theme.colors.brandAsb, fontSize: 11, fontFamily: theme.font.label, fontWeight: 700, whiteSpace: "nowrap" }}>
             Ver funil detalhado →
           </span>
         </div>
@@ -227,7 +226,7 @@ export function OverviewClient({ cac, rank, alertas }: { cac: CacMensalRow[]; ra
         )}
       </Card>
 
-      <p style={{ color: MUT, fontSize: 9, fontFamily: mono }}>
+      <p style={{ color: MUT, fontSize: 9, fontFamily: theme.font.label }}>
         Fontes: v_cac_mensal_canal (KPIs + gasto×CAC mês a mês), v_funil_por_canal (funil), v_ranking_criativo (top CPL 30d). Barras = gasto por canal (eixo esq.) · linha = CAC blendado (eixo dir.). Período dos KPIs ≈ últimos 1/3/6 meses. Leads atribuídos desde 02/06.
       </p>
     </div>
@@ -237,19 +236,19 @@ export function OverviewClient({ cac, rank, alertas }: { cac: CacMensalRow[]; ra
 function Kpi({ label, value, cor }: { label: string; value: string; cor: string }) {
   return (
     <div style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8, padding: "14px 16px" }}>
-      <p style={{ color: MUT, fontSize: 9, fontFamily: mono, letterSpacing: ".12em", textTransform: "uppercase", marginBottom: 6 }}>{label}</p>
-      <p style={{ color: cor, fontSize: 20, fontWeight: 700, fontFamily: mono }}>{value}</p>
+      <p style={{ color: MUT, fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".12em", textTransform: "uppercase", marginBottom: 6 }}>{label}</p>
+      <p style={{ color: cor, fontSize: 20, fontWeight: 700, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" }}>{value}</p>
     </div>
   );
 }
 function Card({ titulo, children }: { titulo: string; children: React.ReactNode }) {
   return (
     <div style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8, padding: 16 }}>
-      <p style={{ color: "#FFFFFF", fontSize: 11, fontWeight: 700, fontFamily: mono, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 12 }}>{titulo}</p>
+      <p style={{ color: "#FFFFFF", fontSize: 11, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 12 }}>{titulo}</p>
       {children}
     </div>
   );
 }
 function Vazio({ texto }: { texto: string }) {
-  return <p style={{ color: MUT, fontSize: 11, fontFamily: mono, textAlign: "center", padding: 30 }}>{texto}</p>;
+  return <p style={{ color: MUT, fontSize: 11, fontFamily: theme.font.label, textAlign: "center", padding: 30 }}>{texto}</p>;
 }

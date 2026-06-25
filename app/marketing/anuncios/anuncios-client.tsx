@@ -19,7 +19,6 @@ export type RankRow = {
 };
 export type SparkRow = { ad_id: string; data: string; spend: number };
 
-const mono = "'Courier New', monospace";
 const RED = theme.colors.critical;       // #C8102E
 const GREEN = theme.colors.success;      // #22c55e
 const YELLOW = theme.colors.chartYellow; // #e8b923
@@ -46,7 +45,7 @@ function StatusBadge({ status }: { status: string | null }) {
   return (
     <span style={{
       display: "inline-block", padding: "2px 7px", borderRadius: 3, fontSize: 8.5,
-      fontFamily: mono, fontWeight: 700, letterSpacing: ".06em",
+      fontFamily: theme.font.label, fontWeight: 700, letterSpacing: ".06em",
       color: cor, border: `1px solid ${cor}`, background: `${cor}1a`,
     }}>{label}</span>
   );
@@ -127,7 +126,7 @@ export function AnunciosClient({ rank, spark }: { rank: RankRow[]; spark: SparkR
             return (
               <button key={p} onClick={() => setPeriodo(p)} style={{
                 padding: "5px 12px", fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase",
-                fontFamily: mono, fontWeight: 700, cursor: "pointer", borderRadius: 3,
+                fontFamily: theme.font.label, fontWeight: 700, cursor: "pointer", borderRadius: 3,
                 background: active ? RED : "transparent", color: active ? "#fff" : "#c0c8d8",
                 border: `1px solid ${active ? RED : "#2a2a2a"}`,
               }}>{p}</button>
@@ -135,17 +134,17 @@ export function AnunciosClient({ rank, spark }: { rank: RankRow[]; spark: SparkR
           })}
         </div>
         <select value={campanha} onChange={e => setCampanha(e.target.value)} style={{
-          padding: "5px 10px", fontSize: 11, fontFamily: mono, background: "#1a1a1a",
+          padding: "5px 10px", fontSize: 11, fontFamily: theme.font.label, background: "#1a1a1a",
           color: "#c8d8e8", border: "1px solid #2a2a2a", borderRadius: 3,
         }}>
           <option value="todas">Todas as campanhas</option>
           {campanhas.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
-        <span style={{ color: MUT, fontSize: 9, fontFamily: mono }}>ordenar:</span>
+        <span style={{ color: MUT, fontSize: 9, fontFamily: theme.font.label }}>ordenar:</span>
         {(["cpl", "roas", "spend"] as const).map(k => (
           <button key={k} onClick={() => toggleSort(k)} style={{
             padding: "4px 9px", fontSize: 9, letterSpacing: ".08em", textTransform: "uppercase",
-            fontFamily: mono, fontWeight: 600, cursor: "pointer", borderRadius: 3,
+            fontFamily: theme.font.label, fontWeight: 600, cursor: "pointer", borderRadius: 3,
             background: sortKey === k ? "rgba(200,16,46,.14)" : "transparent",
             color: sortKey === k ? "#fff" : "#8899aa", border: "1px solid #2a2a2a",
           }}>{k}{seta(k)}</button>
@@ -155,14 +154,14 @@ export function AnunciosClient({ rank, spark }: { rank: RankRow[]; spark: SparkR
       {/* Gasto sem retorno atribuído (DEBT-119) — destacado no topo */}
       {semRetorno.length > 0 && (
         <div style={{ background: "rgba(200,16,46,.10)", border: `1px solid ${RED}`, borderRadius: 8, padding: 16 }}>
-          <p style={{ color: RED, fontSize: 11, fontWeight: 700, fontFamily: mono, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 6 }}>
+          <p style={{ color: RED, fontSize: 11, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 6 }}>
             Gasto sem retorno atribuído — DEBT-119
           </p>
           <div style={{ display: "flex", gap: 24, alignItems: "baseline", flexWrap: "wrap" }}>
-            <span style={{ color: YELLOW, fontSize: 20, fontWeight: 700, fontFamily: mono }}>{fmtBRLc(semRetornoTot)}</span>
-            <span style={{ color: "#c8d8e8", fontSize: 12, fontFamily: mono }}>{semRetorno.length} anúncio{semRetorno.length > 1 ? "s" : ""} · 0 leads atribuídos</span>
+            <span style={{ color: YELLOW, fontSize: 20, fontWeight: 700, fontFamily: theme.font.num }}>{fmtBRLc(semRetornoTot)}</span>
+            <span style={{ color: "#c8d8e8", fontSize: 12, fontFamily: theme.font.label }}>{semRetorno.length} anúncio{semRetorno.length > 1 ? "s" : ""} · 0 leads atribuídos</span>
           </div>
-          <p style={{ color: MUT, fontSize: 9, fontFamily: mono, marginTop: 8 }}>
+          <p style={{ color: MUT, fontSize: 9, fontFamily: theme.font.label, marginTop: 8 }}>
             Anúncios site/[LEAD]-SP com gasto e nenhum lead atribuível (botões wa.me genéricos — DEBT-119). Não entram no CPL/CAC da tabela abaixo.
           </p>
         </div>
@@ -171,11 +170,11 @@ export function AnunciosClient({ rank, spark }: { rank: RankRow[]; spark: SparkR
       {/* Tabela */}
       <div style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8, padding: 16, overflowX: "auto" }}>
         {comRetorno.length === 0 ? (
-          <p style={{ color: MUT, fontSize: 11, fontFamily: mono, textAlign: "center", padding: 20 }}>
+          <p style={{ color: MUT, fontSize: 11, fontFamily: theme.font.label, textAlign: "center", padding: 20 }}>
             Sem anúncios com lead atribuído neste período/campanha.
           </p>
         ) : (
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12, fontFamily: mono }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12, fontFamily: theme.font.num }}>
             <thead>
               <tr style={{ borderBottom: "1px solid #2a2a2a" }}>
                 <th style={{ ...th, textAlign: "left" }}>Campanha</th>
@@ -221,7 +220,7 @@ export function AnunciosClient({ rank, spark }: { rank: RankRow[]; spark: SparkR
           </table>
         )}
       </div>
-      <p style={{ color: MUT, fontSize: 9, fontFamily: mono }}>
+      <p style={{ color: MUT, fontSize: 9, fontFamily: theme.font.label }}>
         Fonte: v_ranking_criativo (CPL/ROAS por ad_id, janela {periodo}) + v_performance_diaria (sparkline gasto 7d). CPL = gasto ÷ leads · ROAS = receita ÷ gasto. Anúncios sem leads atribuíveis (site/[LEAD]-SP — DEBT-119) estão destacados no bloco acima.
       </p>
     </div>
@@ -230,7 +229,7 @@ export function AnunciosClient({ rank, spark }: { rank: RankRow[]; spark: SparkR
 
 // Sparkline SVG minimalista (gasto dos últimos dias)
 function Sparkline({ serie }: { serie: number[] }) {
-  if (!serie || serie.length < 2) return <span style={{ color: MUT, fontSize: 10, fontFamily: mono }}>—</span>;
+  if (!serie || serie.length < 2) return <span style={{ color: MUT, fontSize: 10, fontFamily: theme.font.num }}>—</span>;
   const w = 72, h = 22, pad = 2;
   const max = Math.max(...serie, 1);
   const min = Math.min(...serie, 0);
@@ -248,5 +247,5 @@ function Sparkline({ serie }: { serie: number[] }) {
   );
 }
 
-const th: React.CSSProperties = { fontSize: 9, color: "#556677", fontFamily: mono, letterSpacing: ".1em", textTransform: "uppercase", padding: "6px 10px", textAlign: "center" };
-const td: React.CSSProperties = { padding: "8px 10px", color: "#c8d8e8", fontFamily: mono };
+const th: React.CSSProperties = { fontSize: 9, color: "#556677", fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", padding: "6px 10px", textAlign: "center" };
+const td: React.CSSProperties = { padding: "8px 10px", color: "#c8d8e8", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" };

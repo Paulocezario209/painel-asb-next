@@ -14,7 +14,6 @@ export type FunilRow = {
 };
 export type ConvMensalRow = { mes: string; leads: number; convertidos: number };
 
-const mono = "'Courier New', monospace";
 // Cores 100% via theme (tokens chartYellow/gridLine adicionados na migração marketing).
 const RED = theme.colors.critical;       // #C8102E
 const GREEN = theme.colors.success;      // #22c55e
@@ -31,11 +30,11 @@ function fmtMes(iso: string) {
 }
 
 const tooltipStyle = {
-  contentStyle: { background: "#1a1a1a", border: `1px solid ${RED}`, borderRadius: 3, fontSize: 11, fontFamily: mono, color: "#c8d8e8" },
+  contentStyle: { background: "#1a1a1a", border: `1px solid ${RED}`, borderRadius: 3, fontSize: 11, fontFamily: theme.font.num, color: "#c8d8e8" },
   itemStyle: { color: "#c8d8e8" },
   labelStyle: { color: MUT, fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase" as const },
 };
-const axisStyle = { fontSize: 10, fontFamily: mono, fill: MUT };
+const axisStyle = { fontSize: 10, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" as const, fill: MUT };
 
 export function FunilCacClient({ funil, mensal }: { funil: FunilRow[]; mensal: ConvMensalRow[] }) {
   // Funil agregado (soma dos canais)
@@ -82,11 +81,11 @@ export function FunilCacClient({ funil, mensal }: { funil: FunilRow[]; mensal: C
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
       {/* FIX2: Funil visual (Recharts FunnelChart) — afunila topo→fundo, count nos labels */}
       <div style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8, padding: 16 }}>
-        <p style={{ color: "#FFFFFF", fontSize: 11, fontWeight: 700, fontFamily: mono, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 14 }}>
+        <p style={{ color: "#FFFFFF", fontSize: 11, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 14 }}>
           Funil de conversão (todos os canais)
         </p>
         {agg.leads === 0 ? (
-          <p style={{ color: MUT, fontSize: 11, fontFamily: mono, textAlign: "center", padding: 24 }}>
+          <p style={{ color: MUT, fontSize: 11, fontFamily: theme.font.label, textAlign: "center", padding: 24 }}>
             Sem leads atribuídos ainda (captura desde 02/06).
           </p>
         ) : (
@@ -94,20 +93,20 @@ export function FunilCacClient({ funil, mensal }: { funil: FunilRow[]; mensal: C
             <FunnelVisual data={funnelStages} />
           </div>
         )}
-        <p style={{ color: MUT, fontSize: 9, fontFamily: mono, marginTop: 8 }}>
+        <p style={{ color: MUT, fontSize: 9, fontFamily: theme.font.label, marginTop: 8 }}>
           Impressões/Cliques não estão em <code>v_funil_por_canal</code> (vêm das views de ads Meta) — o funil inicia em Leads.
         </p>
       </div>
 
       {/* Breakdown por canal */}
       <div style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8, padding: 16, overflowX: "auto" }}>
-        <p style={{ color: "#FFFFFF", fontSize: 11, fontWeight: 700, fontFamily: mono, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 12 }}>
+        <p style={{ color: "#FFFFFF", fontSize: 11, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 12 }}>
           Por canal
         </p>
         {funil.length === 0 ? (
-          <p style={{ color: MUT, fontSize: 11, fontFamily: mono, textAlign: "center", padding: 16 }}>Sem dados.</p>
+          <p style={{ color: MUT, fontSize: 11, fontFamily: theme.font.label, textAlign: "center", padding: 16 }}>Sem dados.</p>
         ) : (
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12, fontFamily: mono }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12, fontFamily: theme.font.num }}>
             <thead>
               <tr style={{ borderBottom: "1px solid #2a2a2a" }}>
                 <th style={{ ...th, textAlign: "left" }}>Canal</th>
@@ -140,11 +139,11 @@ export function FunilCacClient({ funil, mensal }: { funil: FunilRow[]; mensal: C
 
       {/* Linha: conversão mensal */}
       <div style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8, padding: 16 }}>
-        <p style={{ color: "#FFFFFF", fontSize: 11, fontWeight: 700, fontFamily: mono, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 12 }}>
+        <p style={{ color: "#FFFFFF", fontSize: 11, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 12 }}>
           Taxa de conversão — evolução mensal
         </p>
         {!temConv ? (
-          <p style={{ color: MUT, fontSize: 11, fontFamily: mono, textAlign: "center", padding: 30 }}>
+          <p style={{ color: MUT, fontSize: 11, fontFamily: theme.font.label, textAlign: "center", padding: 30 }}>
             Sem conversão mensal ainda (leads atribuídos só desde 02/06).
           </p>
         ) : (
@@ -160,7 +159,7 @@ export function FunilCacClient({ funil, mensal }: { funil: FunilRow[]; mensal: C
         )}
       </div>
 
-      <p style={{ color: MUT, fontSize: 9, fontFamily: mono }}>
+      <p style={{ color: MUT, fontSize: 9, fontFamily: theme.font.label }}>
         Fonte: v_funil_por_canal (qualificado = qual_stage ≥ 7 / lead realmente qualificado · handoff=seller_first_reply_at · convertido=first_order_at) + v_cac_mensal_canal (conversão mensal). % do funil = razão sobre Leads. Leads atribuídos desde 02/06.
       </p>
     </div>
@@ -172,5 +171,5 @@ function pctFmt(p: number | null) {
   return `${(Number(p) * 100).toFixed(1)}%`;
 }
 
-const th: React.CSSProperties = { fontSize: 9, color: "#556677", fontFamily: mono, letterSpacing: ".1em", textTransform: "uppercase", padding: "6px 10px", textAlign: "center" };
-const td: React.CSSProperties = { padding: "8px 10px", color: "#c8d8e8", fontFamily: mono };
+const th: React.CSSProperties = { fontSize: 9, color: "#556677", fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", padding: "6px 10px", textAlign: "center" };
+const td: React.CSSProperties = { padding: "8px 10px", color: "#c8d8e8", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" };

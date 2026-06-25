@@ -1,9 +1,9 @@
+import { theme } from "@/lib/theme";
 import { createClient } from "@/lib/supabase/server";
 import { FunilCacClient, type FunilRow, type ConvMensalRow } from "./funil-cac-client";
 
 export const dynamic = "force-dynamic";
 
-const mono = "'Courier New', monospace";
 
 export default async function FunilCacPage() {
   const supabase = await createClient();
@@ -27,23 +27,23 @@ export default async function FunilCacPage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div>
-        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: mono, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
+        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
           Funil CAC
         </h1>
-        <p style={{ color: "#8899aa", fontSize: 11, fontFamily: mono }}>
+        <p style={{ color: "#8899aa", fontSize: 11, fontFamily: theme.font.label }}>
           Lead → qualificado → handoff → pedido, por canal + evolução da conversão
         </p>
       </div>
 
       {erro && (
-        <div style={{ background: "#1a1a1a", border: "1px solid #C8102E", borderRadius: 6, padding: 16, color: "#C8102E", fontSize: 11, fontFamily: mono }}>
+        <div style={{ background: "#1a1a1a", border: "1px solid #C8102E", borderRadius: 6, padding: 16, color: "#C8102E", fontSize: 11, fontFamily: theme.font.label }}>
           View <code>v_funil_por_canal</code> indisponível. {erro}
         </div>
       )}
 
       <FunilCacClient funil={funil} mensal={mensal} />
 
-      <p style={{ color: "#556677", fontSize: 10, fontFamily: mono, textAlign: "right" }}>
+      <p style={{ color: "#556677", fontSize: 10, fontFamily: theme.font.label, textAlign: "right" }}>
         Dados de gasto Meta Ads atualizados diariamente às 06:10 BRT
       </p>
     </div>

@@ -1,3 +1,4 @@
+import { theme } from "@/lib/theme";
 import { createClient } from "@/lib/supabase/server";
 import { AnunciosClient, type RankRow, type SparkRow } from "./anuncios-client";
 // ETAPA6 (DEBT-137): cache real do ranking de criativos (view global).
@@ -6,7 +7,6 @@ import { createClient as createServiceClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic";
 
-const mono = "'Courier New', monospace";
 
 const getCachedRankingCriativo = unstable_cache(
   async () => {
@@ -47,23 +47,23 @@ export default async function AnunciosPage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div>
-        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: mono, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
+        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
           Anúncios
         </h1>
-        <p style={{ color: "#8899aa", fontSize: 11, fontFamily: mono }}>
+        <p style={{ color: "#8899aa", fontSize: 11, fontFamily: theme.font.label }}>
           Ranking de criativos · gasto · leads · CPL · ROAS · tendência 7d (Meta Ads)
         </p>
       </div>
 
       {erro && (
-        <div style={{ background: "#1a1a1a", border: "1px solid #C8102E", borderRadius: 6, padding: 16, color: "#C8102E", fontSize: 11, fontFamily: mono }}>
+        <div style={{ background: "#1a1a1a", border: "1px solid #C8102E", borderRadius: 6, padding: 16, color: "#C8102E", fontSize: 11, fontFamily: theme.font.label }}>
           View <code>v_ranking_criativo</code> indisponível. {erro}
         </div>
       )}
 
       <AnunciosClient rank={rank} spark={spark} />
 
-      <p style={{ color: "#556677", fontSize: 10, fontFamily: mono, textAlign: "right" }}>
+      <p style={{ color: "#556677", fontSize: 10, fontFamily: theme.font.label, textAlign: "right" }}>
         Dados de gasto Meta Ads atualizados diariamente às 06:10 BRT
       </p>
     </div>

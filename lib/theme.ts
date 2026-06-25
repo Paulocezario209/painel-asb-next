@@ -37,6 +37,9 @@ export const theme = {
   font: {
     mono: "'Courier New', monospace",
     sans: "inherit",
+    // Fase 1 tipografia (token-driven): número = mono Geist · label/texto = sans Geist.
+    num:   "var(--font-geist-mono), 'Courier New', monospace",
+    label: "var(--font-geist-sans), system-ui, sans-serif",
   },
 } as const;
 

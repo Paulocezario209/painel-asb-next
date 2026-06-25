@@ -1,3 +1,4 @@
+import { theme } from "@/lib/theme";
 import { createClient } from "@/lib/supabase/server";
 import { CalendarioClient, type DiaRow } from "./calendario-client";
 // ETAPA6 (DEBT-137): cache real da performance diária (view global, chave inclui o ano).
@@ -6,7 +7,6 @@ import { createClient as createServiceClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic";
 
-const mono = "'Courier New', monospace";
 
 // unstable_cache inclui os argumentos (ano) na chave automaticamente → 1 entrada por ano.
 const getCachedPerfDiaria = unstable_cache(
@@ -46,17 +46,17 @@ export default async function CalendarioPage({
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div>
-        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: mono, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
+        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
           Calendário
         </h1>
-        <p style={{ color: "#8899aa", fontSize: 11, fontFamily: mono }}>
+        <p style={{ color: "#8899aa", fontSize: 11, fontFamily: theme.font.label }}>
           Gasto diário por mês · heatmap · KPIs do dia (Meta Ads)
         </p>
       </div>
 
       <CalendarioClient ano={Number(ano)} rows={rows} />
 
-      <p style={{ color: "#556677", fontSize: 10, fontFamily: mono, textAlign: "right" }}>
+      <p style={{ color: "#556677", fontSize: 10, fontFamily: theme.font.label, textAlign: "right" }}>
         Dados de gasto Meta Ads atualizados diariamente às 06:10 BRT
       </p>
     </div>
