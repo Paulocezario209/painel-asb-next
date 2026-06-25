@@ -103,14 +103,14 @@ export function AtivosCarteira({
                 {k.label}
               </div>
               <div className="text-3xl font-bold text-white mt-2">{k.count}</div>
-              <div className="text-[10px] text-gray-500 mt-2 leading-tight truncate">{k.desc}</div>
+              <div className="text-[10px] text-slate-200 mt-2 leading-tight truncate">{k.desc}</div>
             </Link>
           );
         })}
       </div>
 
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-slate-200">
           {filtradas.length} de {rows.length} clientes · {brl(totalReceita)} faturado
         </p>
       </div>
@@ -129,7 +129,7 @@ export function AtivosCarteira({
           <div key={col.nome} className="bg-[#16161c] border border-[#2a2a35] rounded-lg p-4 shadow-[0_0_26px_-10px_rgba(79,125,240,0.55)]">
             <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#2a2a2a]">
               <h2 className="text-xs font-bold uppercase tracking-wider text-white truncate">{col.nome}</h2>
-              <span className="text-xs text-gray-500 font-semibold shrink-0 ml-2">{col.list.length}</span>
+              <span className="text-xs text-slate-200 font-semibold shrink-0 ml-2">{col.list.length}</span>
             </div>
 
             <div className="space-y-2 max-h-[70vh] overflow-y-auto">
@@ -157,12 +157,12 @@ export function AtivosCarteira({
                           </span>
                         </div>
                       </div>
-                      <div className="text-[11px] text-gray-500 truncate">
+                      <div className="text-[11px] text-slate-200 truncate">
                         {[c.city, c.dias_sem_compra != null ? `${c.dias_sem_compra}d s/ comprar` : null]
                           .filter(Boolean)
                           .join(" · ")}
                       </div>
-                      <div className="text-[10px] text-gray-400 mt-1">{brl(c.total_revenue_brl)} faturado</div>
+                      <div className="text-[10px] text-slate-200 mt-1">{brl(c.total_revenue_brl)} faturado</div>
                     </div>
                   );
                   return c.lead_id ? (

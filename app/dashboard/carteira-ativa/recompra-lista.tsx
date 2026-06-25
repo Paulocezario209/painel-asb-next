@@ -166,7 +166,7 @@ function CestaView({ cesta, pedidos }: { cesta: CestaItem[]; pedidos: number }) 
     return <div className="px-3 pb-3 text-[11px] text-gray-600 italic">Sem cesta nos últimos 90d.</div>;
   return (
     <div className="px-3 pb-3 pt-1 border-t border-[#2a2a2a] space-y-1">
-      <div className="text-[10px] text-gray-500 uppercase tracking-wider mt-1 mb-1" style={{ fontFamily: theme.font.label }}>
+      <div className="text-[10px] text-slate-200 uppercase tracking-wider mt-1 mb-1" style={{ fontFamily: theme.font.label }}>
         Sugestão de pedido — média por compra · {pedidos} pedidos/90d
       </div>
       {cesta.map((p) => (
@@ -174,7 +174,7 @@ function CestaView({ cesta, pedidos }: { cesta: CestaItem[]; pedidos: number }) 
           <span className="font-mono font-bold text-white whitespace-nowrap tabular-nums">
             {num(p.qtd_media)} {p.sigla ?? ""}
           </span>
-          <span className="text-gray-300 truncate flex-1">{p.descricao}</span>
+          <span className="text-slate-200 truncate flex-1">{p.descricao}</span>
           <span className="text-gray-600 text-[10px] whitespace-nowrap">
             {p.pedidos}× · {brl(p.valor_total_90d)}
           </span>

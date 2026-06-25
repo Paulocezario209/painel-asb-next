@@ -68,7 +68,7 @@ export function LeadActions({ lead: initial }: { lead: Lead }) {
   }
 
   if (!showConfirm && !showConvert) {
-    return <p className="text-sm text-gray-400">Nenhuma ação disponível.</p>;
+    return <p className="text-sm text-slate-200">Nenhuma ação disponível.</p>;
   }
 
   return (

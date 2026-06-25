@@ -88,7 +88,7 @@ export default async function UpSellPage() {
     <div className="space-y-4">
       <div>
         <h1 className="text-2xl font-bold text-white">Ticket — Up-sell · Risco de Queda · Tier Upgrade</h1>
-        <p className="text-sm text-gray-400 mt-1">
+        <p className="text-sm text-slate-200 mt-1">
           {upsellRows.length} up-sell · {downsellRows.length} risco queda · {upgradeRows.length} tier upgrade · potencial {fmtBRL(potencialTotal)} · em risco {fmtBRL(riscoTotal)}
         </p>
       </div>
@@ -98,22 +98,22 @@ export default async function UpSellPage() {
         <div className="bg-[#16161c] border border-[#2a2a35] rounded-lg p-4 shadow-[0_0_24px_-8px_rgba(79,125,240,0.45)]" style={{ borderTop: "3px solid #BA7517" }}>
           <div className="text-[10px] uppercase tracking-wider font-bold text-[#BA7517]">Up-sell Ticket</div>
           <div className="text-3xl font-bold text-white mt-1">{upsellRows.length}</div>
-          <div className="text-[10px] text-gray-500 mt-1">clientes &lt; 70% da média do tier</div>
+          <div className="text-[10px] text-slate-200 mt-1">clientes &lt; 70% da média do tier</div>
         </div>
         <div className="bg-[#16161c] border border-[#2a2a35] rounded-lg p-4 shadow-[0_0_24px_-8px_rgba(79,125,240,0.45)]" style={{ borderTop: "3px solid #BA1717" }}>
           <div className="text-[10px] uppercase tracking-wider font-bold text-[#BA1717]">Risco Queda</div>
           <div className="text-3xl font-bold text-white mt-1">{downsellRows.length}</div>
-          <div className="text-[10px] text-gray-500 mt-1">clientes &gt; 130% da média do tier</div>
+          <div className="text-[10px] text-slate-200 mt-1">clientes &gt; 130% da média do tier</div>
         </div>
         <div className="bg-[#16161c] border border-[#2a2a35] rounded-lg p-4 shadow-[0_0_24px_-8px_rgba(79,125,240,0.45)]" style={{ borderTop: "3px solid #185FA5" }}>
           <div className="text-[10px] uppercase tracking-wider font-bold text-[#185FA5]">Tier Upgrade</div>
           <div className="text-3xl font-bold text-white mt-1">{upgradeRows.length}</div>
-          <div className="text-[10px] text-gray-500 mt-1">volume justifica tier maior</div>
+          <div className="text-[10px] text-slate-200 mt-1">volume justifica tier maior</div>
         </div>
         <div className="bg-[#16161c] border border-[#2a2a35] rounded-lg p-4 shadow-[0_0_24px_-8px_rgba(79,125,240,0.45)]" style={{ borderTop: "3px solid #22C55E" }}>
           <div className="text-[10px] uppercase tracking-wider font-bold text-[#22C55E]">Potencial Anual</div>
           <div className="text-2xl font-bold text-white mt-1">{fmtBRL(potencialTotal)}</div>
-          <div className="text-[10px] text-gray-500 mt-1">se up-sell subir pra média</div>
+          <div className="text-[10px] text-slate-200 mt-1">se up-sell subir pra média</div>
         </div>
       </div>
 
@@ -131,27 +131,27 @@ export default async function UpSellPage() {
                 <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_auto] gap-2 items-center bg-[#0f0f0f] hover:bg-[#181818] border border-[#2a2a35] hover:border-[#BA7517] rounded p-3 text-xs transition-all shadow-[0_0_12px_-9px_rgba(79,125,240,0.6)]">
                   <div className="text-white font-semibold truncate">
                     {r.name || r.phone}
-                    <span className="text-gray-500 text-[10px] font-normal ml-2">
+                    <span className="text-slate-200 text-[10px] font-normal ml-2">
                       {r.city ?? "—"} · Tier <span style={{ color: TIER_COLOR[r.customer_tier] }} className="font-bold">{r.customer_tier}</span>
                     </span>
                   </div>
-                  <div className="text-gray-400">
-                    <span className="text-gray-500 text-[10px]">Ticket cliente:</span>{" "}
+                  <div className="text-slate-200">
+                    <span className="text-slate-200 text-[10px]">Ticket cliente:</span>{" "}
                     <span className="text-white">{fmtBRL(r.cliente_ticket)}</span>
                   </div>
-                  <div className="text-gray-400">
-                    <span className="text-gray-500 text-[10px]">Média tier:</span>{" "}
+                  <div className="text-slate-200">
+                    <span className="text-slate-200 text-[10px]">Média tier:</span>{" "}
                     <span className="text-white">{fmtBRL(r.tier_avg_ticket)}</span>
                   </div>
-                  <div className="text-gray-400">
-                    <span className="text-gray-500 text-[10px]">Gap:</span>{" "}
+                  <div className="text-slate-200">
+                    <span className="text-slate-200 text-[10px]">Gap:</span>{" "}
                     <span className="text-[#E0993A] font-bold">{r.gap_pct}%</span>
                   </div>
-                  <div className="text-gray-400">
-                    <span className="text-gray-500 text-[10px]">Potencial/ano:</span>{" "}
+                  <div className="text-slate-200">
+                    <span className="text-slate-200 text-[10px]">Potencial/ano:</span>{" "}
                     <span className="text-[#22C55E] font-bold">{fmtBRL(r.potencial_anual_brl)}</span>
                   </div>
-                  <div className="text-gray-500 text-right">{vend(r.vendedor_nome)}</div>
+                  <div className="text-slate-200 text-right">{vend(r.vendedor_nome)}</div>
                 </div>
               );
               return r.lead_id ? (
@@ -178,27 +178,27 @@ export default async function UpSellPage() {
                 <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_auto] gap-2 items-center bg-[#0f0f0f] hover:bg-[#181818] border border-[#2a2a35] hover:border-[#BA1717] rounded p-3 text-xs transition-all shadow-[0_0_12px_-9px_rgba(79,125,240,0.6)]">
                   <div className="text-white font-semibold truncate">
                     {r.name || r.phone}
-                    <span className="text-gray-500 text-[10px] font-normal ml-2">
+                    <span className="text-slate-200 text-[10px] font-normal ml-2">
                       {r.city ?? "—"} · Tier <span style={{ color: TIER_COLOR[r.customer_tier] }} className="font-bold">{r.customer_tier}</span>
                     </span>
                   </div>
-                  <div className="text-gray-400">
-                    <span className="text-gray-500 text-[10px]">Ticket cliente:</span>{" "}
+                  <div className="text-slate-200">
+                    <span className="text-slate-200 text-[10px]">Ticket cliente:</span>{" "}
                     <span className="text-white">{fmtBRL(r.cliente_ticket)}</span>
                   </div>
-                  <div className="text-gray-400">
-                    <span className="text-gray-500 text-[10px]">Média tier:</span>{" "}
+                  <div className="text-slate-200">
+                    <span className="text-slate-200 text-[10px]">Média tier:</span>{" "}
                     <span className="text-white">{fmtBRL(r.tier_avg_ticket)}</span>
                   </div>
-                  <div className="text-gray-400">
-                    <span className="text-gray-500 text-[10px]">Acima:</span>{" "}
+                  <div className="text-slate-200">
+                    <span className="text-slate-200 text-[10px]">Acima:</span>{" "}
                     <span className="text-[#E84545] font-bold">+{r.excesso_pct}%</span>
                   </div>
-                  <div className="text-gray-400">
-                    <span className="text-gray-500 text-[10px]">Revenue em risco:</span>{" "}
+                  <div className="text-slate-200">
+                    <span className="text-slate-200 text-[10px]">Revenue em risco:</span>{" "}
                     <span className="text-[#E84545] font-bold">{fmtBRL(r.revenue_em_risco_brl)}</span>
                   </div>
-                  <div className="text-gray-500 text-right">{vend(r.vendedor_nome)}</div>
+                  <div className="text-slate-200 text-right">{vend(r.vendedor_nome)}</div>
                 </div>
               );
               return r.lead_id ? (
@@ -225,27 +225,27 @@ export default async function UpSellPage() {
                 <div className="grid grid-cols-[2fr_1fr_auto_auto_1fr_auto] gap-2 items-center bg-[#0f0f0f] hover:bg-[#181818] border border-[#2a2a35] hover:border-[#185FA5] rounded p-3 text-xs transition-all shadow-[0_0_12px_-9px_rgba(79,125,240,0.6)]">
                   <div className="text-white font-semibold truncate">
                     {r.name || r.phone}
-                    <span className="text-gray-500 text-[10px] font-normal ml-2">{r.city ?? "—"}</span>
+                    <span className="text-slate-200 text-[10px] font-normal ml-2">{r.city ?? "—"}</span>
                   </div>
-                  <div className="text-gray-400">
-                    <span className="text-gray-500 text-[10px]">Volume:</span>{" "}
+                  <div className="text-slate-200">
+                    <span className="text-slate-200 text-[10px]">Volume:</span>{" "}
                     <span className="text-white">{r.weekly_volume_kg}kg/sem</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <span className="px-2 py-0.5 rounded font-bold text-[10px]" style={{ background: TIER_COLOR[r.tier_atual], color: "#fff" }}>
                       {r.tier_atual}
                     </span>
-                    <span className="text-gray-500">→</span>
+                    <span className="text-slate-200">→</span>
                     <span className="px-2 py-0.5 rounded font-bold text-[10px]" style={{ background: TIER_COLOR[r.tier_sugerido], color: "#fff" }}>
                       {r.tier_sugerido}
                     </span>
                   </div>
-                  <div className="text-gray-500 text-[10px]">{r.razao}</div>
-                  <div className="text-gray-400">
-                    <span className="text-gray-500 text-[10px]">Revenue:</span>{" "}
+                  <div className="text-slate-200 text-[10px]">{r.razao}</div>
+                  <div className="text-slate-200">
+                    <span className="text-slate-200 text-[10px]">Revenue:</span>{" "}
                     <span className="text-white">{fmtBRL(r.total_revenue_brl)}</span>
                   </div>
-                  <div className="text-gray-500 text-right">{vend(r.vendedor_nome)}</div>
+                  <div className="text-slate-200 text-right">{vend(r.vendedor_nome)}</div>
                 </div>
               );
               return r.lead_id ? (

@@ -84,7 +84,7 @@ export function DayDetailModal({
           style={{ padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}
         >
           <div>
-            <div className="text-xs uppercase tracking-wider text-gray-500">
+            <div className="text-xs uppercase tracking-wider text-slate-200">
               {vendorLabel}
             </div>
             <h2 className="text-lg font-bold text-white mt-1">
@@ -116,16 +116,16 @@ export function DayDetailModal({
                 )}
               </div>
             )}
-            <div className="text-xs text-gray-400 mt-1">
+            <div className="text-xs text-slate-200 mt-1">
               {validos.length} pedido(s) {agendado ? "agendado(s)" : "válido(s)"} · <span className="font-semibold text-white"><span className="priv-brl">{fmtBRL(totalValido)}</span></span>
               {totalCancelado > 0 && (
-                <span className="text-gray-500"> · {pedidos.length - validos.length} cancelado(s) <span className="priv-brl">{fmtBRL(totalCancelado)}</span></span>
+                <span className="text-slate-200"> · {pedidos.length - validos.length} cancelado(s) <span className="priv-brl">{fmtBRL(totalCancelado)}</span></span>
               )}
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white"
+            className="text-slate-200 hover:text-white"
             style={{ background: "transparent", border: "none", fontSize: 24, cursor: "pointer", padding: 4, lineHeight: 1 }}
             aria-label="Fechar"
           >
@@ -136,7 +136,7 @@ export function DayDetailModal({
         {/* Lista */}
         <div style={{ padding: "12px 20px" }}>
           {pedidos.length === 0 ? (
-            <div className="text-sm text-gray-500 italic py-8 text-center">
+            <div className="text-sm text-slate-200 italic py-8 text-center">
               Nenhum pedido neste dia.
             </div>
           ) : (
@@ -152,7 +152,7 @@ export function DayDetailModal({
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-xs font-mono text-gray-500">#{p.n_pedido ?? "—"}</span>
+                          <span className="text-xs font-mono text-slate-200">#{p.n_pedido ?? "—"}</span>
                           <span
                             className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded"
                             style={{ background: s.bg, color: s.fg }}
@@ -171,7 +171,7 @@ export function DayDetailModal({
                         <div className="text-sm font-semibold text-white truncate">
                           {p.cliente_nome ?? "(sem nome)"}
                         </div>
-                        <div className="text-[11px] text-gray-500 mt-1">
+                        <div className="text-[11px] text-slate-200 mt-1">
                           Emissão {fmtDate(p.data_emissao)} · Prev. entrega {fmtDate(p.previsao_entrega)}
                         </div>
                       </div>
@@ -180,7 +180,7 @@ export function DayDetailModal({
                           <span className="priv-brl">{fmtBRL(p.valor_total_brl)}</span>
                         </div>
                         {Number(p.valor_faturado_brl ?? 0) > 0 && (
-                          <div className="text-[10px] text-gray-500 mt-0.5">
+                          <div className="text-[10px] text-slate-200 mt-0.5">
                             NF: <span className="priv-brl">{fmtBRL(p.valor_faturado_brl)}</span>
                           </div>
                         )}

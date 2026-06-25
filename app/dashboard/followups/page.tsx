@@ -119,7 +119,7 @@ export default async function FollowupsPage({ searchParams }: { searchParams: Pr
                   <p className="text-[10px] font-bold uppercase tracking-wider text-[#BA7517]">
                     🟠 Vencidos não disparados
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-slate-200 mt-1">
                     leads com `next_followup_at` no passado aguardando envio
                   </p>
                 </div>
@@ -137,7 +137,7 @@ export default async function FollowupsPage({ searchParams }: { searchParams: Pr
                   <p className="text-[10px] font-bold uppercase tracking-wider text-[#BA1717]">
                     🔴 Elegíveis sem data
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-slate-200 mt-1">
                     leads marcados elegíveis mas sem `next_followup_at` — não disparam
                   </p>
                 </div>

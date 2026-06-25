@@ -79,7 +79,7 @@ export function CustomerActions({
 
       {/* Health */}
       <div>
-        <div className="text-[10px] uppercase tracking-wider text-gray-500 font-bold mb-2">Health</div>
+        <div className="text-[10px] uppercase tracking-wider text-slate-200 font-bold mb-2">Health</div>
         <div className="grid grid-cols-2 gap-1.5">
           {HEALTH_BTNS.map((h) => {
             const active = currentHealth === h.key;
@@ -109,7 +109,7 @@ export function CustomerActions({
 
       {/* Reassign */}
       <div>
-        <div className="text-[10px] uppercase tracking-wider text-gray-500 font-bold mb-2">Reassign vendor</div>
+        <div className="text-[10px] uppercase tracking-wider text-slate-200 font-bold mb-2">Reassign vendor</div>
         <select
           value={newOwner}
           onChange={(e) => setNewOwner(e.target.value)}

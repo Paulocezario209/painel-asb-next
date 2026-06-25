@@ -48,8 +48,8 @@ export function ProductGroupSelector({
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between mb-1">
-        <p className="text-xs text-gray-500">Clique para selecionar/remover</p>
-        {saving && <span className="text-xs text-gray-400">Salvando…</span>}
+        <p className="text-xs text-slate-200">Clique para selecionar/remover</p>
+        {saving && <span className="text-xs text-slate-200">Salvando…</span>}
         {saved && <span className="text-xs text-green-600">Salvo ✓</span>}
       </div>
       <div className="flex flex-wrap gap-2">

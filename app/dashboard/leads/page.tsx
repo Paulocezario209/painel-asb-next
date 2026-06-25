@@ -80,7 +80,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
     <div className="space-y-4">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Leads</h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <p className="text-sm text-slate-200 mt-1">
           {view === "ativos" ? `${leads.length} leads encontrados`
             : view === "perdidos" ? "Fila de recuperação — perdidos nos últimos 180 dias"
             : "Fora de cobertura — registrados para expansão futura"}

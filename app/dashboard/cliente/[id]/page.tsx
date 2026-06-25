@@ -106,7 +106,7 @@ export default async function ClientePage({
     <div className="space-y-4 max-w-5xl">
       <Link
         href="/dashboard/clientes"
-        className="inline-flex items-center gap-2 text-xs text-gray-400 hover:text-white"
+        className="inline-flex items-center gap-2 text-xs text-slate-200 hover:text-white"
       >
         ← Carteira de Clientes
       </Link>
@@ -146,25 +146,25 @@ export default async function ClientePage({
       <div className="grid grid-cols-3 gap-4">
         {/* Data card */}
         <div className="col-span-2 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">Dados</h2>
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-200 mb-3">Dados</h2>
           <dl className="grid grid-cols-[120px_1fr] gap-y-2 gap-x-4 text-sm">
-            <dt className="text-gray-500 text-xs uppercase tracking-wide">Cidade</dt>
+            <dt className="text-slate-200 text-xs uppercase tracking-wide">Cidade</dt>
             <dd className="text-white">{lead.city ?? "—"}</dd>
-            <dt className="text-gray-500 text-xs uppercase tracking-wide">Segmento</dt>
+            <dt className="text-slate-200 text-xs uppercase tracking-wide">Segmento</dt>
             <dd className="text-white">{lead.segment ?? "—"}</dd>
-            <dt className="text-gray-500 text-xs uppercase tracking-wide">Produto</dt>
+            <dt className="text-slate-200 text-xs uppercase tracking-wide">Produto</dt>
             <dd className="text-white">{lead.product_type ?? "—"}</dd>
-            <dt className="text-gray-500 text-xs uppercase tracking-wide">Volume</dt>
+            <dt className="text-slate-200 text-xs uppercase tracking-wide">Volume</dt>
             <dd className="text-white">{lead.weekly_volume_kg ? `${lead.weekly_volume_kg}kg/sem` : "—"}</dd>
-            <dt className="text-gray-500 text-xs uppercase tracking-wide">First order</dt>
+            <dt className="text-slate-200 text-xs uppercase tracking-wide">First order</dt>
             <dd className="text-white">{lead.first_order_at ? new Date(lead.first_order_at).toLocaleDateString("pt-BR") : "—"}</dd>
-            <dt className="text-gray-500 text-xs uppercase tracking-wide">Owner</dt>
+            <dt className="text-slate-200 text-xs uppercase tracking-wide">Owner</dt>
             <dd className="text-white">{lead.owner_seller_id ? vendorMap.get(lead.owner_seller_id) ?? "—" : "—"}</dd>
-            <dt className="text-gray-500 text-xs uppercase tracking-wide">Team</dt>
+            <dt className="text-slate-200 text-xs uppercase tracking-wide">Team</dt>
             <dd className="text-white">{lead.routing_team ?? "—"}</dd>
             {lead.customer_exit_reason && (
               <>
-                <dt className="text-gray-500 text-xs uppercase tracking-wide">Exit reason</dt>
+                <dt className="text-slate-200 text-xs uppercase tracking-wide">Exit reason</dt>
                 <dd className="text-red-400">{lead.customer_exit_reason}</dd>
               </>
             )}
@@ -173,7 +173,7 @@ export default async function ClientePage({
 
         {/* Actions (apenas se em carteira) */}
         <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">Ações</h2>
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-200 mb-3">Ações</h2>
           {inCarteira ? (
             <CustomerActions
               leadId={lead.id}
@@ -183,7 +183,7 @@ export default async function ClientePage({
               vendors={vendors ?? []}
             />
           ) : (
-            <div className="text-xs text-gray-500 italic">
+            <div className="text-xs text-slate-200 italic">
               Lead fora da carteira ({STAGE_LABELS[lead.funnel_stage] ?? lead.funnel_stage}).
               Ações cliente desabilitadas.
             </div>
@@ -195,20 +195,20 @@ export default async function ClientePage({
       {lifecycleState && (
         <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-gray-400">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-200">
               Métricas da Carteira (worker daily 6h BRT)
             </h2>
-            <span className="text-[10px] text-gray-500 font-mono">
+            <span className="text-[10px] text-slate-200 font-mono">
               Calculado em {lifecycleState.last_computed_at ? new Date(lifecycleState.last_computed_at).toLocaleString("pt-BR") : "—"}
             </span>
           </div>
           <div className="grid grid-cols-4 gap-3">
             <div className="bg-[#0f0f0f] border border-[#2a2a2a] rounded p-3">
-              <div className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Pedidos</div>
+              <div className="text-[10px] uppercase tracking-wider text-slate-200 font-bold">Pedidos</div>
               <div className="text-2xl font-bold text-white mt-1">{lifecycleState.total_orders ?? 0}</div>
             </div>
             <div className="bg-[#0f0f0f] border border-[#2a2a2a] rounded p-3">
-              <div className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Tier ABC</div>
+              <div className="text-[10px] uppercase tracking-wider text-slate-200 font-bold">Tier ABC</div>
               <div
                 className="text-2xl font-bold mt-1"
                 style={{
@@ -221,31 +221,31 @@ export default async function ClientePage({
               </div>
             </div>
             <div className="bg-[#0f0f0f] border border-[#2a2a2a] rounded p-3">
-              <div className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Receita BRL</div>
+              <div className="text-[10px] uppercase tracking-wider text-slate-200 font-bold">Receita BRL</div>
               <div className="text-xl font-bold text-white mt-1">
                 R$ {Number(lifecycleState.total_revenue_brl ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </div>
             <div className="bg-[#0f0f0f] border border-[#2a2a2a] rounded p-3">
-              <div className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Ticket Médio</div>
+              <div className="text-[10px] uppercase tracking-wider text-slate-200 font-bold">Ticket Médio</div>
               <div className="text-xl font-bold text-white mt-1">
                 R$ {Number(lifecycleState.avg_ticket_brl ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </div>
             <div className="bg-[#0f0f0f] border border-[#2a2a2a] rounded p-3">
-              <div className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">1º Pedido</div>
+              <div className="text-[10px] uppercase tracking-wider text-slate-200 font-bold">1º Pedido</div>
               <div className="text-sm font-semibold text-white mt-1">
                 {lifecycleState.first_order_at ? new Date(lifecycleState.first_order_at).toLocaleDateString("pt-BR") : "—"}
               </div>
             </div>
             <div className="bg-[#0f0f0f] border border-[#2a2a2a] rounded p-3">
-              <div className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Último Pedido</div>
+              <div className="text-[10px] uppercase tracking-wider text-slate-200 font-bold">Último Pedido</div>
               <div className="text-sm font-semibold text-white mt-1">
                 {lifecycleState.last_order_at ? new Date(lifecycleState.last_order_at).toLocaleDateString("pt-BR") : "—"}
               </div>
             </div>
             <div className="bg-[#0f0f0f] border border-[#2a2a2a] rounded p-3">
-              <div className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Dias Sem Comprar</div>
+              <div className="text-[10px] uppercase tracking-wider text-slate-200 font-bold">Dias Sem Comprar</div>
               <div
                 className="text-xl font-bold mt-1"
                 style={{
@@ -258,12 +258,12 @@ export default async function ClientePage({
               </div>
             </div>
             <div className="bg-[#0f0f0f] border border-[#2a2a2a] rounded p-3">
-              <div className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Próxima Esperada</div>
+              <div className="text-[10px] uppercase tracking-wider text-slate-200 font-bold">Próxima Esperada</div>
               <div className="text-sm font-semibold text-white mt-1">
                 {lifecycleState.next_expected_order_at ? new Date(lifecycleState.next_expected_order_at).toLocaleDateString("pt-BR") : "—"}
               </div>
               {lifecycleState.avg_order_interval_days && (
-                <div className="text-[10px] text-gray-500 mt-1">
+                <div className="text-[10px] text-slate-200 mt-1">
                   avg {Number(lifecycleState.avg_order_interval_days).toFixed(1)}d
                 </div>
               )}
@@ -274,7 +274,7 @@ export default async function ClientePage({
 
       {/* FIX3: Oportunidades de expansão — seção sempre visível (cards ou empty state) */}
       <div>
-        <h2 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-slate-200 mb-3">
           Oportunidades de Expansão
         </h2>
         {(upsellOp || downsellRisk || tierUp) ? (
@@ -292,23 +292,23 @@ export default async function ClientePage({
               </div>
               <div className="space-y-2 text-xs">
                 <div>
-                  <span className="text-gray-500">Ticket atual:</span>{" "}
+                  <span className="text-slate-200">Ticket atual:</span>{" "}
                   <span className="text-white font-semibold">
                     R$ {Number(upsellOp.cliente_ticket).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
                 <div>
-                  <span className="text-gray-500">Média Tier {upsellOp.customer_tier}:</span>{" "}
+                  <span className="text-slate-200">Média Tier {upsellOp.customer_tier}:</span>{" "}
                   <span className="text-white font-semibold">
                     R$ {Number(upsellOp.tier_avg_ticket).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
                 <div>
-                  <span className="text-gray-500">Gap:</span>{" "}
+                  <span className="text-slate-200">Gap:</span>{" "}
                   <span className="text-[#E0993A] font-bold">{upsellOp.gap_pct}% abaixo</span>
                 </div>
                 <div className="pt-2 mt-2 border-t border-[#2a2a2a]">
-                  <span className="text-gray-500">Potencial anual se subir pra média:</span>
+                  <span className="text-slate-200">Potencial anual se subir pra média:</span>
                   <div className="text-[#22C55E] font-bold text-lg mt-1">
                     + R$ {Number(upsellOp.potencial_anual_brl).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </div>
@@ -345,23 +345,23 @@ export default async function ClientePage({
               </div>
               <div className="space-y-2 text-xs">
                 <div>
-                  <span className="text-gray-500">Ticket atual:</span>{" "}
+                  <span className="text-slate-200">Ticket atual:</span>{" "}
                   <span className="text-white font-semibold">
                     R$ {Number(downsellRisk.cliente_ticket).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
                 <div>
-                  <span className="text-gray-500">Média Tier {downsellRisk.customer_tier}:</span>{" "}
+                  <span className="text-slate-200">Média Tier {downsellRisk.customer_tier}:</span>{" "}
                   <span className="text-white font-semibold">
                     R$ {Number(downsellRisk.tier_avg_ticket).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
                 <div>
-                  <span className="text-gray-500">Acima da média:</span>{" "}
+                  <span className="text-slate-200">Acima da média:</span>{" "}
                   <span className="text-[#E84545] font-bold">+{downsellRisk.excesso_pct}%</span>
                 </div>
                 <div className="pt-2 mt-2 border-t border-[#2a2a2a]">
-                  <span className="text-gray-500">Revenue em risco (se buscar alternativa mais barata):</span>
+                  <span className="text-slate-200">Revenue em risco (se buscar alternativa mais barata):</span>
                   <div className="text-[#E84545] font-bold text-lg mt-1">
                     R$ {Number(downsellRisk.revenue_em_risco_brl).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </div>
@@ -383,15 +383,15 @@ export default async function ClientePage({
               </div>
               <div className="space-y-2 text-xs">
                 <div className="flex items-center gap-2">
-                  <span className="text-gray-500">Tier atual:</span>
+                  <span className="text-slate-200">Tier atual:</span>
                   <span
                     className="px-2 py-0.5 rounded font-bold"
                     style={{ background: "#9696AF", color: "#fff" }}
                   >
                     {tierUp.tier_atual}
                   </span>
-                  <span className="text-gray-500">→</span>
-                  <span className="text-gray-500">Sugerido:</span>
+                  <span className="text-slate-200">→</span>
+                  <span className="text-slate-200">Sugerido:</span>
                   <span
                     className="px-2 py-0.5 rounded font-bold"
                     style={{
@@ -403,14 +403,14 @@ export default async function ClientePage({
                   </span>
                 </div>
                 <div>
-                  <span className="text-gray-500">Volume:</span>{" "}
+                  <span className="text-slate-200">Volume:</span>{" "}
                   <span className="text-white font-semibold">{tierUp.weekly_volume_kg} kg/sem</span>
                 </div>
                 <div>
-                  <span className="text-gray-500">Razão:</span>{" "}
-                  <span className="text-gray-300 text-[10px] font-mono">{tierUp.razao}</span>
+                  <span className="text-slate-200">Razão:</span>{" "}
+                  <span className="text-slate-200 text-[10px] font-mono">{tierUp.razao}</span>
                 </div>
-                <div className="pt-2 mt-2 border-t border-[#2a2a2a] text-[10px] text-gray-500">
+                <div className="pt-2 mt-2 border-t border-[#2a2a2a] text-[10px] text-slate-200">
                   Reclassificação manual pelo gestor — worker calcula tier
                   automaticamente após first_order+30d baseado em weekly_volume_kg.
                 </div>
@@ -427,20 +427,20 @@ export default async function ClientePage({
 
       {/* Timeline */}
       <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4">
-        <h2 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-slate-200 mb-3">
           Timeline ({events?.length ?? 0} eventos)
         </h2>
         <div className="space-y-2 max-h-[300px] overflow-y-auto">
           {(events ?? []).map((ev, i: number) => (
             <div key={i} className="flex items-start gap-3 text-xs border-l-2 border-[#185FA5] pl-3 py-1">
-              <span className="text-gray-500 shrink-0 w-32 font-mono">
+              <span className="text-slate-200 shrink-0 w-32 font-mono">
                 {new Date(ev.created_at).toLocaleString("pt-BR")}
               </span>
               <span className="text-white">
-                <span className="text-gray-400">{ev.from_stage}</span>
+                <span className="text-slate-200">{ev.from_stage}</span>
                 {" → "}
                 <span className="font-semibold">{ev.to_stage}</span>
-                <span className="text-gray-500 ml-2">({ev.actor})</span>
+                <span className="text-slate-200 ml-2">({ev.actor})</span>
               </span>
             </div>
           ))}
@@ -453,20 +453,20 @@ export default async function ClientePage({
       {/* Reassign log */}
       {overrides && overrides.length > 0 && (
         <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-200 mb-3">
             Reassign log ({overrides.length})
           </h2>
           <div className="space-y-2">
             {overrides.map((o, i: number) => (
               <div key={i} className="text-xs flex items-start gap-3 border-l-2 border-[#BA7517] pl-3 py-1">
-                <span className="text-gray-500 shrink-0 w-32 font-mono">
+                <span className="text-slate-200 shrink-0 w-32 font-mono">
                   {new Date(o.created_at).toLocaleString("pt-BR")}
                 </span>
                 <span className="text-white">
-                  <span className="text-gray-400">{o.from_owner_seller_id ? vendorMap.get(o.from_owner_seller_id) ?? "—" : "—"}</span>
+                  <span className="text-slate-200">{o.from_owner_seller_id ? vendorMap.get(o.from_owner_seller_id) ?? "—" : "—"}</span>
                   {" → "}
                   <span className="font-semibold">{vendorMap.get(o.to_owner_seller_id) ?? "—"}</span>
-                  <div className="text-gray-500">Motivo: {o.motivo}</div>
+                  <div className="text-slate-200">Motivo: {o.motivo}</div>
                 </span>
               </div>
             ))}

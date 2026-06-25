@@ -45,7 +45,7 @@ export default async function ChurnPage() {
     <div className="space-y-4">
       <div>
         <h1 className="text-2xl font-bold text-white">Churn — Carteira de Clientes</h1>
-        <p className="text-sm text-gray-400 mt-1">
+        <p className="text-sm text-slate-200 mt-1">
           {total} clientes em risco/pré-churn/churn/inativo · carteira real ARES (v_carteira_360) · maiores no topo
         </p>
       </div>
@@ -64,7 +64,7 @@ export default async function ChurnPage() {
                 {col.label}
               </div>
               <div className="text-4xl font-bold text-white mt-2">{count}</div>
-              <div className="text-[10px] text-gray-500 mt-2 leading-tight">{col.desc}</div>
+              <div className="text-[10px] text-slate-200 mt-2 leading-tight">{col.desc}</div>
             </div>
           );
         })}
@@ -77,7 +77,7 @@ export default async function ChurnPage() {
             <div className="flex items-center gap-2 mb-3 pb-2 border-b border-[#2a2a2a]">
               <div className="w-3 h-3 rounded-full" style={{ background: col.color, boxShadow: `0 0 6px ${col.color}` }} />
               <h2 className="text-xs font-bold uppercase tracking-wider text-white">{col.label}</h2>
-              <span className="text-xs text-gray-500 ml-auto">{byStatus[col.key].length} clientes</span>
+              <span className="text-xs text-slate-200 ml-auto">{byStatus[col.key].length} clientes</span>
             </div>
 
             {byStatus[col.key].length === 0 ? (
@@ -91,25 +91,25 @@ export default async function ChurnPage() {
                     <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_auto] gap-2 items-center bg-[#0f0f0f] hover:bg-[#181818] border border-[#2a2a35] hover:border-[#185FA5] rounded p-3 text-xs transition-all shadow-[0_0_12px_-9px_rgba(79,125,240,0.6)]">
                       <div className="text-white font-semibold truncate">
                         {c.name || `cliente ${c.ares_pessoa_id}`}
-                        <span className="text-gray-500 text-[10px] font-normal ml-2">{c.city ?? "—"}</span>
+                        <span className="text-slate-200 text-[10px] font-normal ml-2">{c.city ?? "—"}</span>
                       </div>
-                      <div className="text-gray-400">
-                        <span className="text-gray-500 text-[10px]">Receita:</span>{" "}
+                      <div className="text-slate-200">
+                        <span className="text-slate-200 text-[10px]">Receita:</span>{" "}
                         <span className="text-white">{brl(c.total_revenue_brl)}</span>
                       </div>
-                      <div className="text-gray-400">
-                        <span className="text-gray-500 text-[10px]">Pedidos:</span>{" "}
+                      <div className="text-slate-200">
+                        <span className="text-slate-200 text-[10px]">Pedidos:</span>{" "}
                         <span className="text-white">{c.total_orders ?? "—"}</span>
                       </div>
-                      <div className="text-gray-400">
-                        <span className="text-gray-500 text-[10px]">Sem comprar:</span>{" "}
+                      <div className="text-slate-200">
+                        <span className="text-slate-200 text-[10px]">Sem comprar:</span>{" "}
                         <span className="text-white">{c.dias_sem_compra ?? "—"}d</span>
                       </div>
-                      <div className="text-gray-400">
-                        <span className="text-gray-500 text-[10px]">Tier:</span>{" "}
+                      <div className="text-slate-200">
+                        <span className="text-slate-200 text-[10px]">Tier:</span>{" "}
                         <span className="text-white font-bold">{c.customer_tier ?? "—"}</span>
                       </div>
-                      <div className="text-gray-500">{c.vendedor_nome?.split(" ")[0] ?? "—"}</div>
+                      <div className="text-slate-200">{c.vendedor_nome?.split(" ")[0] ?? "—"}</div>
                     </div>
                   );
                   return c.lead_id ? (
