@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { theme } from "@/lib/theme";
 import { HotLeadsTable } from "@/components/hot-leads/hot-leads-table";
 
 export const dynamic = "force-dynamic";
@@ -23,20 +24,20 @@ export default async function HotLeadsPage() {
             color: "#FFFFFF",
             fontSize: 18,
             fontWeight: 700,
-            fontFamily: "'Courier New', monospace",
+            fontFamily: theme.font.label,
             letterSpacing: ".08em",
             marginBottom: 4,
           }}
         >
           Leads Quentes
         </h1>
-        <p style={{ color: "#556677", fontSize: 11, fontFamily: "'Courier New', monospace", letterSpacing: ".1em" }}>
+        <p style={{ color: "#556677", fontSize: 11, fontFamily: theme.font.label, letterSpacing: ".1em" }}>
           {error ? "Erro ao carregar leads" : `${leads?.length ?? 0} leads · Perfil A (ativos) + Perfil B (convertidos)`}
         </p>
       </div>
 
       {error ? (
-        <div style={{ color: "#C8102E", fontFamily: "'Courier New', monospace", fontSize: 12 }}>
+        <div style={{ color: "#C8102E", fontFamily: theme.font.label, fontSize: 12 }}>
           Erro: {error.message}
         </div>
       ) : (

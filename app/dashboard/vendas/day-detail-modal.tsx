@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { theme } from "@/lib/theme";
 import type { DayPedido } from "./actions";
 
 const STATUS_COLOR: Record<string, { bg: string; fg: string; label: string }> = {
@@ -99,7 +100,7 @@ export function DayDetailModal({
             </h2>
             {/* DEBT-133: contexto da célula — meta × realizado (fold §9) × % */}
             {header && !agendado && (header.meta > 0 || header.realizado > 0) && (
-              <div className="text-xs mt-1" style={{ fontFamily: "'Courier New', monospace" }}>
+              <div className="text-xs mt-1" style={{ fontFamily: theme.font.num }}>
                 {header.meta > 0 && (
                   <span style={{ color: "#ff7b1c" }}>Meta <b className="priv-brl">{fmtBRL(header.meta)}</b></span>
                 )}

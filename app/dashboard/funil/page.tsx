@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { theme } from "@/lib/theme";
 import { FunnelVisual, type FunnelStage } from "@/components/dashboard/funnel-visual";
 import { DashboardFilters } from "@/components/dashboard/dashboard-filters";
 import Link from "next/link";
@@ -116,10 +117,10 @@ const QUALIFICACAO = new Set([
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const S = {
   card:    { background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8 } as React.CSSProperties,
-  label:   { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#556677", fontFamily: "'Courier New', monospace" },
-  value:   { fontSize: 28, fontWeight: 700, color: "#FFFFFF", fontFamily: "'Inter', system-ui, sans-serif", lineHeight: 1 },
-  section: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#c0c8d8", fontFamily: "'Courier New', monospace", marginBottom: 12 } as React.CSSProperties,
-  muted:   { color: "#8899aa", fontSize: 11, fontFamily: "'Courier New', monospace" } as React.CSSProperties,
+  label:   { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#556677", fontFamily: theme.font.label },
+  value:   { fontSize: 28, fontWeight: 700, color: "#FFFFFF", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", lineHeight: 1 },
+  section: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#c0c8d8", fontFamily: theme.font.label, marginBottom: 12 } as React.CSSProperties,
+  muted:   { color: "#8899aa", fontSize: 11, fontFamily: theme.font.label } as React.CSSProperties,
 };
 
 // ── Interfaces ────────────────────────────────────────────────────────────────
@@ -243,7 +244,7 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {/* Header */}
       <div>
-        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: "'Courier New', monospace", letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
+        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
           Funil de Vendas
         </h1>
         <p style={S.muted}>14 etapas (Funil v2) · {total} leads · atualizado agora</p>
@@ -294,24 +295,24 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
                   title={`Ver leads — ${mk.label}`}
                   style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", cursor: "pointer" }}
                 >
-                  <span style={{ width: 132, color: "#c8d8e8", fontSize: 11, fontFamily: "'Courier New', monospace", flexShrink: 0 }}>{mk.label}</span>
+                  <span style={{ width: 132, color: "#c8d8e8", fontSize: 11, fontFamily: theme.font.label, flexShrink: 0 }}>{mk.label}</span>
                   <div style={{ flex: 1, background: "#0d1117", borderRadius: 3, height: 22, position: "relative", overflow: "hidden" }}>
                     <div style={{ width: `${pctTotal}%`, height: "100%", background: "linear-gradient(90deg, #1B2A6B, #2ea043)", borderRadius: 3, minWidth: mk.count > 0 ? 3 : 0 }} />
-                    <span style={{ position: "absolute", left: 8, top: 3, color: "#fff", fontSize: 11, fontFamily: "'Courier New', monospace" }}>{mk.count}</span>
+                    <span style={{ position: "absolute", left: 8, top: 3, color: "#fff", fontSize: 11, fontFamily: theme.font.num }}>{mk.count}</span>
                   </div>
-                  <span style={{ width: 42, textAlign: "right", color: "#8899aa", fontSize: 11, fontFamily: "'Courier New', monospace", flexShrink: 0 }}>{pctTotal}%</span>
+                  <span style={{ width: 42, textAlign: "right", color: "#8899aa", fontSize: 11, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", flexShrink: 0 }}>{pctTotal}%</span>
                   {/* item 4: drop-off = % que NÃO avançou da etapa anterior; cor semântica (tokens existentes) */}
                   {(() => {
-                    if (pctPrev == null) return <span style={{ width: 96, textAlign: "right", color: "#556677", fontSize: 10, fontFamily: "'Courier New', monospace", flexShrink: 0 }}>—</span>;
+                    if (pctPrev == null) return <span style={{ width: 96, textAlign: "right", color: "#556677", fontSize: 10, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", flexShrink: 0 }}>—</span>;
                     const drop = Math.max(0, 100 - pctPrev);
                     const c = drop >= 50 ? "#C8102E" : drop >= 25 ? "#D4A017" : "#556677";
-                    return <span style={{ width: 96, textAlign: "right", color: c, fontSize: 10, fontFamily: "'Courier New', monospace", flexShrink: 0 }}>−{drop}% caiu</span>;
+                    return <span style={{ width: 96, textAlign: "right", color: c, fontSize: 10, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", flexShrink: 0 }}>−{drop}% caiu</span>;
                   })()}
                 </Link>
               );
             })}
           </div>
-          <p style={{ color: "#556677", fontSize: 9, fontFamily: "'Courier New', monospace", marginTop: 10, lineHeight: 1.5 }}>
+          <p style={{ color: "#556677", fontSize: 9, fontFamily: theme.font.label, marginTop: 10, lineHeight: 1.5 }}>
             Base: created_at → qual_stage≥7 → handoff_at → seller_first_reply_at → first_order_at (campos com timestamp confiável, asb-funnel §7). Cumulativo. Difere do funil de 14 etapas abaixo (posição ATUAL; legacy colapsado p/ v2 — DEBT-157).
           </p>
         </div>
@@ -368,9 +369,9 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
                     const dias = Math.floor((Date.now() - new Date(r.created_at).getTime()) / 86400000);
                     const row = (
                       <>
-                        <span style={{ color: "#c8d8e8", fontSize: 11, fontFamily: "'Courier New', monospace", minWidth: 160 }}>{nome}</span>
-                        <span style={{ color: "#556677", fontSize: 10, fontFamily: "'Courier New', monospace" }}>{r.city ?? "—"}</span>
-                        <span style={{ marginLeft: "auto", color: dias >= 7 ? "#C8102E" : dias >= 3 ? "#f59e0b" : "#8899aa", fontSize: 10, fontWeight: 700, fontFamily: "'Courier New', monospace" }}>{dias}d na base</span>
+                        <span style={{ color: "#c8d8e8", fontSize: 11, fontFamily: theme.font.label, minWidth: 160 }}>{nome}</span>
+                        <span style={{ color: "#556677", fontSize: 10, fontFamily: theme.font.label }}>{r.city ?? "—"}</span>
+                        <span style={{ marginLeft: "auto", color: dias >= 7 ? "#C8102E" : dias >= 3 ? "#f59e0b" : "#8899aa", fontSize: 10, fontWeight: 700, fontFamily: theme.font.label }}>{dias}d na base</span>
                       </>
                     );
                     return r.phone ? (
@@ -406,24 +407,24 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
 
               return (
                 <div key={e.created_at + i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "4px 0", borderTop: i > 0 ? "1px solid rgba(27,42,107,.2)" : "none" }}>
-                  <span style={{ color: "#556677", fontSize: 10, fontFamily: "'Courier New', monospace", minWidth: 80 }}>
+                  <span style={{ color: "#556677", fontSize: 10, fontFamily: theme.font.label, minWidth: 80 }}>
                     {dia} {hora}
                   </span>
                   {lead?.phone ? (
-                    <Link href={`/dashboard/leads/${encodeURIComponent(lead.phone)}`} style={{ color: "#c8d8e8", fontSize: 11, fontFamily: "'Courier New', monospace", minWidth: 100, textDecoration: "none" }}>
+                    <Link href={`/dashboard/leads/${encodeURIComponent(lead.phone)}`} style={{ color: "#c8d8e8", fontSize: 11, fontFamily: theme.font.label, minWidth: 100, textDecoration: "none" }}>
                       {nome}
                     </Link>
                   ) : (
-                    <span style={{ color: "#c8d8e8", fontSize: 11, fontFamily: "'Courier New', monospace", minWidth: 100 }}>
+                    <span style={{ color: "#c8d8e8", fontSize: 11, fontFamily: theme.font.label, minWidth: 100 }}>
                       {nome}
                     </span>
                   )}
-                  <span style={{ color: "#8899aa", fontSize: 10, fontFamily: "'Courier New', monospace" }}>
+                  <span style={{ color: "#8899aa", fontSize: 10, fontFamily: theme.font.label }}>
                     {e.from_stage ? `${STAGE_LABELS[e.from_stage] ?? e.from_stage} → ` : ""}{STAGE_LABELS[e.to_stage] ?? e.to_stage}
                   </span>
                   <span style={{
                     marginLeft: "auto",
-                    fontSize: 9, fontFamily: "'Courier New', monospace", letterSpacing: ".08em",
+                    fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".08em",
                     padding: "1px 6px", borderRadius: 2,
                     color: e.actor === "vendedor" ? "#22c55e" : e.actor === "sdr" ? "#C8102E" : "#8899aa",
                     border: `1px solid ${e.actor === "vendedor" ? "rgba(34,197,94,.3)" : e.actor === "sdr" ? "rgba(200,16,46,.3)" : "rgba(136,153,170,.2)"}`,

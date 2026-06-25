@@ -3,6 +3,7 @@
 // asb-dashboard-elite: 1 pergunta — "onde está cada lead do vendedor agora?" + KPIs de topo.
 // Fonte: query direta (LISTA de leads pós-handoff, não agregação numérica — cada lead 1x, limit explícito).
 import { redirect } from "next/navigation";
+import { theme } from "@/lib/theme";
 import { getUserContext, canAccess } from "@/lib/auth/get-user-role";
 import { createClient } from "@/lib/supabase/server";
 import { DashboardFilters } from "@/components/dashboard/dashboard-filters";
@@ -25,9 +26,9 @@ const VENDOR_LABELS: Record<string, string> = {
 
 const S = {
   card: { background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8 } as React.CSSProperties,
-  muted: { color: "#8899aa", fontSize: 11, fontFamily: "'Courier New', monospace" } as React.CSSProperties,
-  kpiLabel: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#556677", fontFamily: "'Courier New', monospace" },
-  kpiValue: { fontSize: 24, fontWeight: 700, color: "#FFFFFF", fontFamily: "'Courier New', monospace", lineHeight: 1 },
+  muted: { color: "#8899aa", fontSize: 11, fontFamily: theme.font.label } as React.CSSProperties,
+  kpiLabel: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#556677", fontFamily: theme.font.label },
+  kpiValue: { fontSize: 24, fontWeight: 700, color: "#FFFFFF", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", lineHeight: 1 },
 };
 
 const brl = (v: number) => "R$ " + v.toLocaleString("pt-BR", { maximumFractionDigits: 0 });
@@ -88,7 +89,7 @@ export default async function PipelinePage({ searchParams }: { searchParams: Pro
     <div style={{ display: "flex", flexDirection: "column", gap: 16, height: "100%" }}>
       {/* Header */}
       <div>
-        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: "'Courier New', monospace", letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
+        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
           Pipeline {ctx.isVendedor && ctx.routing_team ? `· ${VENDOR_LABELS[ctx.routing_team] ?? ctx.routing_team}` : ""}
           {mesParam ? ` · ${mesParam}` : ""}
         </h1>

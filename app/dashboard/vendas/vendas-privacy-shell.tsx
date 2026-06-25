@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
+import { theme } from "@/lib/theme";
 
 const LS_KEY = "asb_vendas_privacy_hidden";
 
@@ -53,7 +54,7 @@ export function VendasPrivacyShell({ children }: { children: ReactNode }) {
           cursor: "pointer",
           color: hidden ? "#8899aa" : "#fff",
           fontSize: 12,
-          fontFamily: "'Courier New', monospace",
+          fontFamily: theme.font.label,
           letterSpacing: ".05em",
           textTransform: "uppercase",
           display: "flex",
@@ -89,7 +90,7 @@ export function VendasPrivacyShell({ children }: { children: ReactNode }) {
           align-items: center;
           justify-content: center;
           color: #556677;
-          font-family: 'Courier New', monospace;
+          font-family: var(--font-geist-mono), monospace;
           font-size: 0.85em;
           font-weight: 600;
           letter-spacing: 1px;
@@ -116,7 +117,7 @@ export function VendasPrivacyShell({ children }: { children: ReactNode }) {
           align-items: center;
           justify-content: center;
           color: #556677;
-          font-family: 'Courier New', monospace;
+          font-family: var(--font-geist-mono), monospace;
           font-size: 0.85em;
           font-weight: 600;
         }

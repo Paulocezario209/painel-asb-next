@@ -110,7 +110,7 @@ export default async function ClientesPage({
               href={`/dashboard/clientes?tab=${t.key}`}
               style={{
                 padding: "8px 16px",
-                fontFamily: theme.font.mono,
+                fontFamily: theme.font.label,
                 fontSize: 11,
                 letterSpacing: ".1em",
                 textTransform: "uppercase",

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { theme } from "@/lib/theme";
 import { createClient } from "@/lib/supabase/server";
 import { FollowupsTable } from "@/components/followups/followups-table";
 
@@ -7,9 +8,9 @@ export const dynamic = "force-dynamic";
 // ── Design tokens ────────────────────────────────────────────────────────────
 const S = {
   card:    { background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8 } as React.CSSProperties,
-  label:   { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#556677", fontFamily: "'Courier New', monospace" },
-  value:   { fontSize: 22, fontWeight: 700, fontFamily: "'Inter', system-ui, sans-serif", lineHeight: 1 } as React.CSSProperties,
-  muted:   { color: "#8899aa", fontSize: 11, fontFamily: "'Courier New', monospace" } as React.CSSProperties,
+  label:   { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#556677", fontFamily: theme.font.label },
+  value:   { fontSize: 22, fontWeight: 700, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", lineHeight: 1 } as React.CSSProperties,
+  muted:   { color: "#8899aa", fontSize: 11, fontFamily: theme.font.label } as React.CSSProperties,
 };
 
 const ANGLE_LABELS: Record<string, string> = {
@@ -102,7 +103,7 @@ export default async function FollowupsPage({ searchParams }: { searchParams: Pr
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div>
-        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: "'Courier New', monospace", letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
+        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
           Follow-ups
         </h1>
         <p style={S.muted}>Histórico de follow-ups automáticos</p>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { theme } from "@/lib/theme";
 import Link from "next/link";
 import type { Alerta, AlertasResponse } from "./actions";
 import { getPedidosAtrasadosPorVendedor, getClientesDormentes } from "./actions";
@@ -55,7 +56,7 @@ export function AlertasComerciais({ data }: { data: AlertasResponse }) {
   if (data.total === 0) {
     return (
       <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg" style={{ padding: "20px 24px" }}>
-        <p style={{ fontSize: 11, fontWeight: 700, color: "#22c55e", fontFamily: "'Courier New', monospace", textTransform: "uppercase", letterSpacing: ".1em", marginBottom: 6 }}>
+        <p style={{ fontSize: 11, fontWeight: 700, color: "#22c55e", fontFamily: theme.font.label, textTransform: "uppercase", letterSpacing: ".1em", marginBottom: 6 }}>
           🟢 ALERTAS COMERCIAIS
         </p>
         <p style={{ fontSize: 12, color: "#8899aa" }}>
@@ -68,10 +69,10 @@ export function AlertasComerciais({ data }: { data: AlertasResponse }) {
   return (
     <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg" style={{ padding: "20px 24px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 14 }}>
-        <p style={{ fontSize: 11, fontWeight: 700, color: "#c0c8d8", fontFamily: "'Courier New', monospace", textTransform: "uppercase", letterSpacing: ".1em" }}>
+        <p style={{ fontSize: 11, fontWeight: 700, color: "#c0c8d8", fontFamily: theme.font.label, textTransform: "uppercase", letterSpacing: ".1em" }}>
           ⚠ ALERTAS COMERCIAIS — {data.total}
         </p>
-        <div style={{ display: "flex", gap: 6, fontSize: 9, fontFamily: "'Courier New', monospace" }}>
+        <div style={{ display: "flex", gap: 6, fontSize: 9, fontFamily: theme.font.label }}>
           {data.contadores.vermelho > 0 && (
             <span style={{ color: "#fff", background: "#C8102E", padding: "2px 8px", borderRadius: 3, fontWeight: 700 }}>
               {data.contadores.vermelho} CRÍTICO
@@ -110,7 +111,7 @@ export function AlertasComerciais({ data }: { data: AlertasResponse }) {
             <>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <span style={{ fontSize: 14 }}>{TIPO_ICON[a.tipo]}</span>
-                <span style={{ fontSize: 8, fontWeight: 700, color: s.border, fontFamily: "'Courier New', monospace", letterSpacing: ".1em" }}>
+                <span style={{ fontSize: 8, fontWeight: 700, color: s.border, fontFamily: theme.font.label, letterSpacing: ".1em" }}>
                   {s.label}
                 </span>
                 {clickable && (

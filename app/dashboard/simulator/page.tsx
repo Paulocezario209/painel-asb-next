@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
+import { theme } from "@/lib/theme";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface LeadConfig {
@@ -72,12 +73,12 @@ const ETAPAS = Array.from({ length: 10 }, (_, i) => i);
 // ── Design tokens ──────────────────────────────────────────────────────────────
 const S = {
   card:    { background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 4, padding: "20px 24px" } as React.CSSProperties,
-  label:   { display: "block", fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase" as const, color: "#556677", fontFamily: "'Courier New', monospace", marginBottom: 6 },
-  section: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#c0c8d8", fontFamily: "'Courier New', monospace", marginBottom: 14 } as React.CSSProperties,
-  muted:   { color: "#8899aa", fontSize: 11, fontFamily: "'Courier New', monospace" } as React.CSSProperties,
+  label:   { display: "block", fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase" as const, color: "#556677", fontFamily: theme.font.label, marginBottom: 6 },
+  section: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#c0c8d8", fontFamily: theme.font.label, marginBottom: 14 } as React.CSSProperties,
+  muted:   { color: "#8899aa", fontSize: 11, fontFamily: theme.font.label } as React.CSSProperties,
   input:   {
     width: "100%", background: "#080b14", border: "1px solid #2a2a2a", borderRadius: 3,
-    color: "#c8d8e8", fontSize: 11, fontFamily: "'Courier New', monospace",
+    color: "#c8d8e8", fontSize: 11, fontFamily: theme.font.label,
     padding: "7px 10px", outline: "none", boxSizing: "border-box" as const,
   },
 };
@@ -89,7 +90,7 @@ function QualBadge({ stage }: { stage: number | null }) {
   return (
     <span style={{
       display: "inline-block", background: `${color}15`, border: `1px solid ${color}50`,
-      color, fontSize: 10, fontFamily: "'Courier New', monospace", fontWeight: 700,
+      color, fontSize: 10, fontFamily: theme.font.num, fontWeight: 700,
       padding: "2px 8px", borderRadius: 3,
     }}>
       etapa {stage}
@@ -101,7 +102,7 @@ function DomainBadge({ domain }: { domain: string }) {
   return (
     <span style={{
       display: "inline-block", background: "rgba(27,42,107,.25)", border: "1px solid #2a2a2a",
-      color: "#8899aa", fontSize: 9, fontFamily: "'Courier New', monospace",
+      color: "#8899aa", fontSize: 9, fontFamily: theme.font.label,
       padding: "2px 8px", borderRadius: 3, letterSpacing: ".10em",
     }}>
       {domain}
@@ -191,7 +192,7 @@ export default function SimulatorPage() {
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {/* Header */}
       <div>
-        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: "'Courier New', monospace", letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
+        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
           Simulador RAG
         </h1>
         <p style={S.muted}>Teste o comportamento do SDR sem usar leads reais</p>
@@ -290,7 +291,7 @@ export default function SimulatorPage() {
                   style={{
                     padding: "7px 20px", borderRadius: 3, cursor: loading || !message.trim() ? "not-allowed" : "pointer",
                     fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase",
-                    fontFamily: "'Courier New', monospace", fontWeight: 700,
+                    fontFamily: theme.font.num, fontWeight: 700,
                     border: "1px solid #C8102E",
                     background: loading || !message.trim() ? "rgba(200,16,46,.05)" : "rgba(200,16,46,.15)",
                     color: loading || !message.trim() ? "#556677" : "#C8102E",
@@ -316,7 +317,7 @@ export default function SimulatorPage() {
 
             {loading && (
               <div style={{ textAlign: "center", padding: "24px 0" }}>
-                <p style={{ color: "#556677", fontFamily: "'Courier New', monospace", fontSize: 11 }}>
+                <p style={{ color: "#556677", fontFamily: theme.font.label, fontSize: 11 }}>
                   ◌ consultando RAG…
                 </p>
               </div>
@@ -336,7 +337,7 @@ export default function SimulatorPage() {
                   {lastResult.intent && (
                     <span style={{
                       display: "inline-block", background: "rgba(27,42,107,.2)", border: "1px solid #2a2a2a",
-                      color: "#8899aa", fontSize: 9, fontFamily: "'Courier New', monospace",
+                      color: "#8899aa", fontSize: 9, fontFamily: theme.font.label,
                       padding: "2px 8px", borderRadius: 3,
                     }}>
                       intent: {lastResult.intent}
@@ -356,7 +357,7 @@ export default function SimulatorPage() {
                     borderLeft: "3px solid #C8102E", background: "rgba(200,16,46,.06)",
                     padding: "10px 14px", borderRadius: "0 4px 4px 0",
                   }}>
-                    <p style={{ color: "#C8102E", fontSize: 11, fontFamily: "'Courier New', monospace" }}>
+                    <p style={{ color: "#C8102E", fontSize: 11, fontFamily: theme.font.label }}>
                       {lastResult.error}
                     </p>
                   </div>
@@ -367,7 +368,7 @@ export default function SimulatorPage() {
                     borderRadius: 3, padding: "14px 16px",
                   }}>
                     <p style={{
-                      color: "#c8d8e8", fontSize: 12, fontFamily: "'Courier New', monospace",
+                      color: "#c8d8e8", fontSize: 12, fontFamily: theme.font.label,
                       lineHeight: 1.7, whiteSpace: "pre-wrap", margin: 0,
                     }}>
                       {lastResult.response}
@@ -397,7 +398,7 @@ export default function SimulatorPage() {
                   onClick={() => { setHistory([]); setLastResult(null); }}
                   style={{
                     background: "transparent", border: "1px solid #2a2a2a", color: "#556677",
-                    fontSize: 9, fontFamily: "'Courier New', monospace", letterSpacing: ".10em",
+                    fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".10em",
                     textTransform: "uppercase", padding: "3px 8px", borderRadius: 3, cursor: "pointer",
                   }}
                 >
@@ -420,7 +421,7 @@ export default function SimulatorPage() {
                       padding: "7px 10px", marginBottom: 6,
                     }}>
                       <p style={{ ...S.muted, fontSize: 9, marginBottom: 3 }}>Lead</p>
-                      <p style={{ color: "#c8d8e8", fontSize: 11, fontFamily: "'Courier New', monospace", margin: 0 }}>
+                      <p style={{ color: "#c8d8e8", fontSize: 11, fontFamily: theme.font.label, margin: 0 }}>
                         {h.message}
                       </p>
                     </div>
@@ -436,7 +437,7 @@ export default function SimulatorPage() {
                           <QualBadge stage={h.qual_stage} />
                         </div>
                         <p style={{
-                          color: "#c8d8e8", fontSize: 11, fontFamily: "'Courier New', monospace",
+                          color: "#c8d8e8", fontSize: 11, fontFamily: theme.font.label,
                           margin: 0, lineHeight: 1.5,
                           display: "-webkit-box",
                           WebkitLineClamp: 3,
@@ -448,7 +449,7 @@ export default function SimulatorPage() {
                       </div>
                     )}
                     {h.error && (
-                      <p style={{ color: "#C8102E", fontSize: 10, fontFamily: "'Courier New', monospace", padding: "4px 10px" }}>
+                      <p style={{ color: "#C8102E", fontSize: 10, fontFamily: theme.font.label, padding: "4px 10px" }}>
                         ✕ {h.error}
                       </p>
                     )}

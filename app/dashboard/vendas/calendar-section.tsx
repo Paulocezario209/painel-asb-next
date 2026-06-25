@@ -216,7 +216,7 @@ export function CalendarSection({
       {/* Toggle vendedor — escondido pra vendedor (vê só os próprios dados) */}
       {!isRestricted && (
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <span style={{ fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", color: theme.colors.neutral, fontFamily: "'Courier New', monospace" }}>
+          <span style={{ fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", color: theme.colors.neutral, fontFamily: theme.font.label }}>
             Vendedor
           </span>
           {[{ k: "all", label: "Consolidado" }, ...ORDER.map(k => ({ k, label: VENDOR_LABELS[k]?.name ?? k }))].map(({ k, label }) => {
@@ -229,7 +229,7 @@ export function CalendarSection({
                 style={{
                   padding: "6px 12px",
                   fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase",
-                  fontFamily: "'Courier New', monospace", fontWeight: 700,
+                  fontFamily: theme.font.label, fontWeight: 700,
                   background: active ? accent : "transparent",
                   color: active ? "#FFFFFF" : theme.colors.textPrimary,
                   border: `1px solid ${active ? accent : theme.colors.borderDefault}`,
@@ -280,17 +280,17 @@ export function CalendarSection({
             >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
                 <div>
-                  <p style={{ fontSize: 11, fontWeight: 700, color: v.accent, fontFamily: "'Courier New', monospace", textTransform: "uppercase", letterSpacing: ".1em" }}>
+                  <p style={{ fontSize: 11, fontWeight: 700, color: v.accent, fontFamily: theme.font.label, textTransform: "uppercase", letterSpacing: ".1em" }}>
                     {v.name}
                   </p>
-                  <p style={{ fontSize: 9, color: "#8899aa", marginTop: 2, fontFamily: "'Courier New', monospace" }}>{v.region}</p>
+                  <p style={{ fontSize: 9, color: "#8899aa", marginTop: 2, fontFamily: theme.font.label }}>{v.region}</p>
                 </div>
                 <span
                   style={{
                     background: corMes, color: "#fff",
                     padding: "3px 8px", borderRadius: 3, fontSize: 9,
                     fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase",
-                    fontFamily: "'Courier New', monospace",
+                    fontFamily: theme.font.label,
                   }}
                 >
                   {pctCiclo !== null ? <span className="priv-pct">{`${pctCiclo}%`}</span> : "—"}
@@ -327,18 +327,18 @@ export function CalendarSection({
                   { label: `↳ CNB ${v.name}`, value: <span className="priv-brl">{fmtBRL(cnbVend)}</span>, c: cnbVend > 0 ? theme.colors.accent : theme.colors.neutral },
                 ];})().map(row => (
                   <div key={row.label} style={{ display: "flex", justifyContent: "space-between", fontSize: 11 }}>
-                    <span style={{ color: theme.colors.neutral, fontFamily: "'Courier New', monospace", fontSize: 9, letterSpacing: ".1em", textTransform: "uppercase" }}>{row.label}</span>
-                    <span style={{ color: row.c, fontWeight: 700, fontFamily: "'Courier New', monospace" }}>{row.value}</span>
+                    <span style={{ color: theme.colors.neutral, fontFamily: theme.font.label, fontSize: 9, letterSpacing: ".1em", textTransform: "uppercase" }}>{row.label}</span>
+                    <span style={{ color: row.c, fontWeight: 700, fontFamily: theme.font.num }}>{row.value}</span>
                   </div>
                 ))}
               </div>
 
               <div style={{ borderTop: "1px solid rgba(27,42,107,.3)", marginTop: 12, paddingTop: 10, display: "flex", justifyContent: "space-between", fontSize: 10 }}>
-                <span style={{ color: "#8899aa", fontFamily: "'Courier New', monospace" }}>
+                <span style={{ color: "#8899aa", fontFamily: theme.font.label }}>
                   ✓ <span style={{ color: theme.colors.success, fontWeight: 700 }}>{r.dias_batidos}</span> &nbsp;
                   ✗ <span style={{ color: theme.colors.critical, fontWeight: 700 }}>{r.dias_abaixo}</span>
                 </span>
-                <span style={{ color: "#8899aa", fontFamily: "'Courier New', monospace" }}>
+                <span style={{ color: "#8899aa", fontFamily: theme.font.label }}>
                   {r.dias_uteis_decorridos}/{r.dias_uteis_mes} dias úteis
                 </span>
               </div>
@@ -370,7 +370,7 @@ export function CalendarSection({
           )
         ) : (
         <div style={{ background: "#1a1a1a", border: `1px solid ${theme.colors.borderDefault}`, borderRadius: 8, padding: 20, maxHeight: 540, overflowY: "auto", display: "none" }}>
-          <p style={{ fontSize: 11, fontWeight: 700, color: theme.colors.textPrimary, fontFamily: "'Courier New', monospace", textTransform: "uppercase", letterSpacing: ".1em", marginBottom: 12 }}>
+          <p style={{ fontSize: 11, fontWeight: 700, color: theme.colors.textPrimary, fontFamily: theme.font.label, textTransform: "uppercase", letterSpacing: ".1em", marginBottom: 12 }}>
             Detalhe por dia (legacy — escondido se estrategias presente)
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -404,18 +404,18 @@ export function CalendarSection({
                   }}
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4 }}>
-                    <span style={{ color: theme.colors.textPrimary, fontFamily: "'Courier New', monospace", fontSize: 11, fontWeight: 700 }}>
+                    <span style={{ color: theme.colors.textPrimary, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", fontSize: 11, fontWeight: 700 }}>
                       {String(diaNum).padStart(2, "0")} ({dow})
                     </span>
                     <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-                      {d.is_today && <span style={{ background: theme.colors.accent, color: "#fff", padding: "1px 6px", borderRadius: 3, fontSize: 8, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'Courier New', monospace" }}>HOJE</span>}
-                      {isEncaixe && <span style={{ background: "rgba(24,95,165,.15)", color: theme.colors.brandAsb, padding: "1px 6px", borderRadius: 3, fontSize: 8, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'Courier New', monospace" }}>ENCAIXE</span>}
+                      {d.is_today && <span style={{ background: theme.colors.accent, color: "#fff", padding: "1px 6px", borderRadius: 3, fontSize: 8, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: theme.font.label }}>HOJE</span>}
+                      {isEncaixe && <span style={{ background: "rgba(24,95,165,.15)", color: theme.colors.brandAsb, padding: "1px 6px", borderRadius: 3, fontSize: 8, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: theme.font.label }}>ENCAIXE</span>}
                       {d.is_dia_meta && !d.is_futuro && d.status_dia === "batida" && <span style={{ color: theme.colors.success, fontSize: 13, fontWeight: 900 }}>✓</span>}
                       {d.is_dia_meta && !d.is_futuro && d.status_dia === "abaixo" && <span style={{ color: theme.colors.critical, fontSize: 13, fontWeight: 900 }}>✗</span>}
                       {d.is_dia_meta && d.is_futuro && Number(d.realizado_brl) > 0 && <span style={{ color: theme.colors.accent, fontSize: 13, fontWeight: 900 }}>▸</span>}
                     </div>
                   </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 4, fontSize: 10, fontFamily: "'Courier New', monospace" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 4, fontSize: 10, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" }}>
                     {d.is_dia_meta && (
                       <>
                         <span style={{ color: theme.colors.neutral }}>Meta:</span>
@@ -466,7 +466,7 @@ export function CalendarSection({
       })()}
       {modalOpen && pendingModal && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 999, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <p style={{ color: theme.colors.textPrimary, fontFamily: "'Courier New', monospace" }}>Carregando…</p>
+          <p style={{ color: theme.colors.textPrimary, fontFamily: theme.font.label }}>Carregando…</p>
         </div>
       )}
 

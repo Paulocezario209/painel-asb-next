@@ -97,7 +97,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
               href={`/dashboard/leads?view=${t.key}`}
               style={{
                 padding: "8px 16px",
-                fontFamily: theme.font.mono,
+                fontFamily: theme.font.label,
                 fontSize: 11,
                 letterSpacing: ".1em",
                 textTransform: "uppercase",
@@ -124,7 +124,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
       ) : (
         <>
           <LeadsTable leads={leads ?? []} userEmail={user?.email ?? ""} initialStatus={sp.status ?? "all"} />
-          <p style={{ color: "#556677", fontSize: 10, fontFamily: "'Courier New', monospace", textAlign: "right" }}>
+          <p style={{ color: "#556677", fontSize: 10, fontFamily: theme.font.label, textAlign: "right" }}>
             Exibindo até 100 leads — use os filtros para refinar.
           </p>
         </>

@@ -31,10 +31,10 @@ const PIPELINE_STAGES = new Set([
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const S = {
   card:    { background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8 } as React.CSSProperties,
-  label:   { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#556677", fontFamily: "'Courier New', monospace" },
-  value:   { fontSize: 28, fontWeight: 700, color: "#FFFFFF", fontFamily: "'Inter', system-ui, sans-serif", lineHeight: 1 },
-  section: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#c0c8d8", fontFamily: "'Courier New', monospace", marginBottom: 12 } as React.CSSProperties,
-  muted:   { color: "#8899aa", fontSize: 11, fontFamily: "'Courier New', monospace" } as React.CSSProperties,
+  label:   { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#556677", fontFamily: theme.font.label },
+  value:   { fontSize: 28, fontWeight: 700, color: "#FFFFFF", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", lineHeight: 1 },
+  section: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#c0c8d8", fontFamily: theme.font.label, marginBottom: 12 } as React.CSSProperties,
+  muted:   { color: "#8899aa", fontSize: 11, fontFamily: theme.font.label } as React.CSSProperties,
 };
 
 // ── Interfaces ────────────────────────────────────────────────────────────────
@@ -180,7 +180,7 @@ export default async function VendedoresPage() {
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {/* Header */}
       <div>
-        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: "'Courier New', monospace", letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
+        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
           Vendedores
         </h1>
         <p style={S.muted}>
@@ -195,7 +195,7 @@ export default async function VendedoresPage() {
       <div className="asb-grid-kpi">
         <div style={{ ...S.card, padding: "20px", borderTop: `2px solid ${theme.colors.brandAsb}` }}>
           <p style={{ ...S.label, color: theme.colors.brandAsb }}>Total em Pipeline</p>
-          <p style={{ ...S.value, fontSize: 24, marginTop: 12, fontFamily: theme.font.mono }}>{fmtBRL0(teamPipelineValue)}</p>
+          <p style={{ ...S.value, fontSize: 24, marginTop: 12, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" }}>{fmtBRL0(teamPipelineValue)}</p>
           <p style={{ ...S.muted, marginTop: 6, fontSize: 10 }}>Σ volume × R$ {PRECO_KG}/kg (leads em pipeline)</p>
         </div>
         <div style={{ ...S.card, padding: "20px", borderTop: `2px solid ${theme.colors.success}` }}>
@@ -289,13 +289,13 @@ export default async function VendedoresPage() {
                           padding: "6px 0", borderTop: i > 0 ? `1px solid ${theme.colors.borderDefault}` : "none",
                         }}
                       >
-                        <span style={{ color: theme.colors.textPrimary, fontSize: 11, fontFamily: theme.font.mono, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        <span style={{ color: theme.colors.textPrimary, fontSize: 11, fontFamily: theme.font.label, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                           {c.name}
                         </span>
-                        <span style={{ color: theme.colors.neutral, fontSize: 9, fontFamily: theme.font.mono, whiteSpace: "nowrap" }}>
+                        <span style={{ color: theme.colors.neutral, fontSize: 9, fontFamily: theme.font.label, whiteSpace: "nowrap" }}>
                           {fmtBRL0(c.value)} · {c.score}/100 · {c.dias.toFixed(0)}d
                         </span>
-                        <span style={{ color: theme.colors.accent, fontSize: 11, fontWeight: 700, fontFamily: theme.font.mono, minWidth: 44, textAlign: "right" }}>
+                        <span style={{ color: theme.colors.accent, fontSize: 11, fontWeight: 700, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", minWidth: 44, textAlign: "right" }}>
                           {Math.round(c.velocity)}
                         </span>
                       </Link>
@@ -318,22 +318,22 @@ export default async function VendedoresPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {waiting.map((w, i) => (
               <Link key={w.phone + i} href={`/dashboard/leads/${encodeURIComponent(w.phone)}`} style={{ display: "flex", textDecoration: "none", cursor: "pointer", alignItems: "center", gap: 10, padding: "5px 0", borderTop: i > 0 ? "1px solid rgba(27,42,107,.2)" : "none" }}>
-                <span style={{ color: "#c8d8e8", fontSize: 11, fontFamily: "'Courier New', monospace", minWidth: 60 }}>
+                <span style={{ color: "#c8d8e8", fontSize: 11, fontFamily: theme.font.label, minWidth: 60 }}>
                   ...{w.phone.slice(-4)}
                 </span>
-                <span style={{ color: "#8899aa", fontSize: 11, fontFamily: "'Courier New', monospace", minWidth: 120 }}>
+                <span style={{ color: "#8899aa", fontSize: 11, fontFamily: theme.font.label, minWidth: 120 }}>
                   {w.name}
                 </span>
                 {scoreMap[w.phone] && (
                   <LeadScoreBadge score={scoreMap[w.phone].score} tier={scoreMap[w.phone].tier} size="sm" />
                 )}
-                <span style={{ color: "#8899aa", fontSize: 10, fontFamily: "'Courier New', monospace" }}>
+                <span style={{ color: "#8899aa", fontSize: 10, fontFamily: theme.font.label }}>
                   {VENDOR_LABELS[w.rt]?.name ?? w.rt}
                 </span>
                 <span style={{
                   marginLeft: "auto",
                   color: w.hours >= 3 ? "#C8102E" : w.hours >= 1 ? "#f59e0b" : "#22c55e",
-                  fontSize: 11, fontWeight: 700, fontFamily: "'Courier New', monospace",
+                  fontSize: 11, fontWeight: 700, fontFamily: theme.font.num,
                 }}>
                   {fmtTime(w.hours)}
                 </span>
@@ -341,7 +341,7 @@ export default async function VendedoresPage() {
             ))}
           </div>
         ) : (
-          <p style={{ color: "#22c55e", fontSize: 12, fontFamily: "'Courier New', monospace" }}>
+          <p style={{ color: "#22c55e", fontSize: 12, fontFamily: theme.font.label }}>
             Todos os handoffs respondidos {"\u2713"}
           </p>
         )}
@@ -372,12 +372,12 @@ export default async function VendedoresPage() {
 
               return (
                 <tr key={rt} style={{ borderTop: "1px solid rgba(27,42,107,.3)" }}>
-                  <td style={{ color: "#c8d8e8", fontSize: 11, fontFamily: "'Courier New', monospace", padding: "7px 0" }}>{v.name}</td>
-                  <td style={{ color: "#c8d8e8", fontSize: 11, fontFamily: "'Courier New', monospace", textAlign: "right", padding: "7px 0" }}>{m.handoffs}</td>
-                  <td style={{ color: "#c8d8e8", fontSize: 11, fontFamily: "'Courier New', monospace", textAlign: "right", padding: "7px 0" }}>{pct}</td>
-                  <td style={{ color: "#c8d8e8", fontSize: 11, fontFamily: "'Courier New', monospace", textAlign: "right", padding: "7px 0" }}>{avgH}</td>
-                  <td style={{ color: "#c8d8e8", fontSize: 11, fontFamily: "'Courier New', monospace", textAlign: "right", padding: "7px 0" }}>{m.pipeline}</td>
-                  <td style={{ color: m.converted > 0 ? "#22c55e" : "#8899aa", fontSize: 11, fontFamily: "'Courier New', monospace", textAlign: "right", padding: "7px 0", fontWeight: 700 }}>{m.converted}</td>
+                  <td style={{ color: "#c8d8e8", fontSize: 11, fontFamily: theme.font.label, padding: "7px 0" }}>{v.name}</td>
+                  <td style={{ color: "#c8d8e8", fontSize: 11, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right", padding: "7px 0" }}>{m.handoffs}</td>
+                  <td style={{ color: "#c8d8e8", fontSize: 11, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right", padding: "7px 0" }}>{pct}</td>
+                  <td style={{ color: "#c8d8e8", fontSize: 11, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right", padding: "7px 0" }}>{avgH}</td>
+                  <td style={{ color: "#c8d8e8", fontSize: 11, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right", padding: "7px 0" }}>{m.pipeline}</td>
+                  <td style={{ color: m.converted > 0 ? "#22c55e" : "#8899aa", fontSize: 11, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right", padding: "7px 0", fontWeight: 700 }}>{m.converted}</td>
                 </tr>
               );
             })}

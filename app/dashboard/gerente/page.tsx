@@ -12,10 +12,10 @@ export const dynamic = "force-dynamic";
 // ── Design tokens ───────────────────────────────────────────────────────────
 const S = {
   card:    { background: "#1a1a1a", border: `1px solid ${theme.colors.borderDefault}`, borderRadius: 8 } as React.CSSProperties,
-  label:   { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: theme.colors.neutral, fontFamily: "'Courier New', monospace" },
-  value:   { fontSize: 28, fontWeight: 700, color: "#FFFFFF", fontFamily: "'Inter', system-ui, sans-serif", lineHeight: 1 },
-  section: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: theme.colors.textPrimary, fontFamily: "'Courier New', monospace", marginBottom: 12 } as React.CSSProperties,
-  muted:   { color: "#8899aa", fontSize: 11, fontFamily: "'Courier New', monospace" } as React.CSSProperties,
+  label:   { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: theme.colors.neutral, fontFamily: theme.font.label },
+  value:   { fontSize: 28, fontWeight: 700, color: "#FFFFFF", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", lineHeight: 1 },
+  section: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: theme.colors.textPrimary, fontFamily: theme.font.label, marginBottom: 12 } as React.CSSProperties,
+  muted:   { color: "#8899aa", fontSize: 11, fontFamily: theme.font.label } as React.CSSProperties,
 };
 
 const VENDOR_LABELS: Record<string, { name: string; region: string }> = {
@@ -198,7 +198,7 @@ export default async function GerentePage() {
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {/* Header */}
       <div>
-        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: "'Courier New', monospace", letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
+        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
           Gerente Comercial
         </h1>
         <p style={S.muted}>
@@ -244,19 +244,19 @@ export default async function GerentePage() {
                   const vendor = VENDOR_LABELS[o.routing_team]?.name ?? o.routing_team;
                   return (
                     <tr key={o.phone} style={{ borderTop: "1px solid rgba(27,42,107,.3)" }}>
-                      <td style={{ color: "#c8d8e8", fontSize: 11, fontFamily: "'Courier New', monospace", padding: "7px 0" }}>
+                      <td style={{ color: "#c8d8e8", fontSize: 11, fontFamily: theme.font.label, padding: "7px 0" }}>
                         {o.name || o.phone}
                         <span style={{ color: theme.colors.neutral, marginLeft: 6, fontSize: 9 }}>{o.city || "—"}</span>
                       </td>
-                      <td style={{ color: diasColor, fontSize: 11, fontFamily: "'Courier New', monospace", padding: "7px 0", fontWeight: 700 }}>
+                      <td style={{ color: diasColor, fontSize: 11, fontFamily: theme.font.num, padding: "7px 0", fontWeight: 700 }}>
                         {dias}d
                       </td>
-                      <td style={{ color: VENDOR_ACCENT[o.routing_team] ?? "#8899aa", fontSize: 10, fontFamily: "'Courier New', monospace", padding: "7px 0" }}>
+                      <td style={{ color: VENDOR_ACCENT[o.routing_team] ?? "#8899aa", fontSize: 10, fontFamily: theme.font.label, padding: "7px 0" }}>
                         {vendor}
                       </td>
                       <td style={{ textAlign: "right", padding: "7px 0" }}>
                         <Link href={`/dashboard/leads/${encodeURIComponent(o.phone)}`}
-                          style={{ color: "#3b82f6", fontSize: 10, fontFamily: "'Courier New', monospace", textDecoration: "none" }}>
+                          style={{ color: "#3b82f6", fontSize: 10, fontFamily: theme.font.label, textDecoration: "none" }}>
                           Ver lead →
                         </Link>
                       </td>
@@ -330,10 +330,10 @@ export default async function GerentePage() {
                 {/* Top row: nome + % */}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10 }}>
                   <div>
-                    <span style={{ color: accent, fontSize: 12, fontWeight: 700, fontFamily: "'Courier New', monospace" }}>{v.name}</span>
-                    <span style={{ color: theme.colors.neutral, fontSize: 9, fontFamily: "'Courier New', monospace", marginLeft: 8 }}>{v.region}</span>
+                    <span style={{ color: accent, fontSize: 12, fontWeight: 700, fontFamily: theme.font.label }}>{v.name}</span>
+                    <span style={{ color: theme.colors.neutral, fontSize: 9, fontFamily: theme.font.label, marginLeft: 8 }}>{v.region}</span>
                   </div>
-                  <span style={{ color: barColor, fontSize: 18, fontWeight: 700, fontFamily: "'Inter', system-ui, sans-serif" }}>
+                  <span style={{ color: barColor, fontSize: 18, fontWeight: 700, fontFamily: theme.font.num }}>
                     {v.pct.toFixed(1)}%
                   </span>
                 </div>
@@ -392,7 +392,7 @@ export default async function GerentePage() {
                 <p style={{ ...S.label, color }}>{label}</p>
                 <p style={{ ...S.value, fontSize: 18, marginTop: 8 }}>{fmtBRL(atual)}</p>
                 <p style={{ ...S.muted, fontSize: 10, marginTop: 6 }}>vs {fmtBRL(anterior)}</p>
-                <p style={{ color, fontSize: 14, fontWeight: 700, fontFamily: "'Courier New', monospace", marginTop: 4 }}>
+                <p style={{ color, fontSize: 14, fontWeight: 700, fontFamily: theme.font.num, marginTop: 4 }}>
                   {deltaPct !== null ? `${arrow} ${deltaPct >= 0 ? "+" : ""}${deltaPct.toFixed(1)}%` : "\u2014"}
                 </p>
               </div>
@@ -440,25 +440,25 @@ export default async function GerentePage() {
               const accent = VENDOR_ACCENT[v.rt] ?? theme.colors.neutral;
               return (
                 <tr key={v.rt} style={{ borderTop: "1px solid rgba(27,42,107,.3)" }}>
-                  <td style={{ color: accent, fontSize: 11, fontFamily: "'Courier New', monospace", padding: "7px 0", fontWeight: 700 }}>{v.name}</td>
-                  <td style={{ color: "#c8d8e8", fontSize: 11, fontFamily: "'Courier New', monospace", textAlign: "right", padding: "7px 0" }}>{fmtBRL(v.realizado)}</td>
-                  <td style={{ color: "#FFFFFF", fontSize: 11, fontFamily: "'Courier New', monospace", textAlign: "right", padding: "7px 0", fontWeight: 700 }}>{fmtBRL(v.proj)}</td>
-                  <td style={{ color: "#8899aa", fontSize: 11, fontFamily: "'Courier New', monospace", textAlign: "right", padding: "7px 0" }}>{v.meta > 0 ? fmtBRL(v.meta) : "\u2014"}</td>
+                  <td style={{ color: accent, fontSize: 11, fontFamily: theme.font.label, padding: "7px 0", fontWeight: 700 }}>{v.name}</td>
+                  <td style={{ color: "#c8d8e8", fontSize: 11, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right", padding: "7px 0" }}>{fmtBRL(v.realizado)}</td>
+                  <td style={{ color: "#FFFFFF", fontSize: 11, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right", padding: "7px 0", fontWeight: 700 }}>{fmtBRL(v.proj)}</td>
+                  <td style={{ color: "#8899aa", fontSize: 11, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right", padding: "7px 0" }}>{v.meta > 0 ? fmtBRL(v.meta) : "\u2014"}</td>
                   <td style={{
                     color: projColor(v.projPct),
-                    fontSize: 11, fontFamily: "'Courier New', monospace", textAlign: "right", padding: "7px 0", fontWeight: 700,
+                    fontSize: 11, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right", padding: "7px 0", fontWeight: 700,
                   }}>{v.meta > 0 ? `${v.projPct.toFixed(1)}%` : "\u2014"}</td>
                 </tr>
               );
             })}
             <tr style={{ borderTop: `2px solid ${theme.colors.borderDefault}` }}>
-              <td style={{ color: "#FFFFFF", fontSize: 11, fontFamily: "'Courier New', monospace", padding: "7px 0", fontWeight: 700 }}>TOTAL</td>
-              <td style={{ color: "#c8d8e8", fontSize: 11, fontFamily: "'Courier New', monospace", textAlign: "right", padding: "7px 0" }}>{fmtBRL(totalRealizado)}</td>
-              <td style={{ color: "#FFFFFF", fontSize: 11, fontFamily: "'Courier New', monospace", textAlign: "right", padding: "7px 0", fontWeight: 700 }}>{fmtBRL(projecaoTotal)}</td>
-              <td style={{ color: "#8899aa", fontSize: 11, fontFamily: "'Courier New', monospace", textAlign: "right", padding: "7px 0" }}>{totalMeta > 0 ? fmtBRL(totalMeta) : "\u2014"}</td>
+              <td style={{ color: "#FFFFFF", fontSize: 11, fontFamily: theme.font.label, padding: "7px 0", fontWeight: 700 }}>TOTAL</td>
+              <td style={{ color: "#c8d8e8", fontSize: 11, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right", padding: "7px 0" }}>{fmtBRL(totalRealizado)}</td>
+              <td style={{ color: "#FFFFFF", fontSize: 11, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right", padding: "7px 0", fontWeight: 700 }}>{fmtBRL(projecaoTotal)}</td>
+              <td style={{ color: "#8899aa", fontSize: 11, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right", padding: "7px 0" }}>{totalMeta > 0 ? fmtBRL(totalMeta) : "\u2014"}</td>
               <td style={{
                 color: projColor(projecaoVsMeta),
-                fontSize: 11, fontFamily: "'Courier New', monospace", textAlign: "right", padding: "7px 0", fontWeight: 700,
+                fontSize: 11, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right", padding: "7px 0", fontWeight: 700,
               }}>{totalMeta > 0 ? `${projecaoVsMeta.toFixed(1)}%` : "\u2014"}</td>
             </tr>
           </tbody>
@@ -467,10 +467,10 @@ export default async function GerentePage() {
 
       {/* Calendário de Metas multi-mês (Feature 1 / DEBT-108) — RPC calendario_metas_mes */}
       <div style={{ marginTop: 8 }}>
-        <h2 style={{ color: "#FFFFFF", fontSize: 13, fontWeight: 700, fontFamily: "'Courier New', monospace", letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
+        <h2 style={{ color: "#FFFFFF", fontSize: 13, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
           Calendário de Metas
         </h2>
-        <p style={{ color: "#8899aa", fontSize: 11, fontFamily: "'Courier New', monospace", marginBottom: 14 }}>
+        <p style={{ color: "#8899aa", fontSize: 11, fontFamily: theme.font.label, marginBottom: 14 }}>
           Navegue qualquer mês · clique no dia para ver meta (e realizado, se já passou)
         </p>
         <MetasCalendarioGerente />

@@ -1,4 +1,5 @@
 import { MetasUpload } from "@/components/uploads/metas-upload";
+import { theme } from "@/lib/theme";
 import { VendasCnbUpload } from "@/components/uploads/vendas-cnb-upload";
 import { redirect } from "next/navigation";
 import { getUserContext, canAccess } from "@/lib/auth/get-user-role";
@@ -15,14 +16,14 @@ export default async function UploadsPage() {
             color: "#FFFFFF",
             fontSize: 18,
             fontWeight: 700,
-            fontFamily: "'Courier New', monospace",
+            fontFamily: theme.font.label,
             letterSpacing: ".08em",
             marginBottom: 6,
           }}
         >
           Upload de Metas (XLSX)
         </h1>
-        <p style={{ color: "#556677", fontSize: 11, fontFamily: "'Courier New', monospace", letterSpacing: ".1em" }}>
+        <p style={{ color: "#556677", fontSize: 11, fontFamily: theme.font.label, letterSpacing: ".1em" }}>
           Metas mensais por vendedor · Preview antes de aplicar · UPSERT por vendedor+mês
         </p>
       </div>
@@ -32,10 +33,10 @@ export default async function UploadsPage() {
         className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg"
         style={{ padding: 16, marginBottom: 20 }}
       >
-        <p style={{ fontSize: 10, color: "#ff7b1c", fontWeight: 700, fontFamily: "'Courier New', monospace", letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 8 }}>
+        <p style={{ fontSize: 10, color: "#ff7b1c", fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 8 }}>
           📋 Formato esperado do XLSX
         </p>
-        <div style={{ background: "#0a0f1f", padding: 12, borderRadius: 4, fontFamily: "'Courier New', monospace", fontSize: 11, color: "#c8d8e8", overflowX: "auto" }}>
+        <div style={{ background: "#0a0f1f", padding: 12, borderRadius: 4, fontFamily: theme.font.num, fontSize: 11, color: "#c8d8e8", overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ borderBottom: "1px solid #2a2a2a" }}>
@@ -52,7 +53,7 @@ export default async function UploadsPage() {
             </tbody>
           </table>
         </div>
-        <p style={{ fontSize: 9, color: "#556677", marginTop: 8, fontFamily: "'Courier New', monospace" }}>
+        <p style={{ fontSize: 9, color: "#556677", marginTop: 8, fontFamily: theme.font.label }}>
           Aliases aceitos: vendedor/nome · mes/mês · ano/year · meta/valor/meta_mensal
         </p>
       </div>
@@ -61,19 +62,19 @@ export default async function UploadsPage() {
 
       {/* ── Bloco 2: Upload de Vendas CNB (DEBT-087) ─────────────────────── */}
       <div style={{ marginTop: 44, marginBottom: 28 }}>
-        <h1 style={{ color: "#FFFFFF", fontSize: 18, fontWeight: 700, fontFamily: "'Courier New', monospace", letterSpacing: ".08em", marginBottom: 6 }}>
+        <h1 style={{ color: "#FFFFFF", fontSize: 18, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".08em", marginBottom: 6 }}>
           Upload de Vendas CNB (XLSX)
         </h1>
-        <p style={{ color: "#556677", fontSize: 11, fontFamily: "'Courier New', monospace", letterSpacing: ".1em" }}>
+        <p style={{ color: "#556677", fontSize: 11, fontFamily: theme.font.label, letterSpacing: ".1em" }}>
           Vendas Carnes Nobres Boutique · Preview antes de aplicar · UPSERT por número+data+documento
         </p>
       </div>
 
       <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg" style={{ padding: 16, marginBottom: 20 }}>
-        <p style={{ fontSize: 10, color: "#ff7b1c", fontWeight: 700, fontFamily: "'Courier New', monospace", letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 8 }}>
+        <p style={{ fontSize: 10, color: "#ff7b1c", fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 8 }}>
           📋 Formato esperado do XLSX
         </p>
-        <div style={{ background: "#0a0f1f", padding: 12, borderRadius: 4, fontFamily: "'Courier New', monospace", fontSize: 11, color: "#c8d8e8", overflowX: "auto" }}>
+        <div style={{ background: "#0a0f1f", padding: 12, borderRadius: 4, fontFamily: theme.font.num, fontSize: 11, color: "#c8d8e8", overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", whiteSpace: "nowrap" }}>
             <thead>
               <tr style={{ borderBottom: "1px solid #2a2a2a" }}>
@@ -95,7 +96,7 @@ export default async function UploadsPage() {
             </tbody>
           </table>
         </div>
-        <p style={{ fontSize: 9, color: "#556677", marginTop: 8, fontFamily: "'Courier New', monospace" }}>
+        <p style={{ fontSize: 9, color: "#556677", marginTop: 8, fontFamily: theme.font.label }}>
           Aliases: numero/cupom · data · cnpj/cpf/cliente_cnpj_cpf · cliente_nome/nome · valor/valor_total · pagamento · vendedor · (CPF=11 díg, CNPJ=14)
         </p>
       </div>

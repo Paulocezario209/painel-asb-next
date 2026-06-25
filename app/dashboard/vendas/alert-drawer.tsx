@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { theme } from "@/lib/theme";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // AlertDrawer — drawer lateral reutilizável (drill-down dos cards de alerta).
@@ -110,7 +111,7 @@ export function AlertDrawer<T extends Record<string, unknown>>({
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
           <div>
-            <p style={{ fontSize: 12, fontWeight: 700, color: "#FFFFFF", fontFamily: "'Courier New', monospace", textTransform: "uppercase", letterSpacing: ".1em" }}>{title}</p>
+            <p style={{ fontSize: 12, fontWeight: 700, color: "#FFFFFF", fontFamily: theme.font.label, textTransform: "uppercase", letterSpacing: ".1em" }}>{title}</p>
             {subtitle && <p style={{ fontSize: 10, color: "#8899aa", marginTop: 4 }}>{subtitle}</p>}
           </div>
           <button onClick={onClose} aria-label="Fechar" style={{ background: "none", border: "none", color: "#8899aa", fontSize: 22, cursor: "pointer", lineHeight: 1 }}>×</button>
@@ -119,7 +120,7 @@ export function AlertDrawer<T extends Record<string, unknown>>({
         {rows.length === 0 ? (
           <p style={{ fontSize: 12, color: "#8899aa" }}>Nenhum item.</p>
         ) : (
-          <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: "'Courier New', monospace", fontSize: 11 }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: theme.font.num, fontSize: 11 }}>
             <thead>
               <tr style={{ borderBottom: "1px solid #2a2a2a" }}>
                 {columns.map((c) => (

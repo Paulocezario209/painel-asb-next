@@ -64,10 +64,10 @@ export function PainelGestor({ data, onVendorClick }: Props) {
     >
       {/* Header */}
       <div style={{ marginBottom: 14, paddingBottom: 12, borderBottom: `1px solid ${theme.colors.borderDefault}` }}>
-        <p style={{ fontSize: 14, fontWeight: 700, color: "#FFFFFF", fontFamily: "'Inter', system-ui, sans-serif" }}>
+        <p style={{ fontSize: 14, fontWeight: 700, color: "#FFFFFF", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" }}>
           📊 Painel Gestor
         </p>
-        <p style={{ fontSize: 10, color: "#8899aa", fontFamily: "'Courier New', monospace" }}>
+        <p style={{ fontSize: 10, color: "#8899aa", fontFamily: theme.font.label }}>
           {SAUDACAO(hora)} · {diaSemana} {String(agora.getDate()).padStart(2, "0")}/{String(agora.getMonth() + 1).padStart(2, "0")}
         </p>
       </div>
@@ -82,7 +82,7 @@ export function PainelGestor({ data, onVendorClick }: Props) {
           marginBottom: 14,
         }}
       >
-        <p style={{ fontSize: 9, color: corTime, fontWeight: 700, fontFamily: "'Courier New', monospace", letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 6 }}>
+        <p style={{ fontSize: 9, color: corTime, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 6 }}>
           ▸ STATUS DO TIME (PRÓXIMO CICLO)
         </p>
         <p style={{ fontSize: 13, color: "#FFFFFF", fontWeight: 700, marginBottom: 4 }}>
@@ -94,7 +94,7 @@ export function PainelGestor({ data, onVendorClick }: Props) {
       </div>
 
       {/* Ranking — clicável pra ver a Missão do vendedor */}
-      <p style={{ fontSize: 9, fontWeight: 700, color: theme.colors.accent, fontFamily: "'Courier New', monospace", letterSpacing: ".15em", marginBottom: 4, textTransform: "uppercase" }}>
+      <p style={{ fontSize: 9, fontWeight: 700, color: theme.colors.accent, fontFamily: theme.font.label, letterSpacing: ".15em", marginBottom: 4, textTransform: "uppercase" }}>
         🏆 RANKING DO CICLO
       </p>
       <p style={{ fontSize: 9, color: theme.colors.neutral, marginBottom: 8, fontStyle: "italic" }}>
@@ -134,16 +134,16 @@ export function PainelGestor({ data, onVendorClick }: Props) {
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <span style={{ fontSize: 14 }}>{medalha}</span>
                 <div>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: "#FFFFFF", fontFamily: "'Courier New', monospace" }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "#FFFFFF", fontFamily: theme.font.label }}>
                     {b.nome}
                   </div>
-                  <div style={{ fontSize: 9, color: "#8899aa", fontFamily: "'Courier New', monospace", marginTop: 1 }}>
+                  <div style={{ fontSize: 9, color: "#8899aa", fontFamily: theme.font.label, marginTop: 1 }}>
                     {fmtDate(b.proxima_meta)} · <span className="priv-brl">{fmtBRL(b.realizado)}</span> / <span className="priv-brl">{fmtBRL(b.meta)}</span>
                   </div>
                 </div>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: cor, fontFamily: "'Courier New', monospace" }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: cor, fontFamily: theme.font.num }}>
                   <span className="priv-pct">{b.pct}%</span>
                 </span>
                 {onVendorClick && (
@@ -156,7 +156,7 @@ export function PainelGestor({ data, onVendorClick }: Props) {
       </div>
 
       {/* Alertas operacionais agregados */}
-      <p style={{ fontSize: 9, fontWeight: 700, color: theme.colors.warning, fontFamily: "'Courier New', monospace", letterSpacing: ".15em", marginBottom: 8, textTransform: "uppercase" }}>
+      <p style={{ fontSize: 9, fontWeight: 700, color: theme.colors.warning, fontFamily: theme.font.label, letterSpacing: ".15em", marginBottom: 8, textTransform: "uppercase" }}>
         ⚠ AÇÕES DE GESTOR
       </p>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 14 }}>
@@ -169,7 +169,7 @@ export function PainelGestor({ data, onVendorClick }: Props) {
             padding: "10px",
           }}
         >
-          <p style={{ fontSize: 9, color: theme.colors.warning, fontWeight: 700, fontFamily: "'Courier New', monospace", letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
+          <p style={{ fontSize: 9, color: theme.colors.warning, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
             📋 PENDENTES
           </p>
           <p style={{ fontSize: 13, color: "#FFFFFF", fontWeight: 700, marginBottom: 2 }}>
@@ -189,7 +189,7 @@ export function PainelGestor({ data, onVendorClick }: Props) {
             padding: "10px",
           }}
         >
-          <p style={{ fontSize: 9, color: dormentesAlta > 0 ? theme.colors.critical : theme.colors.brandAsb, fontWeight: 700, fontFamily: "'Courier New', monospace", letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
+          <p style={{ fontSize: 9, color: dormentesAlta > 0 ? theme.colors.critical : theme.colors.brandAsb, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
             💤 DORMENTES
           </p>
           <p style={{ fontSize: 13, color: "#FFFFFF", fontWeight: 700, marginBottom: 2 }}>
@@ -202,7 +202,7 @@ export function PainelGestor({ data, onVendorClick }: Props) {
       </div>
 
       {/* Insights de gestor */}
-      <p style={{ fontSize: 9, fontWeight: 700, color: theme.colors.brandAsb, fontFamily: "'Courier New', monospace", letterSpacing: ".15em", marginBottom: 8, textTransform: "uppercase" }}>
+      <p style={{ fontSize: 9, fontWeight: 700, color: theme.colors.brandAsb, fontFamily: theme.font.label, letterSpacing: ".15em", marginBottom: 8, textTransform: "uppercase" }}>
         💡 INSIGHTS PARA GESTOR
       </p>
       <ul style={{ listStyle: "none", padding: 0, margin: "0 0 14px 0", display: "flex", flexDirection: "column", gap: 6 }}>
@@ -233,10 +233,10 @@ export function PainelGestor({ data, onVendorClick }: Props) {
 
       {/* Visão estratégica */}
       <div style={{ paddingTop: 10, borderTop: `1px solid ${theme.colors.borderDefault}` }}>
-        <p style={{ fontSize: 9, fontWeight: 700, color: theme.colors.textPrimary, fontFamily: "'Courier New', monospace", letterSpacing: ".15em", marginBottom: 6, textTransform: "uppercase" }}>
+        <p style={{ fontSize: 9, fontWeight: 700, color: theme.colors.textPrimary, fontFamily: theme.font.label, letterSpacing: ".15em", marginBottom: 6, textTransform: "uppercase" }}>
           🎯 FOCO ESTRATÉGICO
         </p>
-        <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 4, fontSize: 10, color: "#8899aa", fontFamily: "'Courier New', monospace" }}>
+        <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 4, fontSize: 10, color: "#8899aa", fontFamily: theme.font.label }}>
           <li>▸ <strong style={{ color: theme.colors.success }}>CICLO:</strong> garantir fechamento da próxima meta</li>
           <li>▸ <strong style={{ color: theme.colors.warning }}>SEMANA:</strong> reduzir pendentes &gt;5d e reativar dormentes alta</li>
           <li>▸ <strong style={{ color: theme.colors.brandAsb }}>MÊS:</strong> ticket médio +10% via mix, não desconto</li>

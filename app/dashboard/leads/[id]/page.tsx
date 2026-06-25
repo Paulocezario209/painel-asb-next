@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { theme } from "@/lib/theme";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -24,7 +25,7 @@ const C = {
   text: "#c9d1d9", text2: "#e6edf3", muted: "#8b949e",
   blue: "#58a6ff", green: "#3fb950", amber: "#f0b429", red: "#f85149", purple: "#c084fc",
 };
-const LABEL: React.CSSProperties = { fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase", color: C.muted, fontFamily: "'Courier New', monospace" };
+const LABEL: React.CSSProperties = { fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase", color: C.muted, fontFamily: theme.font.label };
 const CARD: React.CSSProperties  = { background: C.bg, border: `1px solid ${C.border2}`, borderRadius: 6 };
 
 const TEMP_CFG: Record<string, { label: string; color: string; bg: string; border: string }> = {
@@ -64,7 +65,7 @@ function SmallBadge({ label, color, bg, border }: { label: string; color: string
     <span style={{
       display: "inline-block", padding: "2px 6px", borderRadius: 3,
       fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase",
-      fontFamily: "'Courier New', monospace", fontWeight: 700,
+      fontFamily: theme.font.label, fontWeight: 700,
       color, background: bg, border: `1px solid ${border}`,
     }}>{label}</span>
   );
@@ -143,7 +144,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
       {/* Back nav */}
       <Link
         href="/dashboard/leads"
-        style={{ display: "inline-flex", alignItems: "center", gap: 6, color: C.muted, fontSize: 10, letterSpacing: ".14em", textTransform: "uppercase", fontFamily: "'Courier New', monospace", textDecoration: "none" }}
+        style={{ display: "inline-flex", alignItems: "center", gap: 6, color: C.muted, fontSize: 10, letterSpacing: ".14em", textTransform: "uppercase", fontFamily: theme.font.label, textDecoration: "none" }}
       >
         <ArrowLeft size={12} /> Leads
       </Link>
@@ -151,10 +152,10 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 style={{ color: C.text2, fontSize: 18, fontWeight: 700, fontFamily: "'Inter', system-ui, sans-serif", marginBottom: 2 }}>
+          <h1 style={{ color: C.text2, fontSize: 18, fontWeight: 700, fontFamily: theme.font.label, marginBottom: 2 }}>
             {lead.restaurant_name || lead.name || "Lead sem nome"}
           </h1>
-          <p style={{ color: C.muted, fontSize: 11, fontFamily: "'Courier New', monospace" }}>{lead.phone}</p>
+          <p style={{ color: C.muted, fontSize: 11, fontFamily: theme.font.label }}>{lead.phone}</p>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           <FunnelStageBadge stage={lead.funnel_stage} />
@@ -166,7 +167,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
               background: "transparent", border: `1px solid rgba(63,185,80,.4)`,
               color: C.green, fontSize: 10, letterSpacing: ".10em", textTransform: "uppercase",
               padding: "5px 10px", borderRadius: 4, cursor: "pointer",
-              fontFamily: "'Courier New', monospace",
+              fontFamily: theme.font.label,
             }}>
               <MessageCircle size={12} /> WhatsApp
             </button>
@@ -199,7 +200,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
               <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
                 <span style={{ color: "#8b949e", marginTop: 1, flexShrink: 0 }}><Megaphone size={13} /></span>
                 <div>
-                  <p style={{ fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase", color: "#8b949e", fontFamily: "'Courier New', monospace" }}>Origem</p>
+                  <p style={{ fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase", color: "#8b949e", fontFamily: theme.font.label }}>Origem</p>
                   <div style={{ marginTop: 4 }}>
                     <OrigemSelector phone={lead.phone} initial={lead.origem_canal ?? null} />
                   </div>
@@ -209,7 +210,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
               {lead.pain_point && (
                 <div className="col-span-2">
                   <p style={LABEL}>Dor identificada</p>
-                  <p style={{ color: C.muted, fontSize: 11, fontFamily: "'Courier New', monospace", marginTop: 4, fontStyle: "italic" }}>
+                  <p style={{ color: C.muted, fontSize: 11, fontFamily: theme.font.label, marginTop: 4, fontStyle: "italic" }}>
                     &quot;{lead.pain_point}&quot;
                   </p>
                 </div>
@@ -294,10 +295,10 @@ function CrmField({ icon, label, value, capitalize, mono }: { icon: React.ReactN
     <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
       <span style={{ color: "#8b949e", marginTop: 1, flexShrink: 0 }}>{icon}</span>
       <div>
-        <p style={{ fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase", color: "#8b949e", fontFamily: "'Courier New', monospace" }}>{label}</p>
+        <p style={{ fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase", color: "#8b949e", fontFamily: theme.font.label }}>{label}</p>
         <p style={{
           color: "#c9d1d9", fontSize: 11,
-          fontFamily: mono ? "'Courier New', monospace" : "'Inter', system-ui, sans-serif",
+          fontFamily: mono ? theme.font.num : theme.font.label,
           fontWeight: 500, marginTop: 2,
           textTransform: capitalize ? "capitalize" : undefined,
         }}>

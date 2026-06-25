@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { theme } from "@/lib/theme";
 import { MissaoDoDia } from "./missao-do-dia";
 import type { EstrategiasResponse } from "./actions";
 
@@ -69,7 +70,7 @@ export function PreviewMissaoModal({ vendor, data, onClose }: Props) {
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ fontSize: 16 }}>👁</span>
             <div>
-              <p style={{ fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", fontFamily: "'Courier New', monospace", opacity: 0.8 }}>
+              <p style={{ fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", fontFamily: theme.font.label, opacity: 0.8 }}>
                 PREVIEW DA MISSÃO
               </p>
               <p style={{ fontSize: 13, fontWeight: 700 }}>

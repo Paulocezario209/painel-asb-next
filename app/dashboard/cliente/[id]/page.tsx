@@ -322,7 +322,7 @@ export default async function ClientePage({
                     style={{
                       background: theme.colors.success,
                       color: "#0a0f1f",
-                      fontFamily: theme.font.mono,
+                      fontFamily: theme.font.label,
                     }}
                   >
                     💬 Iniciar conversa

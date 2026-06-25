@@ -9,18 +9,11 @@ import { CardTop10ClientesMes } from "@/components/dashboard/card-top10-clientes
 import { CardReconciliarAres } from "@/components/dashboard/card-reconciliar-ares";
 import { MotivosPerdaChart, type MotivoPerda } from "@/components/dashboard/motivos-perda-chart";
 import { DashboardFilters } from "@/components/dashboard/dashboard-filters";
+import { theme } from "@/lib/theme";
+import { S } from "./lib/dashboard-tokens";
 
 export const dynamic = "force-dynamic";
 
-// ── Design tokens — ASB brand ───────────────────────────────────────────────
-const S = {
-  card:    { background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8 } as React.CSSProperties,
-  label:   { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#556677", fontFamily: "'Courier New', monospace" },
-  value:   { fontSize: 28, fontWeight: 700, color: "#FFFFFF", fontFamily: "'Inter', system-ui, sans-serif", lineHeight: 1 },
-  section: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#c0c8d8", fontFamily: "'Courier New', monospace", marginBottom: 12 } as React.CSSProperties,
-  text:    { color: "#c8d8e8", fontSize: 12, fontFamily: "'Courier New', monospace" } as React.CSSProperties,
-  muted:   { color: "#8899aa", fontSize: 11, fontFamily: "'Courier New', monospace" } as React.CSSProperties,
-};
 
 function getWeekLabel(date: Date): string {
   const d = new Date(date);
@@ -194,7 +187,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div>
-        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: "'Courier New', monospace", letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
+        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
           Dashboard
         </h1>
         <p style={S.muted}>
@@ -216,7 +209,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         </p>
 
         {totalAlerts === 0 ? (
-          <p style={{ color: "#22c55e", fontSize: 11, fontFamily: "'Courier New', monospace" }}>
+          <p style={{ color: "#22c55e", fontSize: 11, fontFamily: theme.font.label }}>
             ✅ Nenhum alerta crítico no momento
           </p>
         ) : (
@@ -267,7 +260,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                     }}
                   >
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-                      <p style={{ color: "#c8d8e8", fontSize: 11, fontFamily: "'Courier New', monospace", margin: 0 }}>
+                      <p style={{ color: "#c8d8e8", fontSize: 11, fontFamily: theme.font.label, margin: 0 }}>
                         {desc}
                       </p>
                       <span style={{
@@ -277,7 +270,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                         color,
                         fontSize: 11,
                         fontWeight: 700,
-                        fontFamily: "'Courier New', monospace",
+                        fontFamily: theme.font.label,
                         padding: "3px 10px",
                         borderRadius: 3,
                         whiteSpace: "nowrap",
@@ -292,7 +285,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                             key={String(l.phone)}
                             href={`/dashboard/leads/${l.phone}`}
                             style={{
-                              fontSize: 10, fontFamily: "'Courier New', monospace",
+                              fontSize: 10, fontFamily: theme.font.label,
                               color: color, opacity: 0.8, textDecoration: "underline",
                               textUnderlineOffset: "2px",
                             }}
@@ -301,7 +294,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                           </Link>
                         ))}
                         {alertLeads.length > 5 && (
-                          <span style={{ fontSize: 10, fontFamily: "'Courier New', monospace", color: "#556677" }}>
+                          <span style={{ fontSize: 10, fontFamily: theme.font.label, color: "#556677" }}>
                             +{alertLeads.length - 5}
                           </span>
                         )}
@@ -357,15 +350,15 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             { tier: "C", count: abcCount.C, color: "#8899aa", bg: "rgba(136,153,170,.06)", border: "rgba(136,153,170,.2)", tag: "longo prazo", desc: "< 100 kg/sem" },
           ] as const).map(({ tier, count, color, bg, border, tag, desc }) => (
             <div key={tier} style={{ background: bg, border: `1px solid ${border}`, borderRadius: 5, padding: "14px 16px", textAlign: "center" }}>
-              <p style={{ color, fontSize: 26, fontWeight: 700, fontFamily: "'Inter', system-ui, sans-serif", lineHeight: 1 }}>{count}</p>
-              <p style={{ color, fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase", marginTop: 4, fontFamily: "'Courier New', monospace", fontWeight: 700 }}>
+              <p style={{ color, fontSize: 26, fontWeight: 700, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>{count}</p>
+              <p style={{ color, fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase", marginTop: 4, fontFamily: theme.font.label, fontWeight: 700 }}>
                 Tier {tier}
               </p>
-              <p style={{ color: "#8b949e", fontSize: 9, fontFamily: "'Courier New', monospace", marginTop: 2 }}>{desc}</p>
+              <p style={{ color: "#8b949e", fontSize: 9, fontFamily: theme.font.label, marginTop: 2 }}>{desc}</p>
               <span style={{
                 display: "inline-block", marginTop: 8, padding: "2px 6px",
                 border: `1px solid ${border}`, borderRadius: 3, color, fontSize: 9,
-                letterSpacing: ".10em", textTransform: "uppercase", fontFamily: "'Courier New', monospace",
+                letterSpacing: ".10em", textTransform: "uppercase", fontFamily: theme.font.label,
               }}>{tag}</span>
             </div>
           ))}
@@ -380,10 +373,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             borderRadius: "0 4px 4px 0",
             marginBottom: 16,
           }}>
-            <p style={{ color: "#FFFFFF", fontSize: 11, fontFamily: "'Courier New', monospace", fontWeight: 700 }}>
+            <p style={{ color: "#FFFFFF", fontSize: 11, fontFamily: theme.font.label, fontWeight: 700 }}>
               ⚡ {urgentA} lead{urgentA > 1 ? "s" : ""} Tier A aguardando confirmação de handoff
             </p>
-            <p style={{ color: "#8899aa", fontSize: 10, fontFamily: "'Courier New', monospace", marginTop: 2 }}>
+            <p style={{ color: "#8899aa", fontSize: 10, fontFamily: theme.font.label, marginTop: 2 }}>
               ação imediata — alto volume, handoff não confirmado
             </p>
             {urgentALeads.length > 0 && (
@@ -393,7 +386,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                     key={String(l.phone)}
                     href={`/dashboard/leads/${l.phone}`}
                     style={{
-                      fontSize: 10, fontFamily: "'Courier New', monospace",
+                      fontSize: 10, fontFamily: theme.font.label,
                       color: "#C8102E", opacity: 0.8, textDecoration: "underline",
                       textUnderlineOffset: "2px",
                     }}
@@ -402,7 +395,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                   </Link>
                 ))}
                 {urgentALeads.length > 5 && (
-                  <span style={{ fontSize: 10, fontFamily: "'Courier New', monospace", color: "#556677" }}>
+                  <span style={{ fontSize: 10, fontFamily: theme.font.label, color: "#556677" }}>
                     +{urgentALeads.length - 5}
                   </span>
                 )}
@@ -418,13 +411,13 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               {topCities.map(([city, count], i) => (
                 <div key={city} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <span style={{ color: "#e0e0e0", fontSize: 11, fontFamily: "'Courier New', monospace" }}>
+                  <span style={{ color: "#e0e0e0", fontSize: 11, fontFamily: theme.font.label }}>
                     <span style={{ color: "#7a9a7a", marginRight: 6 }}>#{i + 1}</span>{city}
                   </span>
                   <span style={{
                     background: "rgba(200,16,46,.08)", border: "1px solid rgba(200,16,46,.25)",
                     color: "#C8102E", fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase",
-                    padding: "2px 7px", borderRadius: 2, fontFamily: "'Courier New', monospace",
+                    padding: "2px 7px", borderRadius: 2, fontFamily: theme.font.label,
                   }}>{count} leads</span>
                 </div>
               ))}
@@ -439,12 +432,12 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               {topGroups.map(([group, count]) => (
                 <div key={group} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <span style={{ color: "#e0e0e0", fontSize: 11, fontFamily: "'Courier New', monospace" }}>
+                  <span style={{ color: "#e0e0e0", fontSize: 11, fontFamily: theme.font.label }}>
                     {PRODUCT_LABELS[group] ?? group}
                   </span>
                   <span style={{
                     border: "1px solid #2a2a2a", color: "#8899aa", fontSize: 9,
-                    padding: "2px 7px", borderRadius: 2, fontFamily: "'Courier New', monospace",
+                    padding: "2px 7px", borderRadius: 2, fontFamily: theme.font.label,
                   }}>{count}</span>
                 </div>
               ))}
@@ -488,7 +481,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             textTransform: "uppercase",
             padding: "3px 8px",
             borderRadius: 3,
-            fontFamily: "'Courier New', monospace",
+            fontFamily: theme.font.label,
           }} translate="no">● {label}</span>
         ))}
       </div>

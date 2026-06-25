@@ -1,6 +1,7 @@
 "use client";
 
 import type { RankingItem } from "./actions";
+import { theme } from "@/lib/theme";
 
 const MEDAL: Record<number, string> = { 1: "🥇", 2: "🥈", 3: "🥉" };
 const COR_HEX: Record<string, string> = {
@@ -35,10 +36,10 @@ export function RankingVendedores({ ranking }: { ranking: RankingItem[] }) {
   return (
     <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg" style={{ padding: "20px 24px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 14 }}>
-        <p style={{ fontSize: 11, fontWeight: 700, color: "#c0c8d8", fontFamily: "'Courier New', monospace", textTransform: "uppercase", letterSpacing: ".1em" }}>
+        <p style={{ fontSize: 11, fontWeight: 700, color: "#c0c8d8", fontFamily: theme.font.label, textTransform: "uppercase", letterSpacing: ".1em" }}>
           🏆 RANKING DO MÊS
         </p>
-        <span style={{ fontSize: 9, color: "#556677", fontFamily: "'Courier New', monospace", letterSpacing: ".1em", textTransform: "uppercase" }}>
+        <span style={{ fontSize: 9, color: "#556677", fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase" }}>
           Hoje vs média 7d
         </span>
       </div>
@@ -53,7 +54,7 @@ export function RankingVendedores({ ranking }: { ranking: RankingItem[] }) {
                   style={{
                     fontSize: 9,
                     color: "#556677",
-                    fontFamily: "'Courier New', monospace",
+                    fontFamily: theme.font.label,
                     textTransform: "uppercase",
                     letterSpacing: ".1em",
                     padding: "8px 6px",
@@ -73,27 +74,27 @@ export function RankingVendedores({ ranking }: { ranking: RankingItem[] }) {
               return (
                 <tr key={r.vendedor_routing_team} style={{ borderBottom: "1px solid rgba(42,42,42,.5)" }}>
                   <td style={{ padding: "10px 6px", fontSize: 14 }}>
-                    {MEDAL[r.posicao] ?? <span style={{ color: "#556677", fontFamily: "'Courier New', monospace", fontSize: 11 }}>{r.posicao}º</span>}
+                    {MEDAL[r.posicao] ?? <span style={{ color: "#556677", fontFamily: theme.font.num, fontSize: 11 }}>{r.posicao}º</span>}
                   </td>
-                  <td style={{ padding: "10px 6px", fontSize: 12, color: "#FFFFFF", fontWeight: 700, fontFamily: "'Courier New', monospace" }}>
+                  <td style={{ padding: "10px 6px", fontSize: 12, color: "#FFFFFF", fontWeight: 700, fontFamily: theme.font.label }}>
                     {r.nome}
                   </td>
-                  <td style={{ padding: "10px 6px", fontSize: 12, color: corPct, fontWeight: 700, fontFamily: "'Courier New', monospace", textAlign: "right" }}>
+                  <td style={{ padding: "10px 6px", fontSize: 12, color: corPct, fontWeight: 700, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right" }}>
                     <span className="priv-pct">{fmtPct(r.pct_atingido_mes)}</span>
                   </td>
-                  <td style={{ padding: "10px 6px", fontSize: 11, color: "#FFFFFF", fontFamily: "'Courier New', monospace", textAlign: "right" }}>
+                  <td style={{ padding: "10px 6px", fontSize: 11, color: "#FFFFFF", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right" }}>
                     <span className="priv-brl">{fmtBRL(r.realizado_mes)}</span>
                   </td>
-                  <td style={{ padding: "10px 6px", fontSize: 11, color: saldoPositivo ? "#22c55e" : "#C8102E", fontWeight: 700, fontFamily: "'Courier New', monospace", textAlign: "right" }}>
+                  <td style={{ padding: "10px 6px", fontSize: 11, color: saldoPositivo ? "#22c55e" : "#C8102E", fontWeight: 700, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right" }}>
                     <span className="priv-brl">{(saldoPositivo ? "+" : "") + fmtBRL(r.saldo)}</span>
                   </td>
-                  <td style={{ padding: "10px 6px", fontSize: 11, color: "#8899aa", fontFamily: "'Courier New', monospace", textAlign: "right" }}>
+                  <td style={{ padding: "10px 6px", fontSize: 11, color: "#8899aa", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right" }}>
                     <span className="priv-brl">{fmtBRL(r.media_7d)}</span>
                   </td>
-                  <td style={{ padding: "10px 6px", fontSize: 11, color: r.realizado_hoje > 0 ? "#FFFFFF" : "#556677", fontWeight: r.realizado_hoje > 0 ? 700 : 400, fontFamily: "'Courier New', monospace", textAlign: "right" }}>
+                  <td style={{ padding: "10px 6px", fontSize: 11, color: r.realizado_hoje > 0 ? "#FFFFFF" : "#556677", fontWeight: r.realizado_hoje > 0 ? 700 : 400, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right" }}>
                     <span className="priv-brl">{fmtBRL(r.realizado_hoje)}</span>
                   </td>
-                  <td style={{ padding: "10px 6px", fontSize: 11, color: delta.cor, fontWeight: 700, fontFamily: "'Courier New', monospace", textAlign: "right" }}>
+                  <td style={{ padding: "10px 6px", fontSize: 11, color: delta.cor, fontWeight: 700, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right" }}>
                     <span style={{ marginRight: 4 }}>{delta.icon}</span>
                     {delta.txt}
                   </td>

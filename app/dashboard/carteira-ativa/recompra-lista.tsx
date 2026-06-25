@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { theme } from "@/lib/theme";
 import type { CSSProperties } from "react";
 import { statusColor, statusLabel } from "@/lib/customer-status";
 
@@ -41,9 +42,9 @@ const cardPresenca: CSSProperties = {
 };
 const S = {
   card: { background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8 } as CSSProperties,
-  h1: { color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: "'Courier New', monospace", letterSpacing: ".1em", textTransform: "uppercase" } as CSSProperties,
-  section: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", color: "#c0c8d8", fontFamily: "'Courier New', monospace" } as CSSProperties,
-  muted: { color: "#8899aa", fontSize: 10, fontFamily: "'Courier New', monospace" } as CSSProperties,
+  h1: { color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase" } as CSSProperties,
+  section: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", color: "#c0c8d8", fontFamily: theme.font.label } as CSSProperties,
+  muted: { color: "#8899aa", fontSize: 10, fontFamily: theme.font.label } as CSSProperties,
 };
 const ORDER = ["atrasado", "hoje", "proximos_3d", "proximos_7d"];
 
@@ -165,7 +166,7 @@ function CestaView({ cesta, pedidos }: { cesta: CestaItem[]; pedidos: number }) 
     return <div className="px-3 pb-3 text-[11px] text-gray-600 italic">Sem cesta nos últimos 90d.</div>;
   return (
     <div className="px-3 pb-3 pt-1 border-t border-[#2a2a2a] space-y-1">
-      <div className="text-[10px] text-gray-500 uppercase tracking-wider mt-1 mb-1" style={{ fontFamily: "'Courier New', monospace" }}>
+      <div className="text-[10px] text-gray-500 uppercase tracking-wider mt-1 mb-1" style={{ fontFamily: theme.font.label }}>
         Sugestão de pedido — média por compra · {pedidos} pedidos/90d
       </div>
       {cesta.map((p) => (

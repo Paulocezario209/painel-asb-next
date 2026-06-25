@@ -4,6 +4,7 @@
 "use client";
 
 import { useState } from "react";
+import { theme } from "@/lib/theme";
 import { useRouter } from "next/navigation";
 
 export type PipelineLead = {
@@ -20,7 +21,6 @@ export type PipelineLead = {
 };
 export type PipelineCtx = { isGestor: boolean; routing_team: string | null; canMoveAll: boolean };
 
-const mono = "'Courier New', monospace";
 
 // Cores semânticas por etapa (asb-dashboard-elite — cor com propósito, não decorativa).
 const STAGE_COL: Record<string, { label: string; cor: string }> = {
@@ -112,7 +112,7 @@ export function PipelineBoard({
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10, flex: 1, minHeight: 0 }}>
       {erro && (
-        <div style={{ border: "1px solid #C8102E", background: "rgba(200,16,46,.08)", borderRadius: 6, padding: "8px 12px", color: "#ff6b6b", fontSize: 11, fontFamily: mono }}>
+        <div style={{ border: "1px solid #C8102E", background: "rgba(200,16,46,.08)", borderRadius: 6, padding: "8px 12px", color: "#ff6b6b", fontSize: 11, fontFamily: theme.font.label }}>
           {erro} <button onClick={() => setErro("")} style={{ background: "none", border: "none", color: "#8899aa", cursor: "pointer", marginLeft: 8 }}>×</button>
         </div>
       )}
@@ -145,15 +145,15 @@ export function PipelineBoard({
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
                   <span style={{ width: 8, height: 8, borderRadius: 2, background: col.cor, flexShrink: 0 }} />
-                  <span style={{ color: "#e0e6ef", fontSize: 10, fontFamily: mono, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase" }}>{col.label}</span>
+                  <span style={{ color: "#e0e6ef", fontSize: 10, fontFamily: theme.font.label, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase" }}>{col.label}</span>
                 </div>
-                <span style={{ color: col.cor, fontSize: 11, fontFamily: mono, fontWeight: 700 }}>{leads.length}</span>
+                <span style={{ color: col.cor, fontSize: 11, fontFamily: theme.font.num, fontWeight: 700 }}>{leads.length}</span>
               </div>
 
               {/* Cards (área droppable) */}
               <div style={{ padding: 8, display: "flex", flexDirection: "column", gap: 7, overflowY: "auto", flex: 1, minHeight: 80 }}>
                 {leads.length === 0 && (
-                  <span style={{ color: "#3a4452", fontSize: 9, fontFamily: mono, textAlign: "center", padding: "16px 0" }}>
+                  <span style={{ color: "#3a4452", fontSize: 9, fontFamily: theme.font.label, textAlign: "center", padding: "16px 0" }}>
                     {isOver ? "soltar aqui" : "—"}
                   </span>
                 )}
@@ -178,10 +178,10 @@ export function PipelineBoard({
                         opacity: dragId === lead.id ? 0.5 : 1,
                       }}
                     >
-                      <div style={{ color: "#fff", fontSize: 11, fontFamily: "'Inter', system-ui, sans-serif", fontWeight: 600, marginBottom: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <div style={{ color: "#fff", fontSize: 11, fontFamily: theme.font.label, fontWeight: 600, marginBottom: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {lead.restaurant_name || "Lead sem nome"}
                       </div>
-                      <div style={{ display: "flex", gap: 8, color: "#8899aa", fontSize: 9, fontFamily: mono, flexWrap: "wrap" }}>
+                      <div style={{ display: "flex", gap: 8, color: "#8899aa", fontSize: 9, fontFamily: theme.font.label, flexWrap: "wrap" }}>
                         {lead.weekly_volume_kg ? <span>{lead.weekly_volume_kg}kg</span> : null}
                         {lead.city ? <span>· {lead.city}</span> : null}
                         {dias != null ? <span style={{ color: dias > 7 ? "#f59e0b" : "#556677" }}>· {dias}d</span> : null}
@@ -195,7 +195,7 @@ export function PipelineBoard({
         })}
       </div>
 
-      {moving && <div style={{ color: "#2ea043", fontSize: 10, fontFamily: mono }}>movendo…</div>}
+      {moving && <div style={{ color: "#2ea043", fontSize: 10, fontFamily: theme.font.label }}>movendo…</div>}
 
       {/* Modal proposta (valor) */}
       {modal?.tipo === "proposta" && (
@@ -240,18 +240,18 @@ function ModalProposta({ lead, onConfirm, onCancel }: { lead: PipelineLead; onCo
   const valido = !isNaN(v) && v > 0;
   return (
     <Backdrop>
-      <p style={{ color: "#fff", fontSize: 12, fontFamily: mono, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 4 }}>Registrar Proposta</p>
-      <p style={{ color: "#8899aa", fontSize: 11, fontFamily: mono, marginBottom: 14 }}>{lead.restaurant_name || "Lead"} → Proposta Enviada</p>
-      <label style={{ color: "#8899aa", fontSize: 9, fontFamily: mono, letterSpacing: ".1em", textTransform: "uppercase" }}>Valor da proposta (R$)</label>
+      <p style={{ color: "#fff", fontSize: 12, fontFamily: theme.font.label, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 4 }}>Registrar Proposta</p>
+      <p style={{ color: "#8899aa", fontSize: 11, fontFamily: theme.font.label, marginBottom: 14 }}>{lead.restaurant_name || "Lead"} → Proposta Enviada</p>
+      <label style={{ color: "#8899aa", fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase" }}>Valor da proposta (R$)</label>
       <input value={valor} onChange={(e) => setValor(e.target.value)} placeholder="0,00" autoFocus
-        style={{ width: "100%", marginTop: 4, marginBottom: 12, background: "#0d1117", border: "1px solid #2e2e2e", borderRadius: 6, padding: "8px 10px", color: "#fff", fontSize: 12, fontFamily: mono, outline: "none" }} />
-      <label style={{ color: "#8899aa", fontSize: 9, fontFamily: mono, letterSpacing: ".1em", textTransform: "uppercase" }}>Notas (opcional)</label>
+        style={{ width: "100%", marginTop: 4, marginBottom: 12, background: "#0d1117", border: "1px solid #2e2e2e", borderRadius: 6, padding: "8px 10px", color: "#fff", fontSize: 12, fontFamily: theme.font.label, outline: "none" }} />
+      <label style={{ color: "#8899aa", fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase" }}>Notas (opcional)</label>
       <input value={notas} onChange={(e) => setNotas(e.target.value)}
-        style={{ width: "100%", marginTop: 4, marginBottom: 16, background: "#0d1117", border: "1px solid #2e2e2e", borderRadius: 6, padding: "8px 10px", color: "#fff", fontSize: 12, fontFamily: mono, outline: "none" }} />
+        style={{ width: "100%", marginTop: 4, marginBottom: 16, background: "#0d1117", border: "1px solid #2e2e2e", borderRadius: 6, padding: "8px 10px", color: "#fff", fontSize: 12, fontFamily: theme.font.label, outline: "none" }} />
       <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
         <BtnCancel onClick={onCancel} />
         <button disabled={!valido} onClick={() => onConfirm(v, notas.trim() || null)}
-          style={{ background: valido ? "#8b5cf6" : "#2e2e2e", border: "none", borderRadius: 6, padding: "8px 16px", color: "#fff", fontSize: 11, fontFamily: mono, fontWeight: 700, cursor: valido ? "pointer" : "default" }}>
+          style={{ background: valido ? "#8b5cf6" : "#2e2e2e", border: "none", borderRadius: 6, padding: "8px 16px", color: "#fff", fontSize: 11, fontFamily: theme.font.label, fontWeight: 700, cursor: valido ? "pointer" : "default" }}>
           Registrar
         </button>
       </div>
@@ -264,24 +264,24 @@ function ModalPerdido({ lead, onConfirm, onCancel }: { lead: PipelineLead; onCon
   const [detail, setDetail] = useState("");
   return (
     <Backdrop>
-      <p style={{ color: "#C8102E", fontSize: 12, fontFamily: mono, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 4 }}>Marcar como Perdido</p>
-      <p style={{ color: "#8899aa", fontSize: 11, fontFamily: mono, marginBottom: 6 }}>{lead.restaurant_name || "Lead"} → Perdido</p>
-      <p style={{ color: "#f59e0b", fontSize: 10, fontFamily: mono, marginBottom: 14, lineHeight: 1.5 }}>
+      <p style={{ color: "#C8102E", fontSize: 12, fontFamily: theme.font.label, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 4 }}>Marcar como Perdido</p>
+      <p style={{ color: "#8899aa", fontSize: 11, fontFamily: theme.font.label, marginBottom: 6 }}>{lead.restaurant_name || "Lead"} → Perdido</p>
+      <p style={{ color: "#f59e0b", fontSize: 10, fontFamily: theme.font.label, marginBottom: 14, lineHeight: 1.5 }}>
         ⚠ Ação destrutiva: encerra o atendimento (human_active=false, lost_at). Confirme o motivo.
       </p>
-      <label style={{ color: "#8899aa", fontSize: 9, fontFamily: mono, letterSpacing: ".1em", textTransform: "uppercase" }}>Motivo</label>
+      <label style={{ color: "#8899aa", fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase" }}>Motivo</label>
       <select value={reason} onChange={(e) => setReason(e.target.value)} autoFocus
-        style={{ width: "100%", marginTop: 4, marginBottom: 12, background: "#0d1117", border: "1px solid #2e2e2e", borderRadius: 6, padding: "8px 10px", color: "#fff", fontSize: 12, fontFamily: mono, outline: "none" }}>
+        style={{ width: "100%", marginTop: 4, marginBottom: 12, background: "#0d1117", border: "1px solid #2e2e2e", borderRadius: 6, padding: "8px 10px", color: "#fff", fontSize: 12, fontFamily: theme.font.label, outline: "none" }}>
         <option value="">Selecione…</option>
         {LOST_REASONS.map((r) => <option key={r} value={r}>{r}</option>)}
       </select>
-      <label style={{ color: "#8899aa", fontSize: 9, fontFamily: mono, letterSpacing: ".1em", textTransform: "uppercase" }}>Detalhe (opcional)</label>
+      <label style={{ color: "#8899aa", fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase" }}>Detalhe (opcional)</label>
       <input value={detail} onChange={(e) => setDetail(e.target.value)}
-        style={{ width: "100%", marginTop: 4, marginBottom: 16, background: "#0d1117", border: "1px solid #2e2e2e", borderRadius: 6, padding: "8px 10px", color: "#fff", fontSize: 12, fontFamily: mono, outline: "none" }} />
+        style={{ width: "100%", marginTop: 4, marginBottom: 16, background: "#0d1117", border: "1px solid #2e2e2e", borderRadius: 6, padding: "8px 10px", color: "#fff", fontSize: 12, fontFamily: theme.font.label, outline: "none" }} />
       <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
         <BtnCancel onClick={onCancel} />
         <button disabled={!reason} onClick={() => onConfirm(reason, detail.trim() || null)}
-          style={{ background: reason ? "#C8102E" : "#2e2e2e", border: "none", borderRadius: 6, padding: "8px 16px", color: "#fff", fontSize: 11, fontFamily: mono, fontWeight: 700, cursor: reason ? "pointer" : "default" }}>
+          style={{ background: reason ? "#C8102E" : "#2e2e2e", border: "none", borderRadius: 6, padding: "8px 16px", color: "#fff", fontSize: 11, fontFamily: theme.font.label, fontWeight: 700, cursor: reason ? "pointer" : "default" }}>
           Confirmar perda
         </button>
       </div>
@@ -292,15 +292,15 @@ function ModalPerdido({ lead, onConfirm, onCancel }: { lead: PipelineLead; onCon
 function ModalFechar({ lead, onConfirm, onCancel }: { lead: PipelineLead; onConfirm: () => void; onCancel: () => void }) {
   return (
     <Backdrop>
-      <p style={{ color: "#22c55e", fontSize: 12, fontFamily: mono, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 4 }}>Fechar Pedido</p>
-      <p style={{ color: "#8899aa", fontSize: 11, fontFamily: mono, marginBottom: 14 }}>{lead.restaurant_name || "Lead"} → Fechado</p>
-      <p style={{ color: "#c8d8e8", fontSize: 11, fontFamily: mono, marginBottom: 18, lineHeight: 1.5 }}>
+      <p style={{ color: "#22c55e", fontSize: 12, fontFamily: theme.font.label, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 4 }}>Fechar Pedido</p>
+      <p style={{ color: "#8899aa", fontSize: 11, fontFamily: theme.font.label, marginBottom: 14 }}>{lead.restaurant_name || "Lead"} → Fechado</p>
+      <p style={{ color: "#c8d8e8", fontSize: 11, fontFamily: theme.font.label, marginBottom: 18, lineHeight: 1.5 }}>
         Marca o lead como convertido (grava <span style={{ color: "#22c55e" }}>first_order_at</span>). Confirma o fechamento do pedido?
       </p>
       <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
         <BtnCancel onClick={onCancel} />
         <button onClick={onConfirm}
-          style={{ background: "#22c55e", border: "none", borderRadius: 6, padding: "8px 16px", color: "#04210f", fontSize: 11, fontFamily: mono, fontWeight: 700, cursor: "pointer" }}>
+          style={{ background: "#22c55e", border: "none", borderRadius: 6, padding: "8px 16px", color: "#04210f", fontSize: 11, fontFamily: theme.font.label, fontWeight: 700, cursor: "pointer" }}>
           Confirmar fechamento
         </button>
       </div>
@@ -317,8 +317,8 @@ function ModalLista({ stage, leads, onClose, onOpenLead }: { stage: string; lead
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", borderBottom: "1px solid #262626" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ width: 9, height: 9, borderRadius: 2, background: col.cor }} />
-            <span style={{ color: "#fff", fontSize: 12, fontFamily: mono, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase" }}>{col.label}</span>
-            <span style={{ color: col.cor, fontSize: 12, fontFamily: mono, fontWeight: 700 }}>{leads.length}</span>
+            <span style={{ color: "#fff", fontSize: 12, fontFamily: theme.font.label, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase" }}>{col.label}</span>
+            <span style={{ color: col.cor, fontSize: 12, fontFamily: theme.font.num, fontWeight: 700 }}>{leads.length}</span>
           </div>
           <button onClick={onClose} style={{ background: "none", border: "none", color: "#8899aa", fontSize: 18, cursor: "pointer", lineHeight: 1 }}>×</button>
         </div>
@@ -329,12 +329,12 @@ function ModalLista({ stage, leads, onClose, onOpenLead }: { stage: string; lead
               <div key={l.id} onClick={() => l.phone && onOpenLead(l.phone)}
                 style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "10px 12px", borderRadius: 6, cursor: l.phone ? "pointer" : "default", borderBottom: "1px solid #1c1c1c" }}>
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ color: "#fff", fontSize: 12, fontFamily: "'Inter', system-ui, sans-serif", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.restaurant_name || "Lead sem nome"}</div>
-                  <div style={{ color: "#8899aa", fontSize: 10, fontFamily: mono, marginTop: 2 }}>
+                  <div style={{ color: "#fff", fontSize: 12, fontFamily: theme.font.label, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.restaurant_name || "Lead sem nome"}</div>
+                  <div style={{ color: "#8899aa", fontSize: 10, fontFamily: theme.font.label, marginTop: 2 }}>
                     {l.weekly_volume_kg ? `${l.weekly_volume_kg}kg` : "—"}{l.city ? ` · ${l.city}` : ""}
                   </div>
                 </div>
-                <span style={{ color: dias != null && dias > 7 ? "#f59e0b" : "#556677", fontSize: 10, fontFamily: mono, flexShrink: 0 }}>{dias != null ? `${dias}d` : ""}</span>
+                <span style={{ color: dias != null && dias > 7 ? "#f59e0b" : "#556677", fontSize: 10, fontFamily: theme.font.label, flexShrink: 0 }}>{dias != null ? `${dias}d` : ""}</span>
               </div>
             );
           })}
@@ -346,7 +346,7 @@ function ModalLista({ stage, leads, onClose, onOpenLead }: { stage: string; lead
 
 function BtnCancel({ onClick }: { onClick: () => void }) {
   return (
-    <button onClick={onClick} style={{ background: "transparent", border: "1px solid #2e2e2e", borderRadius: 6, padding: "8px 16px", color: "#8899aa", fontSize: 11, fontFamily: mono, cursor: "pointer" }}>
+    <button onClick={onClick} style={{ background: "transparent", border: "1px solid #2e2e2e", borderRadius: 6, padding: "8px 16px", color: "#8899aa", fontSize: 11, fontFamily: theme.font.label, cursor: "pointer" }}>
       Cancelar
     </button>
   );
