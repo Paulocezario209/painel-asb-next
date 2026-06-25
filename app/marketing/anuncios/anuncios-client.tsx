@@ -90,10 +90,25 @@ export function AnunciosClient({ rank, spark }: { rank: RankRow[]; spark: SparkR
     });
   }, [rank, periodo, campanha, sortKey, sortDir]);
 
-  const tot = useMemo(() => linhas.reduce(
+  // DEBT-119: anúncios com gasto e ZERO lead atribuído — extraídos pra um bloco no topo,
+  // fora do CPL/CAC da tabela (senão somem com "—" e inflam a leitura de eficiência).
+  const semRetorno = useMemo(
+    () => linhas.filter(r => Number(r.spend ?? 0) > 0 && Number(r.leads ?? 0) === 0),
+    [linhas],
+  );
+  const comRetorno = useMemo(
+    () => linhas.filter(r => !(Number(r.spend ?? 0) > 0 && Number(r.leads ?? 0) === 0)),
+    [linhas],
+  );
+  const semRetornoTot = useMemo(
+    () => semRetorno.reduce((a, r) => a + Number(r.spend ?? 0), 0),
+    [semRetorno],
+  );
+
+  const tot = useMemo(() => comRetorno.reduce(
     (a, r) => ({ spend: a.spend + Number(r.spend ?? 0), leads: a.leads + Number(r.leads ?? 0) }),
     { spend: 0, leads: 0 },
-  ), [linhas]);
+  ), [comRetorno]);
   const cacTot = tot.leads > 0 ? tot.spend / tot.leads : null;
 
   function toggleSort(k: SortKey) {
@@ -137,11 +152,27 @@ export function AnunciosClient({ rank, spark }: { rank: RankRow[]; spark: SparkR
         ))}
       </div>
 
+      {/* Gasto sem retorno atribuído (DEBT-119) — destacado no topo */}
+      {semRetorno.length > 0 && (
+        <div style={{ background: "rgba(200,16,46,.10)", border: `1px solid ${RED}`, borderRadius: 8, padding: 16 }}>
+          <p style={{ color: RED, fontSize: 11, fontWeight: 700, fontFamily: mono, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 6 }}>
+            Gasto sem retorno atribuído — DEBT-119
+          </p>
+          <div style={{ display: "flex", gap: 24, alignItems: "baseline", flexWrap: "wrap" }}>
+            <span style={{ color: YELLOW, fontSize: 20, fontWeight: 700, fontFamily: mono }}>{fmtBRLc(semRetornoTot)}</span>
+            <span style={{ color: "#c8d8e8", fontSize: 12, fontFamily: mono }}>{semRetorno.length} anúncio{semRetorno.length > 1 ? "s" : ""} · 0 leads atribuídos</span>
+          </div>
+          <p style={{ color: MUT, fontSize: 9, fontFamily: mono, marginTop: 8 }}>
+            Anúncios site/[LEAD]-SP com gasto e nenhum lead atribuível (botões wa.me genéricos — DEBT-119). Não entram no CPL/CAC da tabela abaixo.
+          </p>
+        </div>
+      )}
+
       {/* Tabela */}
       <div style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8, padding: 16, overflowX: "auto" }}>
-        {linhas.length === 0 ? (
+        {comRetorno.length === 0 ? (
           <p style={{ color: MUT, fontSize: 11, fontFamily: mono, textAlign: "center", padding: 20 }}>
-            Sem anúncios com gasto neste período/campanha.
+            Sem anúncios com lead atribuído neste período/campanha.
           </p>
         ) : (
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12, fontFamily: mono }}>
@@ -158,7 +189,7 @@ export function AnunciosClient({ rank, spark }: { rank: RankRow[]; spark: SparkR
               </tr>
             </thead>
             <tbody>
-              {linhas.map(r => {
+              {comRetorno.map(r => {
                 const cpl = r.cpl != null ? Number(r.cpl) : null;
                 const roas = r.roas != null ? Number(r.roas) : null;
                 const semLead = Number(r.spend ?? 0) > 0 && Number(r.leads ?? 0) === 0;
@@ -180,7 +211,7 @@ export function AnunciosClient({ rank, spark }: { rank: RankRow[]; spark: SparkR
                 );
               })}
               <tr style={{ borderTop: "2px solid #2a2a2a" }}>
-                <td style={{ ...td, color: "#FFFFFF", fontWeight: 700 }} colSpan={3}>TOTAL ({linhas.length})</td>
+                <td style={{ ...td, color: "#FFFFFF", fontWeight: 700 }} colSpan={3}>TOTAL ({comRetorno.length})</td>
                 <td style={{ ...td, textAlign: "right", color: YELLOW, fontWeight: 700 }}>{fmtBRLc(tot.spend)}</td>
                 <td style={{ ...td, textAlign: "center", fontWeight: 700 }}>{tot.leads}</td>
                 <td style={{ ...td, textAlign: "right", color: cacTot != null ? "#FFFFFF" : MUT, fontWeight: 700 }}>{cacTot != null ? fmtBRLc(cacTot) : "—"}</td>
@@ -191,7 +222,7 @@ export function AnunciosClient({ rank, spark }: { rank: RankRow[]; spark: SparkR
         )}
       </div>
       <p style={{ color: MUT, fontSize: 9, fontFamily: mono }}>
-        Fonte: v_ranking_criativo (CPL/ROAS por ad_id, janela {periodo}) + v_performance_diaria (sparkline gasto 7d). CPL = gasto ÷ leads · ROAS = receita ÷ gasto. Anúncios sem leads atribuíveis (site/[LEAD]-SP — DEBT-119) ficam com CPL "—" no fim.
+        Fonte: v_ranking_criativo (CPL/ROAS por ad_id, janela {periodo}) + v_performance_diaria (sparkline gasto 7d). CPL = gasto ÷ leads · ROAS = receita ÷ gasto. Anúncios sem leads atribuíveis (site/[LEAD]-SP — DEBT-119) estão destacados no bloco acima.
       </p>
     </div>
   );
