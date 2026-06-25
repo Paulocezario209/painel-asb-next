@@ -74,7 +74,7 @@ export function MetaCalendarGrid({
       {/* DOW header */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4, marginBottom: 4 }}>
         {DOW.map(d => (
-          <div key={d} style={{ fontSize: 9, color: "#556677", textAlign: "center", fontFamily: "'Courier New', monospace", textTransform: "uppercase", letterSpacing: ".1em" }}>{d}</div>
+          <div key={d} style={{ fontSize: 9, color: "#e4e9f0", textAlign: "center", fontFamily: "'Courier New', monospace", textTransform: "uppercase", letterSpacing: ".1em" }}>{d}</div>
         ))}
       </div>
 
@@ -101,7 +101,7 @@ export function MetaCalendarGrid({
               marker = "+"; markerColor = "#185FA5";
             }
           } else if (d.status_dia === "futuro") {
-            bg = "#0a0f1f"; color = "#556677"; border = "1px solid #2a2a2a";
+            bg = "#0a0f1f"; color = "#e4e9f0"; border = "1px solid #2a2a2a";
             if (Number(d.realizado_brl) > 0) {
               marker = "▸"; markerColor = "#ff7b1c";
             }
@@ -150,7 +150,7 @@ export function MetaCalendarGrid({
               )}
               {/* FIX 3 (DEBT-132): realizado(fold)/meta em dias-meta já decorridos */}
               {d.is_dia_meta && !d.is_futuro && Number(d.meta_diaria_brl) > 0 && (
-                <span style={{ fontSize: 8, fontWeight: 700, color: "#8899aa", lineHeight: 1 }} className="priv-brl">
+                <span style={{ fontSize: 8, fontWeight: 700, color: "#c0d0e0", lineHeight: 1 }} className="priv-brl">
                   {fmtK(Number(d.realizado_meta_brl ?? d.realizado_brl))}/{fmtK(Number(d.meta_diaria_brl))}
                 </span>
               )}
@@ -160,7 +160,7 @@ export function MetaCalendarGrid({
       </div>
 
       {/* Legenda */}
-      <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid rgba(27,42,107,.3)", display: "flex", gap: 14, fontSize: 9, color: "#8899aa", fontFamily: "'Courier New', monospace", flexWrap: "wrap" }}>
+      <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid rgba(27,42,107,.3)", display: "flex", gap: 14, fontSize: 9, color: "#c0d0e0", fontFamily: "'Courier New', monospace", flexWrap: "wrap" }}>
         <span><span style={{ color: "#22c55e", fontWeight: 900 }}>✓</span> Meta batida</span>
         <span><span style={{ color: "#C8102E", fontWeight: 900 }}>✗</span> Abaixo</span>
         <span><span style={{ color: "#185FA5", fontWeight: 900 }}>+</span> Encaixe (fora rota)</span>

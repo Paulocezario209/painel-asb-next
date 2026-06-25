@@ -294,7 +294,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                           </Link>
                         ))}
                         {alertLeads.length > 5 && (
-                          <span style={{ fontSize: 10, fontFamily: theme.font.label, color: "#556677" }}>
+                          <span style={{ fontSize: 10, fontFamily: theme.font.label, color: "#e4e9f0" }}>
                             +{alertLeads.length - 5}
                           </span>
                         )}
@@ -347,7 +347,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           {([
             { tier: "A", count: abcCount.A, color: "#C8102E", bg: "rgba(200,16,46,.08)", border: "rgba(200,16,46,.3)", tag: "urgente", desc: "≥ 300 kg/sem" },
             { tier: "B", count: abcCount.B, color: "#f59e0b", bg: "rgba(245,158,11,.08)", border: "rgba(245,158,11,.3)", tag: "médio", desc: "100–299 kg/sem" },
-            { tier: "C", count: abcCount.C, color: "#8899aa", bg: "rgba(136,153,170,.06)", border: "rgba(136,153,170,.2)", tag: "longo prazo", desc: "< 100 kg/sem" },
+            { tier: "C", count: abcCount.C, color: "#c0d0e0", bg: "rgba(136,153,170,.06)", border: "rgba(136,153,170,.2)", tag: "longo prazo", desc: "< 100 kg/sem" },
           ] as const).map(({ tier, count, color, bg, border, tag, desc }) => (
             <div key={tier} style={{ background: bg, border: `1px solid ${border}`, borderRadius: 5, padding: "14px 16px", textAlign: "center" }}>
               <p style={{ color, fontSize: 26, fontWeight: 700, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>{count}</p>
@@ -376,7 +376,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             <p style={{ color: "#FFFFFF", fontSize: 11, fontFamily: theme.font.label, fontWeight: 700 }}>
               ⚡ {urgentA} lead{urgentA > 1 ? "s" : ""} Tier A aguardando confirmação de handoff
             </p>
-            <p style={{ color: "#8899aa", fontSize: 10, fontFamily: theme.font.label, marginTop: 2 }}>
+            <p style={{ color: "#c0d0e0", fontSize: 10, fontFamily: theme.font.label, marginTop: 2 }}>
               ação imediata — alto volume, handoff não confirmado
             </p>
             {urgentALeads.length > 0 && (
@@ -395,7 +395,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                   </Link>
                 ))}
                 {urgentALeads.length > 5 && (
-                  <span style={{ fontSize: 10, fontFamily: theme.font.label, color: "#556677" }}>
+                  <span style={{ fontSize: 10, fontFamily: theme.font.label, color: "#e4e9f0" }}>
                     +{urgentALeads.length - 5}
                   </span>
                 )}
@@ -436,7 +436,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                     {PRODUCT_LABELS[group] ?? group}
                   </span>
                   <span style={{
-                    border: "1px solid #2a2a2a", color: "#8899aa", fontSize: 9,
+                    border: "1px solid #2a2a2a", color: "#c0d0e0", fontSize: 9,
                     padding: "2px 7px", borderRadius: 2, fontFamily: theme.font.label,
                   }}>{count}</span>
                 </div>

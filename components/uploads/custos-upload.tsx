@@ -92,7 +92,7 @@ export function CustosUpload() {
           <p style={{ fontSize: 13, color: "#FFFFFF", fontWeight: 700, fontFamily: mono }}>
             {isDragActive ? "Solte o XLSX aqui" : "Arraste o template preenchido (XLSX) ou clique"}
           </p>
-          <p style={{ fontSize: 10, color: "#556677", marginTop: 8, fontFamily: mono }}>
+          <p style={{ fontSize: 10, color: "#e4e9f0", marginTop: 8, fontFamily: mono }}>
             5 abas: Temp Produto · Temp Setor · Horas · Jornada · Qualidade · ID OP validado contra o ARES
           </p>
         </div>
@@ -127,9 +127,9 @@ export function CustosUpload() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 8, marginBottom: 14 }}>
             {abas.map(([aba, r]) => (
               <div key={aba} style={{ background: "#0b0f1d", borderRadius: 4, padding: "8px 10px" }}>
-                <p style={{ fontSize: 8, color: "#556677", fontFamily: mono, letterSpacing: ".06em", textTransform: "uppercase", marginBottom: 3 }}>{aba}</p>
+                <p style={{ fontSize: 8, color: "#e4e9f0", fontFamily: mono, letterSpacing: ".06em", textTransform: "uppercase", marginBottom: 3 }}>{aba}</p>
                 <p style={{ fontSize: 16, color: r.erros > 0 ? "#d29922" : "#2ea043", fontWeight: 700, fontFamily: "Inter, sans-serif" }}>
-                  {r.ok}<span style={{ fontSize: 10, color: "#556677" }}> ok</span>
+                  {r.ok}<span style={{ fontSize: 10, color: "#e4e9f0" }}> ok</span>
                   {r.erros > 0 && <span style={{ fontSize: 11, color: "#f85149" }}> · {r.erros} erro</span>}
                 </p>
               </div>
@@ -143,7 +143,7 @@ export function CustosUpload() {
               </p>
               {preview.erros.map((e, i) => (
                 <p key={i} style={{ fontSize: 10, color: "#c8d8e8", fontFamily: mono }}>
-                  <span style={{ color: "#8899aa" }}>{e.aba} L{e.linha}</span> · <span style={{ color: "#f85149" }}>{e.motivo}</span>
+                  <span style={{ color: "#c0d0e0" }}>{e.aba} L{e.linha}</span> · <span style={{ color: "#f85149" }}>{e.motivo}</span>
                 </p>
               ))}
             </div>
@@ -164,7 +164,7 @@ export function CustosUpload() {
             <CheckCircle size={24} color="#2ea043" />
             <div>
               <p style={{ fontSize: 14, fontWeight: 700, color: "#2ea043" }}>Gravado · {applied.total_ok} linhas</p>
-              <p style={{ fontSize: 10, color: "#8899aa", fontFamily: mono }}>upload #{applied.upload_id} · o dashboard semanal já reflete</p>
+              <p style={{ fontSize: 10, color: "#c0d0e0", fontFamily: mono }}>upload #{applied.upload_id} · o dashboard semanal já reflete</p>
             </div>
           </div>
           <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
@@ -177,5 +177,5 @@ export function CustosUpload() {
   );
 }
 
-const btnGhost: React.CSSProperties = { background: "transparent", border: "1px solid #1B2A6B", color: "#8899aa", padding: "8px 14px", borderRadius: 4, fontSize: 11, fontFamily: mono, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 };
+const btnGhost: React.CSSProperties = { background: "transparent", border: "1px solid #1B2A6B", color: "#c0d0e0", padding: "8px 14px", borderRadius: 4, fontSize: 11, fontFamily: mono, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 };
 const btnGo = (on: boolean): React.CSSProperties => ({ background: on ? "#2ea043" : "#1B2A6B", border: "none", color: "#fff", padding: "8px 16px", borderRadius: 4, fontSize: 11, fontWeight: 700, fontFamily: mono, cursor: on ? "pointer" : "not-allowed", letterSpacing: ".05em", textTransform: "uppercase" });

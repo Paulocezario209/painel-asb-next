@@ -4,7 +4,7 @@ export const theme = {
     critical:   "#C8102E",
     warning:    "#D4A017",
     success:    "#22c55e",
-    neutral:    "#556677",
+    neutral:    "#e4e9f0",
     brandAsb:   "#185FA5",
     brandCnb:   "#D85A30",
     brandCuit:  "#9333ea",
@@ -21,8 +21,8 @@ export const theme = {
 
     // Texto
     textPrimary:   "#c0c8d8",
-    textSecondary: "#556677",
-    textMuted:     "#3a4a5a",
+    textSecondary: "#e4e9f0",
+    textMuted:     "#e4e9f0",
 
     // Específicos já usados no painel
     accent:     "#ff7b1c",

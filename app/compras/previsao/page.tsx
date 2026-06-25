@@ -56,34 +56,34 @@ export default async function PrevisaoPage() {
   // banner conta o TOTAL (não filtrado) — a busca acontece no client
   const reporTotal = merged.filter((r) => r.repor_agora).length;
 
-  const th: React.CSSProperties = { fontSize: 9, color: "#556677", fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", padding: "8px 10px", textAlign: "right", borderBottom: "1px solid #1B2A6B" };
+  const th: React.CSSProperties = { fontSize: 9, color: "#e4e9f0", fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", padding: "8px 10px", textAlign: "right", borderBottom: "1px solid #1B2A6B" };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <div>
         <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>Previsão de Compras</h1>
-        <p style={{ color: "#8899aa", fontSize: 11, fontFamily: theme.font.label }}>
+        <p style={{ color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label }}>
           O que comprar e quanto: CMD (venda+produção) × horizonte − saldo − carteira aberta, por fornecedor.
         </p>
       </div>
 
       {cfg && (
-        <div style={{ ...th, textAlign: "left", border: "none", paddingLeft: 0, color: "#8899aa" }}>
+        <div style={{ ...th, textAlign: "left", border: "none", paddingLeft: 0, color: "#c0d0e0" }}>
           ⚙ config: horizonte {cfg.horizonte_dias}d · segurança {cfg.dias_seguranca}d · ciclo {cfg.ciclo_revisao_dias}d · lead default {cfg.lead_time_default}d
-          <span style={{ color: "#556677" }}> (editável via SQL no M1)</span>
+          <span style={{ color: "#e4e9f0" }}> (editável via SQL no M1)</span>
         </div>
       )}
 
       <div style={{ border: "1px solid #f85149", background: "rgba(248,81,73,.07)", borderRadius: 6, padding: "10px 14px" }}>
         <p style={{ color: "#f85149", fontSize: 11, fontFamily: theme.font.label }}>
           🔴 REPOR AGORA: {reporTotal} insumo(s) abaixo do ponto de reposição.
-          <span style={{ color: "#556677" }}> &quot;s/ âncora&quot; = saldo não confiável até inventário 30/05 (assume 0).</span>
+          <span style={{ color: "#e4e9f0" }}> &quot;s/ âncora&quot; = saldo não confiável até inventário 30/05 (assume 0).</span>
         </p>
       </div>
 
       <PrevisaoClient rows={merged} />
 
-      <p style={{ color: "#556677", fontSize: 9, fontFamily: theme.font.label }}>
+      <p style={{ color: "#e4e9f0", fontSize: 9, fontFamily: theme.font.label }}>
         Comprável = produto com histórico de compra. CMD tipos 1+4 (90d). Fornecedor = mais frequente no histórico.
         Edição de config + sort interativo = ciclo 2. CMD de MP transformada: DEBT-069.
       </p>

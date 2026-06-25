@@ -22,7 +22,7 @@ export type SparkRow = { ad_id: string; data: string; spend: number };
 const RED = theme.colors.critical;       // #C8102E
 const GREEN = theme.colors.success;      // #22c55e
 const YELLOW = theme.colors.chartYellow; // #e8b923
-const MUT = theme.colors.neutral;        // #556677
+const MUT = theme.colors.neutral;        // #e4e9f0
 
 function fmtBRLc(v: number) {
   return Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -35,9 +35,9 @@ function statusInfo(s: string | null): { label: string; cor: string } {
   if (s === "WITH_ISSUES") return { label: "COM ISSUES", cor: YELLOW };
   if (s.includes("PAUSED")) {
     const lbl = s === "ADSET_PAUSED" ? "ADSET PAUS." : s === "CAMPAIGN_PAUSED" ? "CAMP. PAUS." : "PAUSADO";
-    return { label: lbl, cor: "#8899aa" };
+    return { label: lbl, cor: "#c0d0e0" };
   }
-  return { label: s, cor: "#8899aa" };
+  return { label: s, cor: "#c0d0e0" };
 }
 
 function StatusBadge({ status }: { status: string | null }) {
@@ -146,7 +146,7 @@ export function AnunciosClient({ rank, spark }: { rank: RankRow[]; spark: SparkR
             padding: "4px 9px", fontSize: 9, letterSpacing: ".08em", textTransform: "uppercase",
             fontFamily: theme.font.label, fontWeight: 600, cursor: "pointer", borderRadius: 3,
             background: sortKey === k ? "rgba(200,16,46,.14)" : "transparent",
-            color: sortKey === k ? "#fff" : "#8899aa", border: "1px solid #2a2a2a",
+            color: sortKey === k ? "#fff" : "#c0d0e0", border: "1px solid #2a2a2a",
           }}>{k}{seta(k)}</button>
         ))}
       </div>
@@ -247,5 +247,5 @@ function Sparkline({ serie }: { serie: number[] }) {
   );
 }
 
-const th: React.CSSProperties = { fontSize: 9, color: "#556677", fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", padding: "6px 10px", textAlign: "center" };
+const th: React.CSSProperties = { fontSize: 9, color: "#e4e9f0", fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", padding: "6px 10px", textAlign: "center" };
 const td: React.CSSProperties = { padding: "8px 10px", color: "#c8d8e8", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" };

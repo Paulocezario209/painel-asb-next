@@ -124,7 +124,7 @@ export function CalendarDashboard({
   }, [sel, itens]);
 
   const card: React.CSSProperties = { background: "#0f1428", border: "1px solid #1B2A6B", borderRadius: 6, padding: 14 };
-  const lbl: React.CSSProperties = { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", color: "#556677", fontFamily: theme.font.label };
+  const lbl: React.CSSProperties = { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", color: "#e4e9f0", fontFamily: theme.font.label };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 8 }}>
@@ -163,7 +163,7 @@ export function CalendarDashboard({
             isMesCorrente ? (
               <div style={{ color: "#c8d8e8", fontSize: 22, fontWeight: 700, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", padding: 12 }}>{brl(0)}</div>
             ) : (
-              <div style={{ color: "#556677", fontSize: 11, fontFamily: theme.font.label, padding: 12 }}>sem faturamento no mês</div>
+              <div style={{ color: "#e4e9f0", fontSize: 11, fontFamily: theme.font.label, padding: 12 }}>sem faturamento no mês</div>
             )
           ) : (
             <ResponsiveContainer width="100%" height={180}>
@@ -214,7 +214,7 @@ export function CalendarDashboard({
                 <span style={{ color: SEM[d.semaforo], fontSize: 10, fontFamily: theme.font.num }}>
                   {d.pct_compras_faturado != null ? `${d.pct_compras_faturado}%` : "—"}
                 </span>
-                <span style={{ color: "#556677", fontSize: 9, fontFamily: theme.font.label }}>
+                <span style={{ color: "#e4e9f0", fontSize: 9, fontFamily: theme.font.label }}>
                   {d.faturado_brl > 0 ? `f ${Math.round(d.faturado_brl / 1000)}k` : ""}
                   {d.compras_brl > 0 ? ` c ${Math.round(d.compras_brl / 1000)}k` : ""}
                 </span>
@@ -239,7 +239,7 @@ export function CalendarDashboard({
               <span style={{ color: "#FFFFFF", fontSize: 14, fontWeight: 700, fontFamily: theme.font.num }}>
                 {ddmm(selDia.dia)} {Object.keys(selDia.flags || {}).map((f) => FLAG_EMOJI[f] || "").join("")}
               </span>
-              <button onClick={() => setSel(null)} style={{ background: "transparent", border: "none", color: "#8899aa", cursor: "pointer", fontSize: 18 }}>×</button>
+              <button onClick={() => setSel(null)} style={{ background: "transparent", border: "none", color: "#c0d0e0", cursor: "pointer", fontSize: 18 }}>×</button>
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
@@ -273,7 +273,7 @@ export function CalendarDashboard({
               <div>
                 <div style={{ ...lbl, marginBottom: 6 }}>Devoluções do dia ({selDevol.length})</div>
                 {selDevol.map((d, idx) => (
-                  <div key={idx} style={{ display: "flex", justifyContent: "space-between", gap: 8, padding: "3px 0", fontSize: 10, fontFamily: theme.font.num, color: "#8899aa", borderBottom: "1px solid #1B2A6B" }}>
+                  <div key={idx} style={{ display: "flex", justifyContent: "space-between", gap: 8, padding: "3px 0", fontSize: 10, fontFamily: theme.font.num, color: "#c0d0e0", borderBottom: "1px solid #1B2A6B" }}>
                     <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 240 }}>
                       NF {d.n_nf || "—"} · {d.fornecedor_nome || "—"}{d.ref_nfe_chave ? ` · ref ${d.ref_nfe_chave.slice(0, 12)}…` : ""}
                     </span>
@@ -286,7 +286,7 @@ export function CalendarDashboard({
             <div>
               <div style={{ ...lbl, marginBottom: 6 }}>Fornecedores do dia ({selFornec.length}) · clique implícito: produtos abaixo de cada um</div>
               {selFornec.length === 0 ? (
-                <div style={{ color: "#556677", fontSize: 11, fontFamily: theme.font.label }}>sem compras neste dia</div>
+                <div style={{ color: "#e4e9f0", fontSize: 11, fontFamily: theme.font.label }}>sem compras neste dia</div>
               ) : (
                 selFornec.map(([nome, val]) => (
                   <div key={nome} style={{ marginBottom: 10 }}>
@@ -295,7 +295,7 @@ export function CalendarDashboard({
                       <b>{brl(val)}</b>
                     </div>
                     {(selItensByFornec[nome] || []).map((it, idx) => (
-                      <div key={idx} style={{ display: "flex", justifyContent: "space-between", gap: 8, padding: "3px 0 3px 10px", fontSize: 10, fontFamily: theme.font.num, color: "#8899aa" }}>
+                      <div key={idx} style={{ display: "flex", justifyContent: "space-between", gap: 8, padding: "3px 0 3px 10px", fontSize: 10, fontFamily: theme.font.num, color: "#c0d0e0" }}>
                         <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 200 }}>
                           {(it.produto_nome || "(produto)") + " · " + Number(it.quantidade) + "× " + brl(Number(it.preco_un))}
                         </span>
@@ -305,7 +305,7 @@ export function CalendarDashboard({
                   </div>
                 ))
               )}
-              <div style={{ color: "#556677", fontSize: 9, fontFamily: theme.font.label, marginTop: 4 }}>
+              <div style={{ color: "#e4e9f0", fontSize: 9, fontFamily: theme.font.label, marginTop: 4 }}>
                 Drilldown por produto (v_compras_itens_dia). Total do fornecedor = valor do pedido (header,
                 c/ frete/desc.); itens = linhas. Lote/validade de fornecedor: DEBT-067 (não digitado no ARES).
               </div>

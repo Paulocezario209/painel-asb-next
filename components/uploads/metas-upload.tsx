@@ -154,7 +154,7 @@ export function MetasUpload() {
           <p style={{ fontSize: 13, color: "#FFFFFF", fontWeight: 700, fontFamily: "'Courier New', monospace" }}>
             {isDragActive ? "Solte o arquivo aqui" : "Arraste XLSX de metas ou clique pra escolher"}
           </p>
-          <p style={{ fontSize: 10, color: "#556677", marginTop: 8, fontFamily: "'Courier New', monospace" }}>
+          <p style={{ fontSize: 10, color: "#e4e9f0", marginTop: 8, fontFamily: "'Courier New', monospace" }}>
             Colunas esperadas: Vendedor · Mes · Ano · MetaMensal
           </p>
         </div>
@@ -253,7 +253,7 @@ export function MetasUpload() {
               style={{
                 background: "transparent",
                 border: "1px solid #2a2a2a",
-                color: "#8899aa",
+                color: "#c0d0e0",
                 padding: "8px 14px",
                 borderRadius: 4,
                 fontSize: 11,
@@ -298,7 +298,7 @@ export function MetasUpload() {
               <p style={{ fontSize: 14, fontWeight: 700, color: "#22c55e" }}>
                 {applied.aplicadas} meta(s) gravada(s)
               </p>
-              <p style={{ fontSize: 10, color: "#8899aa", fontFamily: "'Courier New', monospace" }}>
+              <p style={{ fontSize: 10, color: "#c0d0e0", fontFamily: "'Courier New', monospace" }}>
                 Painel /dashboard/vendas atualizado em &lt;15min (cron)
               </p>
             </div>
@@ -335,7 +335,7 @@ export function MetasUpload() {
               marginTop: 16,
               background: "transparent",
               border: "1px solid #2a2a2a",
-              color: "#8899aa",
+              color: "#c0d0e0",
               padding: "8px 14px",
               borderRadius: 4,
               fontSize: 11,
@@ -357,7 +357,7 @@ export function MetasUpload() {
 function Stat({ label, value, cor }: { label: string; value: number; cor: string }) {
   return (
     <div style={{ background: "#0a0f1f", borderRadius: 4, padding: "10px 12px" }}>
-      <p style={{ fontSize: 9, color: "#556677", fontFamily: "'Courier New', monospace", letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 2 }}>
+      <p style={{ fontSize: 9, color: "#e4e9f0", fontFamily: "'Courier New', monospace", letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 2 }}>
         {label}
       </p>
       <p style={{ fontSize: 18, color: cor, fontWeight: 700, fontFamily: "'Inter', system-ui, sans-serif" }}>
@@ -369,7 +369,7 @@ function Stat({ label, value, cor }: { label: string; value: number; cor: string
 
 const th: React.CSSProperties = {
   fontSize: 9,
-  color: "#556677",
+  color: "#e4e9f0",
   fontFamily: "'Courier New', monospace",
   letterSpacing: ".1em",
   textTransform: "uppercase",

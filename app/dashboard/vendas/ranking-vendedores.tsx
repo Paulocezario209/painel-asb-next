@@ -9,7 +9,7 @@ const COR_HEX: Record<string, string> = {
   amarelo:  "#D4A017",
   laranja:  "#BA7517",
   vermelho: "#C8102E",
-  cinza:    "#556677",
+  cinza:    "#e4e9f0",
 };
 
 function fmtBRL(v: number): string {
@@ -22,8 +22,8 @@ function fmtPct(v: number | null): string {
 }
 
 function fmtDelta(v: number | null): { txt: string; cor: string; icon: string } {
-  if (v === null) return { txt: "—", cor: "#556677", icon: "" };
-  if (Math.abs(v) < 5) return { txt: `${v >= 0 ? "+" : ""}${v.toFixed(0)}%`, cor: "#8899aa", icon: "→" };
+  if (v === null) return { txt: "—", cor: "#e4e9f0", icon: "" };
+  if (Math.abs(v) < 5) return { txt: `${v >= 0 ? "+" : ""}${v.toFixed(0)}%`, cor: "#c0d0e0", icon: "→" };
   if (v > 0) return { txt: `+${v.toFixed(0)}%`, cor: "#22c55e", icon: "↑" };
   return { txt: `${v.toFixed(0)}%`, cor: "#C8102E", icon: "↓" };
 }
@@ -39,7 +39,7 @@ export function RankingVendedores({ ranking }: { ranking: RankingItem[] }) {
         <p style={{ fontSize: 11, fontWeight: 700, color: "#c0c8d8", fontFamily: theme.font.label, textTransform: "uppercase", letterSpacing: ".1em" }}>
           🏆 RANKING DO MÊS
         </p>
-        <span style={{ fontSize: 9, color: "#556677", fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase" }}>
+        <span style={{ fontSize: 9, color: "#e4e9f0", fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase" }}>
           Hoje vs média 7d
         </span>
       </div>
@@ -53,7 +53,7 @@ export function RankingVendedores({ ranking }: { ranking: RankingItem[] }) {
                   key={h}
                   style={{
                     fontSize: 9,
-                    color: "#556677",
+                    color: "#e4e9f0",
                     fontFamily: theme.font.label,
                     textTransform: "uppercase",
                     letterSpacing: ".1em",
@@ -70,11 +70,11 @@ export function RankingVendedores({ ranking }: { ranking: RankingItem[] }) {
             {ranking.map((r) => {
               const delta = fmtDelta(r.delta_pct_vs_media);
               const saldoPositivo = r.saldo >= 0;
-              const corPct = COR_HEX[r.cor_card_mes] ?? "#8899aa";
+              const corPct = COR_HEX[r.cor_card_mes] ?? "#c0d0e0";
               return (
                 <tr key={r.vendedor_routing_team} style={{ borderBottom: "1px solid rgba(42,42,42,.5)" }}>
                   <td style={{ padding: "10px 6px", fontSize: 14 }}>
-                    {MEDAL[r.posicao] ?? <span style={{ color: "#556677", fontFamily: theme.font.num, fontSize: 11 }}>{r.posicao}º</span>}
+                    {MEDAL[r.posicao] ?? <span style={{ color: "#e4e9f0", fontFamily: theme.font.num, fontSize: 11 }}>{r.posicao}º</span>}
                   </td>
                   <td style={{ padding: "10px 6px", fontSize: 12, color: "#FFFFFF", fontWeight: 700, fontFamily: theme.font.label }}>
                     {r.nome}
@@ -88,10 +88,10 @@ export function RankingVendedores({ ranking }: { ranking: RankingItem[] }) {
                   <td style={{ padding: "10px 6px", fontSize: 11, color: saldoPositivo ? "#22c55e" : "#C8102E", fontWeight: 700, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right" }}>
                     <span className="priv-brl">{(saldoPositivo ? "+" : "") + fmtBRL(r.saldo)}</span>
                   </td>
-                  <td style={{ padding: "10px 6px", fontSize: 11, color: "#8899aa", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right" }}>
+                  <td style={{ padding: "10px 6px", fontSize: 11, color: "#c0d0e0", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right" }}>
                     <span className="priv-brl">{fmtBRL(r.media_7d)}</span>
                   </td>
-                  <td style={{ padding: "10px 6px", fontSize: 11, color: r.realizado_hoje > 0 ? "#FFFFFF" : "#556677", fontWeight: r.realizado_hoje > 0 ? 700 : 400, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right" }}>
+                  <td style={{ padding: "10px 6px", fontSize: 11, color: r.realizado_hoje > 0 ? "#FFFFFF" : "#e4e9f0", fontWeight: r.realizado_hoje > 0 ? 700 : 400, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right" }}>
                     <span className="priv-brl">{fmtBRL(r.realizado_hoje)}</span>
                   </td>
                   <td style={{ padding: "10px 6px", fontSize: 11, color: delta.cor, fontWeight: 700, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right" }}>

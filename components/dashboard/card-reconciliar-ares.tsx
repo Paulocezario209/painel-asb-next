@@ -25,7 +25,7 @@ function fmtVendor(team: string | null): string {
 function OrigemBadge({ canal, adId }: { canal: string | null; adId: string | null }) {
   const pago = !!canal && canal !== "organico";
   const bg = pago ? "rgba(210,153,34,.12)" : "rgba(136,153,170,.08)";
-  const fg = pago ? "#d29922" : "#8899aa";
+  const fg = pago ? "#d29922" : "#c0d0e0";
   return (
     <span style={{ display: "inline-flex", flexDirection: "column", gap: 2 }}>
       <span
@@ -38,7 +38,7 @@ function OrigemBadge({ canal, adId }: { canal: string | null; adId: string | nul
         {canal ?? "—"}
       </span>
       {adId ? (
-        <span style={{ color: "#556677", fontSize: 9, fontFamily: mono }}>ad {adId}</span>
+        <span style={{ color: "#e4e9f0", fontSize: 9, fontFamily: mono }}>ad {adId}</span>
       ) : null}
     </span>
   );
@@ -67,7 +67,7 @@ type Row = {
 };
 
 const th: React.CSSProperties = {
-  fontSize: 9, color: "#556677", fontFamily: mono, letterSpacing: ".1em",
+  fontSize: 9, color: "#e4e9f0", fontFamily: mono, letterSpacing: ".1em",
   textTransform: "uppercase", padding: "6px 8px", textAlign: "left",
   borderBottom: "1px solid #2a2a2a", whiteSpace: "nowrap",
 };
@@ -80,19 +80,19 @@ function MatchRow({ r }: { r: Row }) {
     <tr style={{ borderBottom: "1px solid #222" }}>
       <td style={{ ...td, color: "#FFFFFF" }}>
         {r.name || r.fantasia || r.phone}
-        <span style={{ color: "#556677", fontSize: 10, marginLeft: 6 }}>
+        <span style={{ color: "#e4e9f0", fontSize: 10, marginLeft: 6 }}>
           {String(r.phone).slice(-4)}
         </span>
       </td>
       <td style={td}><OrigemBadge canal={r.origem_canal} adId={r.ad_id} /></td>
-      <td style={{ ...td, color: "#8899aa" }}>
+      <td style={{ ...td, color: "#c0d0e0" }}>
         {r.fantasia || r.nome_ares || "—"}
-        <span style={{ color: "#556677", fontSize: 10, marginLeft: 6 }}>#{r.ares_pessoa_id}</span>
+        <span style={{ color: "#e4e9f0", fontSize: 10, marginLeft: 6 }}>#{r.ares_pessoa_id}</span>
       </td>
-      <td style={{ ...td, color: "#8899aa", fontSize: 11 }}>{r.cidade || "—"}</td>
+      <td style={{ ...td, color: "#c0d0e0", fontSize: 11 }}>{r.cidade || "—"}</td>
       <td style={{ ...td, textAlign: "right" }}>{r.n_pedidos}</td>
       <td style={{ ...td, textAlign: "right", color: "#2ea043", fontWeight: 700 }}>{brl(r.receita_brl)}</td>
-      <td style={{ ...td, color: "#8899aa", fontSize: 11 }}>{fmtVendor(r.vendedor_routing_team)}</td>
+      <td style={{ ...td, color: "#c0d0e0", fontSize: 11 }}>{fmtVendor(r.vendedor_routing_team)}</td>
       <td style={{ ...td, textAlign: "right" }}>
         <ConfirmMatchButton leadId={r.lead_id} aresPessoaId={r.ares_pessoa_id} />
       </td>
@@ -131,10 +131,10 @@ export async function CardReconciliarAres() {
   if (unicos.length === 0 && ambByLead.size === 0) {
     return (
       <div style={{ ...card, border: "1px solid #2a2a2a" }}>
-        <p style={{ fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", color: "#556677", fontFamily: mono, marginBottom: 4 }}>
+        <p style={{ fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", color: "#e4e9f0", fontFamily: mono, marginBottom: 4 }}>
           Reconciliar lead ↔ ARES
         </p>
-        <p style={{ color: "#8899aa", fontSize: 11, fontFamily: mono }}>
+        <p style={{ color: "#c0d0e0", fontSize: 11, fontFamily: mono }}>
           Fila zerada — nenhum lead pendente casa por telefone no momento.
         </p>
       </div>
@@ -148,7 +148,7 @@ export async function CardReconciliarAres() {
       <p style={{ fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", color: "#d29922", fontFamily: mono, marginBottom: 4 }}>
         <span style={{ marginRight: 6 }}>⚲</span>Reconciliar lead ↔ ARES ({unicos.length} match{unicos.length === 1 ? "" : "es"} único{unicos.length === 1 ? "" : "s"}) · {brl(totalRev)} em receita
       </p>
-      <p style={{ color: "#8899aa", fontSize: 11, fontFamily: mono, marginBottom: 12 }}>
+      <p style={{ color: "#c0d0e0", fontSize: 11, fontFamily: mono, marginBottom: 12 }}>
         Leads que casam um cliente ARES por telefone mas ainda sem elo. Confirme p/ ligar origem→receita (pagos no topo).
       </p>
 
@@ -183,17 +183,17 @@ export async function CardReconciliarAres() {
             <div key={leadId} style={{ marginBottom: 12, border: "1px solid #2a2a2a", borderRadius: 6, padding: "8px 12px" }}>
               <p style={{ color: "#c8d8e8", fontSize: 11, fontFamily: mono, marginBottom: 6 }}>
                 {cands[0].name || cands[0].phone}
-                <span style={{ color: "#556677", marginLeft: 8 }}>{cands[0].n_candidatos} candidatos — escolha 1</span>
+                <span style={{ color: "#e4e9f0", marginLeft: 8 }}>{cands[0].n_candidatos} candidatos — escolha 1</span>
               </p>
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
                 <tbody>
                   {cands.map((r) => (
                     <tr key={`${leadId}-${r.ares_pessoa_id}`} style={{ borderBottom: "1px solid #1f1f1f" }}>
-                      <td style={{ ...td, color: "#8899aa" }}>
+                      <td style={{ ...td, color: "#c0d0e0" }}>
                         {r.fantasia || r.nome_ares || "—"}
-                        <span style={{ color: "#556677", fontSize: 10, marginLeft: 6 }}>#{r.ares_pessoa_id}</span>
+                        <span style={{ color: "#e4e9f0", fontSize: 10, marginLeft: 6 }}>#{r.ares_pessoa_id}</span>
                       </td>
-                      <td style={{ ...td, color: "#8899aa", fontSize: 11 }}>{r.cidade || "—"}</td>
+                      <td style={{ ...td, color: "#c0d0e0", fontSize: 11 }}>{r.cidade || "—"}</td>
                       <td style={{ ...td, textAlign: "right" }}>{r.n_pedidos} ped</td>
                       <td style={{ ...td, textAlign: "right", color: "#2ea043" }}>{brl(r.receita_brl)}</td>
                       <td style={{ ...td, textAlign: "right" }}>

@@ -19,7 +19,7 @@ const n3 = (n: number | null) => (n == null ? "—" : n.toLocaleString("pt-BR", 
 export default function PrevisaoClient({ rows }: { rows: PrevRow[] }) {
   const [q, setQ] = useState("");
 
-  const th: React.CSSProperties = { fontSize: 9, color: "#556677", fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", padding: "8px 10px", textAlign: "right", borderBottom: "1px solid #1B2A6B" };
+  const th: React.CSSProperties = { fontSize: 9, color: "#e4e9f0", fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", padding: "8px 10px", textAlign: "right", borderBottom: "1px solid #1B2A6B" };
   const td: React.CSSProperties = { padding: "7px 10px", color: "#c8d8e8", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", fontSize: 12, textAlign: "right" };
   const card: React.CSSProperties = { background: "#0f1428", border: "1px solid #1B2A6B", borderRadius: 6, overflowX: "auto" };
 
@@ -37,13 +37,13 @@ export default function PrevisaoClient({ rows }: { rows: PrevRow[] }) {
     <tr key={String(r.id_produto)} style={{ borderBottom: "1px solid #0b0f1d" }}>
       <td style={{ ...td, textAlign: "left", color: "#FFFFFF", maxWidth: 280, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
         {r.descricao || `#${r.id_produto}`}
-        {r.__isPool && r.skus ? <span style={{ color: "#556677", fontSize: 9 }}> · pool {r.skus}</span> : null}
+        {r.__isPool && r.skus ? <span style={{ color: "#e4e9f0", fontSize: 9 }}> · pool {r.skus}</span> : null}
       </td>
       <td style={td}>{n3(r.cmd)}</td>
-      <td style={{ ...td, color: r.saldo_confiavel ? "#c8d8e8" : "#556677" }}>{r.saldo_confiavel ? n3(r.saldo_atual) : "s/ âncora"}</td>
+      <td style={{ ...td, color: r.saldo_confiavel ? "#c8d8e8" : "#e4e9f0" }}>{r.saldo_confiavel ? n3(r.saldo_atual) : "s/ âncora"}</td>
       <td style={td}>{n3(r.em_pedido)}</td>
-      <td style={{ ...td, color: r.a_comprar > 0 ? "#f0a04b" : "#556677", fontWeight: 700 }}>{n3(r.a_comprar)}</td>
-      <td style={{ ...td, textAlign: "left", color: "#8899aa" }}>{r.fornecedor_provavel || "—"}{r.lead_time_dias ? ` (${r.lead_time_dias}d)` : ""}</td>
+      <td style={{ ...td, color: r.a_comprar > 0 ? "#f0a04b" : "#e4e9f0", fontWeight: 700 }}>{n3(r.a_comprar)}</td>
+      <td style={{ ...td, textAlign: "left", color: "#c0d0e0" }}>{r.fornecedor_provavel || "—"}{r.lead_time_dias ? ` (${r.lead_time_dias}d)` : ""}</td>
     </tr>
   );
 
@@ -62,7 +62,7 @@ export default function PrevisaoClient({ rows }: { rows: PrevRow[] }) {
           />
           {q ? (
             <>
-              <span style={{ color: "#556677", fontFamily: theme.font.label, fontSize: 10, whiteSpace: "nowrap" }}>{filtered.length} de {rows.length}</span>
+              <span style={{ color: "#e4e9f0", fontFamily: theme.font.label, fontSize: 10, whiteSpace: "nowrap" }}>{filtered.length} de {rows.length}</span>
               <button
                 onClick={() => setQ("")}
                 aria-label="Limpar busca"
@@ -82,9 +82,9 @@ export default function PrevisaoClient({ rows }: { rows: PrevRow[] }) {
         </tr></thead>
         <tbody>
           {rows.length === 0 ? (
-            <tr><td colSpan={6} style={{ ...td, textAlign: "center", color: "#556677", padding: 20 }}>aguardando dados (aplicar migrations)</td></tr>
+            <tr><td colSpan={6} style={{ ...td, textAlign: "center", color: "#e4e9f0", padding: 20 }}>aguardando dados (aplicar migrations)</td></tr>
           ) : filtered.length === 0 ? (
-            <tr><td colSpan={6} style={{ ...td, textAlign: "center", color: "#556677", padding: 20 }}>Nenhum insumo encontrado para &quot;{q}&quot;</td></tr>
+            <tr><td colSpan={6} style={{ ...td, textAlign: "center", color: "#e4e9f0", padding: 20 }}>Nenhum insumo encontrado para &quot;{q}&quot;</td></tr>
           ) : (
             <>
               {repor.length > 0 && <tr><td colSpan={6} style={{ ...td, textAlign: "left", color: "#f85149", fontWeight: 700, background: "#0b0f1d" }}>🔴 REPOR AGORA</td></tr>}

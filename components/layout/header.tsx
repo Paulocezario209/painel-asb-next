@@ -30,7 +30,7 @@ export function Header({
         <button
           onClick={onMenuToggle}
           className="sm:hidden"
-          style={{ background: "transparent", border: "none", color: "#8899aa", cursor: "pointer", padding: 4, display: "flex", alignItems: "center" }}
+          style={{ background: "transparent", border: "none", color: "#c0d0e0", cursor: "pointer", padding: 4, display: "flex", alignItems: "center" }}
           aria-label="Menu"
         >
           <Menu size={18} />
@@ -39,16 +39,16 @@ export function Header({
       </div>
 
       <div className="flex items-center gap-3">
-        <span className="hidden sm:inline" style={{ color: "#8899aa", fontSize: 11, fontFamily: "'Courier New', monospace" }}>
+        <span className="hidden sm:inline" style={{ color: "#c0d0e0", fontSize: 11, fontFamily: "'Courier New', monospace" }}>
           <span style={{ color: "#C8102E" }}>›</span> {email}
         </span>
-        <span className="sm:hidden" style={{ color: "#8899aa", fontSize: 10, fontFamily: "'Courier New', monospace", maxWidth: 130, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        <span className="sm:hidden" style={{ color: "#c0d0e0", fontSize: 10, fontFamily: "'Courier New', monospace", maxWidth: 130, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {email.split("@")[0]}
         </span>
         <button
           onClick={handleLogout}
           style={{
-            background: "transparent", border: "1px solid #1B2A6B", color: "#8899aa",
+            background: "transparent", border: "1px solid #1B2A6B", color: "#c0d0e0",
             fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase",
             padding: "4px 10px", borderRadius: 2, cursor: "pointer",
             fontFamily: "'Courier New', monospace", transition: "all .15s",
@@ -59,7 +59,7 @@ export function Header({
           }}
           onMouseLeave={(e) => {
             (e.currentTarget as HTMLButtonElement).style.borderColor = "#1B2A6B";
-            (e.currentTarget as HTMLButtonElement).style.color = "#8899aa";
+            (e.currentTarget as HTMLButtonElement).style.color = "#c0d0e0";
           }}
         >
           logout

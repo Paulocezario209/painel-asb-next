@@ -8,9 +8,9 @@ export const dynamic = "force-dynamic";
 // ── Design tokens ────────────────────────────────────────────────────────────
 const S = {
   card:    { background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8 } as React.CSSProperties,
-  label:   { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#556677", fontFamily: theme.font.label },
+  label:   { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#e4e9f0", fontFamily: theme.font.label },
   value:   { fontSize: 22, fontWeight: 700, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", lineHeight: 1 } as React.CSSProperties,
-  muted:   { color: "#8899aa", fontSize: 11, fontFamily: theme.font.label } as React.CSSProperties,
+  muted:   { color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label } as React.CSSProperties,
 };
 
 const ANGLE_LABELS: Record<string, string> = {

@@ -25,7 +25,7 @@ const RED = theme.colors.critical;       // #C8102E
 const BLUE = theme.colors.chartNavy;     // #2A3F8F
 const GREEN = theme.colors.success;      // #22c55e
 const YELLOW = theme.colors.chartYellow; // #e8b923
-const MUT = theme.colors.neutral;        // #556677
+const MUT = theme.colors.neutral;        // #e4e9f0
 const GRID = theme.colors.gridLine;
 
 const CANAL_COR: Record<string, string> = {

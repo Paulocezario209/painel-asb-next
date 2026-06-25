@@ -283,7 +283,7 @@ export function CalendarSection({
                   <p style={{ fontSize: 11, fontWeight: 700, color: v.accent, fontFamily: theme.font.label, textTransform: "uppercase", letterSpacing: ".1em" }}>
                     {v.name}
                   </p>
-                  <p style={{ fontSize: 9, color: "#8899aa", marginTop: 2, fontFamily: theme.font.label }}>{v.region}</p>
+                  <p style={{ fontSize: 9, color: "#c0d0e0", marginTop: 2, fontFamily: theme.font.label }}>{v.region}</p>
                 </div>
                 <span
                   style={{
@@ -320,10 +320,10 @@ export function CalendarSection({
                     c: saldoDiaPositivo ? theme.colors.success : theme.colors.critical
                   },
                   { label: "Acumulado",  value: <span className="priv-brl">{fmtBRL(acumuladoEmissao)}</span>, c: "#FFFFFF" },
-                  { label: "Esperado",   value: <span className="priv-brl">{fmtBRL(r.meta_acumulada_brl)}</span>, c: "#8899aa" },
+                  { label: "Esperado",   value: <span className="priv-brl">{fmtBRL(r.meta_acumulada_brl)}</span>, c: "#c0d0e0" },
                   { label: "Saldo mês",  value: <span className="priv-brl">{(saldoPositivo ? "+" : "") + fmtBRL(saldoMes)}</span>, c: saldoPositivo ? theme.colors.success : theme.colors.critical },
                   { label: "Total §5 (ARES+CNB)", value: <span className="priv-brl">{fmtBRL(totalSf)}</span>, c: theme.colors.success },
-                  { label: "↳ ARES (fiscal)", value: <span className="priv-brl">{fmtBRL(aresPart)}</span>, c: "#8899aa" },
+                  { label: "↳ ARES (fiscal)", value: <span className="priv-brl">{fmtBRL(aresPart)}</span>, c: "#c0d0e0" },
                   { label: `↳ CNB ${v.name}`, value: <span className="priv-brl">{fmtBRL(cnbVend)}</span>, c: cnbVend > 0 ? theme.colors.accent : theme.colors.neutral },
                 ];})().map(row => (
                   <div key={row.label} style={{ display: "flex", justifyContent: "space-between", fontSize: 11 }}>
@@ -334,11 +334,11 @@ export function CalendarSection({
               </div>
 
               <div style={{ borderTop: "1px solid rgba(27,42,107,.3)", marginTop: 12, paddingTop: 10, display: "flex", justifyContent: "space-between", fontSize: 10 }}>
-                <span style={{ color: "#8899aa", fontFamily: theme.font.label }}>
+                <span style={{ color: "#c0d0e0", fontFamily: theme.font.label }}>
                   ✓ <span style={{ color: theme.colors.success, fontWeight: 700 }}>{r.dias_batidos}</span> &nbsp;
                   ✗ <span style={{ color: theme.colors.critical, fontWeight: 700 }}>{r.dias_abaixo}</span>
                 </span>
-                <span style={{ color: "#8899aa", fontFamily: theme.font.label }}>
+                <span style={{ color: "#c0d0e0", fontFamily: theme.font.label }}>
                   {r.dias_uteis_decorridos}/{r.dias_uteis_mes} dias úteis
                 </span>
               </div>

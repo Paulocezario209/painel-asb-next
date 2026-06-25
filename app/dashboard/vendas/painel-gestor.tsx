@@ -67,7 +67,7 @@ export function PainelGestor({ data, onVendorClick }: Props) {
         <p style={{ fontSize: 14, fontWeight: 700, color: "#FFFFFF", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" }}>
           📊 Painel Gestor
         </p>
-        <p style={{ fontSize: 10, color: "#8899aa", fontFamily: theme.font.label }}>
+        <p style={{ fontSize: 10, color: "#c0d0e0", fontFamily: theme.font.label }}>
           {SAUDACAO(hora)} · {diaSemana} {String(agora.getDate()).padStart(2, "0")}/{String(agora.getMonth() + 1).padStart(2, "0")}
         </p>
       </div>
@@ -137,7 +137,7 @@ export function PainelGestor({ data, onVendorClick }: Props) {
                   <div style={{ fontSize: 11, fontWeight: 700, color: "#FFFFFF", fontFamily: theme.font.label }}>
                     {b.nome}
                   </div>
-                  <div style={{ fontSize: 9, color: "#8899aa", fontFamily: theme.font.label, marginTop: 1 }}>
+                  <div style={{ fontSize: 9, color: "#c0d0e0", fontFamily: theme.font.label, marginTop: 1 }}>
                     {fmtDate(b.proxima_meta)} · <span className="priv-brl">{fmtBRL(b.realizado)}</span> / <span className="priv-brl">{fmtBRL(b.meta)}</span>
                   </div>
                 </div>
@@ -226,7 +226,7 @@ export function PainelGestor({ data, onVendorClick }: Props) {
             🔥 Time inteiro acima da meta — momento de premiar
           </li>
         )}
-        <li style={{ fontSize: 10, color: "#8899aa", lineHeight: 1.4, fontStyle: "italic", paddingTop: 4, borderTop: "1px dashed #2a2a2a", marginTop: 4 }}>
+        <li style={{ fontSize: 10, color: "#c0d0e0", lineHeight: 1.4, fontStyle: "italic", paddingTop: 4, borderTop: "1px dashed #2a2a2a", marginTop: 4 }}>
           💭 Disciplina diária + ZERO desconto como muleta = margem saudável.
         </li>
       </ul>
@@ -236,7 +236,7 @@ export function PainelGestor({ data, onVendorClick }: Props) {
         <p style={{ fontSize: 9, fontWeight: 700, color: theme.colors.textPrimary, fontFamily: theme.font.label, letterSpacing: ".15em", marginBottom: 6, textTransform: "uppercase" }}>
           🎯 FOCO ESTRATÉGICO
         </p>
-        <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 4, fontSize: 10, color: "#8899aa", fontFamily: theme.font.label }}>
+        <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 4, fontSize: 10, color: "#c0d0e0", fontFamily: theme.font.label }}>
           <li>▸ <strong style={{ color: theme.colors.success }}>CICLO:</strong> garantir fechamento da próxima meta</li>
           <li>▸ <strong style={{ color: theme.colors.warning }}>SEMANA:</strong> reduzir pendentes &gt;5d e reativar dormentes alta</li>
           <li>▸ <strong style={{ color: theme.colors.brandAsb }}>MÊS:</strong> ticket médio +10% via mix, não desconto</li>

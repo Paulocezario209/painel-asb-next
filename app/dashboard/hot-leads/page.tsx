@@ -31,7 +31,7 @@ export default async function HotLeadsPage() {
         >
           Leads Quentes
         </h1>
-        <p style={{ color: "#556677", fontSize: 11, fontFamily: theme.font.label, letterSpacing: ".1em" }}>
+        <p style={{ color: "#e4e9f0", fontSize: 11, fontFamily: theme.font.label, letterSpacing: ".1em" }}>
           {error ? "Erro ao carregar leads" : `${leads?.length ?? 0} leads · Perfil A (ativos) + Perfil B (convertidos)`}
         </p>
       </div>

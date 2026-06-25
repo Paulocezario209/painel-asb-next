@@ -47,7 +47,7 @@ export async function CardTop10ClientesMes() {
   const mesLabel = String(new Date().getMonth() + 1).padStart(2, "0");
 
   const th: React.CSSProperties = {
-    fontSize: 9, color: "#556677", fontFamily: mono, letterSpacing: ".1em",
+    fontSize: 9, color: "#e4e9f0", fontFamily: mono, letterSpacing: ".1em",
     textTransform: "uppercase", padding: "6px 8px", textAlign: "left",
     borderBottom: "1px solid #2a2a2a", whiteSpace: "nowrap",
   };
@@ -60,7 +60,7 @@ export async function CardTop10ClientesMes() {
       <p style={{ fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", color: "#22c55e", fontFamily: mono, marginBottom: 4 }}>
         <span style={{ marginRight: 6 }}>★</span>Top {rows.length} clientes do mês · {brl(total)}
       </p>
-      <p style={{ color: "#8899aa", fontSize: 11, fontFamily: mono, marginBottom: 12 }}>
+      <p style={{ color: "#c0d0e0", fontSize: 11, fontFamily: mono, marginBottom: 12 }}>
         Receita acumulada de 01/{mesLabel} até hoje, ordenado por receita.
       </p>
       <div style={{ overflowX: "auto" }}>
@@ -83,15 +83,15 @@ export async function CardTop10ClientesMes() {
             {rows.map((r, i) => (
               <tr key={r.ares_pessoa_id} style={{ borderBottom: "1px solid #222" }}>
                 <td style={{ ...td, textAlign: "right", color: "#22c55e", fontWeight: 700 }}>{i + 1}</td>
-                <td style={{ ...td, textAlign: "right", color: "#8899aa", fontSize: 10 }}>{r.ares_pessoa_id}</td>
+                <td style={{ ...td, textAlign: "right", color: "#c0d0e0", fontSize: 10 }}>{r.ares_pessoa_id}</td>
                 <td style={{ ...td, color: "#FFFFFF" }}>{r.nome_fantasia || "—"}</td>
-                <td style={{ ...td, color: "#8899aa", fontSize: 11 }}>{fmtTel(r.contato)}</td>
-                <td style={{ ...td, color: "#8899aa", fontSize: 11 }}>{r.bairro || "—"}</td>
+                <td style={{ ...td, color: "#c0d0e0", fontSize: 11 }}>{fmtTel(r.contato)}</td>
+                <td style={{ ...td, color: "#c0d0e0", fontSize: 11 }}>{r.bairro || "—"}</td>
                 <td style={{ ...td, color: "#c8d8e8", fontSize: 11 }}>{r.vendedor_nome || "—"}</td>
                 <td style={{ ...td, textAlign: "right" }}>{r.pedidos_mes}</td>
                 <td style={{ ...td, textAlign: "right", color: "#2ea043", fontWeight: 700 }}>{brl(r.receita_mes)}</td>
-                <td style={{ ...td, textAlign: "right", color: "#8899aa", fontSize: 11 }}>{Number(r.recorrencia_semanal).toFixed(1)}x/sem</td>
-                <td style={{ ...td, textAlign: "right", color: "#8899aa", fontSize: 11 }}>{brl(r.ticket_medio)}</td>
+                <td style={{ ...td, textAlign: "right", color: "#c0d0e0", fontSize: 11 }}>{Number(r.recorrencia_semanal).toFixed(1)}x/sem</td>
+                <td style={{ ...td, textAlign: "right", color: "#c0d0e0", fontSize: 11 }}>{brl(r.ticket_medio)}</td>
               </tr>
             ))}
           </tbody>

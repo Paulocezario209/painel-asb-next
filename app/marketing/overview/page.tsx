@@ -65,7 +65,7 @@ export default async function OverviewPage() {
         <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
           Overview
         </h1>
-        <p style={{ color: "#8899aa", fontSize: 11, fontFamily: theme.font.label }}>
+        <p style={{ color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label }}>
           Investimento · CAC · ROAS · funil · ranking de criativos (Meta Ads)
         </p>
       </div>
@@ -78,7 +78,7 @@ export default async function OverviewPage() {
 
       <OverviewClient cac={cac} rank={rank} alertas={alertas} />
 
-      <p style={{ color: "#556677", fontSize: 10, fontFamily: theme.font.label, textAlign: "right" }}>
+      <p style={{ color: "#e4e9f0", fontSize: 10, fontFamily: theme.font.label, textAlign: "right" }}>
         Dados de gasto Meta Ads atualizados diariamente às 06:10 BRT
       </p>
     </div>

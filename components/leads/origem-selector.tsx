@@ -46,7 +46,7 @@ export function OrigemSelector({ phone, initial }: { phone: string; initial: str
           <option key={key} value={key}>{label}</option>
         ))}
       </select>
-      {saving && <span style={{ fontSize: 9, color: "#8899aa", fontFamily: "'Courier New', monospace" }}>salvando…</span>}
+      {saving && <span style={{ fontSize: 9, color: "#c0d0e0", fontFamily: "'Courier New', monospace" }}>salvando…</span>}
       {saved && <span style={{ fontSize: 9, color: "#22c55e", fontFamily: "'Courier New', monospace" }}>salvo ✓</span>}
     </div>
   );

@@ -117,10 +117,10 @@ const QUALIFICACAO = new Set([
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const S = {
   card:    { background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8 } as React.CSSProperties,
-  label:   { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#556677", fontFamily: theme.font.label },
+  label:   { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#e4e9f0", fontFamily: theme.font.label },
   value:   { fontSize: 28, fontWeight: 700, color: "#FFFFFF", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", lineHeight: 1 },
   section: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#c0c8d8", fontFamily: theme.font.label, marginBottom: 12 } as React.CSSProperties,
-  muted:   { color: "#8899aa", fontSize: 11, fontFamily: theme.font.label } as React.CSSProperties,
+  muted:   { color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label } as React.CSSProperties,
 };
 
 // ── Interfaces ────────────────────────────────────────────────────────────────
@@ -300,19 +300,19 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
                     <div style={{ width: `${pctTotal}%`, height: "100%", background: "linear-gradient(90deg, #1B2A6B, #2ea043)", borderRadius: 3, minWidth: mk.count > 0 ? 3 : 0 }} />
                     <span style={{ position: "absolute", left: 8, top: 3, color: "#fff", fontSize: 11, fontFamily: theme.font.num }}>{mk.count}</span>
                   </div>
-                  <span style={{ width: 42, textAlign: "right", color: "#8899aa", fontSize: 11, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", flexShrink: 0 }}>{pctTotal}%</span>
+                  <span style={{ width: 42, textAlign: "right", color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", flexShrink: 0 }}>{pctTotal}%</span>
                   {/* item 4: drop-off = % que NÃO avançou da etapa anterior; cor semântica (tokens existentes) */}
                   {(() => {
-                    if (pctPrev == null) return <span style={{ width: 96, textAlign: "right", color: "#556677", fontSize: 10, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", flexShrink: 0 }}>—</span>;
+                    if (pctPrev == null) return <span style={{ width: 96, textAlign: "right", color: "#e4e9f0", fontSize: 10, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", flexShrink: 0 }}>—</span>;
                     const drop = Math.max(0, 100 - pctPrev);
-                    const c = drop >= 50 ? "#C8102E" : drop >= 25 ? "#D4A017" : "#556677";
+                    const c = drop >= 50 ? "#C8102E" : drop >= 25 ? "#D4A017" : "#e4e9f0";
                     return <span style={{ width: 96, textAlign: "right", color: c, fontSize: 10, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", flexShrink: 0 }}>−{drop}% caiu</span>;
                   })()}
                 </Link>
               );
             })}
           </div>
-          <p style={{ color: "#556677", fontSize: 9, fontFamily: theme.font.label, marginTop: 10, lineHeight: 1.5 }}>
+          <p style={{ color: "#e4e9f0", fontSize: 9, fontFamily: theme.font.label, marginTop: 10, lineHeight: 1.5 }}>
             Base: created_at → qual_stage≥7 → handoff_at → seller_first_reply_at → first_order_at (campos com timestamp confiável, asb-funnel §7). Cumulativo. Difere do funil de 14 etapas abaixo (posição ATUAL; legacy colapsado p/ v2 — DEBT-157).
           </p>
         </div>
@@ -322,7 +322,7 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
       <div style={{ ...S.card, padding: "20px 24px" }}>
         <p style={S.section}>
           <span style={{ color: "#C8102E", marginRight: 6 }}>{"▼"}</span>
-          Onde estão os leads agora <span style={{ color: "#556677", textTransform: "none", letterSpacing: 0 }}>· % = fatia do pipe ativo ({totalAtivos})</span>
+          Onde estão os leads agora <span style={{ color: "#e4e9f0", textTransform: "none", letterSpacing: 0 }}>· % = fatia do pipe ativo ({totalAtivos})</span>
         </p>
         {orfaos.length > 0 && (
           <p style={{ ...S.muted, color: "#D4A017", fontSize: 10, marginBottom: 8 }}>
@@ -354,14 +354,14 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
       <div style={{ ...S.card, padding: "20px 24px" }}>
         <p style={S.section}>
           <span style={{ color: "#185FA5", marginRight: 6 }}>{"◉"}</span>
-          Leads Parados por Etapa <span style={{ color: "#556677", textTransform: "none", letterSpacing: 0 }}>· tempo = dias na BASE (created_at), não na etapa</span>
+          Leads Parados por Etapa <span style={{ color: "#e4e9f0", textTransform: "none", letterSpacing: 0 }}>· tempo = dias na BASE (created_at), não na etapa</span>
         </p>
         {etapasComLeads.length > 0 ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {etapasComLeads.map(s => (
               <div key={s}>
                 <p style={{ ...S.muted, fontSize: 10, marginBottom: 6 }}>
-                  {STAGE_LABELS[s] ?? s} <span style={{ color: "#556677" }}>· {stageCounts[s] ?? 0} no total{(stageCounts[s] ?? 0) > 10 ? " (top 10)" : ""}</span>
+                  {STAGE_LABELS[s] ?? s} <span style={{ color: "#e4e9f0" }}>· {stageCounts[s] ?? 0} no total{(stageCounts[s] ?? 0) > 10 ? " (top 10)" : ""}</span>
                 </p>
                 <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                   {leadsPorEtapa[s].map((r, i) => {
@@ -370,8 +370,8 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
                     const row = (
                       <>
                         <span style={{ color: "#c8d8e8", fontSize: 11, fontFamily: theme.font.label, minWidth: 160 }}>{nome}</span>
-                        <span style={{ color: "#556677", fontSize: 10, fontFamily: theme.font.label }}>{r.city ?? "—"}</span>
-                        <span style={{ marginLeft: "auto", color: dias >= 7 ? "#C8102E" : dias >= 3 ? "#f59e0b" : "#8899aa", fontSize: 10, fontWeight: 700, fontFamily: theme.font.label }}>{dias}d na base</span>
+                        <span style={{ color: "#e4e9f0", fontSize: 10, fontFamily: theme.font.label }}>{r.city ?? "—"}</span>
+                        <span style={{ marginLeft: "auto", color: dias >= 7 ? "#C8102E" : dias >= 3 ? "#f59e0b" : "#c0d0e0", fontSize: 10, fontWeight: 700, fontFamily: theme.font.label }}>{dias}d na base</span>
                       </>
                     );
                     return r.phone ? (
@@ -407,7 +407,7 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
 
               return (
                 <div key={e.created_at + i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "4px 0", borderTop: i > 0 ? "1px solid rgba(27,42,107,.2)" : "none" }}>
-                  <span style={{ color: "#556677", fontSize: 10, fontFamily: theme.font.label, minWidth: 80 }}>
+                  <span style={{ color: "#e4e9f0", fontSize: 10, fontFamily: theme.font.label, minWidth: 80 }}>
                     {dia} {hora}
                   </span>
                   {lead?.phone ? (
@@ -419,14 +419,14 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
                       {nome}
                     </span>
                   )}
-                  <span style={{ color: "#8899aa", fontSize: 10, fontFamily: theme.font.label }}>
+                  <span style={{ color: "#c0d0e0", fontSize: 10, fontFamily: theme.font.label }}>
                     {e.from_stage ? `${STAGE_LABELS[e.from_stage] ?? e.from_stage} → ` : ""}{STAGE_LABELS[e.to_stage] ?? e.to_stage}
                   </span>
                   <span style={{
                     marginLeft: "auto",
                     fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".08em",
                     padding: "1px 6px", borderRadius: 2,
-                    color: e.actor === "vendedor" ? "#22c55e" : e.actor === "sdr" ? "#C8102E" : "#8899aa",
+                    color: e.actor === "vendedor" ? "#22c55e" : e.actor === "sdr" ? "#C8102E" : "#c0d0e0",
                     border: `1px solid ${e.actor === "vendedor" ? "rgba(34,197,94,.3)" : e.actor === "sdr" ? "rgba(200,16,46,.3)" : "rgba(136,153,170,.2)"}`,
                     background: e.actor === "vendedor" ? "rgba(34,197,94,.06)" : e.actor === "sdr" ? "rgba(200,16,46,.06)" : "transparent",
                   }}>

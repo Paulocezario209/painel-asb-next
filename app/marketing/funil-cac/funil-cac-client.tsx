@@ -18,7 +18,7 @@ export type ConvMensalRow = { mes: string; leads: number; convertidos: number };
 const RED = theme.colors.critical;       // #C8102E
 const GREEN = theme.colors.success;      // #22c55e
 const YELLOW = theme.colors.chartYellow; // #e8b923
-const MUT = theme.colors.neutral;        // #556677
+const MUT = theme.colors.neutral;        // #e4e9f0
 const GRID = theme.colors.gridLine;
 // FIX2: cores semânticas do funil (topo→fundo)
 const FUNNEL_FILL = ["#185FA5", "#534AB7", "#1f7a6a", "#0F6E56"];
@@ -127,9 +127,9 @@ export function FunilCacClient({ funil, mensal }: { funil: FunilRow[]; mensal: C
                   <td style={{ ...td, textAlign: "center", color: theme.colors.chartNavyLight }}>{f.qualificados_real}</td>
                   <td style={{ ...td, textAlign: "center", color: YELLOW }}>{f.handoffs}</td>
                   <td style={{ ...td, textAlign: "center", color: GREEN }}>{f.convertidos}</td>
-                  <td style={{ ...td, textAlign: "center", color: "#8899aa" }}>{pctFmt(f.pct_qualificacao_real)}</td>
-                  <td style={{ ...td, textAlign: "center", color: "#8899aa" }}>{pctFmt(f.pct_handoff)}</td>
-                  <td style={{ ...td, textAlign: "center", color: "#8899aa" }}>{pctFmt(f.pct_conversao)}</td>
+                  <td style={{ ...td, textAlign: "center", color: "#c0d0e0" }}>{pctFmt(f.pct_qualificacao_real)}</td>
+                  <td style={{ ...td, textAlign: "center", color: "#c0d0e0" }}>{pctFmt(f.pct_handoff)}</td>
+                  <td style={{ ...td, textAlign: "center", color: "#c0d0e0" }}>{pctFmt(f.pct_conversao)}</td>
                 </tr>
               ))}
             </tbody>
@@ -171,5 +171,5 @@ function pctFmt(p: number | null) {
   return `${(Number(p) * 100).toFixed(1)}%`;
 }
 
-const th: React.CSSProperties = { fontSize: 9, color: "#556677", fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", padding: "6px 10px", textAlign: "center" };
+const th: React.CSSProperties = { fontSize: 9, color: "#e4e9f0", fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", padding: "6px 10px", textAlign: "center" };
 const td: React.CSSProperties = { padding: "8px 10px", color: "#c8d8e8", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" };

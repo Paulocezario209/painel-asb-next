@@ -5,9 +5,9 @@ import { theme } from "@/lib/theme";
 const glow = (hex: string): CSSProperties => ({ boxShadow: `0 0 22px -8px ${hex}, inset 0 1px 0 0 ${hex}1a` });
 const S = {
   card: { background: "#16161c", border: "1px solid #2a2a35", borderRadius: 8 } as CSSProperties,
-  label: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", color: "#556677", fontFamily: theme.font.label } as CSSProperties,
+  label: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", color: "#e4e9f0", fontFamily: theme.font.label } as CSSProperties,
   value: { fontSize: 28, fontWeight: 700, color: "#FFFFFF", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" as const, lineHeight: 1 } as CSSProperties,
-  muted: { color: "#8899aa", fontSize: 10, fontFamily: theme.font.label } as CSSProperties,
+  muted: { color: "#c0d0e0", fontSize: 10, fontFamily: theme.font.label } as CSSProperties,
 };
 
 const brl = (n: number) => (n ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });

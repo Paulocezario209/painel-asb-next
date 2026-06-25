@@ -73,9 +73,9 @@ const ETAPAS = Array.from({ length: 10 }, (_, i) => i);
 // ── Design tokens ──────────────────────────────────────────────────────────────
 const S = {
   card:    { background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 4, padding: "20px 24px" } as React.CSSProperties,
-  label:   { display: "block", fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase" as const, color: "#556677", fontFamily: theme.font.label, marginBottom: 6 },
+  label:   { display: "block", fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase" as const, color: "#e4e9f0", fontFamily: theme.font.label, marginBottom: 6 },
   section: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#c0c8d8", fontFamily: theme.font.label, marginBottom: 14 } as React.CSSProperties,
-  muted:   { color: "#8899aa", fontSize: 11, fontFamily: theme.font.label } as React.CSSProperties,
+  muted:   { color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label } as React.CSSProperties,
   input:   {
     width: "100%", background: "#080b14", border: "1px solid #2a2a2a", borderRadius: 3,
     color: "#c8d8e8", fontSize: 11, fontFamily: theme.font.label,
@@ -86,7 +86,7 @@ const S = {
 // ── Helpers ────────────────────────────────────────────────────────────────────
 function QualBadge({ stage }: { stage: number | null }) {
   if (stage === null) return null;
-  const color = stage >= 7 ? "#22c55e" : stage >= 4 ? "#f59e0b" : "#8899aa";
+  const color = stage >= 7 ? "#22c55e" : stage >= 4 ? "#f59e0b" : "#c0d0e0";
   return (
     <span style={{
       display: "inline-block", background: `${color}15`, border: `1px solid ${color}50`,
@@ -102,7 +102,7 @@ function DomainBadge({ domain }: { domain: string }) {
   return (
     <span style={{
       display: "inline-block", background: "rgba(27,42,107,.25)", border: "1px solid #2a2a2a",
-      color: "#8899aa", fontSize: 9, fontFamily: theme.font.label,
+      color: "#c0d0e0", fontSize: 9, fontFamily: theme.font.label,
       padding: "2px 8px", borderRadius: 3, letterSpacing: ".10em",
     }}>
       {domain}
@@ -294,7 +294,7 @@ export default function SimulatorPage() {
                     fontFamily: theme.font.num, fontWeight: 700,
                     border: "1px solid #C8102E",
                     background: loading || !message.trim() ? "rgba(200,16,46,.05)" : "rgba(200,16,46,.15)",
-                    color: loading || !message.trim() ? "#556677" : "#C8102E",
+                    color: loading || !message.trim() ? "#e4e9f0" : "#C8102E",
                     transition: "all .15s",
                   }}
                 >
@@ -317,7 +317,7 @@ export default function SimulatorPage() {
 
             {loading && (
               <div style={{ textAlign: "center", padding: "24px 0" }}>
-                <p style={{ color: "#556677", fontFamily: theme.font.label, fontSize: 11 }}>
+                <p style={{ color: "#e4e9f0", fontFamily: theme.font.label, fontSize: 11 }}>
                   ◌ consultando RAG…
                 </p>
               </div>
@@ -337,7 +337,7 @@ export default function SimulatorPage() {
                   {lastResult.intent && (
                     <span style={{
                       display: "inline-block", background: "rgba(27,42,107,.2)", border: "1px solid #2a2a2a",
-                      color: "#8899aa", fontSize: 9, fontFamily: theme.font.label,
+                      color: "#c0d0e0", fontSize: 9, fontFamily: theme.font.label,
                       padding: "2px 8px", borderRadius: 3,
                     }}>
                       intent: {lastResult.intent}
@@ -397,7 +397,7 @@ export default function SimulatorPage() {
                 <button
                   onClick={() => { setHistory([]); setLastResult(null); }}
                   style={{
-                    background: "transparent", border: "1px solid #2a2a2a", color: "#556677",
+                    background: "transparent", border: "1px solid #2a2a2a", color: "#e4e9f0",
                     fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".10em",
                     textTransform: "uppercase", padding: "3px 8px", borderRadius: 3, cursor: "pointer",
                   }}

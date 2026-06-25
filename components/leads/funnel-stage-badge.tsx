@@ -1,6 +1,6 @@
 const STAGE_CFG: Record<string, { label: string; color: string; bg: string; border: string }> = {
-  lead_novo:              { label: "Lead Novo",          color: "#8899aa", bg: "rgba(136,153,170,.08)", border: "rgba(136,153,170,.25)" },
-  atendido_sdr:           { label: "Atendido SDR",      color: "#8899aa", bg: "rgba(136,153,170,.08)", border: "rgba(136,153,170,.25)" },
+  lead_novo:              { label: "Lead Novo",          color: "#c0d0e0", bg: "rgba(136,153,170,.08)", border: "rgba(136,153,170,.25)" },
+  atendido_sdr:           { label: "Atendido SDR",      color: "#c0d0e0", bg: "rgba(136,153,170,.08)", border: "rgba(136,153,170,.25)" },
   qualificacao_inicial:   { label: "Qualif. Inicial",   color: "#6390f5", bg: "rgba(99,144,245,.08)",  border: "rgba(99,144,245,.25)" },
   cobertura_validada:     { label: "Cobertura Valid.",   color: "#6390f5", bg: "rgba(99,144,245,.08)",  border: "rgba(99,144,245,.25)" },
   produto_definido:       { label: "Produto Definido",  color: "#6390f5", bg: "rgba(99,144,245,.08)",  border: "rgba(99,144,245,.25)" },
@@ -18,7 +18,7 @@ const STAGE_CFG: Record<string, { label: string; color: string; bg: string; bord
 };
 
 export function FunnelStageBadge({ stage }: { stage: string | null }) {
-  const cfg = STAGE_CFG[stage ?? ""] ?? { label: stage ?? "?", color: "#8899aa", bg: "rgba(136,153,170,.06)", border: "rgba(136,153,170,.2)" };
+  const cfg = STAGE_CFG[stage ?? ""] ?? { label: stage ?? "?", color: "#c0d0e0", bg: "rgba(136,153,170,.06)", border: "rgba(136,153,170,.2)" };
   return (
     <span style={{
       display: "inline-block", padding: "2px 8px", borderRadius: 3,

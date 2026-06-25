@@ -31,10 +31,10 @@ const PIPELINE_STAGES = new Set([
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const S = {
   card:    { background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8 } as React.CSSProperties,
-  label:   { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#556677", fontFamily: theme.font.label },
+  label:   { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#e4e9f0", fontFamily: theme.font.label },
   value:   { fontSize: 28, fontWeight: 700, color: "#FFFFFF", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", lineHeight: 1 },
   section: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#c0c8d8", fontFamily: theme.font.label, marginBottom: 12 } as React.CSSProperties,
-  muted:   { color: "#8899aa", fontSize: 11, fontFamily: theme.font.label } as React.CSSProperties,
+  muted:   { color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label } as React.CSSProperties,
 };
 
 // ── Interfaces ────────────────────────────────────────────────────────────────
@@ -321,13 +321,13 @@ export default async function VendedoresPage() {
                 <span style={{ color: "#c8d8e8", fontSize: 11, fontFamily: theme.font.label, minWidth: 60 }}>
                   ...{w.phone.slice(-4)}
                 </span>
-                <span style={{ color: "#8899aa", fontSize: 11, fontFamily: theme.font.label, minWidth: 120 }}>
+                <span style={{ color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label, minWidth: 120 }}>
                   {w.name}
                 </span>
                 {scoreMap[w.phone] && (
                   <LeadScoreBadge score={scoreMap[w.phone].score} tier={scoreMap[w.phone].tier} size="sm" />
                 )}
-                <span style={{ color: "#8899aa", fontSize: 10, fontFamily: theme.font.label }}>
+                <span style={{ color: "#c0d0e0", fontSize: 10, fontFamily: theme.font.label }}>
                   {VENDOR_LABELS[w.rt]?.name ?? w.rt}
                 </span>
                 <span style={{
@@ -377,7 +377,7 @@ export default async function VendedoresPage() {
                   <td style={{ color: "#c8d8e8", fontSize: 11, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right", padding: "7px 0" }}>{pct}</td>
                   <td style={{ color: "#c8d8e8", fontSize: 11, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right", padding: "7px 0" }}>{avgH}</td>
                   <td style={{ color: "#c8d8e8", fontSize: 11, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right", padding: "7px 0" }}>{m.pipeline}</td>
-                  <td style={{ color: m.converted > 0 ? "#22c55e" : "#8899aa", fontSize: 11, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right", padding: "7px 0", fontWeight: 700 }}>{m.converted}</td>
+                  <td style={{ color: m.converted > 0 ? "#22c55e" : "#c0d0e0", fontSize: 11, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right", padding: "7px 0", fontWeight: 700 }}>{m.converted}</td>
                 </tr>
               );
             })}

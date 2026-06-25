@@ -80,7 +80,7 @@ export function LeadTimeline({
   const display = merged.slice(0, 50);
 
   if (display.length === 0) {
-    return <p style={{ color: "#8899aa", fontSize: 11, fontFamily: "'Courier New', monospace" }}>Sem eventos registrados.</p>;
+    return <p style={{ color: "#c0d0e0", fontSize: 11, fontFamily: "'Courier New', monospace" }}>Sem eventos registrados.</p>;
   }
 
   return (
@@ -121,12 +121,12 @@ export function LeadTimeline({
                 <span style={{ color: "#c8d8e8", fontSize: 11, fontFamily: "'Courier New', monospace", fontWeight: 600 }}>
                   {title}
                 </span>
-                <span style={{ color: "#556677", fontSize: 9, fontFamily: "'Courier New', monospace", flexShrink: 0, marginLeft: 8 }}>
+                <span style={{ color: "#e4e9f0", fontSize: 9, fontFamily: "'Courier New', monospace", flexShrink: 0, marginLeft: 8 }}>
                   {fmtRelative(item.created_at)}
                 </span>
               </div>
               {detail && (
-                <p style={{ color: "#8899aa", fontSize: 10, fontFamily: "'Courier New', monospace", marginTop: 2, wordBreak: "break-word" }}>
+                <p style={{ color: "#c0d0e0", fontSize: 10, fontFamily: "'Courier New', monospace", marginTop: 2, wordBreak: "break-word" }}>
                   {detail}
                 </p>
               )}
@@ -145,7 +145,7 @@ export function LeadTimeline({
         );
       })}
       {merged.length > 50 && (
-        <p style={{ color: "#556677", fontSize: 9, fontFamily: "'Courier New', monospace", textAlign: "center", padding: "8px 0" }}>
+        <p style={{ color: "#e4e9f0", fontSize: 9, fontFamily: "'Courier New', monospace", textAlign: "center", padding: "8px 0" }}>
           +{merged.length - 50} eventos anteriores
         </p>
       )}

@@ -26,8 +26,8 @@ const VENDOR_LABELS: Record<string, string> = {
 
 const S = {
   card: { background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8 } as React.CSSProperties,
-  muted: { color: "#8899aa", fontSize: 11, fontFamily: theme.font.label } as React.CSSProperties,
-  kpiLabel: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#556677", fontFamily: theme.font.label },
+  muted: { color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label } as React.CSSProperties,
+  kpiLabel: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#e4e9f0", fontFamily: theme.font.label },
   kpiValue: { fontSize: 24, fontWeight: 700, color: "#FFFFFF", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", lineHeight: 1 },
 };
 
@@ -82,7 +82,7 @@ export default async function PipelinePage({ searchParams }: { searchParams: Pro
   const kpis = [
     { label: "Leads ativos", value: String(ativos.length), accent: "#185FA5", sub: "em aberto (exclui fechado/perdido)" },
     { label: "Valor estimado", value: brl(valorEstimado), accent: "#22c55e", sub: `${ativos.length} leads × R$${PRECO_KG}/kg` },
-    { label: "Parados >7d", value: String(parados7d), accent: parados7d > 0 ? "#f59e0b" : "#556677", sub: "sem mover desde o handoff" },
+    { label: "Parados >7d", value: String(parados7d), accent: parados7d > 0 ? "#f59e0b" : "#e4e9f0", sub: "sem mover desde o handoff" },
   ];
 
   return (

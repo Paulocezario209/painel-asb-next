@@ -22,7 +22,7 @@ const SEM: Record<string, { cor: string; label: string }> = {
   vermelho: { cor: "#f85149", label: "CRÍTICO" },
   amarelo: { cor: "#d29922", label: "ALERTA" },
   verde: { cor: "#2ea043", label: "OK" },
-  sem_cmd: { cor: "#556677", label: "SEM CMD" },
+  sem_cmd: { cor: "#e4e9f0", label: "SEM CMD" },
 };
 const num = (n: number | null, d = 1) =>
   n == null ? "—" : n.toLocaleString("pt-BR", { minimumFractionDigits: d, maximumFractionDigits: d });
@@ -31,7 +31,7 @@ export default function EstoqueClient({ rows }: { rows: CoberturaRow[] }) {
   const [q, setQ] = useState("");
 
   const th: React.CSSProperties = {
-    fontSize: 9, color: "#556677", fontFamily: theme.font.label, letterSpacing: ".1em",
+    fontSize: 9, color: "#e4e9f0", fontFamily: theme.font.label, letterSpacing: ".1em",
     textTransform: "uppercase", padding: "8px 10px", textAlign: "right", borderBottom: "1px solid #1B2A6B",
   };
   const td: React.CSSProperties = { padding: "7px 10px", color: "#c8d8e8", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", fontSize: 12, textAlign: "right" };
@@ -57,7 +57,7 @@ export default function EstoqueClient({ rows }: { rows: CoberturaRow[] }) {
           />
           {q ? (
             <>
-              <span style={{ color: "#556677", fontFamily: theme.font.label, fontSize: 10, whiteSpace: "nowrap" }}>{filtered.length} de {rows.length}</span>
+              <span style={{ color: "#e4e9f0", fontFamily: theme.font.label, fontSize: 10, whiteSpace: "nowrap" }}>{filtered.length} de {rows.length}</span>
               <button
                 onClick={() => setQ("")}
                 aria-label="Limpar busca"
@@ -84,9 +84,9 @@ export default function EstoqueClient({ rows }: { rows: CoberturaRow[] }) {
         </thead>
         <tbody>
           {rows.length === 0 ? (
-            <tr><td colSpan={7} style={{ ...td, textAlign: "center", color: "#556677", padding: 20 }}>sem produtos ancorados</td></tr>
+            <tr><td colSpan={7} style={{ ...td, textAlign: "center", color: "#e4e9f0", padding: 20 }}>sem produtos ancorados</td></tr>
           ) : filtered.length === 0 ? (
-            <tr><td colSpan={7} style={{ ...td, textAlign: "center", color: "#556677", padding: 20 }}>Nenhum insumo encontrado para &quot;{q}&quot;</td></tr>
+            <tr><td colSpan={7} style={{ ...td, textAlign: "center", color: "#e4e9f0", padding: 20 }}>Nenhum insumo encontrado para &quot;{q}&quot;</td></tr>
           ) : (
             filtered.map((r) => {
               const s = SEM[r.semaforo] ?? SEM.sem_cmd;
@@ -95,7 +95,7 @@ export default function EstoqueClient({ rows }: { rows: CoberturaRow[] }) {
                   <td style={{ ...td, textAlign: "left", color: "#FFFFFF", maxWidth: 320, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {r.descricao || `#${r.id_produto}`}
                   </td>
-                  <td style={{ ...td, textAlign: "left", color: "#8899aa" }}>{r.grupo || "—"}</td>
+                  <td style={{ ...td, textAlign: "left", color: "#c0d0e0" }}>{r.grupo || "—"}</td>
                   <td style={td}>{r.unidade || "—"}</td>
                   <td style={{ ...td, color: (r.saldo_atual ?? 0) < 0 ? "#f85149" : "#c8d8e8" }}>{num(r.saldo_atual, 3)}</td>
                   <td style={td}>{num(r.cmd_dia, 3)}</td>

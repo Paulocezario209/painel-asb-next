@@ -16,7 +16,7 @@ export type SemanaPonto = {
 export function CustosChart({ data }: { data: SemanaPonto[] }) {
   if (!data || data.length === 0) {
     return (
-      <p style={{ color: "#556677", fontSize: 11, fontFamily: mono, padding: 20, textAlign: "center" }}>
+      <p style={{ color: "#e4e9f0", fontSize: 11, fontFamily: mono, padding: 20, textAlign: "center" }}>
         sem dados semanais ainda (aguardando produção + upload de apontamentos)
       </p>
     );

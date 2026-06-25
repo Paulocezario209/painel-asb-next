@@ -107,7 +107,7 @@ export function MissaoDoDia({ data, vendor }: Props) {
         >
           {emoji} {saudacao}, {nomeAlvo}!
         </p>
-        <p style={{ fontSize: 10, color: "#8899aa", fontFamily: theme.font.label, letterSpacing: ".05em" }}>
+        <p style={{ fontSize: 10, color: "#c0d0e0", fontFamily: theme.font.label, letterSpacing: ".05em" }}>
           {dataLabel} · Pronto pra mais um desafio?
         </p>
       </div>
@@ -166,7 +166,7 @@ export function MissaoDoDia({ data, vendor }: Props) {
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 14 }}>
             {dormentesFiltrado.slice(0, 5).map((d, i) => {
-              const cor = d.prioridade === "alta" ? theme.colors.critical : d.prioridade === "media" ? "#BA7517" : "#8899aa";
+              const cor = d.prioridade === "alta" ? theme.colors.critical : d.prioridade === "media" ? "#BA7517" : "#c0d0e0";
               return (
                 <div
                   key={`${d.cliente}-${i}`}
@@ -180,7 +180,7 @@ export function MissaoDoDia({ data, vendor }: Props) {
                   <div style={{ fontSize: 10, color: "#fff", fontWeight: 700, fontFamily: theme.font.label, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={d.cliente}>
                     {d.cliente}
                   </div>
-                  <div style={{ fontSize: 9, color: "#8899aa", fontFamily: theme.font.label, marginTop: 1 }}>
+                  <div style={{ fontSize: 9, color: "#c0d0e0", fontFamily: theme.font.label, marginTop: 1 }}>
                     {d.dias_sem_comprar}d ausente · hist. <span className="priv-brl">{fmtBRL(d.valor_historico)}</span>
                   </div>
                 </div>
@@ -240,7 +240,7 @@ export function MissaoDoDia({ data, vendor }: Props) {
         <p style={{ fontSize: 9, fontWeight: 700, color: theme.colors.textPrimary, fontFamily: theme.font.label, letterSpacing: ".15em", marginBottom: 8, textTransform: "uppercase" }}>
           🎯 PROGRAMA
         </p>
-        <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 4, fontSize: 10, color: "#8899aa", fontFamily: theme.font.label }}>
+        <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 4, fontSize: 10, color: "#c0d0e0", fontFamily: theme.font.label }}>
           <li>▸ <strong style={{ color: theme.colors.success }}>CURTO:</strong> bater a próxima meta de entrega</li>
           <li>▸ <strong style={{ color: theme.colors.warning }}>MÉDIO:</strong> +10% ticket médio no mês</li>
           <li>▸ <strong style={{ color: theme.colors.brandAsb }}>LONGO:</strong> dobrar recorrentes em 90 dias</li>

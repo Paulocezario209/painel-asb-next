@@ -18,7 +18,7 @@ type MapaRow = {
 };
 
 function corCobertura(pct: number | null): string {
-  if (pct == null) return "#556677";
+  if (pct == null) return "#e4e9f0";
   if (pct >= 70) return "#2ea043";
   if (pct >= 30) return "#d29922";
   return "#f85149";
@@ -46,7 +46,7 @@ export default async function InventarioPage() {
   const emRevisao = mapa.filter((m) => m.contagem_em_revisao).length;
   const comFisica = mapa.filter((m) => m.tem_contagem_fisica).length;
 
-  const th: React.CSSProperties = { fontSize: 9, color: "#556677", fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", padding: "8px 10px", textAlign: "right", borderBottom: "1px solid #1B2A6B" };
+  const th: React.CSSProperties = { fontSize: 9, color: "#e4e9f0", fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", padding: "8px 10px", textAlign: "right", borderBottom: "1px solid #1B2A6B" };
   const td: React.CSSProperties = { padding: "7px 10px", color: "#c8d8e8", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", fontSize: 12, textAlign: "right" };
   const card: React.CSSProperties = { background: "#0f1428", border: "1px solid #1B2A6B", borderRadius: 6, overflowX: "auto" };
 
@@ -54,7 +54,7 @@ export default async function InventarioPage() {
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <div>
         <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>Mapa do Inventário</h1>
-        <p style={{ color: "#8899aa", fontSize: 11, fontFamily: theme.font.label }}>
+        <p style={{ color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label }}>
           Saúde da contagem: última contagem (física ou acerto 16/17), há quantos dias, cobertura por grupo, divergências.
         </p>
       </div>
@@ -75,15 +75,15 @@ export default async function InventarioPage() {
           </tr></thead>
           <tbody>
             {grupos.length === 0 ? (
-              <tr><td colSpan={6} style={{ ...td, textAlign: "center", color: "#556677", padding: 20 }}>aguardando dados (aplicar migrations)</td></tr>
+              <tr><td colSpan={6} style={{ ...td, textAlign: "center", color: "#e4e9f0", padding: 20 }}>aguardando dados (aplicar migrations)</td></tr>
             ) : grupos.map((g) => (
               <tr key={`${g.id_grupo}`} style={{ borderBottom: "1px solid #0b0f1d" }}>
                 <td style={{ ...td, textAlign: "left", color: "#FFFFFF" }}>{g.grupo_nome || "—"}</td>
                 <td style={td}>{g.n_contados_fisico}/{g.n_produtos}</td>
                 <td style={{ ...td, color: corCobertura(g.cobertura_pct), fontWeight: 700 }}>{g.cobertura_pct == null ? "—" : `${g.cobertura_pct}%`}</td>
                 <td style={td}>{n0(g.dias_medio_desde_contagem)}</td>
-                <td style={{ ...td, color: g.n_em_revisao > 0 ? "#d29922" : "#556677" }}>{g.n_em_revisao}</td>
-                <td style={{ ...td, color: g.n_divergencia_grande > 0 ? "#f85149" : "#556677" }}>{g.n_divergencia_grande}</td>
+                <td style={{ ...td, color: g.n_em_revisao > 0 ? "#d29922" : "#e4e9f0" }}>{g.n_em_revisao}</td>
+                <td style={{ ...td, color: g.n_divergencia_grande > 0 ? "#f85149" : "#e4e9f0" }}>{g.n_divergencia_grande}</td>
               </tr>
             ))}
           </tbody>
@@ -99,11 +99,11 @@ export default async function InventarioPage() {
           </tr></thead>
           <tbody>
             {aContar.length === 0 ? (
-              <tr><td colSpan={5} style={{ ...td, textAlign: "center", color: "#556677", padding: 20 }}>—</td></tr>
+              <tr><td colSpan={5} style={{ ...td, textAlign: "center", color: "#e4e9f0", padding: 20 }}>—</td></tr>
             ) : aContar.map((m) => (
               <tr key={m.id_produto} style={{ borderBottom: "1px solid #0b0f1d" }}>
                 <td style={{ ...td, textAlign: "left", color: "#FFFFFF", maxWidth: 320, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.descricao || `#${m.id_produto}`}</td>
-                <td style={{ ...td, textAlign: "left", color: "#8899aa" }}>{m.grupo_nome || "—"}</td>
+                <td style={{ ...td, textAlign: "left", color: "#c0d0e0" }}>{m.grupo_nome || "—"}</td>
                 <td style={td}>{m.ultima_contagem ? m.ultima_contagem.slice(0, 10).split("-").reverse().join("/") : "(sem acerto ≤90d)"}</td>
                 <td style={{ ...td, color: m.dias_desde_contagem == null ? "#f85149" : "#c8d8e8" }}>{m.dias_desde_contagem == null ? "—" : n0(m.dias_desde_contagem)}</td>
                 <td style={{ ...td, textAlign: "center" }}>{m.tem_contagem_fisica ? "✓" : "❌"}</td>

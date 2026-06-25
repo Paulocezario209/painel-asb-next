@@ -147,7 +147,7 @@ export function VendasCnbUpload() {
           <p style={{ fontSize: 13, color: "#FFFFFF", fontWeight: 700, fontFamily: "'Courier New', monospace" }}>
             {isDragActive ? "Solte o arquivo aqui" : "Arraste XLSX de vendas CNB ou clique pra escolher"}
           </p>
-          <p style={{ fontSize: 10, color: "#556677", marginTop: 8, fontFamily: "'Courier New', monospace" }}>
+          <p style={{ fontSize: 10, color: "#e4e9f0", marginTop: 8, fontFamily: "'Courier New', monospace" }}>
             Colunas esperadas: numero · data · cliente_cnpj_cpf · cliente_nome · valor_total · forma_pagamento · vendedor
           </p>
         </div>
@@ -203,7 +203,7 @@ export function VendasCnbUpload() {
                 <tbody>
                   {preview.previa.map((p) => (
                     <tr key={p.row} style={{ borderTop: "1px solid #2a2a2a" }}>
-                      <td style={{ ...td, color: "#8899aa" }}>#{p.numero}</td>
+                      <td style={{ ...td, color: "#c0d0e0" }}>#{p.numero}</td>
                       <td style={{ ...td, color: "#FFFFFF" }}>{p.cliente_nome}</td>
                       <td style={td}>{p.cliente_documento_tipo} {p.cliente_documento}</td>
                       <td style={td}>{p.data_venda}</td>
@@ -228,7 +228,7 @@ export function VendasCnbUpload() {
           )}
 
           <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 16 }}>
-            <button onClick={reset} style={{ background: "transparent", border: "1px solid #2a2a2a", color: "#8899aa", padding: "8px 14px", borderRadius: 4, fontSize: 11, fontFamily: "'Courier New', monospace", cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+            <button onClick={reset} style={{ background: "transparent", border: "1px solid #2a2a2a", color: "#c0d0e0", padding: "8px 14px", borderRadius: 4, fontSize: 11, fontFamily: "'Courier New', monospace", cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
               <RotateCcw size={14} /> Cancelar
             </button>
             <button onClick={aplicar} disabled={preview.validas === 0} style={{ background: preview.validas > 0 ? "#22c55e" : "#2a2a2a", border: "none", color: "#fff", padding: "8px 16px", borderRadius: 4, fontSize: 11, fontWeight: 700, fontFamily: "'Courier New', monospace", cursor: preview.validas > 0 ? "pointer" : "not-allowed", letterSpacing: ".05em", textTransform: "uppercase" }}>
@@ -244,10 +244,10 @@ export function VendasCnbUpload() {
             <CheckCircle size={24} color="#22c55e" />
             <div>
               <p style={{ fontSize: 14, fontWeight: 700, color: "#22c55e" }}>{applied.aplicadas} venda(s) CNB gravada(s)</p>
-              <p style={{ fontSize: 10, color: "#8899aa", fontFamily: "'Courier New', monospace" }}>UPSERT por número + data + documento (re-upload atualiza)</p>
+              <p style={{ fontSize: 10, color: "#c0d0e0", fontFamily: "'Courier New', monospace" }}>UPSERT por número + data + documento (re-upload atualiza)</p>
             </div>
           </div>
-          <button onClick={reset} style={{ marginTop: 8, background: "transparent", border: "1px solid #2a2a2a", color: "#8899aa", padding: "8px 14px", borderRadius: 4, fontSize: 11, fontFamily: "'Courier New', monospace", cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+          <button onClick={reset} style={{ marginTop: 8, background: "transparent", border: "1px solid #2a2a2a", color: "#c0d0e0", padding: "8px 14px", borderRadius: 4, fontSize: 11, fontFamily: "'Courier New', monospace", cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
             <Upload size={14} /> Subir outra planilha
           </button>
         </div>
@@ -259,11 +259,11 @@ export function VendasCnbUpload() {
 function Stat({ label, value, cor }: { label: string; value: number; cor: string }) {
   return (
     <div style={{ background: "#0a0f1f", borderRadius: 4, padding: "10px 12px" }}>
-      <p style={{ fontSize: 9, color: "#556677", fontFamily: "'Courier New', monospace", letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 2 }}>{label}</p>
+      <p style={{ fontSize: 9, color: "#e4e9f0", fontFamily: "'Courier New', monospace", letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 2 }}>{label}</p>
       <p style={{ fontSize: 18, color: cor, fontWeight: 700, fontFamily: "'Inter', system-ui, sans-serif" }}>{value}</p>
     </div>
   );
 }
 
-const th: React.CSSProperties = { fontSize: 9, color: "#556677", fontFamily: "'Courier New', monospace", letterSpacing: ".1em", textTransform: "uppercase", padding: "6px 8px", textAlign: "right" };
+const th: React.CSSProperties = { fontSize: 9, color: "#e4e9f0", fontFamily: "'Courier New', monospace", letterSpacing: ".1em", textTransform: "uppercase", padding: "6px 8px", textAlign: "right" };
 const td: React.CSSProperties = { padding: "6px 8px", color: "#c8d8e8", fontFamily: "'Courier New', monospace" };

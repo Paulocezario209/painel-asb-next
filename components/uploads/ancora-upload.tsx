@@ -103,7 +103,7 @@ export function AncoraUpload() {
           <p style={{ fontSize: 13, color: "#FFFFFF", fontWeight: 700, fontFamily: mono }}>
             {isDragActive ? "Solte o XLSX aqui" : "Arraste o inventário 01/05 (XLSX) ou clique"}
           </p>
-          <p style={{ fontSize: 10, color: "#556677", marginTop: 8, fontFamily: mono }}>
+          <p style={{ fontSize: 10, color: "#e4e9f0", marginTop: 8, fontFamily: mono }}>
             Aba &quot;Inventario&quot; · só linhas com Contagem/anotação · M1 grava saldo só de KG limpas
           </p>
         </div>
@@ -189,7 +189,7 @@ export function AncoraUpload() {
             <CheckCircle size={24} color="#2ea043" />
             <div>
               <p style={{ fontSize: 14, fontWeight: 700, color: "#2ea043" }}>Âncora gravada · saldo recomputado</p>
-              <p style={{ fontSize: 10, color: "#8899aa", fontFamily: mono }}>
+              <p style={{ fontSize: 10, color: "#c0d0e0", fontFamily: mono }}>
                 {applied.saldo_ancora_atualizados} saldos KG · {applied.auditoria_gravada} na auditoria · {applied.ambiguas} ambíguas
               </p>
             </div>
@@ -209,12 +209,12 @@ export function AncoraUpload() {
 function Stat({ label, value, cor }: { label: string; value: number; cor: string }) {
   return (
     <div style={{ background: "#0b0f1d", borderRadius: 4, padding: "10px 12px" }}>
-      <p style={{ fontSize: 9, color: "#556677", fontFamily: mono, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 2 }}>{label}</p>
+      <p style={{ fontSize: 9, color: "#e4e9f0", fontFamily: mono, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 2 }}>{label}</p>
       <p style={{ fontSize: 18, color: cor, fontWeight: 700, fontFamily: "Inter, sans-serif" }}>{value}</p>
     </div>
   );
 }
-const th: React.CSSProperties = { fontSize: 9, color: "#556677", fontFamily: mono, letterSpacing: ".1em", textTransform: "uppercase", padding: "6px 8px", textAlign: "right" };
+const th: React.CSSProperties = { fontSize: 9, color: "#e4e9f0", fontFamily: mono, letterSpacing: ".1em", textTransform: "uppercase", padding: "6px 8px", textAlign: "right" };
 const td: React.CSSProperties = { padding: "6px 8px", color: "#c8d8e8", fontFamily: mono };
-const btnGhost: React.CSSProperties = { background: "transparent", border: "1px solid #1B2A6B", color: "#8899aa", padding: "8px 14px", borderRadius: 4, fontSize: 11, fontFamily: mono, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 };
+const btnGhost: React.CSSProperties = { background: "transparent", border: "1px solid #1B2A6B", color: "#c0d0e0", padding: "8px 14px", borderRadius: 4, fontSize: 11, fontFamily: mono, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 };
 const btnGo = (on: boolean): React.CSSProperties => ({ background: on ? "#2ea043" : "#1B2A6B", border: "none", color: "#fff", padding: "8px 16px", borderRadius: 4, fontSize: 11, fontWeight: 700, fontFamily: mono, cursor: on ? "pointer" : "not-allowed", letterSpacing: ".05em", textTransform: "uppercase" });

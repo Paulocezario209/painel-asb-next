@@ -67,7 +67,7 @@ export function LeadNotes({ leadId, notes }: { leadId: string; notes: NoteEvent[
               <p style={{ color: "#c8d8e8", fontSize: 11, fontFamily: "'Courier New', monospace", whiteSpace: "pre-wrap" }}>
                 {String(n.payload?.content ?? "")}
               </p>
-              <p style={{ color: "#556677", fontSize: 8, fontFamily: "'Courier New', monospace", marginTop: 4 }}>
+              <p style={{ color: "#e4e9f0", fontSize: 8, fontFamily: "'Courier New', monospace", marginTop: 4 }}>
                 {n.payload?.author ?? "?"} · {new Date(n.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
               </p>
             </div>

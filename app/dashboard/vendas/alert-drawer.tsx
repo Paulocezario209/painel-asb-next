@@ -57,7 +57,7 @@ export type ClienteDormenteRow = {
 
 // ── Configs de coluna (decisões de layout do Paulo) ──────────────────────────
 export const PEDIDOS_ATRASADOS_COLUMNS: DrawerColumn<PedidoAtrasadoRow>[] = [
-  { key: "n_pedido", label: "Nº Pedido", render: (r) => <span style={{ color: "#8899aa" }}>#{r.n_pedido ?? "—"}</span> },
+  { key: "n_pedido", label: "Nº Pedido", render: (r) => <span style={{ color: "#c0d0e0" }}>#{r.n_pedido ?? "—"}</span> },
   { key: "cliente_nome", label: "Cliente", render: (r) => r.cliente_nome ?? "—" },
   { key: "valor_total_brl", label: "Valor", align: "right", render: (r) => fmtBRL(r.valor_total_brl) },
   { key: "dias_atraso", label: "Dias atrasado", align: "right",
@@ -112,19 +112,19 @@ export function AlertDrawer<T extends Record<string, unknown>>({
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
           <div>
             <p style={{ fontSize: 12, fontWeight: 700, color: "#FFFFFF", fontFamily: theme.font.label, textTransform: "uppercase", letterSpacing: ".1em" }}>{title}</p>
-            {subtitle && <p style={{ fontSize: 10, color: "#8899aa", marginTop: 4 }}>{subtitle}</p>}
+            {subtitle && <p style={{ fontSize: 10, color: "#c0d0e0", marginTop: 4 }}>{subtitle}</p>}
           </div>
-          <button onClick={onClose} aria-label="Fechar" style={{ background: "none", border: "none", color: "#8899aa", fontSize: 22, cursor: "pointer", lineHeight: 1 }}>×</button>
+          <button onClick={onClose} aria-label="Fechar" style={{ background: "none", border: "none", color: "#c0d0e0", fontSize: 22, cursor: "pointer", lineHeight: 1 }}>×</button>
         </div>
 
         {rows.length === 0 ? (
-          <p style={{ fontSize: 12, color: "#8899aa" }}>Nenhum item.</p>
+          <p style={{ fontSize: 12, color: "#c0d0e0" }}>Nenhum item.</p>
         ) : (
           <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: theme.font.num, fontSize: 11 }}>
             <thead>
               <tr style={{ borderBottom: "1px solid #2a2a2a" }}>
                 {columns.map((c) => (
-                  <th key={c.key} style={{ textAlign: c.align ?? "left", padding: "6px 8px", color: "#556677", fontSize: 9, textTransform: "uppercase", letterSpacing: ".1em", fontWeight: 700 }}>{c.label}</th>
+                  <th key={c.key} style={{ textAlign: c.align ?? "left", padding: "6px 8px", color: "#e4e9f0", fontSize: 9, textTransform: "uppercase", letterSpacing: ".1em", fontWeight: 700 }}>{c.label}</th>
                 ))}
               </tr>
             </thead>

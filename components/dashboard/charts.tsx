@@ -10,7 +10,7 @@ type WeekPoint   = { week: string; count: number };
 type VendorRow   = { label: string; handoffs: number; confirmed: number; converted: number };
 
 const GRID  = "rgba(27,42,107,.35)";
-const TEXT  = "#556677";
+const TEXT  = "#e4e9f0";
 const RED   = "#C8102E";
 const BLUE  = "#2a2a2a";
 const BLUE2 = "#2A3F8F";
@@ -23,7 +23,7 @@ const tooltipStyle = {
     boxShadow: "0 4px 20px rgba(200,16,46,.15)",
   },
   itemStyle:  { color: "#c8d8e8" },
-  labelStyle: { color: "#556677", fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase" as const },
+  labelStyle: { color: "#e4e9f0", fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase" as const },
 };
 
 const axisStyle = { fontSize: 10, fontFamily: "'Courier New', monospace", fill: TEXT };

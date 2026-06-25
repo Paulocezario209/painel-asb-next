@@ -35,7 +35,7 @@ const GREEN = "#2ea043";
 const C_CRIT = "#C8102E";   // alta de preço / EVITAR — ruim p/ comprar
 const C_WARN = "#D4A017";   // AGUARDAR
 const C_OK = "#22c55e";     // queda de preço / COMPRAR — bom p/ comprar
-const C_MUTED = "#8899aa";
+const C_MUTED = "#c0d0e0";
 
 // Cores por proteína (linhas do gráfico)
 const COR_PROT: Record<string, string> = {
@@ -276,7 +276,7 @@ export default function MercadoClient({
         </div>
       </div>
 
-      <p style={{ color: "#556677", fontSize: 9, fontFamily: theme.font.label }}>
+      <p style={{ color: "#e4e9f0", fontSize: 9, fontFamily: theme.font.label }}>
         Fonte cotações: indicador CEPEA via Notícias Agrícolas (boi R$/@, frango/suíno R$/kg · suíno = média das praças).
         Notícias: Google News classificadas por IA. Análise: gpt-4o-mini. Atualização diária 06h BRT (workflow ASB_MERCADO_INTELIGENCIA).
       </p>

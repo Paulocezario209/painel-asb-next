@@ -59,7 +59,7 @@ export function AlertasComerciais({ data }: { data: AlertasResponse }) {
         <p style={{ fontSize: 11, fontWeight: 700, color: "#22c55e", fontFamily: theme.font.label, textTransform: "uppercase", letterSpacing: ".1em", marginBottom: 6 }}>
           🟢 ALERTAS COMERCIAIS
         </p>
-        <p style={{ fontSize: 12, color: "#8899aa" }}>
+        <p style={{ fontSize: 12, color: "#c0d0e0" }}>
           Nenhum alerta no momento. Operação saudável.
         </p>
       </div>
@@ -121,7 +121,7 @@ export function AlertasComerciais({ data }: { data: AlertasResponse }) {
               <p style={{ fontSize: 12, fontWeight: 700, color: "#FFFFFF", lineHeight: 1.3 }}>
                 {a.titulo}
               </p>
-              <p style={{ fontSize: 10, color: "#8899aa", lineHeight: 1.4 }}>
+              <p style={{ fontSize: 10, color: "#c0d0e0", lineHeight: 1.4 }}>
                 {a.descricao}
               </p>
             </>

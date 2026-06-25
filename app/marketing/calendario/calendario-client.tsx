@@ -16,7 +16,7 @@ export type DiaRow = {
 const RED = theme.colors.critical;       // #C8102E
 const GREEN = theme.colors.success;      // #22c55e
 const YELLOW = theme.colors.chartYellow; // #e8b923
-const MUT = theme.colors.neutral;        // #556677
+const MUT = theme.colors.neutral;        // #e4e9f0
 
 const MESES_FULL = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 const MESES_ABR = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
@@ -140,7 +140,7 @@ export function CalendarioClient({ ano, rows }: { ano: number; rows: DiaRow[] })
                 <KV label="Gasto" valor={fmtBRLc(detalheDia.gasto)} cor={YELLOW} />
                 <KV label="Leads" valor={String(detalheDia.leads)} cor="#c8d8e8" />
                 <KV label="CPL" valor={detalheDia.leads > 0 ? fmtBRLc(detalheDia.gasto / detalheDia.leads) : "—"} cor="#fff" />
-                <KV label="Anúncios" valor={String(detalheDia.ads.size)} cor="#8899aa" />
+                <KV label="Anúncios" valor={String(detalheDia.ads.size)} cor="#c0d0e0" />
                 <KV label="Melhor criativo" valor={detalheDia.bestName ? `${detalheDia.bestName} (${fmtBRLc(detalheDia.bestCpl)})` : "—"} cor={GREEN} />
               </div>
             ) : (
@@ -186,7 +186,7 @@ function MonthGrid({ ano, mes, byDia, maxGastoDia, diaSel, onSel }: {
               style={{
                 aspectRatio: "1", borderRadius: 3, cursor: agg ? "pointer" : "default",
                 background: bg, border: sel ? `2px solid ${YELLOW}` : "1px solid #2a2a2a",
-                color: intensidade > 0.45 ? "#fff" : "#8899aa", fontSize: 9, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums",
+                color: intensidade > 0.45 ? "#fff" : "#c0d0e0", fontSize: 9, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums",
                 display: "flex", alignItems: "center", justifyContent: "center",
               }}>{d}</button>
           );

@@ -226,7 +226,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
           <div style={{ ...CARD, padding: "20px 24px" }}>
             <p style={{ ...LABEL, marginBottom: 16 }}>
               Conversa Vendedor
-              <span style={{ color: "#556677", marginLeft: 8 }}>({vmTotal ?? 0} msgs)</span>
+              <span style={{ color: "#e4e9f0", marginLeft: 8 }}>({vmTotal ?? 0} msgs)</span>
             </p>
             <VendorConversation messages={vendorMsgs} total={vmTotal ?? 0} />
           </div>
@@ -235,7 +235,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
           <div style={{ ...CARD, padding: "20px 24px" }}>
             <p style={{ ...LABEL, marginBottom: 16 }}>
               Cadência de Follow-up
-              <span style={{ color: "#556677", marginLeft: 8 }}>({(followupRows ?? []).length} waves)</span>
+              <span style={{ color: "#e4e9f0", marginLeft: 8 }}>({(followupRows ?? []).length} waves)</span>
             </p>
             <FollowupCadence rows={(followupRows ?? []) as FollowupRow[]} />
           </div>

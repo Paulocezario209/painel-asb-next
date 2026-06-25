@@ -36,7 +36,7 @@ function fmtProximo(iso: string | null): { label: string; color: string; pulse: 
 // ── Design tokens ────────────────────────────────────────────────────────────
 const C = {
   bg: "#1a1a1a", bg2: "#0f0f0f", border: "#2a2a2a", border2: "#2a2a2a",
-  text: "#FFFFFF", muted: "#8899aa", link: "#c0c8d8", green: "#22c55e",
+  text: "#FFFFFF", muted: "#c0d0e0", link: "#c0c8d8", green: "#22c55e",
   amber: "#f59e0b", red: "#C8102E", blue: "#3a3a3a",
 };
 

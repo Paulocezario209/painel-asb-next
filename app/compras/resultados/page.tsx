@@ -198,7 +198,7 @@ export default async function ResultadosPage({
     fontSize: 9,
     letterSpacing: ".15em",
     textTransform: "uppercase",
-    color: "#556677",
+    color: "#e4e9f0",
     fontFamily: theme.font.label,
   };
   const mtdLabel = isMesCorrente ? "MTD" : "Realizado";
@@ -220,7 +220,7 @@ export default async function ResultadosPage({
         }}
       >
         Resultado de {MESES_PT[mesSel]}/{anoSel}{" "}
-        <span style={{ color: "#556677", fontSize: 11 }}>
+        <span style={{ color: "#e4e9f0", fontSize: 11 }}>
           {isMesCorrente ? `(em andamento · ${duDecorridos}/${duTotal} dias úteis)` : "(mês fechado)"}
         </span>
       </h1>
@@ -242,7 +242,7 @@ export default async function ResultadosPage({
             const futuro = mn > mesCorrenteNum;
             const corrente = mn === mesCorrenteNum;
             const status = futuro ? "futuro" : corrente ? "em andamento" : "fechado";
-            const cor = row ? semCor(row.semaforo) : "#556677";
+            const cor = row ? semCor(row.semaforo) : "#e4e9f0";
 
             const tile = (
               <div
@@ -260,15 +260,15 @@ export default async function ResultadosPage({
                   <span style={{ color: ativo ? "#FFFFFF" : "#c8d8e8", fontSize: 12, fontWeight: 700 }}>{MESES_PT[i]}</span>
                   <span style={{ width: 8, height: 8, borderRadius: "50%", background: cor, flexShrink: 0 }} />
                 </div>
-                <div style={{ ...labelS, marginTop: 4, fontSize: 8, color: corrente ? "#d29922" : "#556677" }}>{status}</div>
+                <div style={{ ...labelS, marginTop: 4, fontSize: 8, color: corrente ? "#d29922" : "#e4e9f0" }}>{status}</div>
                 {row ? (
-                  <div style={{ marginTop: 6, fontSize: 10, color: "#8899aa", lineHeight: 1.5 }}>
+                  <div style={{ marginTop: 6, fontSize: 10, color: "#c0d0e0", lineHeight: 1.5 }}>
                     <div>Fat: <b style={{ color: "#c8d8e8" }}>{brl0(Number(row.faturado_brl || 0))}</b></div>
                     <div>Comp: <b style={{ color: "#c8d8e8" }}>{brl0(Number(row.compras_brl || 0))}</b></div>
                     <div style={{ color: cor, fontWeight: 700 }}>{Number(row.pct_compras_faturado ?? 0).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%</div>
                   </div>
                 ) : (
-                  <div style={{ marginTop: 6, fontSize: 9, color: "#556677" }}>{futuro ? "—" : "sem dados"}</div>
+                  <div style={{ marginTop: 6, fontSize: 9, color: "#e4e9f0" }}>{futuro ? "—" : "sem dados"}</div>
                 )}
               </div>
             );
@@ -305,11 +305,11 @@ export default async function ResultadosPage({
           ) : (
             <>
               <div style={{ fontSize: 26, fontWeight: 700, color: "#FFFFFF", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", marginTop: 6 }}>{brl(comprasMtd)}</div>
-              <div style={{ ...labelS, marginTop: 8, color: "#8899aa", textTransform: "none", letterSpacing: 0 }}>
+              <div style={{ ...labelS, marginTop: 8, color: "#c0d0e0", textTransform: "none", letterSpacing: 0 }}>
                 Recebido (NF): <b style={{ color: "#2ea043" }}>{brl(recebidoMtd)}</b> · A chegar: <b style={{ color: "#d29922" }}>{brl(aChegarMtd)}</b>
               </div>
               {devolucaoMtd > 0 && (
-                <div style={{ ...labelS, marginTop: 4, color: "#8899aa", textTransform: "none", letterSpacing: 0 }}>
+                <div style={{ ...labelS, marginTop: 4, color: "#c0d0e0", textTransform: "none", letterSpacing: 0 }}>
                   (−) Devolução: <b style={{ color: "#d29922" }}>{brl(devolucaoMtd)}</b>
                 </div>
               )}
@@ -322,7 +322,7 @@ export default async function ResultadosPage({
           <div style={{ fontSize: 26, fontWeight: 700, color: sem.cor, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", marginTop: 6 }}>
             {pct}% <span style={{ fontSize: 12, fontFamily: theme.font.label }}>{sem.label}</span>
           </div>
-          <div style={{ ...labelS, marginTop: 8, color: "#556677", textTransform: "none", letterSpacing: 0 }}>teto 54% · 🟢≤54 🟡54-65 🔴&gt;65</div>
+          <div style={{ ...labelS, marginTop: 8, color: "#e4e9f0", textTransform: "none", letterSpacing: 0 }}>teto 54% · 🟢≤54 🟡54-65 🔴&gt;65</div>
         </div>
       </div>
 

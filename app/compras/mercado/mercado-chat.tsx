@@ -9,7 +9,7 @@ import { theme } from "@/lib/theme";
 const GREEN = "#2ea043";
 const BG = "#0d1117";
 const BORDER = "#1e2a35";
-const MUTED = "#8899aa";
+const MUTED = "#c0d0e0";
 
 type Cotacao = { proteina: string; valor: number; unidade: string; variacao_pct: number | null };
 

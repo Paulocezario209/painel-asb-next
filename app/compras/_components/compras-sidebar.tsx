@@ -57,7 +57,7 @@ export function ComprasSidebar({
                 padding: "7px 10px", borderRadius: 3,
                 borderLeft: isActive ? `3px solid ${GREEN}` : "3px solid transparent",
                 background: isActive ? "rgba(46,160,67,.14)" : "transparent",
-                color: isActive ? "#FFFFFF" : "#8899aa",
+                color: isActive ? "#FFFFFF" : "#c0d0e0",
                 fontSize: 10, letterSpacing: ".14em", textTransform: "uppercase",
                 fontFamily: theme.font.label, fontWeight: 600,
                 transition: "all .15s", textDecoration: "none",
@@ -71,7 +71,7 @@ export function ComprasSidebar({
               onMouseLeave={(e) => {
                 if (!isActive) {
                   (e.currentTarget as HTMLAnchorElement).style.background = "transparent";
-                  (e.currentTarget as HTMLAnchorElement).style.color = "#8899aa";
+                  (e.currentTarget as HTMLAnchorElement).style.color = "#c0d0e0";
                 }
               }}
             >
@@ -86,7 +86,7 @@ export function ComprasSidebar({
       <div className="px-4 py-3" style={{ borderTop: `1px solid ${GREEN}` }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <div style={{ width: 6, height: 6, borderRadius: "50%", background: GREEN, boxShadow: `0 0 6px ${GREEN}` }} />
-          <p style={{ color: "#556677", fontSize: 9, letterSpacing: ".12em", textTransform: "uppercase", fontFamily: theme.font.label }}>
+          <p style={{ color: "#e4e9f0", fontSize: 9, letterSpacing: ".12em", textTransform: "uppercase", fontFamily: theme.font.label }}>
             Compras · Fase 0
           </p>
         </div>

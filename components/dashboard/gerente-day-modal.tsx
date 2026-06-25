@@ -26,12 +26,12 @@ const S = {
   modal: { background: "#0f1117", border: "1px solid #2a2a2a", borderRadius: 8, width: "100%", maxWidth: 860, maxHeight: "90vh", overflowY: "auto" as const, padding: 24, display: "flex", flexDirection: "column" as const, gap: 20 },
   title: { fontSize: 13, fontWeight: 700, color: "#c0c8d8", fontFamily: "'Courier New', monospace", textTransform: "uppercase" as const, letterSpacing: ".1em" },
   section: { display: "flex", flexDirection: "column" as const, gap: 8 },
-  sectionTitle: { fontSize: 11, fontWeight: 700, color: "#556677", fontFamily: "'Courier New', monospace", textTransform: "uppercase" as const, letterSpacing: ".08em", borderBottom: "1px solid #1e2a35", paddingBottom: 4 },
+  sectionTitle: { fontSize: 11, fontWeight: 700, color: "#e4e9f0", fontFamily: "'Courier New', monospace", textTransform: "uppercase" as const, letterSpacing: ".08em", borderBottom: "1px solid #1e2a35", paddingBottom: 4 },
   kpiRow: { display: "flex", gap: 12, flexWrap: "wrap" as const },
   kpi: { flex: 1, minWidth: 120, background: "#1a1a2e", border: "1px solid #2a2a2a", borderRadius: 6, padding: "10px 14px" },
-  kpiLabel: { fontSize: 10, color: "#556677", fontFamily: "'Courier New', monospace", textTransform: "uppercase" as const },
+  kpiLabel: { fontSize: 10, color: "#e4e9f0", fontFamily: "'Courier New', monospace", textTransform: "uppercase" as const },
   table: { width: "100%", borderCollapse: "collapse" as const, fontSize: 12 },
-  th: { textAlign: "left" as const, padding: "6px 8px", color: "#556677", fontFamily: "'Courier New', monospace", fontSize: 10, borderBottom: "1px solid #1e2a35" },
+  th: { textAlign: "left" as const, padding: "6px 8px", color: "#e4e9f0", fontFamily: "'Courier New', monospace", fontSize: 10, borderBottom: "1px solid #1e2a35" },
   td: { padding: "6px 8px", color: "#c0c8d8", borderBottom: "1px solid #111" },
   tdVal: { padding: "6px 8px", color: "#22c55e", textAlign: "right" as const, fontFamily: "'Courier New', monospace", borderBottom: "1px solid #111" },
   badge: { display: "inline-block", padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 700 },
@@ -64,9 +64,9 @@ export default function GerenteDayModal({ dia, vendorLabel, pedidos, cnb, ausent
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div>
             <p style={S.title}>{fmtDate(dia)}</p>
-            <p style={{ fontSize: 11, color: "#556677", marginTop: 2 }}>{vendorLabel}</p>
+            <p style={{ fontSize: 11, color: "#e4e9f0", marginTop: 2 }}>{vendorLabel}</p>
           </div>
-          <button onClick={onClose} style={{ background: "none", border: "none", color: "#556677", fontSize: 20, cursor: "pointer" }}>✕</button>
+          <button onClick={onClose} style={{ background: "none", border: "none", color: "#e4e9f0", fontSize: 20, cursor: "pointer" }}>✕</button>
         </div>
 
         {/* KPIs */}
@@ -140,7 +140,7 @@ export default function GerenteDayModal({ dia, vendorLabel, pedidos, cnb, ausent
                 {cnb.map((c, i) => (
                   <tr key={i}>
                     <td style={S.td}>{c.cliente_nome}</td>
-                    <td style={{ ...S.td, color: "#556677" }}>{c.numero}</td>
+                    <td style={{ ...S.td, color: "#e4e9f0" }}>{c.numero}</td>
                     <td style={S.tdVal}>{fmtBRL(Number(c.valor_total_brl))}</td>
                   </tr>
                 ))}
@@ -159,7 +159,7 @@ export default function GerenteDayModal({ dia, vendorLabel, pedidos, cnb, ausent
                 {ausentes.map((a, i) => (
                   <tr key={i}>
                     <td style={S.td}>{a.cliente_nome}</td>
-                    <td style={{ ...S.td, color: "#556677" }}>{new Date(a.ultima_compra + "T00:00:00").toLocaleDateString("pt-BR")}</td>
+                    <td style={{ ...S.td, color: "#e4e9f0" }}>{new Date(a.ultima_compra + "T00:00:00").toLocaleDateString("pt-BR")}</td>
                     <td style={{ ...S.tdVal, color: a.dias_ausente > 14 ? "#C8102E" : "#D4A017" }}>{a.dias_ausente}d</td>
                   </tr>
                 ))}

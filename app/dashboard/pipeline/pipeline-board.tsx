@@ -113,14 +113,14 @@ export function PipelineBoard({
     <div style={{ display: "flex", flexDirection: "column", gap: 10, flex: 1, minHeight: 0 }}>
       {erro && (
         <div style={{ border: "1px solid #C8102E", background: "rgba(200,16,46,.08)", borderRadius: 6, padding: "8px 12px", color: "#ff6b6b", fontSize: 11, fontFamily: theme.font.label }}>
-          {erro} <button onClick={() => setErro("")} style={{ background: "none", border: "none", color: "#8899aa", cursor: "pointer", marginLeft: 8 }}>×</button>
+          {erro} <button onClick={() => setErro("")} style={{ background: "none", border: "none", color: "#c0d0e0", cursor: "pointer", marginLeft: 8 }}>×</button>
         </div>
       )}
 
       {/* Board horizontal */}
       <div style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 8, flex: 1, minHeight: 0 }}>
         {stages.map((stage) => {
-          const col = STAGE_COL[stage] ?? { label: stage, cor: "#8899aa" };
+          const col = STAGE_COL[stage] ?? { label: stage, cor: "#c0d0e0" };
           const leads = board[stage] ?? [];
           const isDest = MOVIVEIS.has(stage);
           const isOver = overCol === stage;
@@ -181,10 +181,10 @@ export function PipelineBoard({
                       <div style={{ color: "#fff", fontSize: 11, fontFamily: theme.font.label, fontWeight: 600, marginBottom: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {lead.restaurant_name || "Lead sem nome"}
                       </div>
-                      <div style={{ display: "flex", gap: 8, color: "#8899aa", fontSize: 9, fontFamily: theme.font.label, flexWrap: "wrap" }}>
+                      <div style={{ display: "flex", gap: 8, color: "#c0d0e0", fontSize: 9, fontFamily: theme.font.label, flexWrap: "wrap" }}>
                         {lead.weekly_volume_kg ? <span>{lead.weekly_volume_kg}kg</span> : null}
                         {lead.city ? <span>· {lead.city}</span> : null}
-                        {dias != null ? <span style={{ color: dias > 7 ? "#f59e0b" : "#556677" }}>· {dias}d</span> : null}
+                        {dias != null ? <span style={{ color: dias > 7 ? "#f59e0b" : "#e4e9f0" }}>· {dias}d</span> : null}
                       </div>
                     </div>
                   );
@@ -241,11 +241,11 @@ function ModalProposta({ lead, onConfirm, onCancel }: { lead: PipelineLead; onCo
   return (
     <Backdrop>
       <p style={{ color: "#fff", fontSize: 12, fontFamily: theme.font.label, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 4 }}>Registrar Proposta</p>
-      <p style={{ color: "#8899aa", fontSize: 11, fontFamily: theme.font.label, marginBottom: 14 }}>{lead.restaurant_name || "Lead"} → Proposta Enviada</p>
-      <label style={{ color: "#8899aa", fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase" }}>Valor da proposta (R$)</label>
+      <p style={{ color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label, marginBottom: 14 }}>{lead.restaurant_name || "Lead"} → Proposta Enviada</p>
+      <label style={{ color: "#c0d0e0", fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase" }}>Valor da proposta (R$)</label>
       <input value={valor} onChange={(e) => setValor(e.target.value)} placeholder="0,00" autoFocus
         style={{ width: "100%", marginTop: 4, marginBottom: 12, background: "#0d1117", border: "1px solid #2e2e2e", borderRadius: 6, padding: "8px 10px", color: "#fff", fontSize: 12, fontFamily: theme.font.label, outline: "none" }} />
-      <label style={{ color: "#8899aa", fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase" }}>Notas (opcional)</label>
+      <label style={{ color: "#c0d0e0", fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase" }}>Notas (opcional)</label>
       <input value={notas} onChange={(e) => setNotas(e.target.value)}
         style={{ width: "100%", marginTop: 4, marginBottom: 16, background: "#0d1117", border: "1px solid #2e2e2e", borderRadius: 6, padding: "8px 10px", color: "#fff", fontSize: 12, fontFamily: theme.font.label, outline: "none" }} />
       <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
@@ -265,17 +265,17 @@ function ModalPerdido({ lead, onConfirm, onCancel }: { lead: PipelineLead; onCon
   return (
     <Backdrop>
       <p style={{ color: "#C8102E", fontSize: 12, fontFamily: theme.font.label, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 4 }}>Marcar como Perdido</p>
-      <p style={{ color: "#8899aa", fontSize: 11, fontFamily: theme.font.label, marginBottom: 6 }}>{lead.restaurant_name || "Lead"} → Perdido</p>
+      <p style={{ color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label, marginBottom: 6 }}>{lead.restaurant_name || "Lead"} → Perdido</p>
       <p style={{ color: "#f59e0b", fontSize: 10, fontFamily: theme.font.label, marginBottom: 14, lineHeight: 1.5 }}>
         ⚠ Ação destrutiva: encerra o atendimento (human_active=false, lost_at). Confirme o motivo.
       </p>
-      <label style={{ color: "#8899aa", fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase" }}>Motivo</label>
+      <label style={{ color: "#c0d0e0", fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase" }}>Motivo</label>
       <select value={reason} onChange={(e) => setReason(e.target.value)} autoFocus
         style={{ width: "100%", marginTop: 4, marginBottom: 12, background: "#0d1117", border: "1px solid #2e2e2e", borderRadius: 6, padding: "8px 10px", color: "#fff", fontSize: 12, fontFamily: theme.font.label, outline: "none" }}>
         <option value="">Selecione…</option>
         {LOST_REASONS.map((r) => <option key={r} value={r}>{r}</option>)}
       </select>
-      <label style={{ color: "#8899aa", fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase" }}>Detalhe (opcional)</label>
+      <label style={{ color: "#c0d0e0", fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase" }}>Detalhe (opcional)</label>
       <input value={detail} onChange={(e) => setDetail(e.target.value)}
         style={{ width: "100%", marginTop: 4, marginBottom: 16, background: "#0d1117", border: "1px solid #2e2e2e", borderRadius: 6, padding: "8px 10px", color: "#fff", fontSize: 12, fontFamily: theme.font.label, outline: "none" }} />
       <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
@@ -293,7 +293,7 @@ function ModalFechar({ lead, onConfirm, onCancel }: { lead: PipelineLead; onConf
   return (
     <Backdrop>
       <p style={{ color: "#22c55e", fontSize: 12, fontFamily: theme.font.label, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 4 }}>Fechar Pedido</p>
-      <p style={{ color: "#8899aa", fontSize: 11, fontFamily: theme.font.label, marginBottom: 14 }}>{lead.restaurant_name || "Lead"} → Fechado</p>
+      <p style={{ color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label, marginBottom: 14 }}>{lead.restaurant_name || "Lead"} → Fechado</p>
       <p style={{ color: "#c8d8e8", fontSize: 11, fontFamily: theme.font.label, marginBottom: 18, lineHeight: 1.5 }}>
         Marca o lead como convertido (grava <span style={{ color: "#22c55e" }}>first_order_at</span>). Confirma o fechamento do pedido?
       </p>
@@ -310,7 +310,7 @@ function ModalFechar({ lead, onConfirm, onCancel }: { lead: PipelineLead; onConf
 
 // Modal de lista expandida da etapa — só leitura; cada linha abre o lead.
 function ModalLista({ stage, leads, onClose, onOpenLead }: { stage: string; leads: PipelineLead[]; onClose: () => void; onOpenLead: (phone: string) => void }) {
-  const col = STAGE_COL[stage] ?? { label: stage, cor: "#8899aa" };
+  const col = STAGE_COL[stage] ?? { label: stage, cor: "#c0d0e0" };
   return (
     <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 60, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,.6)", backdropFilter: "blur(3px)" }}>
       <div onClick={(e) => e.stopPropagation()} style={{ width: "min(580px, calc(100vw - 32px))", maxHeight: "80vh", display: "flex", flexDirection: "column", background: "#141414", border: `1px solid ${col.cor}`, borderRadius: 10, boxShadow: "0 24px 48px rgba(0,0,0,.5)" }}>
@@ -320,7 +320,7 @@ function ModalLista({ stage, leads, onClose, onOpenLead }: { stage: string; lead
             <span style={{ color: "#fff", fontSize: 12, fontFamily: theme.font.label, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase" }}>{col.label}</span>
             <span style={{ color: col.cor, fontSize: 12, fontFamily: theme.font.num, fontWeight: 700 }}>{leads.length}</span>
           </div>
-          <button onClick={onClose} style={{ background: "none", border: "none", color: "#8899aa", fontSize: 18, cursor: "pointer", lineHeight: 1 }}>×</button>
+          <button onClick={onClose} style={{ background: "none", border: "none", color: "#c0d0e0", fontSize: 18, cursor: "pointer", lineHeight: 1 }}>×</button>
         </div>
         <div style={{ overflowY: "auto", padding: 6 }}>
           {leads.map((l) => {
@@ -330,11 +330,11 @@ function ModalLista({ stage, leads, onClose, onOpenLead }: { stage: string; lead
                 style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "10px 12px", borderRadius: 6, cursor: l.phone ? "pointer" : "default", borderBottom: "1px solid #1c1c1c" }}>
                 <div style={{ minWidth: 0 }}>
                   <div style={{ color: "#fff", fontSize: 12, fontFamily: theme.font.label, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.restaurant_name || "Lead sem nome"}</div>
-                  <div style={{ color: "#8899aa", fontSize: 10, fontFamily: theme.font.label, marginTop: 2 }}>
+                  <div style={{ color: "#c0d0e0", fontSize: 10, fontFamily: theme.font.label, marginTop: 2 }}>
                     {l.weekly_volume_kg ? `${l.weekly_volume_kg}kg` : "—"}{l.city ? ` · ${l.city}` : ""}
                   </div>
                 </div>
-                <span style={{ color: dias != null && dias > 7 ? "#f59e0b" : "#556677", fontSize: 10, fontFamily: theme.font.label, flexShrink: 0 }}>{dias != null ? `${dias}d` : ""}</span>
+                <span style={{ color: dias != null && dias > 7 ? "#f59e0b" : "#e4e9f0", fontSize: 10, fontFamily: theme.font.label, flexShrink: 0 }}>{dias != null ? `${dias}d` : ""}</span>
               </div>
             );
           })}
@@ -346,7 +346,7 @@ function ModalLista({ stage, leads, onClose, onOpenLead }: { stage: string; lead
 
 function BtnCancel({ onClick }: { onClick: () => void }) {
   return (
-    <button onClick={onClick} style={{ background: "transparent", border: "1px solid #2e2e2e", borderRadius: 6, padding: "8px 16px", color: "#8899aa", fontSize: 11, fontFamily: theme.font.label, cursor: "pointer" }}>
+    <button onClick={onClick} style={{ background: "transparent", border: "1px solid #2e2e2e", borderRadius: 6, padding: "8px 16px", color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label, cursor: "pointer" }}>
       Cancelar
     </button>
   );

@@ -42,7 +42,7 @@ export function DashboardFilters({ showMonth = true, showVendedor = true, defaul
     <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
       {showMonth && (
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ color: "#556677", fontSize: 9, fontFamily: mono, letterSpacing: ".12em", textTransform: "uppercase" }}>Mês</span>
+          <span style={{ color: "#e4e9f0", fontSize: 9, fontFamily: mono, letterSpacing: ".12em", textTransform: "uppercase" }}>Mês</span>
           <input
             type="month"
             value={mesLocal}
@@ -51,7 +51,7 @@ export function DashboardFilters({ showMonth = true, showVendedor = true, defaul
             style={{ background: "#0d1117", border: "1px solid #2a2a2a", borderRadius: 5, padding: "5px 8px", color: "#c8d8e8", fontSize: 11, fontFamily: mono, colorScheme: "dark" }}
           />
           {(defaultMes ? (mesUrl && mesUrl !== defaultMes) : mesLocal) && (
-            <button onClick={() => { setMesLocal(defaultMes ?? ""); update("mes", ""); }} style={{ background: "none", border: "none", color: "#8899aa", fontSize: 10, fontFamily: mono, cursor: "pointer" }}>
+            <button onClick={() => { setMesLocal(defaultMes ?? ""); update("mes", ""); }} style={{ background: "none", border: "none", color: "#c0d0e0", fontSize: 10, fontFamily: mono, cursor: "pointer" }}>
               {defaultMes ? "mês atual" : "limpar"}
             </button>
           )}
@@ -60,7 +60,7 @@ export function DashboardFilters({ showMonth = true, showVendedor = true, defaul
 
       {showVendedor && (
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span style={{ color: "#556677", fontSize: 9, fontFamily: mono, letterSpacing: ".12em", textTransform: "uppercase", marginRight: 2 }}>Vendedor</span>
+          <span style={{ color: "#e4e9f0", fontSize: 9, fontFamily: mono, letterSpacing: ".12em", textTransform: "uppercase", marginRight: 2 }}>Vendedor</span>
           {VENDEDORES.map(({ v, label }) => {
             const active = vendedor === v || (!vendedor && v === "");
             return (
@@ -71,7 +71,7 @@ export function DashboardFilters({ showMonth = true, showVendedor = true, defaul
                   background: active ? `rgba(46,160,67,.16)` : "transparent",
                   border: `1px solid ${active ? GREEN : "#2a2a2a"}`,
                   borderRadius: 5, padding: "5px 11px",
-                  color: active ? "#fff" : "#8899aa",
+                  color: active ? "#fff" : "#c0d0e0",
                   fontSize: 10, fontFamily: mono, letterSpacing: ".06em", cursor: "pointer",
                   fontWeight: active ? 700 : 400,
                 }}

@@ -12,7 +12,7 @@ function fmtTime(iso: string): string {
 
 export function VendorConversation({ messages, total }: { messages: VendorMsg[]; total: number }) {
   if (messages.length === 0) {
-    return <p style={{ color: "#8899aa", fontSize: 11, fontFamily: "'Courier New', monospace" }}>Nenhuma mensagem vendedor capturada.</p>;
+    return <p style={{ color: "#c0d0e0", fontSize: 11, fontFamily: "'Courier New', monospace" }}>Nenhuma mensagem vendedor capturada.</p>;
   }
 
   return (
@@ -38,7 +38,7 @@ export function VendorConversation({ messages, total }: { messages: VendorMsg[];
               }}>
                 {m.content || (m.media_type ? `[${m.media_type}]` : "[sem conteudo]")}
               </p>
-              <p style={{ color: "#556677", fontSize: 8, fontFamily: "'Courier New', monospace", marginTop: 4, textAlign: "right" }}>
+              <p style={{ color: "#e4e9f0", fontSize: 8, fontFamily: "'Courier New', monospace", marginTop: 4, textAlign: "right" }}>
                 {isVendor ? "vendedor" : "lead"} · {fmtTime(m.sent_at)}
               </p>
             </div>
@@ -46,7 +46,7 @@ export function VendorConversation({ messages, total }: { messages: VendorMsg[];
         );
       })}
       {total > messages.length && (
-        <p style={{ color: "#556677", fontSize: 9, fontFamily: "'Courier New', monospace", textAlign: "center", padding: "8px 0" }}>
+        <p style={{ color: "#e4e9f0", fontSize: 9, fontFamily: "'Courier New', monospace", textAlign: "center", padding: "8px 0" }}>
           Mostrando {messages.length} de {total} mensagens
         </p>
       )}

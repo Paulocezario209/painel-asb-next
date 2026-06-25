@@ -2,7 +2,7 @@
 import { theme } from "@/lib/theme";
 export const C = {
   bg: "#0d1117", card: "#0f1428", card2: "#0b0f1d", borda: "#1B2A6B", azul: "#1B2A6B",
-  verde: "#2ea043", texto: "#c8d8e8", branco: "#FFFFFF", mut: "#8899aa", mut2: "#556677",
+  verde: "#2ea043", texto: "#c8d8e8", branco: "#FFFFFF", mut: "#c0d0e0", mut2: "#e4e9f0",
   verde2: "#22C55E", amarelo: "#EAB308", laranja: "#F97316", vermelho: "#EF4444",
 };
 export const mono = theme.font.num; // repoint: Geist Mono p/ consumidores não-migrados (inline sai no 2c)

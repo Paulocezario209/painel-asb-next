@@ -85,9 +85,9 @@ function TimeBadge({ handoffAt }: { handoffAt: string }) {
 
 // ── Main component ─────────────────────────────────────────────────────────────
 const S = {
-  label: { fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase" as const, color: "#556677", fontFamily: "'Courier New', monospace" },
+  label: { fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase" as const, color: "#e4e9f0", fontFamily: "'Courier New', monospace" },
   cell:  { color: "#c8d8e8", fontSize: 11, fontFamily: "'Courier New', monospace", padding: "10px 12px", verticalAlign: "top" as const },
-  muted: { color: "#8899aa", fontSize: 10, fontFamily: "'Courier New', monospace" },
+  muted: { color: "#c0d0e0", fontSize: 10, fontFamily: "'Courier New', monospace" },
 };
 
 export function HandoffsTable({ initial }: { initial: Handoff[] }) {
@@ -173,7 +173,7 @@ export function HandoffsTable({ initial }: { initial: Handoff[] }) {
     fontFamily: "'Courier New', monospace", fontWeight: 600,
     border: active ? "1px solid #C8102E" : "1px solid #2a2a2a",
     background: active ? "rgba(200,16,46,.12)" : "transparent",
-    color: active ? "#C8102E" : "#8899aa",
+    color: active ? "#C8102E" : "#c0d0e0",
     transition: "all .15s",
   });
 
@@ -272,7 +272,7 @@ export function HandoffsTable({ initial }: { initial: Handoff[] }) {
                     {r.scheduled_at ? (
                       <span style={{ color: "#c8d8e8" }}>{formatScheduled(r.scheduled_at)}</span>
                     ) : (
-                      <span style={{ color: "#556677" }}>—</span>
+                      <span style={{ color: "#e4e9f0" }}>—</span>
                     )}
                   </td>
 
@@ -284,7 +284,7 @@ export function HandoffsTable({ initial }: { initial: Handoff[] }) {
                   {/* Vendedor */}
                   <td style={{ ...S.cell, whiteSpace: "nowrap" }}>
                     <span style={{
-                      border: "1px solid #2a2a2a", color: "#8899aa", fontSize: 9,
+                      border: "1px solid #2a2a2a", color: "#c0d0e0", fontSize: 9,
                       padding: "2px 7px", borderRadius: 2, fontFamily: "'Courier New', monospace",
                     }}>
                       {VENDOR_LABELS[r.routing_team ?? ""] ?? r.routing_team ?? "—"}
@@ -307,7 +307,7 @@ export function HandoffsTable({ initial }: { initial: Handoff[] }) {
                         fontFamily: "'Courier New', monospace", fontWeight: 700,
                         border: "1px solid rgba(34,197,94,.4)",
                         background: loading[r.phone] ? "rgba(34,197,94,.04)" : "rgba(34,197,94,.1)",
-                        color: loading[r.phone] ? "#556677" : "#22c55e",
+                        color: loading[r.phone] ? "#e4e9f0" : "#22c55e",
                         transition: "all .15s",
                       }}
                     >

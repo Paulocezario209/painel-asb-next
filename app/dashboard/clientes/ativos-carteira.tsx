@@ -49,7 +49,7 @@ export function AtivosCarteira({
     ...statusKeys.map((k) => ({
       key: k,
       label: CUSTOMER_STATUS[k]?.label ?? k,
-      color: CUSTOMER_STATUS[k]?.color ?? "#556677",
+      color: CUSTOMER_STATUS[k]?.color ?? "#e4e9f0",
       desc: CUSTOMER_STATUS[k]?.desc ?? "",
       count: counts.get(k) ?? 0,
     })),

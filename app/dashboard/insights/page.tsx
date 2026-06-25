@@ -50,10 +50,10 @@ interface Lead {
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const S = {
   card:    { background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8 } as React.CSSProperties,
-  label:   { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#556677", fontFamily: theme.font.label },
+  label:   { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#e4e9f0", fontFamily: theme.font.label },
   value:   { fontSize: 28, fontWeight: 700, color: "#FFFFFF", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", lineHeight: 1 },
   section: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#c0c8d8", fontFamily: theme.font.label, marginBottom: 12 } as React.CSSProperties,
-  muted:   { color: "#8899aa", fontSize: 11, fontFamily: theme.font.label } as React.CSSProperties,
+  muted:   { color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label } as React.CSSProperties,
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -90,7 +90,7 @@ const SEG_LABELS: Record<string, string> = {
 const TEMP_META: Record<string, { color: string; bg: string; border: string; label: string }> = {
   hot:  { color: "#C8102E", bg: "rgba(200,16,46,.08)", border: "rgba(200,16,46,.3)",  label: "Hot" },
   warm: { color: "#f59e0b", bg: "rgba(245,158,11,.08)", border: "rgba(245,158,11,.3)", label: "Warm" },
-  cold: { color: "#8899aa", bg: "rgba(136,153,170,.06)", border: "rgba(136,153,170,.2)", label: "Cold" },
+  cold: { color: "#c0d0e0", bg: "rgba(136,153,170,.06)", border: "rgba(136,153,170,.2)", label: "Cold" },
 };
 
 export default async function InsightsPage() {
@@ -186,7 +186,7 @@ export default async function InsightsPage() {
 
       {!hasData ? (
         <div style={{ ...S.card, padding: "40px 24px", textAlign: "center" }}>
-          <p style={{ color: "#556677", fontFamily: theme.font.label, fontSize: 12 }}>
+          <p style={{ color: "#e4e9f0", fontFamily: theme.font.label, fontSize: 12 }}>
             Nenhum lead cadastrado ainda. Os insights aparecem automaticamente conforme a base cresce.
           </p>
         </div>
@@ -282,7 +282,7 @@ export default async function InsightsPage() {
                     {funnelRows.map(([seg, { total: t, qual: q }]) => (
                       <tr key={seg} style={{ borderTop: "1px solid rgba(27,42,107,.3)" }}>
                         <td style={{ color: "#c8d8e8", fontSize: 11, fontFamily: theme.font.label, padding: "7px 0" }}>{seg}</td>
-                        <td style={{ color: "#8899aa", fontSize: 11, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right", padding: "7px 0" }}>{t}</td>
+                        <td style={{ color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right", padding: "7px 0" }}>{t}</td>
                         <td style={{ color: "#c8d8e8", fontSize: 11, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right", padding: "7px 0" }}>{q}</td>
                         <td style={{ color: "#C8102E", fontSize: 11, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right", padding: "7px 0" }}>
                           {t > 0 ? `${Math.round(q/t*100)}%` : "—"}
@@ -328,7 +328,7 @@ export default async function InsightsPage() {
                       <div key={label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                         <span style={{ color: "#c8d8e8", fontSize: 11, fontFamily: theme.font.label }}>{label}</span>
                         <span style={{
-                          border: "1px solid #2a2a2a", color: "#8899aa", fontSize: 9,
+                          border: "1px solid #2a2a2a", color: "#c0d0e0", fontSize: 9,
                           padding: "2px 7px", borderRadius: 2, fontFamily: theme.font.label,
                         }}>{count} leads</span>
                       </div>

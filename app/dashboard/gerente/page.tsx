@@ -15,7 +15,7 @@ const S = {
   label:   { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: theme.colors.neutral, fontFamily: theme.font.label },
   value:   { fontSize: 28, fontWeight: 700, color: "#FFFFFF", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", lineHeight: 1 },
   section: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: theme.colors.textPrimary, fontFamily: theme.font.label, marginBottom: 12 } as React.CSSProperties,
-  muted:   { color: "#8899aa", fontSize: 11, fontFamily: theme.font.label } as React.CSSProperties,
+  muted:   { color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label } as React.CSSProperties,
 };
 
 const VENDOR_LABELS: Record<string, { name: string; region: string }> = {
@@ -251,7 +251,7 @@ export default async function GerentePage() {
                       <td style={{ color: diasColor, fontSize: 11, fontFamily: theme.font.num, padding: "7px 0", fontWeight: 700 }}>
                         {dias}d
                       </td>
-                      <td style={{ color: VENDOR_ACCENT[o.routing_team] ?? "#8899aa", fontSize: 10, fontFamily: theme.font.label, padding: "7px 0" }}>
+                      <td style={{ color: VENDOR_ACCENT[o.routing_team] ?? "#c0d0e0", fontSize: 10, fontFamily: theme.font.label, padding: "7px 0" }}>
                         {vendor}
                       </td>
                       <td style={{ textAlign: "right", padding: "7px 0" }}>
@@ -312,7 +312,7 @@ export default async function GerentePage() {
           Prioridades do Dia
         </p>
         <p style={{ ...S.muted, fontSize: 9, marginBottom: 16 }}>
-          Ordenado por % atingido (pior em cima) &middot; realizado/meta OFICIAL por <b style={{ color: "#8899aa" }}>faturamento</b> NF+Recibo (§5, = /vendas); &ldquo;prévia emissão&rdquo; = tempo real, não-oficial
+          Ordenado por % atingido (pior em cima) &middot; realizado/meta OFICIAL por <b style={{ color: "#c0d0e0" }}>faturamento</b> NF+Recibo (§5, = /vendas); &ldquo;prévia emissão&rdquo; = tempo real, não-oficial
         </p>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -443,7 +443,7 @@ export default async function GerentePage() {
                   <td style={{ color: accent, fontSize: 11, fontFamily: theme.font.label, padding: "7px 0", fontWeight: 700 }}>{v.name}</td>
                   <td style={{ color: "#c8d8e8", fontSize: 11, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right", padding: "7px 0" }}>{fmtBRL(v.realizado)}</td>
                   <td style={{ color: "#FFFFFF", fontSize: 11, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right", padding: "7px 0", fontWeight: 700 }}>{fmtBRL(v.proj)}</td>
-                  <td style={{ color: "#8899aa", fontSize: 11, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right", padding: "7px 0" }}>{v.meta > 0 ? fmtBRL(v.meta) : "\u2014"}</td>
+                  <td style={{ color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right", padding: "7px 0" }}>{v.meta > 0 ? fmtBRL(v.meta) : "\u2014"}</td>
                   <td style={{
                     color: projColor(v.projPct),
                     fontSize: 11, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right", padding: "7px 0", fontWeight: 700,
@@ -455,7 +455,7 @@ export default async function GerentePage() {
               <td style={{ color: "#FFFFFF", fontSize: 11, fontFamily: theme.font.label, padding: "7px 0", fontWeight: 700 }}>TOTAL</td>
               <td style={{ color: "#c8d8e8", fontSize: 11, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right", padding: "7px 0" }}>{fmtBRL(totalRealizado)}</td>
               <td style={{ color: "#FFFFFF", fontSize: 11, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right", padding: "7px 0", fontWeight: 700 }}>{fmtBRL(projecaoTotal)}</td>
-              <td style={{ color: "#8899aa", fontSize: 11, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right", padding: "7px 0" }}>{totalMeta > 0 ? fmtBRL(totalMeta) : "\u2014"}</td>
+              <td style={{ color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right", padding: "7px 0" }}>{totalMeta > 0 ? fmtBRL(totalMeta) : "\u2014"}</td>
               <td style={{
                 color: projColor(projecaoVsMeta),
                 fontSize: 11, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right", padding: "7px 0", fontWeight: 700,
@@ -470,7 +470,7 @@ export default async function GerentePage() {
         <h2 style={{ color: "#FFFFFF", fontSize: 13, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
           Calendário de Metas
         </h2>
-        <p style={{ color: "#8899aa", fontSize: 11, fontFamily: theme.font.label, marginBottom: 14 }}>
+        <p style={{ color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label, marginBottom: 14 }}>
           Navegue qualquer mês · clique no dia para ver meta (e realizado, se já passou)
         </p>
         <MetasCalendarioGerente />

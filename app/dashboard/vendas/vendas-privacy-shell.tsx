@@ -52,7 +52,7 @@ export function VendasPrivacyShell({ children }: { children: ReactNode }) {
           borderRadius: 8,
           padding: "8px 12px",
           cursor: "pointer",
-          color: hidden ? "#8899aa" : "#fff",
+          color: hidden ? "#c0d0e0" : "#fff",
           fontSize: 12,
           fontFamily: theme.font.label,
           letterSpacing: ".05em",
@@ -89,7 +89,7 @@ export function VendasPrivacyShell({ children }: { children: ReactNode }) {
           display: flex;
           align-items: center;
           justify-content: center;
-          color: #556677;
+          color: #e4e9f0;
           font-family: var(--font-geist-mono), monospace;
           font-size: 0.85em;
           font-weight: 600;
@@ -116,7 +116,7 @@ export function VendasPrivacyShell({ children }: { children: ReactNode }) {
           display: flex;
           align-items: center;
           justify-content: center;
-          color: #556677;
+          color: #e4e9f0;
           font-family: var(--font-geist-mono), monospace;
           font-size: 0.85em;
           font-weight: 600;

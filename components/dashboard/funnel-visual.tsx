@@ -23,7 +23,7 @@ const tooltipStyle = {
     boxShadow: "0 4px 20px rgba(200,16,46,.15)",
   },
   itemStyle:  { color: "#c8d8e8" },
-  labelStyle: { color: "#556677", fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase" as const },
+  labelStyle: { color: "#e4e9f0", fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase" as const },
 };
 
 export function FunnelVisual({ data }: { data: FunnelStage[] }) {

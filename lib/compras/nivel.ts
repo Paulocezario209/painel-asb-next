@@ -1,7 +1,7 @@
 // Classificação de nível de custo/kg + cores (server-side, camada Custos 5.3).
 export type Thr = { ideal: number; atencao: number; alerta: number };
 export const THR_DEFAULT: Thr = { ideal: 18, atencao: 19, alerta: 20 };
-export const COR = { ideal: "#22C55E", atencao: "#EAB308", alerta: "#F97316", critico: "#EF4444", projecao: "#556677" } as const;
+export const COR = { ideal: "#22C55E", atencao: "#EAB308", alerta: "#F97316", critico: "#EF4444", projecao: "#e4e9f0" } as const;
 export type Nivel = keyof typeof COR;
 
 export function nivelDe(custoKg: number | null | undefined, t: Thr = THR_DEFAULT): { nivel: Nivel; cor: string; label: string } {

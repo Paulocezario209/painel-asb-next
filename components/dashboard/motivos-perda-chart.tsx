@@ -13,11 +13,11 @@ const COR_MOTIVO: Record<string, string> = {
   "Comprou concorrente": "#C8102E", // perda dura
   "Sem orcamento": "#D4A017",
   "Sem orçamento": "#D4A017",
-  "Sem interesse": "#8899aa",
-  "Sem retorno": "#556677",
+  "Sem interesse": "#c0d0e0",
+  "Sem retorno": "#e4e9f0",
   "Outro": "#185FA5",
 };
-const PALETA = ["#C8102E", "#D4A017", "#185FA5", "#8899aa", "#556677", "#D85A30", "#22c55e"];
+const PALETA = ["#C8102E", "#D4A017", "#185FA5", "#c0d0e0", "#e4e9f0", "#D85A30", "#22c55e"];
 
 // Fix 2: categorias sempre visíveis (mesmo com 0) — espelham os motivos novos do dropdown.
 const CATEGORIAS_FIXAS = ["Preço"];   // DEBT-167: "Fora de rota" não é motivo de perda (estado terminal próprio)
@@ -31,7 +31,7 @@ export function MotivosPerdaChart({ data }: { data: MotivoPerda[] }) {
 
   if (!data.length || total === 0) {
     return (
-      <p style={{ color: "#8899aa", fontSize: 11, fontFamily: mono }}>
+      <p style={{ color: "#c0d0e0", fontSize: 11, fontFamily: mono }}>
         Nenhum lead marcado como perdido ainda (sem motivos para agregar).
       </p>
     );
@@ -81,7 +81,7 @@ export function MotivosPerdaChart({ data }: { data: MotivoPerda[] }) {
               </div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 6, flexShrink: 0 }}>
                 <span style={{ color: "#fff", fontSize: 12, fontFamily: mono, fontWeight: 700 }}>{d.total}</span>
-                <span style={{ color: "#8899aa", fontSize: 10, fontFamily: mono }}>{pct}%</span>
+                <span style={{ color: "#c0d0e0", fontSize: 10, fontFamily: mono }}>{pct}%</span>
                 {d.total_30d > 0 && (
                   <span style={{ color: "#D4A017", fontSize: 9, fontFamily: mono }} title="perdas nos últimos 30 dias">
                     ▲{d.total_30d}/30d
@@ -92,7 +92,7 @@ export function MotivosPerdaChart({ data }: { data: MotivoPerda[] }) {
           );
         })}
         <div style={{ borderTop: "1px solid #2a2a2a", marginTop: 4, paddingTop: 6, display: "flex", justifyContent: "space-between" }}>
-          <span style={{ color: "#8899aa", fontSize: 10, fontFamily: mono, letterSpacing: ".1em", textTransform: "uppercase" }}>Total perdidos</span>
+          <span style={{ color: "#c0d0e0", fontSize: 10, fontFamily: mono, letterSpacing: ".1em", textTransform: "uppercase" }}>Total perdidos</span>
           <span style={{ color: "#fff", fontSize: 12, fontFamily: mono, fontWeight: 700 }}>{total}</span>
         </div>
       </div>

@@ -12,7 +12,7 @@ const S = {
   card: { background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8 } as CSSProperties,
   h2: { color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase" } as CSSProperties,
   section: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", color: "#c0c8d8", fontFamily: theme.font.label } as CSSProperties,
-  muted: { color: "#8899aa", fontSize: 10, fontFamily: theme.font.label } as CSSProperties,
+  muted: { color: "#c0d0e0", fontSize: 10, fontFamily: theme.font.label } as CSSProperties,
 };
 
 const totalOf = (d: Record<string, number>) => Object.values(d).reduce((a, b) => a + b, 0);
@@ -73,7 +73,7 @@ export function SaudeCarteira({ saude }: { saude: SaudeVendedor[] }) {
                     <span className="w-2 h-2 rounded-full shrink-0" style={{ background: d.color, boxShadow: `0 0 6px ${d.color}` }} />
                     <span className="flex-1 truncate" style={{ color: "#c8d8e8" }}>{d.name}</span>
                     <span className="tabular-nums" style={{ color: "#FFFFFF" }}>{d.value}</span>
-                    <span className="w-9 text-right" style={{ color: "#8899aa" }}>{Math.round((100 * d.value) / total)}%</span>
+                    <span className="w-9 text-right" style={{ color: "#c0d0e0" }}>{Math.round((100 * d.value) / total)}%</span>
                   </div>
                 ))}
               </div>

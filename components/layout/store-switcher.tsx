@@ -113,7 +113,7 @@ export function StoreSwitcher() {
               display: "flex", flexDirection: "column", gap: 6,
             }}
           >
-            <span style={{ fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", color: "#556677", fontFamily: mono, padding: "2px 4px 4px" }}>
+            <span style={{ fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", color: "#e4e9f0", fontFamily: mono, padding: "2px 4px 4px" }}>
               Módulos ASB
             </span>
             {STORES.map((s) => {
@@ -138,7 +138,7 @@ export function StoreSwitcher() {
                     <div style={{ color: "#FFFFFF", fontSize: 12, fontWeight: 700, fontFamily: mono, textTransform: "uppercase", letterSpacing: ".06em" }}>
                       {s.label}
                     </div>
-                    <div style={{ color: "#8899aa", fontSize: 10, fontFamily: mono, marginTop: 2 }}>
+                    <div style={{ color: "#c0d0e0", fontSize: 10, fontFamily: mono, marginTop: 2 }}>
                       {s.desc}
                     </div>
                   </div>

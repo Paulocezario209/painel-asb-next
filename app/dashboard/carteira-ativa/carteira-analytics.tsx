@@ -7,7 +7,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Toolti
 // Padrões reusados da aba Inteligência (components/insights/segment-chart.tsx): barra horizontal
 // gradiente + tooltip estilizado + eixos mono. Adaptado ao tema tech (glow azul ASB).
 const GRID = "rgba(27,42,107,.35)";
-const axisStyle = { fontSize: 10, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" as const, fill: "#556677" };
+const axisStyle = { fontSize: 10, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" as const, fill: "#e4e9f0" };
 const tooltipStyle = {
   contentStyle: {
     background: "#16161c", border: "1px solid #4f7df0", borderRadius: 4,
@@ -15,7 +15,7 @@ const tooltipStyle = {
     boxShadow: "0 4px 20px rgba(79,125,240,.20)",
   },
   itemStyle: { color: "#c8d8e8" },
-  labelStyle: { color: "#556677", fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase" as const },
+  labelStyle: { color: "#e4e9f0", fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase" as const },
 };
 
 // Tokens do design-system (padrão Inteligência) + camada de glow tech sutil.
@@ -23,9 +23,9 @@ const S = {
   card: { background: "#16161c", border: "1px solid #2a2a35", borderRadius: 8 } as CSSProperties, // camada INTELIGÊNCIA (levemente elevada)
   h2: { color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase" } as CSSProperties,
   section: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", color: "#c0c8d8", fontFamily: theme.font.label } as CSSProperties,
-  label: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", color: "#556677", fontFamily: theme.font.label } as CSSProperties,
+  label: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", color: "#e4e9f0", fontFamily: theme.font.label } as CSSProperties,
   value: { fontSize: 28, fontWeight: 700, color: "#FFFFFF", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" as const, lineHeight: 1 } as CSSProperties,
-  muted: { color: "#8899aa", fontSize: 10, fontFamily: theme.font.label } as CSSProperties,
+  muted: { color: "#c0d0e0", fontSize: 10, fontFamily: theme.font.label } as CSSProperties,
 };
 // glow sutil por accent (camada de inteligência = "painel de comando")
 const glow = (hex: string): CSSProperties => ({ boxShadow: `0 0 22px -8px ${hex}, inset 0 1px 0 0 ${hex}1a` });
@@ -129,7 +129,7 @@ export function TopProdutosSection({ meta, top }: { meta: MetaRow[]; top: TopRow
                 {prods.map((p) => (
                   <div key={p.id_produto}>
                     <div className="flex items-baseline gap-2" style={{ fontSize: 11 }}>
-                      <span className="font-mono tabular-nums" style={{ color: "#8899aa", width: 18 }}>{p.rank}.</span>
+                      <span className="font-mono tabular-nums" style={{ color: "#c0d0e0", width: 18 }}>{p.rank}.</span>
                       <span className="truncate flex-1" style={{ color: "#c8d8e8" }}>{p.descricao_produto}</span>
                       <span className="font-mono tabular-nums" style={{ color: "#FFFFFF", width: 44, textAlign: "right" }}>{p.pct}%</span>
                     </div>
@@ -186,7 +186,7 @@ export function GruposSection({ meta, grupos }: { meta: MetaRow[]; grupos: Grupo
                 {data.slice(0, 5).map((d) => (
                   <div key={d.name} className="flex items-center gap-2" style={{ fontSize: 11, fontFamily: theme.font.label }}>
                     <span className="flex-1 truncate" style={{ color: "#c8d8e8" }}>{d.name}</span>
-                    <span style={{ color: "#8899aa", width: 36, textAlign: "right" }}>{d.pct}%</span>
+                    <span style={{ color: "#c0d0e0", width: 36, textAlign: "right" }}>{d.pct}%</span>
                   </div>
                 ))}
               </div>

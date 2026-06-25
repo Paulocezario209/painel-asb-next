@@ -124,7 +124,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
       ) : (
         <>
           <LeadsTable leads={leads ?? []} userEmail={user?.email ?? ""} initialStatus={sp.status ?? "all"} />
-          <p style={{ color: "#556677", fontSize: 10, fontFamily: theme.font.label, textAlign: "right" }}>
+          <p style={{ color: "#e4e9f0", fontSize: 10, fontFamily: theme.font.label, textAlign: "right" }}>
             Exibindo até 100 leads — use os filtros para refinar.
           </p>
         </>

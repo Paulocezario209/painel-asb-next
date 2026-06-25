@@ -14,7 +14,7 @@ export function classificar(custoKg: number | null | undefined, t: Thresholds = 
 
 export const STATUS_COR: Record<Status, string> = {
   ideal: "#22C55E", atencao: "#EAB308", alerta: "#F97316",
-  critico: "#EF4444", sem_dados: "#556677", feriado: "#1B2A6B",
+  critico: "#EF4444", sem_dados: "#e4e9f0", feriado: "#1B2A6B",
 };
 export const STATUS_LABEL: Record<Status, string> = {
   ideal: "IDEAL", atencao: "ATENÇÃO", alerta: "ALERTA",
