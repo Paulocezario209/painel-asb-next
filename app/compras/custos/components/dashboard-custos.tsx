@@ -5,7 +5,8 @@ import {
   Plus, Layers, Save, RefreshCw, Loader2, Trash2, Database, ArrowLeft,
 } from "lucide-react";
 import { ResponsiveContainer, ComposedChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine } from "recharts";
-import { C, mono, sCard, sLabel, sInput, btn, btnGhost } from "../lib/ui";
+import { C, sCard, sLabel, sInput, btn, btnGhost } from "../lib/ui";
+import { theme } from "@/lib/theme";
 import { brl, kg, num } from "../lib/formatadores";
 import { THRESHOLDS_DEFAULT, STATUS_COR, STATUS_LABEL, type Thresholds, type Status } from "../lib/classificar";
 import { calcularProjecao } from "../lib/calcular-projecao";
@@ -139,20 +140,20 @@ export function DashboardCustos() {
     try { await fn(); await carregar(); } catch (e) { setErro((e as Error).message); } finally { setBusy(null); }
   }
 
-  const tip = { contentStyle: { background: C.card2, border: `1px solid ${C.borda}`, borderRadius: 6, fontFamily: mono, fontSize: 11 }, labelStyle: { color: C.branco } };
-  const axis = { tick: { fill: C.mut, fontSize: 10, fontFamily: mono }, stroke: C.borda };
+  const tip = { contentStyle: { background: C.card2, border: `1px solid ${C.borda}`, borderRadius: 6, fontFamily: theme.font.num, fontSize: 11 }, labelStyle: { color: C.branco } };
+  const axis = { tick: { fill: C.mut, fontSize: 10, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" }, stroke: C.borda };
   const th: React.CSSProperties = { ...sLabel, padding: "8px 10px", textAlign: "right", borderBottom: `1px solid ${C.borda}` };
-  const td: React.CSSProperties = { padding: "6px 10px", color: C.texto, fontFamily: mono, fontSize: 12, textAlign: "right" };
+  const td: React.CSSProperties = { padding: "6px 10px", color: C.texto, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", fontSize: 12, textAlign: "right" };
 
-  if (loading) return <div style={{ padding: 40, textAlign: "center", color: C.mut, fontFamily: mono }}><Loader2 className="animate-spin" style={{ margin: "0 auto 10px" }} /> Carregando custos...</div>;
+  if (loading) return <div style={{ padding: 40, textAlign: "center", color: C.mut, fontFamily: theme.font.label }}><Loader2 className="animate-spin" style={{ margin: "0 auto 10px" }} /> Carregando custos...</div>;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
         <div>
-          <h1 style={{ color: C.branco, fontSize: 16, fontWeight: 700, fontFamily: mono, letterSpacing: ".1em", textTransform: "uppercase" }}>Custo de Produção</h1>
-          <p style={{ color: C.mut, fontSize: 11, fontFamily: mono }}>Dashboard ASB 2026 · realizado, projeção, alertas, relatório e controle estatístico</p>
+          <h1 style={{ color: C.branco, fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase" }}>Custo de Produção</h1>
+          <p style={{ color: C.mut, fontSize: 11, fontFamily: theme.font.label }}>Dashboard ASB 2026 · realizado, projeção, alertas, relatório e controle estatístico</p>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <button onClick={() => acao("ares", () => api.aresSync())} disabled={!!busy} style={btnGhost}><Database size={14} /> {busy === "ares" ? "Sync..." : "Sync ARES"}</button>
@@ -161,12 +162,12 @@ export function DashboardCustos() {
         </div>
       </div>
 
-      {erro && <div style={{ border: `1px solid ${C.vermelho}`, background: `${C.vermelho}11`, borderRadius: 6, padding: "8px 12px", color: C.vermelho, fontSize: 11, fontFamily: mono }}>{erro}</div>}
+      {erro && <div style={{ border: `1px solid ${C.vermelho}`, background: `${C.vermelho}11`, borderRadius: 6, padding: "8px 12px", color: C.vermelho, fontSize: 11, fontFamily: theme.font.label }}>{erro}</div>}
 
       {/* Tabs */}
       <div style={{ display: "flex", gap: 4, flexWrap: "wrap", borderBottom: `1px solid ${C.borda}`, paddingBottom: 2 }}>
         {ABAS.map(({ id, label, icon: Icon }) => (
-          <button key={id} onClick={() => setAba(id)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 12px", border: "none", borderBottom: aba === id ? `2px solid ${C.verde}` : "2px solid transparent", background: "transparent", color: aba === id ? C.branco : C.mut, fontSize: 10, fontFamily: mono, letterSpacing: ".08em", textTransform: "uppercase", fontWeight: 600, cursor: "pointer" }}>
+          <button key={id} onClick={() => setAba(id)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 12px", border: "none", borderBottom: aba === id ? `2px solid ${C.verde}` : "2px solid transparent", background: "transparent", color: aba === id ? C.branco : C.mut, fontSize: 10, fontFamily: theme.font.label, letterSpacing: ".08em", textTransform: "uppercase", fontWeight: 600, cursor: "pointer" }}>
             <Icon size={13} /> {label}
           </button>
         ))}
@@ -177,16 +178,16 @@ export function DashboardCustos() {
         <>
           {alertasAtivos.length > 0 && (
             <div style={{ border: `1px solid ${C.laranja}`, background: `${C.laranja}11`, borderRadius: 6, padding: "10px 14px" }}>
-              <p style={{ color: C.laranja, fontSize: 11, fontFamily: mono, fontWeight: 700, marginBottom: 6 }}>{alertasAtivos.length} alerta(s) ativo(s)</p>
+              <p style={{ color: C.laranja, fontSize: 11, fontFamily: theme.font.label, fontWeight: 700, marginBottom: 6 }}>{alertasAtivos.length} alerta(s) ativo(s)</p>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {alertasAtivos.map((a) => {
                   const m = Number(a.ano_mes.slice(5));
-                  return <button key={a.ano_mes} onClick={() => { setSelMes(m); setSelAno(Number(a.ano_mes.slice(0, 4))); setAba("meses"); }} style={{ background: `${a.cor}22`, border: `1px solid ${a.cor}`, color: a.cor, borderRadius: 4, padding: "3px 8px", fontSize: 10, fontFamily: mono, fontWeight: 700, cursor: "pointer" }}>{MESES[m - 1]}: {brl(a.custo_medio_kg)}/kg ({a.label})</button>;
+                  return <button key={a.ano_mes} onClick={() => { setSelMes(m); setSelAno(Number(a.ano_mes.slice(0, 4))); setAba("meses"); }} style={{ background: `${a.cor}22`, border: `1px solid ${a.cor}`, color: a.cor, borderRadius: 4, padding: "3px 8px", fontSize: 10, fontFamily: theme.font.label, fontWeight: 700, cursor: "pointer" }}>{MESES[m - 1]}: {brl(a.custo_medio_kg)}/kg ({a.label})</button>;
                 })}
               </div>
             </div>
           )}
-          {custoHoraZero && <div style={{ border: `1px solid ${C.amarelo}`, background: `${C.amarelo}11`, borderRadius: 6, padding: "8px 12px" }}><p style={{ color: C.amarelo, fontSize: 11, fontFamily: mono }}>CUSTO_HORA = R$ 0,00 — aguardando RH/financeiro (DEBT-075).</p></div>}
+          {custoHoraZero && <div style={{ border: `1px solid ${C.amarelo}`, background: `${C.amarelo}11`, borderRadius: 6, padding: "8px 12px" }}><p style={{ color: C.amarelo, fontSize: 11, fontFamily: theme.font.label }}>CUSTO_HORA = R$ 0,00 — aguardando RH/financeiro (DEBT-075).</p></div>}
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(190px,1fr))", gap: 10 }}>
             <Kpi label="Kg Realizado" value={kg(totalKg)} cor={C.branco} sub={`${mesesComDados}/12 meses · ${regComKg} registros`} />
@@ -234,7 +235,7 @@ export function DashboardCustos() {
           <div style={{ ...sCard, padding: 16 }}>
             <Calendario ano={selAno} mes={selMes} registros={regMap} onPickDia={(data, r) => setModal({ tipo: "dia", data, reg: r })} />
             <div style={{ display: "flex", gap: 14, marginTop: 14, flexWrap: "wrap" }}>
-              {(["ideal", "atencao", "alerta", "critico", "feriado"] as Status[]).map((s) => (<span key={s} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 9, color: C.mut, fontFamily: mono }}><span style={{ width: 10, height: 10, borderRadius: 2, background: STATUS_COR[s] }} /> {STATUS_LABEL[s]}</span>))}
+              {(["ideal", "atencao", "alerta", "critico", "feriado"] as Status[]).map((s) => (<span key={s} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 9, color: C.mut, fontFamily: theme.font.label }}><span style={{ width: 10, height: 10, borderRadius: 2, background: STATUS_COR[s] }} /> {STATUS_LABEL[s]}</span>))}
             </div>
           </div>
           <div style={{ ...sCard, overflowX: "auto" }}>
@@ -273,7 +274,7 @@ export function DashboardCustos() {
           <div>
             <p style={{ ...sLabel, marginBottom: 10 }}>CONSUMO DE INSUMOS — {selMes}/{selAno}</p>
             {diarioMes.length === 0 ? (
-              <div style={{ ...sCard, padding: 16 }}><p style={{ color: C.mut, fontSize: 11, fontFamily: mono }}>sem lançamentos de insumo no mês</p></div>
+              <div style={{ ...sCard, padding: 16 }}><p style={{ color: C.mut, fontSize: 11, fontFamily: theme.font.label }}>sem lançamentos de insumo no mês</p></div>
             ) : (
               <>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(440px,1fr))", gap: 20 }}>
@@ -335,7 +336,7 @@ export function DashboardCustos() {
           {!temHoras && (
             <div style={{ ...sCard, padding: 16 }}>
               <p style={{ ...sLabel, marginBottom: 6 }}>Horas vs Kg (Moagem / Modelagem / Embalamento)</p>
-              <p style={{ color: C.mut, fontSize: 11, fontFamily: mono }}>São necessários pelo menos 2 dias com horas de processo e kg registrados. (Apontamento de horas via upload XLSX — Fase 5.1.)</p>
+              <p style={{ color: C.mut, fontSize: 11, fontFamily: theme.font.label }}>São necessários pelo menos 2 dias com horas de processo e kg registrados. (Apontamento de horas via upload XLSX — Fase 5.1.)</p>
             </div>
           )}
         </div>
@@ -356,8 +357,8 @@ function Kpi({ label, value, cor, sub }: { label: string; value: string; cor: st
   return (
     <div style={{ ...sCard, padding: "12px 14px" }}>
       <p style={{ ...sLabel, marginBottom: 4 }}>{label}</p>
-      <p style={{ fontSize: 18, color: cor, fontWeight: 700, fontFamily: "Inter, sans-serif" }}>{value}</p>
-      {sub && <p style={{ fontSize: 9, color: C.mut2, fontFamily: mono, marginTop: 2 }}>{sub}</p>}
+      <p style={{ fontSize: 18, color: cor, fontWeight: 700, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" }}>{value}</p>
+      {sub && <p style={{ fontSize: 9, color: C.mut2, fontFamily: theme.font.label, marginTop: 2 }}>{sub}</p>}
     </div>
   );
 }
@@ -403,7 +404,7 @@ function ConfigTab({ thresholds, custoHora, onReload }: { thresholds: Thresholds
         <p style={{ ...sLabel, marginBottom: 10 }}>Thresholds custo/kg (limite superior de cada faixa)</p>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10 }}>{campo("Ideal ≤", th.IDEAL, (n) => setTh({ ...th, IDEAL: n }))}{campo("Atenção ≤", th.ATENCAO, (n) => setTh({ ...th, ATENCAO: n }))}{campo("Alerta ≤", th.ALERTA, (n) => setTh({ ...th, ALERTA: n }))}</div>
       </div>
-      <div style={{ display: "flex", gap: 10, alignItems: "center" }}><button onClick={salvar} disabled={saving} style={btn(!saving)}>{saving ? "Salvando..." : "Salvar configurações"}</button>{msg && <span style={{ color: msg === "Salvo." ? C.verde2 : C.vermelho, fontSize: 11, fontFamily: mono }}>{msg}</span>}</div>
+      <div style={{ display: "flex", gap: 10, alignItems: "center" }}><button onClick={salvar} disabled={saving} style={btn(!saving)}>{saving ? "Salvando..." : "Salvar configurações"}</button>{msg && <span style={{ color: msg === "Salvo." ? C.verde2 : C.vermelho, fontSize: 11, fontFamily: theme.font.label }}>{msg}</span>}</div>
     </div>
   );
 }
