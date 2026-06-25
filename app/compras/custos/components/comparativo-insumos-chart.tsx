@@ -1,6 +1,7 @@
 "use client";
 import { ResponsiveContainer, ComposedChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine } from "recharts";
-import { C, mono, sCard, sLabel } from "../lib/ui";
+import { C, sCard, sLabel } from "../lib/ui";
+import { theme } from "@/lib/theme";
 
 // Etapa 2 item 3: % Gordura sobre Recorte por dia. Faixas fixas (NÃO limites estatísticos): baixo 6 / ideal 10 / alto 14.
 // pct null (dia sem Recorte) = GAP (connectNulls=false), nunca 0.
@@ -14,12 +15,12 @@ export function ComparativoInsumosChart({ data, title = "Comparativo de Utiliza�
     return (
       <div style={{ ...sCard, padding: 16 }}>
         <p style={{ ...sLabel, marginBottom: 6 }}>{title}</p>
-        <p style={{ color: C.mut, fontSize: 11, fontFamily: mono }}>Sem dias com Recorte lançado no mês — % indefinido.</p>
+        <p style={{ color: C.mut, fontSize: 11, fontFamily: theme.font.label }}>Sem dias com Recorte lançado no mês — % indefinido.</p>
       </div>
     );
   }
-  const tip = { contentStyle: { background: C.card2, border: `1px solid ${C.borda}`, borderRadius: 6, fontFamily: mono, fontSize: 11 }, labelStyle: { color: C.branco } };
-  const axis = { tick: { fill: C.mut, fontSize: 9, fontFamily: mono }, stroke: C.borda };
+  const tip = { contentStyle: { background: C.card2, border: `1px solid ${C.borda}`, borderRadius: 6, fontFamily: theme.font.num, fontSize: 11 }, labelStyle: { color: C.branco } };
+  const axis = { tick: { fill: C.mut, fontSize: 9, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" }, stroke: C.borda };
 
   type DotProps = { cx?: number; cy?: number; index?: number };
   const dot = (p: DotProps) => {
@@ -31,7 +32,7 @@ export function ComparativoInsumosChart({ data, title = "Comparativo de Utiliza�
 
   return (
     <div style={{ ...sCard, padding: 14 }}>
-      <p style={{ color: C.branco, fontSize: 12, fontWeight: 700, fontFamily: mono, letterSpacing: ".06em", marginBottom: 10 }}>{title}</p>
+      <p style={{ color: C.branco, fontSize: 12, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".06em", marginBottom: 10 }}>{title}</p>
       <ResponsiveContainer width="100%" height={250}>
         <ComposedChart data={data} margin={{ top: 6, right: 48, bottom: 0, left: 0 }}>
           <CartesianGrid stroke={C.borda} strokeDasharray="3 3" vertical={false} />

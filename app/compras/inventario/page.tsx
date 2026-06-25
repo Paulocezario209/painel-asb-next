@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-const mono = "'Courier New', monospace";
+import { theme } from "@/lib/theme";
 
 type GrupoRow = {
   id_grupo: number | null; grupo_nome: string | null;
@@ -46,21 +46,21 @@ export default async function InventarioPage() {
   const emRevisao = mapa.filter((m) => m.contagem_em_revisao).length;
   const comFisica = mapa.filter((m) => m.tem_contagem_fisica).length;
 
-  const th: React.CSSProperties = { fontSize: 9, color: "#556677", fontFamily: mono, letterSpacing: ".1em", textTransform: "uppercase", padding: "8px 10px", textAlign: "right", borderBottom: "1px solid #1B2A6B" };
-  const td: React.CSSProperties = { padding: "7px 10px", color: "#c8d8e8", fontFamily: mono, fontSize: 12, textAlign: "right" };
+  const th: React.CSSProperties = { fontSize: 9, color: "#556677", fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", padding: "8px 10px", textAlign: "right", borderBottom: "1px solid #1B2A6B" };
+  const td: React.CSSProperties = { padding: "7px 10px", color: "#c8d8e8", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", fontSize: 12, textAlign: "right" };
   const card: React.CSSProperties = { background: "#0f1428", border: "1px solid #1B2A6B", borderRadius: 6, overflowX: "auto" };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <div>
-        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: mono, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>Mapa do Inventário</h1>
-        <p style={{ color: "#8899aa", fontSize: 11, fontFamily: mono }}>
+        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>Mapa do Inventário</h1>
+        <p style={{ color: "#8899aa", fontSize: 11, fontFamily: theme.font.label }}>
           Saúde da contagem: última contagem (física ou acerto 16/17), há quantos dias, cobertura por grupo, divergências.
         </p>
       </div>
 
       <div style={{ border: "1px solid #d29922", background: "rgba(210,153,34,.08)", borderRadius: 6, padding: "10px 14px" }}>
-        <p style={{ color: "#d29922", fontSize: 11, fontFamily: mono }}>
+        <p style={{ color: "#d29922", fontSize: 11, fontFamily: theme.font.label }}>
           {comFisica} produto(s) com contagem física · {emRevisao} em revisão (ambíguos da transcrição).
           Janela do espelho = 90 dias: o único acerto de inventário nela é 01/05 (por isso ~25 dias em todos).
           Contagens anteriores a 90d não aparecem (DEBT-072). Inventário 30/05 (módulo ARES) expande. Ambíguos: aba Estoque.

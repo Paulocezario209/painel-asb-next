@@ -6,7 +6,7 @@ import EstoqueClient, { type CoberturaRow } from "./estoque-client";
 
 export const dynamic = "force-dynamic";
 
-const mono = "'Courier New', monospace";
+import { theme } from "@/lib/theme";
 
 export default async function EstoquePage() {
   const supabase = await createClient();
@@ -20,17 +20,17 @@ export default async function EstoquePage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <div>
-        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: mono, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
+        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
           Estoque Atual
         </h1>
-        <p style={{ color: "#8899aa", fontSize: 11, fontFamily: mono }}>
+        <p style={{ color: "#8899aa", fontSize: 11, fontFamily: theme.font.label }}>
           Saldo por produto (âncora + Σ movimento) · cobertura em dias (saldo ÷ consumo/dia) · semáforo de ruptura.
         </p>
       </div>
 
       {/* Banner cobertura parcial */}
       <div style={{ border: "1px solid #d29922", background: "rgba(210,153,34,.08)", borderRadius: 6, padding: "10px 14px" }}>
-        <p style={{ color: "#d29922", fontSize: 11, fontFamily: mono }}>
+        <p style={{ color: "#d29922", fontSize: 11, fontFamily: theme.font.label }}>
           {rows.length} produto(s) ancorado(s) de {totalProdutos} totais. Os demais aguardam o inventário ARES de 30/05,
           que o sync espelha automaticamente e expande esta cobertura.
         </p>
@@ -38,14 +38,14 @@ export default async function EstoquePage() {
 
       {/* Tabela M1 + busca (client) */}
       <EstoqueClient rows={rows} />
-      <p style={{ color: "#556677", fontSize: 9, fontFamily: mono }}>
+      <p style={{ color: "#556677", fontSize: 9, fontFamily: theme.font.label }}>
         CMD = saídas (venda + consumo produção), |qtd|, média 30d úteis. &quot;SEM CMD&quot; = matéria-prima sem saída
         capturada (DEBT-069: transformação interna). Ordenado por menor cobertura.
       </p>
 
       {/* Carregar âncora manual (fallback — fonte de produção é o ARES) */}
       <details style={{ marginTop: 8 }}>
-        <summary style={{ color: "#556677", fontSize: 10, fontFamily: mono, letterSpacing: ".1em", textTransform: "uppercase", cursor: "pointer" }}>
+        <summary style={{ color: "#556677", fontSize: 10, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", cursor: "pointer" }}>
           Carregar âncora manual (fallback XLSX)
         </summary>
         <div style={{ marginTop: 10 }}><AncoraUpload /></div>

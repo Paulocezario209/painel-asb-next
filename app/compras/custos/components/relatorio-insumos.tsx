@@ -1,7 +1,8 @@
 "use client";
 // Etapa 2 item 5: relatório mensal de insumos — READ-ONLY (resumo das views + apontamentos automáticos).
 // Sem persistência/tabela. Montado em 2 lugares (Meses 2026 + Gerencial) com a MESMA lógica.
-import { C, mono, sCard, sLabel } from "../lib/ui";
+import { C, sCard, sLabel } from "../lib/ui";
+import { theme } from "@/lib/theme";
 import { brl, num } from "../lib/formatadores";
 import { CAT_RECORTE, CAT_GORDURA, type InsumoDiario, type InsumoComparativo } from "../lib/storage-supabase";
 
@@ -29,19 +30,19 @@ export function RelatorioInsumos({ mesLabel, diario, comparativo }: { mesLabel: 
   const card = (label: string, valor: string, cor: string, sub?: string) => (
     <div style={{ ...sCard, padding: "12px 14px" }}>
       <p style={{ ...sLabel, marginBottom: 4 }}>{label}</p>
-      <p style={{ fontSize: 18, color: cor, fontWeight: 700, fontFamily: "Inter, sans-serif" }}>{valor}</p>
-      {sub && <p style={{ fontSize: 9, color: C.mut2, fontFamily: mono, marginTop: 2 }}>{sub}</p>}
+      <p style={{ fontSize: 18, color: cor, fontWeight: 700, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" }}>{valor}</p>
+      {sub && <p style={{ fontSize: 9, color: C.mut2, fontFamily: theme.font.label, marginTop: 2 }}>{sub}</p>}
     </div>
   );
   const corPct = pctMedio == null ? C.mut : pctMedio < 6 ? C.amarelo : pctMedio > 14 ? C.vermelho : C.verde2;
 
   return (
     <div style={{ ...sCard, padding: 16 }}>
-      <p style={{ color: C.branco, fontSize: 12, fontWeight: 700, fontFamily: mono, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 12 }}>
+      <p style={{ color: C.branco, fontSize: 12, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 12 }}>
         Relatório de Insumos — {mesLabel}
       </p>
       {diario.length === 0 ? (
-        <p style={{ color: C.mut, fontSize: 11, fontFamily: mono }}>sem lançamentos de insumo no mês.</p>
+        <p style={{ color: C.mut, fontSize: 11, fontFamily: theme.font.label }}>sem lançamentos de insumo no mês.</p>
       ) : (
         <>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 10, marginBottom: 14 }}>
@@ -52,17 +53,17 @@ export function RelatorioInsumos({ mesLabel, diario, comparativo }: { mesLabel: 
           </div>
           <p style={{ ...sLabel, marginBottom: 8 }}>Apontamentos do mês (automáticos)</p>
           {apont.length === 0 ? (
-            <p style={{ color: C.mut, fontSize: 11, fontFamily: mono }}>Sem desvios — nenhum dia fora da faixa 6–14%.</p>
+            <p style={{ color: C.mut, fontSize: 11, fontFamily: theme.font.label }}>Sem desvios — nenhum dia fora da faixa 6–14%.</p>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               {apont.map((a, i) => (
                 <div key={i} style={{ borderLeft: `3px solid ${COR[a.tipo]}`, background: `${COR[a.tipo]}11`, borderRadius: 4, padding: "8px 12px" }}>
-                  <p style={{ color: C.texto, fontSize: 11, fontFamily: mono }}>{a.txt}</p>
+                  <p style={{ color: C.texto, fontSize: 11, fontFamily: theme.font.label }}>{a.txt}</p>
                 </div>
               ))}
             </div>
           )}
-          <p style={{ color: C.mut2, fontSize: 9, fontFamily: mono, textAlign: "center", letterSpacing: ".05em", marginTop: 14 }}>
+          <p style={{ color: C.mut2, fontSize: 9, fontFamily: theme.font.label, textAlign: "center", letterSpacing: ".05em", marginTop: 14 }}>
             AMERICAN STEAK BRASIL · RELATÓRIO DE INSUMOS {mesLabel} · GERADO AUTOMATICAMENTE · USO INTERNO
           </p>
         </>

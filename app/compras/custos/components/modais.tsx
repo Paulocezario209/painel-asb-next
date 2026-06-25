@@ -1,7 +1,8 @@
 "use client";
 import { useState } from "react";
 import { X } from "lucide-react";
-import { C, mono, sInput, sLabel, btn, btnGhost } from "../lib/ui";
+import { C, sInput, sLabel, btn, btnGhost } from "../lib/ui";
+import { theme } from "@/lib/theme";
 import { api, CATEGORIAS_INSUMO, CAT_KG_LOCK } from "../lib/storage-supabase";
 
 function Shell({ titulo, onClose, children }: { titulo: string; onClose: () => void; children: React.ReactNode }) {
@@ -9,7 +10,7 @@ function Shell({ titulo, onClose, children }: { titulo: string; onClose: () => v
     <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.6)", zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
       <div onClick={(e) => e.stopPropagation()} style={{ background: C.card, border: `1px solid ${C.borda}`, borderRadius: 8, width: "100%", maxWidth: 560, maxHeight: "90vh", overflowY: "auto", padding: 20 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-          <h3 style={{ color: C.branco, fontSize: 13, fontWeight: 700, fontFamily: mono, letterSpacing: ".08em", textTransform: "uppercase" }}>{titulo}</h3>
+          <h3 style={{ color: C.branco, fontSize: 13, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".08em", textTransform: "uppercase" }}>{titulo}</h3>
           <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: C.mut }}><X size={18} /></button>
         </div>
         {children}
@@ -60,7 +61,7 @@ export function ModalProducao({ registro, onClose, onSaved }: { registro?: Recor
         <Campo label="Horas Embalamento"><input type="number" step="0.01" value={f.horasEmbalamento} onChange={(e) => set("horasEmbalamento", Number(e.target.value))} style={sInput} /></Campo>
         <div style={{ gridColumn: "1 / -1" }}><Campo label="Observação"><input value={f.obs} onChange={(e) => set("obs", e.target.value)} style={sInput} placeholder="ex: Semana 2 / feriado..." /></Campo></div>
       </div>
-      {err && <p style={{ color: C.vermelho, fontSize: 11, fontFamily: mono, marginTop: 10 }}>{err}</p>}
+      {err && <p style={{ color: C.vermelho, fontSize: 11, fontFamily: theme.font.label, marginTop: 10 }}>{err}</p>}
       <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 18 }}>
         <button onClick={onClose} style={btnGhost}>Cancelar</button>
         <button onClick={salvar} disabled={saving || !f.data} style={btn(!saving && !!f.data)}>{saving ? "Salvando..." : "Salvar"}</button>
@@ -88,7 +89,7 @@ export function ModalLote({ semanaInicio, onClose, onSaved }: { semanaInicio?: s
 
   return (
     <Shell titulo="Lote Semanal" onClose={onClose}>
-      <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: mono, fontSize: 11 }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: theme.font.num, fontSize: 11 }}>
         <thead><tr>{["Data", "kg", "Custo R$", "Temp", "OPs"].map((h) => <th key={h} style={{ ...sLabel, padding: "4px 6px", textAlign: "left" }}>{h}</th>)}</tr></thead>
         <tbody>
           {linhas.map((l, i) => (
@@ -102,7 +103,7 @@ export function ModalLote({ semanaInicio, onClose, onSaved }: { semanaInicio?: s
           ))}
         </tbody>
       </table>
-      {err && <p style={{ color: C.vermelho, fontSize: 11, fontFamily: mono, marginTop: 10 }}>{err}</p>}
+      {err && <p style={{ color: C.vermelho, fontSize: 11, fontFamily: theme.font.label, marginTop: 10 }}>{err}</p>}
       <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 18 }}>
         <button onClick={onClose} style={btnGhost}>Cancelar</button>
         <button onClick={salvar} disabled={saving} style={btn(!saving)}>{saving ? "Salvando..." : "Gravar lote"}</button>
@@ -136,7 +137,7 @@ export function ModalInsumo({ onClose, onSaved }: { onClose: () => void; onSaved
         <Campo label="SIF"><input value={f.sif} onChange={(e) => set("sif", e.target.value)} style={sInput} /></Campo>
         <Campo label="Categoria"><select value={f.categoria} onChange={(e) => { const v = e.target.value; setF((p) => ({ ...p, categoria: v, unidade: CAT_KG_LOCK.has(v) ? "kg" : p.unidade })); }} style={sInput}><option value="">— selecione —</option>{CATEGORIAS_INSUMO.map((c) => <option key={c} value={c}>{c}</option>)}</select></Campo>
       </div>
-      {err && <p style={{ color: C.vermelho, fontSize: 11, fontFamily: mono, marginTop: 10 }}>{err}</p>}
+      {err && <p style={{ color: C.vermelho, fontSize: 11, fontFamily: theme.font.label, marginTop: 10 }}>{err}</p>}
       <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 18 }}>
         <button onClick={onClose} style={btnGhost}>Cancelar</button>
         <button onClick={salvar} disabled={saving || !f.materia || !f.categoria} style={btn(!saving && !!f.materia && !!f.categoria)}>{saving ? "Salvando..." : "Salvar"}</button>

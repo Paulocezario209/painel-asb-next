@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { ResponsiveContainer, ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
-import { C, mono, sCard, sLabel } from "../lib/ui";
+import { C, sCard, sLabel } from "../lib/ui";
+import { theme } from "@/lib/theme";
 import { brl, num } from "../lib/formatadores";
 
 type Comp = { nome: string; valor: number; cor: string; horas: number | null; custo_hora: number | null };
@@ -19,27 +20,27 @@ export function AbaRelatorio({ ano, mes }: { ano: number; mes: number }) {
     fetch(`/api/compras/custos/relatorio-mensal?ano=${ano}&mes=${mes}`).then((r) => r.json()).then((j) => j.error ? setErr(j.error) : setD(j)).catch((e) => setErr(String(e)));
   }, [ano, mes]);
   const th: React.CSSProperties = { ...sLabel, padding: "6px 8px", textAlign: "right", borderBottom: `1px solid ${C.borda}` };
-  const td: React.CSSProperties = { padding: "5px 8px", color: C.texto, fontFamily: mono, fontSize: 11, textAlign: "right" };
-  const tip = { contentStyle: { background: C.card2, border: `1px solid ${C.borda}`, borderRadius: 6, fontFamily: mono, fontSize: 11 }, labelStyle: { color: C.branco } };
-  const axis = { tick: { fill: C.mut, fontSize: 9, fontFamily: mono }, stroke: C.borda };
+  const td: React.CSSProperties = { padding: "5px 8px", color: C.texto, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", fontSize: 11, textAlign: "right" };
+  const tip = { contentStyle: { background: C.card2, border: `1px solid ${C.borda}`, borderRadius: 6, fontFamily: theme.font.num, fontSize: 11 }, labelStyle: { color: C.branco } };
+  const axis = { tick: { fill: C.mut, fontSize: 9, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" }, stroke: C.borda };
 
-  if (err) return <p style={{ color: C.vermelho, fontFamily: mono, fontSize: 12 }}>{err}</p>;
-  if (!d) return <p style={{ color: C.mut, fontFamily: mono, fontSize: 12 }}>carregando relatório...</p>;
+  if (err) return <p style={{ color: C.vermelho, fontFamily: theme.font.label, fontSize: 12 }}>{err}</p>;
+  if (!d) return <p style={{ color: C.mut, fontFamily: theme.font.label, fontSize: 12 }}>carregando relatório...</p>;
   const total = d.custo_total || 1;
   const pct = (v: number) => Math.round((v / total) * 1000) / 10;
   const k = d.kpis;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <p style={{ color: C.branco, fontSize: 13, fontWeight: 700, fontFamily: mono, letterSpacing: ".08em", textTransform: "uppercase" }}>Relatório {MESES[d.mes]}/{d.ano}</p>
+      <p style={{ color: C.branco, fontSize: 13, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".08em", textTransform: "uppercase" }}>Relatório {MESES[d.mes]}/{d.ano}</p>
 
       {/* 4 cards composição */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: 10 }}>
         {d.composicao.map((c) => (
           <div key={c.nome} style={{ ...sCard, padding: "12px 14px", borderLeft: `3px solid ${c.cor}` }}>
             <p style={{ ...sLabel, marginBottom: 4 }}>{c.nome}</p>
-            <p style={{ fontSize: 18, color: c.cor, fontWeight: 700, fontFamily: "Inter, sans-serif" }}>{brl(c.valor)}</p>
-            <p style={{ fontSize: 9, color: C.mut, fontFamily: mono }}>{pct(c.valor)}% do total{c.horas != null ? ` · ${num(c.horas, 1)}h · R$ ${(c.custo_hora ?? 0).toFixed(2)}/h` : ""}</p>
+            <p style={{ fontSize: 18, color: c.cor, fontWeight: 700, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" }}>{brl(c.valor)}</p>
+            <p style={{ fontSize: 9, color: C.mut, fontFamily: theme.font.label }}>{pct(c.valor)}% do total{c.horas != null ? ` · ${num(c.horas, 1)}h · R$ ${(c.custo_hora ?? 0).toFixed(2)}/h` : ""}</p>
           </div>
         ))}
       </div>
@@ -92,7 +93,7 @@ export function AbaRelatorio({ ano, mes }: { ano: number; mes: number }) {
         <p style={{ ...sLabel, marginBottom: 10 }}>Composição (%)</p>
         {d.composicao.map((c) => (
           <div key={c.nome} style={{ marginBottom: 8 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, fontFamily: mono, color: C.mut, marginBottom: 2 }}><span>{c.nome}</span><span>{pct(c.valor)}%</span></div>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, fontFamily: theme.font.label, color: C.mut, marginBottom: 2 }}><span>{c.nome}</span><span>{pct(c.valor)}%</span></div>
             <div style={{ height: 8, background: C.card2, borderRadius: 4, overflow: "hidden" }}><div style={{ width: `${pct(c.valor)}%`, height: "100%", background: c.cor }} /></div>
           </div>
         ))}
@@ -101,25 +102,25 @@ export function AbaRelatorio({ ano, mes }: { ano: number; mes: number }) {
       {/* 9 KPIs */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 8 }}>
         {[["MP/Kg", brl(k.mp_kg)], ["Moagem/Kg", brl(k.moagem_kg)], ["Model./Kg", brl(k.modelagem_kg)], ["Embal./Kg", brl(k.embalamento_kg)], ["Total/Kg", brl(k.total_kg)], ["H Moagem", `${num(k.h_moagem, 1)}h`], ["H Model.", `${num(k.h_modelagem, 1)}h`], ["H Embal.", `${num(k.h_embalamento, 1)}h`], ["OPs / Kg-dia", `${k.ops} / ${num(k.kg_dia, 0)}`]].map(([a, b]) => (
-          <div key={a} style={{ background: C.card2, borderRadius: 4, padding: "8px 10px" }}><p style={{ fontSize: 8, color: C.mut2, fontFamily: mono, textTransform: "uppercase" }}>{a}</p><p style={{ fontSize: 13, color: C.texto, fontFamily: mono, fontWeight: 700 }}>{b}</p></div>
+          <div key={a} style={{ background: C.card2, borderRadius: 4, padding: "8px 10px" }}><p style={{ fontSize: 8, color: C.mut2, fontFamily: theme.font.label, textTransform: "uppercase" }}>{a}</p><p style={{ fontSize: 13, color: C.texto, fontFamily: theme.font.label, fontWeight: 700 }}>{b}</p></div>
         ))}
       </div>
 
       {/* Apontamentos */}
       <div style={{ ...sCard, padding: 16 }}>
-        <p style={{ color: C.branco, fontSize: 12, fontWeight: 700, fontFamily: mono, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 12 }}>Apontamentos Fora do Padrão — Melhoria Contínua</p>
-        {d.apontamentos.length === 0 ? <p style={{ color: C.verde2, fontSize: 12, fontFamily: mono }}>Nenhum dia acima do threshold de alerta.</p> :
+        <p style={{ color: C.branco, fontSize: 12, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 12 }}>Apontamentos Fora do Padrão — Melhoria Contínua</p>
+        {d.apontamentos.length === 0 ? <p style={{ color: C.verde2, fontSize: 12, fontFamily: theme.font.label }}>Nenhum dia acima do threshold de alerta.</p> :
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {d.apontamentos.map((a) => (
               <div key={a.data} style={{ borderLeft: `3px solid ${a.cor}`, background: `${a.cor}11`, borderRadius: 4, padding: "8px 12px" }}>
-                <p style={{ fontSize: 11, fontFamily: mono }}><span style={{ color: a.cor, fontWeight: 700 }}>{a.label}</span> <span style={{ color: C.branco }}>{a.data} — Custo/Kg {brl(a.custo_kg)}</span></p>
-                <p style={{ fontSize: 10, color: C.mut, fontFamily: mono }}>Referência: threshold alerta {brl(a.ref)}/kg → {a.acao}</p>
+                <p style={{ fontSize: 11, fontFamily: theme.font.label }}><span style={{ color: a.cor, fontWeight: 700 }}>{a.label}</span> <span style={{ color: C.branco }}>{a.data} — Custo/Kg {brl(a.custo_kg)}</span></p>
+                <p style={{ fontSize: 10, color: C.mut, fontFamily: theme.font.label }}>Referência: threshold alerta {brl(a.ref)}/kg → {a.acao}</p>
               </div>
             ))}
           </div>}
       </div>
 
-      <p style={{ color: C.mut2, fontSize: 9, fontFamily: mono, textAlign: "center", letterSpacing: ".05em" }}>
+      <p style={{ color: C.mut2, fontSize: 9, fontFamily: theme.font.label, textAlign: "center", letterSpacing: ".05em" }}>
         AMERICAN STEAK BRASIL · RELATÓRIO {MESES[d.mes]}/{d.ano} · MOAGEM R${d.custo_hora.moagem.toFixed(2)}/H · MODELAGEM R${d.custo_hora.modelagem.toFixed(2)}/H · EMBALAMENTO R${d.custo_hora.embalamento.toFixed(2)}/H · GERADO AUTOMATICAMENTE · USO INTERNO
       </p>
     </div>

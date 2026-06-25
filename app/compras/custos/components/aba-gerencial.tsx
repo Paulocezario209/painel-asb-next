@@ -1,7 +1,8 @@
 "use client";
 import { ResponsiveContainer, ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, BarChart, Cell } from "recharts";
 import { AlertTriangle, TrendingUp, TrendingDown, CheckCircle2 } from "lucide-react";
-import { C, mono, sCard } from "../lib/ui";
+import { C, sCard } from "../lib/ui";
+import { theme } from "@/lib/theme";
 import { brl } from "../lib/formatadores";
 import type { Thresholds } from "../lib/classificar";
 import type { Registro } from "../lib/storage-supabase";
@@ -67,8 +68,8 @@ export function AbaGerencial({ meses, registros, thresholds, insumosMensal = [] 
   ]; })() : [];
   const CORES = [C.azul, C.verde, C.amarelo];
 
-  const tip = { contentStyle: { background: C.card2, border: `1px solid ${C.borda}`, borderRadius: 6, fontFamily: mono, fontSize: 11 }, labelStyle: { color: C.branco } };
-  const axis = { tick: { fill: C.mut, fontSize: 10, fontFamily: mono }, stroke: C.borda };
+  const tip = { contentStyle: { background: C.card2, border: `1px solid ${C.borda}`, borderRadius: 6, fontFamily: theme.font.num, fontSize: 11 }, labelStyle: { color: C.branco } };
+  const axis = { tick: { fill: C.mut, fontSize: 10, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" }, stroke: C.borda };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -126,11 +127,11 @@ export function AbaGerencial({ meses, registros, thresholds, insumosMensal = [] 
       )}
 
       <div style={{ ...sCard, padding: 16 }}>
-        <p style={{ color: C.branco, fontSize: 12, fontWeight: 700, fontFamily: mono, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 12 }}>
+        <p style={{ color: C.branco, fontSize: 12, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 12 }}>
           Apontamentos Fora do Padrão — Melhoria Contínua
         </p>
         {apont.length === 0 ? (
-          <div style={{ display: "flex", gap: 8, alignItems: "center", color: C.verde2, fontFamily: mono, fontSize: 12 }}>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", color: C.verde2, fontFamily: theme.font.label, fontSize: 12 }}>
             <CheckCircle2 size={18} /> Nenhum desvio detectado nos dados atuais.
           </div>
         ) : (
@@ -142,11 +143,11 @@ export function AbaGerencial({ meses, registros, thresholds, insumosMensal = [] 
                 <div key={i} style={{ borderLeft: `3px solid ${cor}`, background: `${cor}11`, borderRadius: 4, padding: "10px 12px" }}>
                   <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 3 }}>
                     <Icon size={14} color={cor} />
-                    <span style={{ color: cor, fontSize: 9, fontWeight: 700, fontFamily: mono, letterSpacing: ".1em", textTransform: "uppercase" }}>{a.tipo}</span>
-                    <span style={{ color: C.branco, fontSize: 12, fontWeight: 700, fontFamily: mono }}>{a.titulo}</span>
+                    <span style={{ color: cor, fontSize: 9, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase" }}>{a.tipo}</span>
+                    <span style={{ color: C.branco, fontSize: 12, fontWeight: 700, fontFamily: theme.font.label }}>{a.titulo}</span>
                   </div>
-                  <p style={{ color: C.texto, fontSize: 11, fontFamily: mono }}>{a.detalhe}</p>
-                  <p style={{ color: C.mut, fontSize: 10, fontFamily: mono, marginTop: 2 }}>→ {a.acao}</p>
+                  <p style={{ color: C.texto, fontSize: 11, fontFamily: theme.font.label }}>{a.detalhe}</p>
+                  <p style={{ color: C.mut, fontSize: 10, fontFamily: theme.font.label, marginTop: 2 }}>→ {a.acao}</p>
                 </div>
               );
             })}
@@ -157,4 +158,4 @@ export function AbaGerencial({ meses, registros, thresholds, insumosMensal = [] 
   );
 }
 
-const lblChart: React.CSSProperties = { color: C.mut2, fontSize: 9, fontFamily: mono, letterSpacing: ".1em", textTransform: "uppercase", padding: "0 6px 8px" };
+const lblChart: React.CSSProperties = { color: C.mut2, fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", padding: "0 6px 8px" };

@@ -1,5 +1,6 @@
 "use client";
-import { C, mono } from "../lib/ui";
+import { C } from "../lib/ui";
+import { theme } from "@/lib/theme";
 import { STATUS_COR, type Status } from "../lib/classificar";
 import type { Registro } from "../lib/storage-supabase";
 
@@ -17,7 +18,7 @@ export function Calendario({ ano, mes, registros, onPickDia }: {
   return (
     <div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 4, marginBottom: 4 }}>
-        {DIAS_SEM.map((d) => <div key={d} style={{ textAlign: "center", fontSize: 9, color: C.mut2, fontFamily: mono, letterSpacing: ".05em", padding: 4 }}>{d}</div>)}
+        {DIAS_SEM.map((d) => <div key={d} style={{ textAlign: "center", fontSize: 9, color: C.mut2, fontFamily: theme.font.label, letterSpacing: ".05em", padding: 4 }}>{d}</div>)}
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 4 }}>
         {cells.map((dia, i) => {
@@ -36,11 +37,11 @@ export function Calendario({ ano, mes, registros, onPickDia }: {
                 border: `1px solid ${temDado ? cor : C.borda}`,
                 display: "flex", flexDirection: "column", justifyContent: "space-between",
               }}>
-              <span style={{ fontSize: 11, color: C.branco, fontFamily: mono, fontWeight: 700 }}>{dia}</span>
+              <span style={{ fontSize: 11, color: C.branco, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", fontWeight: 700 }}>{dia}</span>
               {r && r.kg_produzido > 0 ? (
-                <span style={{ fontSize: 9, color: cor, fontFamily: mono, fontWeight: 700 }}>R${(r.custo_kg ?? 0).toFixed(1)}</span>
+                <span style={{ fontSize: 9, color: cor, fontFamily: theme.font.num, fontWeight: 700 }}>R${(r.custo_kg ?? 0).toFixed(1)}</span>
               ) : st === "feriado" ? (
-                <span style={{ fontSize: 8, color: cor, fontFamily: mono }}>feriado</span>
+                <span style={{ fontSize: 8, color: cor, fontFamily: theme.font.label }}>feriado</span>
               ) : null}
             </button>
           );

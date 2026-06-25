@@ -28,7 +28,7 @@ export type Noticia = {
   sinal_ia: string | null; resumo_ia: string | null;
 };
 
-const mono = "'Courier New', monospace";
+import { theme } from "@/lib/theme";
 const GREEN = "#2ea043";
 
 // Cores semânticas (skill elite) — ÓTICA DO COMPRADOR.
@@ -113,14 +113,14 @@ export default function MercadoClient({
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 8 }}>
         <div>
-          <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: mono, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
+          <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
             Inteligência de Mercado
           </h1>
-          <p style={{ color: C_MUTED, fontSize: 11, fontFamily: mono }}>
+          <p style={{ color: C_MUTED, fontSize: 11, fontFamily: theme.font.label }}>
             Cotações de proteínas (indicador CEPEA) + notícias + análise IA · timing de compra.
           </p>
         </div>
-        <span style={{ color: C_MUTED, fontSize: 10, fontFamily: mono, letterSpacing: ".08em" }}>
+        <span style={{ color: C_MUTED, fontSize: 10, fontFamily: theme.font.label, letterSpacing: ".08em" }}>
           ATUALIZADO {dataAtualizacao}
         </span>
       </div>
@@ -133,19 +133,19 @@ export default function MercadoClient({
           if (!c) {
             return (
               <div key={prot} style={cardStyle}>
-                <span style={{ color: C_MUTED, fontSize: 11, fontFamily: mono }}>{LABEL_PROT[prot]} — sem cotação</span>
+                <span style={{ color: C_MUTED, fontSize: 11, fontFamily: theme.font.label }}>{LABEL_PROT[prot]} — sem cotação</span>
               </div>
             );
           }
           return (
             <div key={prot} style={cardStyle}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                <span style={{ color: COR_PROT[prot], fontSize: 11, fontFamily: mono, fontWeight: 700, letterSpacing: ".12em" }}>
+                <span style={{ color: COR_PROT[prot], fontSize: 11, fontFamily: theme.font.label, fontWeight: 700, letterSpacing: ".12em" }}>
                   {LABEL_PROT[prot]}
                 </span>
                 {s?.sinal && (
                   <span style={{
-                    color: corSinal(s.sinal), fontSize: 10, fontFamily: mono, fontWeight: 700,
+                    color: corSinal(s.sinal), fontSize: 10, fontFamily: theme.font.label, fontWeight: 700,
                     border: `1px solid ${corSinal(s.sinal)}`, borderRadius: 3, padding: "2px 6px",
                     letterSpacing: ".1em",
                   }}>
@@ -154,16 +154,16 @@ export default function MercadoClient({
                 )}
               </div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-                <span style={{ color: "#FFFFFF", fontSize: 24, fontFamily: mono, fontWeight: 700 }}>
+                <span style={{ color: "#FFFFFF", fontSize: 24, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", fontWeight: 700 }}>
                   R$ {fmtBRL(c.valor)}
                 </span>
-                <span style={{ color: C_MUTED, fontSize: 11, fontFamily: mono }}>{c.unidade}</span>
+                <span style={{ color: C_MUTED, fontSize: 11, fontFamily: theme.font.label }}>{c.unidade}</span>
               </div>
-              <div style={{ marginTop: 4, color: corVar(c.variacao_pct), fontSize: 12, fontFamily: mono }}>
+              <div style={{ marginTop: 4, color: corVar(c.variacao_pct), fontSize: 12, fontFamily: theme.font.num }}>
                 {setaVar(c.variacao_pct)} {c.variacao_pct == null ? "—" : `${c.variacao_pct > 0 ? "+" : ""}${fmtBRL(c.variacao_pct)}%`}
               </div>
               {s?.confianca != null && (
-                <div style={{ marginTop: 6, color: C_MUTED, fontSize: 9, fontFamily: mono, letterSpacing: ".1em" }}>
+                <div style={{ marginTop: 6, color: C_MUTED, fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".1em" }}>
                   CONFIANÇA {"●".repeat(s.confianca)}{"○".repeat(Math.max(0, 5 - s.confianca))}
                 </div>
               )}
@@ -176,7 +176,7 @@ export default function MercadoClient({
       <div style={cardStyle}>
         <span style={titleStyle}>Histórico 90 dias</span>
         {chartData.length < 2 ? (
-          <p style={{ color: C_MUTED, fontSize: 11, fontFamily: mono, marginTop: 10 }}>
+          <p style={{ color: C_MUTED, fontSize: 11, fontFamily: theme.font.label, marginTop: 10 }}>
             Histórico em construção — {chartData.length} dia(s) coletado(s). A série aparece conforme o cron diário acumula pontos.
           </p>
         ) : (
@@ -184,16 +184,16 @@ export default function MercadoClient({
             <ResponsiveContainer>
               <LineChart data={chartData} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1e2a35" />
-                <XAxis dataKey="data" tick={{ fill: C_MUTED, fontSize: 10, fontFamily: mono }} stroke="#2a3a45" />
-                <YAxis yAxisId="left" tick={{ fill: COR_PROT.bovino, fontSize: 10, fontFamily: mono }} stroke="#2a3a45"
+                <XAxis dataKey="data" tick={{ fill: C_MUTED, fontSize: 10, fontFamily: theme.font.num }} stroke="#2a3a45" />
+                <YAxis yAxisId="left" tick={{ fill: COR_PROT.bovino, fontSize: 10, fontFamily: theme.font.num }} stroke="#2a3a45"
                   label={{ value: "R$/@", angle: -90, position: "insideLeft", fill: COR_PROT.bovino, fontSize: 9 }} />
-                <YAxis yAxisId="right" orientation="right" tick={{ fill: C_MUTED, fontSize: 10, fontFamily: mono }} stroke="#2a3a45"
+                <YAxis yAxisId="right" orientation="right" tick={{ fill: C_MUTED, fontSize: 10, fontFamily: theme.font.num }} stroke="#2a3a45"
                   label={{ value: "R$/kg", angle: 90, position: "insideRight", fill: C_MUTED, fontSize: 9 }} />
                 <Tooltip
-                  contentStyle={{ background: "#0d1117", border: "1px solid #2a3a45", borderRadius: 4, fontFamily: mono, fontSize: 11 }}
+                  contentStyle={{ background: "#0d1117", border: "1px solid #2a3a45", borderRadius: 4, fontFamily: theme.font.num, fontSize: 11 }}
                   labelStyle={{ color: "#FFFFFF" }}
                 />
-                <Legend wrapperStyle={{ fontFamily: mono, fontSize: 10 }} />
+                <Legend wrapperStyle={{ fontFamily: theme.font.label, fontSize: 10 }} />
                 <Line yAxisId="left" type="monotone" dataKey="bovino" name="Boi (R$/@)" stroke={COR_PROT.bovino} strokeWidth={2} dot={false} connectNulls />
                 <Line yAxisId="right" type="monotone" dataKey="frango" name="Frango (R$/kg)" stroke={COR_PROT.frango} strokeWidth={2} dot={false} connectNulls />
                 <Line yAxisId="right" type="monotone" dataKey="suino" name="Suíno (R$/kg)" stroke={COR_PROT.suino} strokeWidth={2} dot={false} connectNulls />
@@ -215,14 +215,14 @@ export default function MercadoClient({
               return (
                 <div key={prot} style={{ borderLeft: `3px solid ${corSinal(s.sinal)}`, paddingLeft: 10 }}>
                   <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 3 }}>
-                    <span style={{ color: COR_PROT[prot], fontSize: 11, fontFamily: mono, fontWeight: 700 }}>{LABEL_PROT[prot]}</span>
-                    <span style={{ color: corSinal(s.sinal), fontSize: 10, fontFamily: mono, fontWeight: 700 }}>{s.sinal}</span>
+                    <span style={{ color: COR_PROT[prot], fontSize: 11, fontFamily: theme.font.label, fontWeight: 700 }}>{LABEL_PROT[prot]}</span>
+                    <span style={{ color: corSinal(s.sinal), fontSize: 10, fontFamily: theme.font.label, fontWeight: 700 }}>{s.sinal}</span>
                   </div>
                   {s.justificativa && (
-                    <p style={{ color: "#c0c8d8", fontSize: 11, fontFamily: mono, lineHeight: 1.45 }}>{s.justificativa}</p>
+                    <p style={{ color: "#c0c8d8", fontSize: 11, fontFamily: theme.font.label, lineHeight: 1.45 }}>{s.justificativa}</p>
                   )}
                   {(s.projecao_7d || s.projecao_30d) && (
-                    <p style={{ color: C_MUTED, fontSize: 10, fontFamily: mono, marginTop: 3 }}>
+                    <p style={{ color: C_MUTED, fontSize: 10, fontFamily: theme.font.label, marginTop: 3 }}>
                       {s.projecao_7d ? `7d: ${s.projecao_7d}` : ""}{s.projecao_7d && s.projecao_30d ? " · " : ""}{s.projecao_30d ? `30d: ${s.projecao_30d}` : ""}
                     </p>
                   )}
@@ -231,12 +231,12 @@ export default function MercadoClient({
             })}
             {analiseGeral?.justificativa && (
               <div style={{ borderTop: "1px solid #1e2a35", paddingTop: 8, marginTop: 2 }}>
-                <span style={{ color: C_MUTED, fontSize: 9, fontFamily: mono, letterSpacing: ".1em" }}>GERAL</span>
-                <p style={{ color: "#c0c8d8", fontSize: 11, fontFamily: mono, lineHeight: 1.45, marginTop: 2 }}>{analiseGeral.justificativa}</p>
+                <span style={{ color: C_MUTED, fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".1em" }}>GERAL</span>
+                <p style={{ color: "#c0c8d8", fontSize: 11, fontFamily: theme.font.label, lineHeight: 1.45, marginTop: 2 }}>{analiseGeral.justificativa}</p>
               </div>
             )}
             {sinais.length === 0 && (
-              <p style={{ color: C_MUTED, fontSize: 11, fontFamily: mono }}>Sem análise disponível ainda.</p>
+              <p style={{ color: C_MUTED, fontSize: 11, fontFamily: theme.font.label }}>Sem análise disponível ainda.</p>
             )}
           </div>
         </div>
@@ -246,14 +246,14 @@ export default function MercadoClient({
           <span style={titleStyle}>Notícias do setor</span>
           <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 8 }}>
             {noticias.length === 0 && (
-              <p style={{ color: C_MUTED, fontSize: 11, fontFamily: mono }}>Sem notícias recentes.</p>
+              <p style={{ color: C_MUTED, fontSize: 11, fontFamily: theme.font.label }}>Sem notícias recentes.</p>
             )}
             {noticias.map((n) => {
               const sig = corSinalNoticia(n.sinal_ia);
               return (
                 <div key={n.id} style={{ display: "flex", gap: 8, alignItems: "flex-start", paddingBottom: 8, borderBottom: "1px solid #161e28" }}>
                   <span style={{
-                    color: sig.cor, fontSize: 8, fontFamily: mono, fontWeight: 700, whiteSpace: "nowrap",
+                    color: sig.cor, fontSize: 8, fontFamily: theme.font.label, fontWeight: 700, whiteSpace: "nowrap",
                     border: `1px solid ${sig.cor}`, borderRadius: 3, padding: "2px 4px", marginTop: 2, letterSpacing: ".05em",
                   }}>
                     {sig.label}
@@ -261,13 +261,13 @@ export default function MercadoClient({
                   <div style={{ minWidth: 0 }}>
                     {n.url ? (
                       <a href={n.url} target="_blank" rel="noopener noreferrer"
-                        style={{ color: "#dfe6f0", fontSize: 11, fontFamily: mono, lineHeight: 1.4, textDecoration: "none" }}>
+                        style={{ color: "#dfe6f0", fontSize: 11, fontFamily: theme.font.label, lineHeight: 1.4, textDecoration: "none" }}>
                         {n.titulo}
                       </a>
                     ) : (
-                      <span style={{ color: "#dfe6f0", fontSize: 11, fontFamily: mono, lineHeight: 1.4 }}>{n.titulo}</span>
+                      <span style={{ color: "#dfe6f0", fontSize: 11, fontFamily: theme.font.label, lineHeight: 1.4 }}>{n.titulo}</span>
                     )}
-                    <div style={{ color: C_MUTED, fontSize: 9, fontFamily: mono, marginTop: 2 }}>{n.fonte}</div>
+                    <div style={{ color: C_MUTED, fontSize: 9, fontFamily: theme.font.label, marginTop: 2 }}>{n.fonte}</div>
                   </div>
                 </div>
               );
@@ -276,7 +276,7 @@ export default function MercadoClient({
         </div>
       </div>
 
-      <p style={{ color: "#556677", fontSize: 9, fontFamily: mono }}>
+      <p style={{ color: "#556677", fontSize: 9, fontFamily: theme.font.label }}>
         Fonte cotações: indicador CEPEA via Notícias Agrícolas (boi R$/@, frango/suíno R$/kg · suíno = média das praças).
         Notícias: Google News classificadas por IA. Análise: gpt-4o-mini. Atualização diária 06h BRT (workflow ASB_MERCADO_INTELIGENCIA).
       </p>
@@ -294,6 +294,6 @@ const cardStyle: React.CSSProperties = {
   padding: 16,
 };
 const titleStyle: React.CSSProperties = {
-  color: "#FFFFFF", fontSize: 12, fontWeight: 700, fontFamily: mono,
+  color: "#FFFFFF", fontSize: 12, fontWeight: 700, fontFamily: theme.font.label,
   letterSpacing: ".1em", textTransform: "uppercase",
 };

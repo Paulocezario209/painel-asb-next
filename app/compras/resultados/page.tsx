@@ -13,7 +13,7 @@ import {
 
 export const dynamic = "force-dynamic";
 
-const mono = "'Courier New', monospace";
+import { theme } from "@/lib/theme";
 const brl = (n: number) =>
   n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 const MESES_PT = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
@@ -199,7 +199,7 @@ export default async function ResultadosPage({
     letterSpacing: ".15em",
     textTransform: "uppercase",
     color: "#556677",
-    fontFamily: mono,
+    fontFamily: theme.font.label,
   };
   const mtdLabel = isMesCorrente ? "MTD" : "Realizado";
   // Painel ANO 2026: 12 tiles. Mês corrente do calendário (para fechado/andamento/futuro).
@@ -214,7 +214,7 @@ export default async function ResultadosPage({
           color: "#FFFFFF",
           fontSize: 16,
           fontWeight: 700,
-          fontFamily: mono,
+          fontFamily: theme.font.label,
           letterSpacing: ".1em",
           textTransform: "uppercase",
         }}
@@ -252,7 +252,7 @@ export default async function ResultadosPage({
                   borderRadius: 6,
                   padding: 10,
                   opacity: futuro ? 0.45 : 1,
-                  fontFamily: mono,
+                  fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums",
                   height: "100%",
                 }}
               >
@@ -293,7 +293,7 @@ export default async function ResultadosPage({
           {!isMesCorrente && fatRows.length === 0 ? (
             <div style={{ ...labelS, marginTop: 10, textTransform: "none", letterSpacing: 0 }}>Sem dados de faturamento neste período</div>
           ) : (
-            <div style={{ fontSize: 26, fontWeight: 700, color: "#FFFFFF", fontFamily: "Inter, sans-serif", marginTop: 6 }}>{brl(faturadoMtd)}</div>
+            <div style={{ fontSize: 26, fontWeight: 700, color: "#FFFFFF", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", marginTop: 6 }}>{brl(faturadoMtd)}</div>
           )}
         </div>
 
@@ -304,7 +304,7 @@ export default async function ResultadosPage({
             <div style={{ ...labelS, marginTop: 10, textTransform: "none", letterSpacing: 0 }}>Sem dados de compras neste período</div>
           ) : (
             <>
-              <div style={{ fontSize: 26, fontWeight: 700, color: "#FFFFFF", fontFamily: "Inter, sans-serif", marginTop: 6 }}>{brl(comprasMtd)}</div>
+              <div style={{ fontSize: 26, fontWeight: 700, color: "#FFFFFF", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", marginTop: 6 }}>{brl(comprasMtd)}</div>
               <div style={{ ...labelS, marginTop: 8, color: "#8899aa", textTransform: "none", letterSpacing: 0 }}>
                 Recebido (NF): <b style={{ color: "#2ea043" }}>{brl(recebidoMtd)}</b> · A chegar: <b style={{ color: "#d29922" }}>{brl(aChegarMtd)}</b>
               </div>
@@ -319,8 +319,8 @@ export default async function ResultadosPage({
 
         <div style={{ background: "#0f1428", border: `1px solid ${sem.cor}`, borderRadius: 6, padding: 18, flex: 1, minWidth: 200 }}>
           <div style={labelS}>% Compras / Faturado</div>
-          <div style={{ fontSize: 26, fontWeight: 700, color: sem.cor, fontFamily: "Inter, sans-serif", marginTop: 6 }}>
-            {pct}% <span style={{ fontSize: 12, fontFamily: mono }}>{sem.label}</span>
+          <div style={{ fontSize: 26, fontWeight: 700, color: sem.cor, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", marginTop: 6 }}>
+            {pct}% <span style={{ fontSize: 12, fontFamily: theme.font.label }}>{sem.label}</span>
           </div>
           <div style={{ ...labelS, marginTop: 8, color: "#556677", textTransform: "none", letterSpacing: 0 }}>teto 54% · 🟢≤54 🟡54-65 🔴&gt;65</div>
         </div>
@@ -335,7 +335,7 @@ export default async function ResultadosPage({
           {metaRows.length === 0 ? (
             <div style={{ ...labelS, textTransform: "none", letterSpacing: 0 }}>Sem meta de vendedores neste período — projeção indisponível</div>
           ) : (
-            <div style={{ display: "flex", gap: 24, flexWrap: "wrap", fontFamily: mono, fontSize: 13, color: "#c8d8e8" }}>
+            <div style={{ display: "flex", gap: 24, flexWrap: "wrap", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", fontSize: 13, color: "#c8d8e8" }}>
               <span>Faturado proj.: <b>{brl(projFaturado)}</b></span>
               <span>Compras proj.: <b>{brl(projCompras)}</b></span>
               <span style={{ color: semProj.cor }}>% proj.: <b>{pctProj}% {semProj.label}</b></span>

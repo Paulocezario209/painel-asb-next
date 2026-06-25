@@ -5,7 +5,7 @@
 import { useRef, useState } from "react";
 import { Search, X, Send, Loader2 } from "lucide-react";
 
-const mono = "'Courier New', monospace";
+import { theme } from "@/lib/theme";
 const GREEN = "#2ea043";
 const BG = "#0d1117";
 const BORDER = "#1e2a35";
@@ -119,7 +119,7 @@ export default function MercadoChat({ cotacoes }: { cotacoes: Cotacao[] }) {
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 14px", borderBottom: `1px solid ${BORDER}` }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <Search style={{ width: 14, height: 14, color: GREEN }} />
-              <span style={{ color: "#fff", fontSize: 11, fontFamily: mono, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase" }}>
+              <span style={{ color: "#fff", fontSize: 11, fontFamily: theme.font.label, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase" }}>
                 Inteligência de Mercado
               </span>
             </div>
@@ -131,7 +131,7 @@ export default function MercadoChat({ cotacoes }: { cotacoes: Cotacao[] }) {
           {/* Corpo */}
           <div style={{ flex: 1, overflowY: "auto", padding: 14 }}>
             {!answer && !loading && !error && (
-              <div style={{ color: MUTED, fontSize: 11, fontFamily: mono, lineHeight: 1.6 }}>
+              <div style={{ color: MUTED, fontSize: 11, fontFamily: theme.font.label, lineHeight: 1.6 }}>
                 Pergunte sobre o mercado de proteínas — preço do boi/suíno/frango, tendências, melhor momento de compra. A IA pesquisa na web em tempo real.
                 <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 6 }}>
                   {[
@@ -140,7 +140,7 @@ export default function MercadoChat({ cotacoes }: { cotacoes: Cotacao[] }) {
                     "Tem notícia recente que pressione o preço do frango?",
                   ].map((ex) => (
                     <button key={ex} onClick={() => setQuestion(ex)}
-                      style={{ textAlign: "left", background: "rgba(46,160,67,.08)", border: `1px solid ${BORDER}`, borderRadius: 5, padding: "7px 10px", color: "#c0c8d8", fontSize: 10.5, fontFamily: mono, cursor: "pointer" }}>
+                      style={{ textAlign: "left", background: "rgba(46,160,67,.08)", border: `1px solid ${BORDER}`, borderRadius: 5, padding: "7px 10px", color: "#c0c8d8", fontSize: 10.5, fontFamily: theme.font.label, cursor: "pointer" }}>
                       {ex}
                     </button>
                   ))}
@@ -149,20 +149,20 @@ export default function MercadoChat({ cotacoes }: { cotacoes: Cotacao[] }) {
             )}
 
             {status && (
-              <div style={{ display: "flex", alignItems: "center", gap: 8, color: GREEN, fontSize: 11, fontFamily: mono, marginBottom: 10 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, color: GREEN, fontSize: 11, fontFamily: theme.font.label, marginBottom: 10 }}>
                 <Loader2 style={{ width: 13, height: 13, animation: "spin 1s linear infinite" }} />
                 {status}
               </div>
             )}
 
             {answer && (
-              <div style={{ color: "#dfe6f0", fontSize: 12, fontFamily: mono, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
+              <div style={{ color: "#dfe6f0", fontSize: 12, fontFamily: theme.font.label, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
                 {answer}
               </div>
             )}
 
             {error && (
-              <div style={{ color: "#C8102E", fontSize: 11, fontFamily: mono, marginTop: 8 }}>
+              <div style={{ color: "#C8102E", fontSize: 11, fontFamily: theme.font.label, marginTop: 8 }}>
                 Erro: {error}
               </div>
             )}
@@ -175,7 +175,7 @@ export default function MercadoChat({ cotacoes }: { cotacoes: Cotacao[] }) {
               onChange={(e) => setQuestion(e.target.value)}
               placeholder="Pergunte sobre o mercado…"
               disabled={loading}
-              style={{ flex: 1, background: "#080b14", border: `1px solid ${BORDER}`, borderRadius: 6, padding: "8px 10px", color: "#fff", fontSize: 11.5, fontFamily: mono, outline: "none" }}
+              style={{ flex: 1, background: "#080b14", border: `1px solid ${BORDER}`, borderRadius: 6, padding: "8px 10px", color: "#fff", fontSize: 11.5, fontFamily: theme.font.label, outline: "none" }}
             />
             <button type="submit" disabled={loading || !question.trim()} aria-label="Enviar"
               style={{ width: 38, background: question.trim() && !loading ? GREEN : BORDER, border: "none", borderRadius: 6, cursor: loading || !question.trim() ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>

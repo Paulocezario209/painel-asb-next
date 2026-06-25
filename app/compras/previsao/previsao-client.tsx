@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Search, X } from "lucide-react";
 import { norm } from "@/lib/normalize";
 
-const mono = "'Courier New', monospace";
+import { theme } from "@/lib/theme";
 
 export type PrevRow = {
   id_produto: string | number; descricao: string | null; grupo_nome: string | null;
@@ -19,8 +19,8 @@ const n3 = (n: number | null) => (n == null ? "—" : n.toLocaleString("pt-BR", 
 export default function PrevisaoClient({ rows }: { rows: PrevRow[] }) {
   const [q, setQ] = useState("");
 
-  const th: React.CSSProperties = { fontSize: 9, color: "#556677", fontFamily: mono, letterSpacing: ".1em", textTransform: "uppercase", padding: "8px 10px", textAlign: "right", borderBottom: "1px solid #1B2A6B" };
-  const td: React.CSSProperties = { padding: "7px 10px", color: "#c8d8e8", fontFamily: mono, fontSize: 12, textAlign: "right" };
+  const th: React.CSSProperties = { fontSize: 9, color: "#556677", fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", padding: "8px 10px", textAlign: "right", borderBottom: "1px solid #1B2A6B" };
+  const td: React.CSSProperties = { padding: "7px 10px", color: "#c8d8e8", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", fontSize: 12, textAlign: "right" };
   const card: React.CSSProperties = { background: "#0f1428", border: "1px solid #1B2A6B", borderRadius: 6, overflowX: "auto" };
 
   // filtro acento-insensitive: descricao OU id_produto OU skus
@@ -58,11 +58,11 @@ export default function PrevisaoClient({ rows }: { rows: PrevRow[] }) {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Buscar insumo por nome ou código…"
-            style={{ flex: 1, background: "transparent", border: "none", outline: "none", color: "#c8d8e8", fontFamily: mono, fontSize: 12 }}
+            style={{ flex: 1, background: "transparent", border: "none", outline: "none", color: "#c8d8e8", fontFamily: theme.font.label, fontSize: 12 }}
           />
           {q ? (
             <>
-              <span style={{ color: "#556677", fontFamily: mono, fontSize: 10, whiteSpace: "nowrap" }}>{filtered.length} de {rows.length}</span>
+              <span style={{ color: "#556677", fontFamily: theme.font.label, fontSize: 10, whiteSpace: "nowrap" }}>{filtered.length} de {rows.length}</span>
               <button
                 onClick={() => setQ("")}
                 aria-label="Limpar busca"
