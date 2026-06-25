@@ -119,7 +119,7 @@ export function CalendarioClient({ ano, rows }: { ano: number; rows: DiaRow[] })
             }}>
               <div style={{ color: ativo ? "#fff" : "#c8d8e8", fontSize: 11, fontWeight: 700, fontFamily: mono, letterSpacing: ".06em", textTransform: "uppercase" }}>{nome}</div>
               <div style={{ color: YELLOW, fontSize: 13, fontFamily: mono, fontWeight: 700, marginTop: 4 }}>{mm ? fmtBRL(mm.gasto) : "—"}</div>
-              <div style={{ color: MUT, fontSize: 9, fontFamily: mono, marginTop: 2 }}>{mm ? `${mm.leads} leads` : "sem gasto"}</div>
+              <div style={{ color: MUT, fontSize: 9, fontFamily: mono, marginTop: 2 }}>{mm ? (mm.leads > 0 ? `${mm.leads} leads` : "sem atribuição") : "sem gasto"}</div>
             </button>
           );
         })}
