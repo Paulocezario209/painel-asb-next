@@ -9,8 +9,8 @@ import { theme } from "@/lib/theme";
 
 export type FunilRow = {
   canal: string;
-  leads_total: number; qualificados: number; handoffs: number; convertidos: number;
-  pct_qualificacao: number | null; pct_handoff: number | null; pct_conversao: number | null;
+  leads_total: number; qualificados: number; qualificados_real: number; handoffs: number; convertidos: number;
+  pct_qualificacao: number | null; pct_qualificacao_real: number | null; pct_handoff: number | null; pct_conversao: number | null;
 };
 export type ConvMensalRow = { mes: string; leads: number; convertidos: number };
 
@@ -42,7 +42,7 @@ export function FunilCacClient({ funil, mensal }: { funil: FunilRow[]; mensal: C
   const agg = useMemo(() => funil.reduce(
     (a, f) => ({
       leads: a.leads + Number(f.leads_total),
-      qualificados: a.qualificados + Number(f.qualificados),
+      qualificados: a.qualificados + Number(f.qualificados_real),  // gate real qual_stage>=7 (não a tautológica)
       handoffs: a.handoffs + Number(f.handoffs),
       convertidos: a.convertidos + Number(f.convertidos),
     }),
@@ -125,10 +125,10 @@ export function FunilCacClient({ funil, mensal }: { funil: FunilRow[]; mensal: C
                 <tr key={f.canal} style={{ borderTop: "1px solid #2a2a2a" }}>
                   <td style={{ ...td, color: "#FFFFFF", textTransform: "uppercase" }}>{f.canal}</td>
                   <td style={{ ...td, textAlign: "center" }}>{f.leads_total}</td>
-                  <td style={{ ...td, textAlign: "center", color: theme.colors.chartNavyLight }}>{f.qualificados}</td>
+                  <td style={{ ...td, textAlign: "center", color: theme.colors.chartNavyLight }}>{f.qualificados_real}</td>
                   <td style={{ ...td, textAlign: "center", color: YELLOW }}>{f.handoffs}</td>
                   <td style={{ ...td, textAlign: "center", color: GREEN }}>{f.convertidos}</td>
-                  <td style={{ ...td, textAlign: "center", color: "#8899aa" }}>{pctFmt(f.pct_qualificacao)}</td>
+                  <td style={{ ...td, textAlign: "center", color: "#8899aa" }}>{pctFmt(f.pct_qualificacao_real)}</td>
                   <td style={{ ...td, textAlign: "center", color: "#8899aa" }}>{pctFmt(f.pct_handoff)}</td>
                   <td style={{ ...td, textAlign: "center", color: "#8899aa" }}>{pctFmt(f.pct_conversao)}</td>
                 </tr>
@@ -161,7 +161,7 @@ export function FunilCacClient({ funil, mensal }: { funil: FunilRow[]; mensal: C
       </div>
 
       <p style={{ color: MUT, fontSize: 9, fontFamily: mono }}>
-        Fonte: v_funil_por_canal (qualificado=qual_stage · handoff=seller_first_reply_at · convertido=first_order_at) + v_cac_mensal_canal (conversão mensal). % do funil = razão sobre Leads. Leads atribuídos desde 02/06.
+        Fonte: v_funil_por_canal (qualificado = qual_stage ≥ 7 / lead realmente qualificado · handoff=seller_first_reply_at · convertido=first_order_at) + v_cac_mensal_canal (conversão mensal). % do funil = razão sobre Leads. Leads atribuídos desde 02/06.
       </p>
     </div>
   );
