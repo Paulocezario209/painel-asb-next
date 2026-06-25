@@ -7,7 +7,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
+  --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
@@ -111,10 +111,12 @@
     font-family: 'Courier New', 'Courier', monospace;
     font-size: 13px;
   }
-  html {
-    @apply font-mono;
-  }
 }
+
+/* Tipografia semântica (design system): número = mono · texto = sans.
+   Fase 0 (setup) — classes definidas, ainda NÃO referenciadas em componentes. */
+.num   { font-family: var(--font-geist-mono), 'Courier New', monospace; font-variant-numeric: tabular-nums; }
+.label { font-family: var(--font-geist-sans), system-ui, sans-serif; }
 
 /* Utility classes */
 .asb-label {
