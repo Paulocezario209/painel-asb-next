@@ -75,6 +75,11 @@ export function OrigemClient({ canais, mensal }: { canais: CanalConsolidado[]; m
     () => Array.from(new Set(mensal.filter(r => r.cac_por_lead != null).map(r => r.canal))),
     [mensal],
   );
+  // nº de meses com ≥1 CAC válido — precisa de ≥2 pra traçar uma linha (senão são pontos soltos)
+  const mesesComCac = useMemo(
+    () => lineData.filter(row => canaisComCac.some(c => row[c] != null)).length,
+    [lineData, canaisComCac],
+  );
   // Gasto mensal por canal (barras empilhadas) — visível mesmo sem CAC (jan→mai)
   const canaisAll = useMemo(() => Array.from(new Set(mensal.map(r => r.canal))), [mensal]);
   const gastoData = useMemo(() => mesesOrdenados.map(mes => {
@@ -135,9 +140,9 @@ export function OrigemClient({ canais, mensal }: { canais: CanalConsolidado[]; m
         <p style={{ color: "#FFFFFF", fontSize: 11, fontWeight: 700, fontFamily: mono, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 12 }}>
           CAC por canal — evolução mensal
         </p>
-        {lineData.length === 0 || canaisComCac.length === 0 ? (
+        {lineData.length === 0 || canaisComCac.length === 0 || mesesComCac < 2 ? (
           <p style={{ color: MUT, fontSize: 11, fontFamily: mono, textAlign: "center", padding: 30 }}>
-            Sem CAC mensal ainda (leads atribuídos só desde 02/06).
+            Evolução mensal aparece com ≥2 meses de CAC válido (atribuição só desde 02/06).
           </p>
         ) : (
           <ResponsiveContainer width="100%" height={260}>
