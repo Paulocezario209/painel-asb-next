@@ -51,7 +51,7 @@ type ResumoVendor = {
 };
 
 const VENDOR_LABELS: Record<string, { name: string; region: string; accent: string }> = {
-  SETOR_CUIT:                { name: "Paulo Cezario", region: "CUIT — key accounts",    accent: theme.colors.accent },
+  SETOR_CUIT:                { name: "SETOR CUIT",    region: "CUIT — key accounts",    accent: theme.colors.accent },
   SETOR_SOROCABA_SAO_PAULO:  { name: "Ana Paula",     region: "Sorocaba / Grande SP",   accent: theme.colors.critical },
   SETOR_CAMPINAS_JUNDIAI:    { name: "Alan",          region: "Campinas / Jundiai",     accent: theme.colors.success },
 };

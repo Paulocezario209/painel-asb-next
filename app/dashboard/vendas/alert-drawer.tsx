@@ -18,7 +18,7 @@ export type DrawerColumn<T> = {
 };
 
 const VENDOR_NAMES: Record<string, string> = {
-  SETOR_CUIT: "Paulo Cezario",
+  SETOR_CUIT: "SETOR CUIT",
   SETOR_SOROCABA_SAO_PAULO: "Ana Paula",
   SETOR_CAMPINAS_JUNDIAI: "Alan",
 };

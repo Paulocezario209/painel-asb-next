@@ -18,7 +18,7 @@ const METRICS_CUTOFF = "2026-05-11T03:00:00";
 const VENDOR_LABELS: Record<string, { name: string; region: string }> = {
   SETOR_SOROCABA_SAO_PAULO: { name: "Ana Paula", region: "Sorocaba / Grande SP" },
   SETOR_CAMPINAS_JUNDIAI:   { name: "Alan", region: "Campinas / Jundiai" },
-  SETOR_CUIT:               { name: "Paulo Cezario", region: "CUIT — key accounts" },
+  SETOR_CUIT:               { name: "SETOR CUIT", region: "CUIT — key accounts" },
 };
 
 const VENDOR_ORDER = ["SETOR_SOROCABA_SAO_PAULO", "SETOR_CAMPINAS_JUNDIAI", "SETOR_CUIT"];

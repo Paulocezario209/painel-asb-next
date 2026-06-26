@@ -40,7 +40,7 @@ type AppliedResp = {
 const VENDOR_NOMES: Record<string, string> = {
   SETOR_SOROCABA_SAO_PAULO: "Ana Paula",
   SETOR_CAMPINAS_JUNDIAI: "Alan",
-  SETOR_CUIT: "Paulo Cezario",
+  SETOR_CUIT: "SETOR CUIT",
 };
 
 function fmtBRL(v: number) {

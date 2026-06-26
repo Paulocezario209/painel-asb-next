@@ -21,7 +21,7 @@ const VENDORS = [
   { k: "all", name: "Consolidado", accent: "#185FA5" },
   { k: "SETOR_SOROCABA_SAO_PAULO", name: "Ana Paula", accent: "#C8102E" },
   { k: "SETOR_CAMPINAS_JUNDIAI", name: "Alan", accent: "#22c55e" },
-  { k: "SETOR_CUIT", name: "Paulo Cezario", accent: "#ff7b1c" },
+  { k: "SETOR_CUIT", name: "SETOR CUIT", accent: "#ff7b1c" },
 ];
 
 

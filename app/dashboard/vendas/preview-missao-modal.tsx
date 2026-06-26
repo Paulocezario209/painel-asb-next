@@ -6,7 +6,7 @@ import { MissaoDoDia } from "./missao-do-dia";
 import type { EstrategiasResponse } from "./actions";
 
 const VENDOR_LABELS: Record<string, string> = {
-  SETOR_CUIT: "Paulo Cezario",
+  SETOR_CUIT: "SETOR CUIT",
   SETOR_SOROCABA_SAO_PAULO: "Ana Paula",
   SETOR_CAMPINAS_JUNDIAI: "Alan",
 };
