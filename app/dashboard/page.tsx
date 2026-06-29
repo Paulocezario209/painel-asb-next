@@ -51,7 +51,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   if (vend) qTotal = qTotal.eq("routing_team", vend);
   if (mesIni && mesFimEx) qTotal = qTotal.gte("created_at", mesIni).lt("created_at", mesFimEx);
   // ALERTA — handoff pendente (estado "agora", só vendedor)
-  let qHandoff = supabase.from("ai_sdr_leads").select("*", { count: "exact", head: true }).eq("is_test", false).not("handoff_at", "is", null).eq("handoff_confirmed", false);
+  let qHandoff = supabase.from("ai_sdr_leads").select("*", { count: "exact", head: true }).eq("is_test", false).eq("human_active", true).not("handoff_at", "is", null).eq("handoff_confirmed", false);
   if (vend) qHandoff = qHandoff.eq("routing_team", vend);
   // KPI VOLUME — qualificados (mês + vendedor)
   let qQual = supabase.from("ai_sdr_leads").select("*", { count: "exact", head: true }).eq("is_test", false).gte("qual_stage", 7).or("routing_team.is.null,routing_team.neq.fora_de_rota");  // DEBT-167 4
