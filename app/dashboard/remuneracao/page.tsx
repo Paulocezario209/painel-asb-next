@@ -45,6 +45,7 @@ interface CardModel {
   rt: string; nome: string; region: string; papel: "Gerente" | "Vendedor";
   fixo: number; faturado: number; meta: number; atingimento: number | null;
   comissaoLabel: string; comissao: number;
+  comissaoBaldes?: { label: string; comissao: number }[];   // so o gerente (3 baldes)
   bonusBreak: { label: string; val: number }[]; bonus: number;
   total: number; custoPct: number | null; extra: string | null;
 }
@@ -74,9 +75,12 @@ export default async function RemuneracaoPage({
     ? createServiceClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, srk, { auth: { persistSession: false } })
     : supabase;
 
-  const [{ data: rawGer }, { data: rawVend }] = await Promise.all([
+  const [{ data: rawGer }, { data: rawGerBaldes }, { data: rawVend }] = await Promise.all([
     svc.from("v_comissao_gerente_resumo")
       .select("mes, faturado_brl, meta_brl, atingimento_pct, fixo_brl, comissao_brl, bonus_brl, total_ganho_brl, custo_comercial_pct")
+      .eq("mes", primeiroDiaMes),
+    svc.from("v_comissao_gerente_mensal")
+      .select("balde, clientes, faturado_brl, comissao_brl")
       .eq("mes", primeiroDiaMes),
     svc.from("v_comissao_vendedor_resumo")
       .select("vendedor_routing_team, mes, fixo_brl, faturado_mes, meta_mes, atingimento_pct, comissao_02pct, dias_batidos, bonus_diario_brl, bonus_semanal_brl, crescimento_pct, bonus_crescimento_brl, bonus_total_brl, total_ganho_brl, custo_comercial_pct")
@@ -94,6 +98,18 @@ export default async function RemuneracaoPage({
     bonus_crescimento_brl: number; bonus_total_brl: number; total_ganho_brl: number; custo_comercial_pct: number | null;
   }[];
 
+  // ── Baldes do gerente (v_comissao_gerente_mensal) — ordem fixa + label/cli/faturado ──
+  type BaldeRow = { balde: string; clientes: number; faturado_brl: number; comissao_brl: number };
+  const baldesRaw = (rawGerBaldes ?? []) as unknown as BaldeRow[];
+  const fmtBRL0 = (v: number) => (Number(v) || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  const BALDE_LABEL: Record<string, string> = { NOVO: "Novos", RESGATE: "Resgate", CRESCIMENTO: "Crescimento", CARTEIRA: "Carteira (piso)" };
+  const comissaoBaldes = ["NOVO", "RESGATE", "CRESCIMENTO", "CARTEIRA"].map((b) => {
+    const r = baldesRaw.find(x => x.balde === b);
+    const cli = Number(r?.clientes ?? 0);
+    const fat = Number(r?.faturado_brl ?? 0);
+    return { label: `${BALDE_LABEL[b]} (${cli} cli - fat ${fmtBRL0(fat)})`, comissao: Number(r?.comissao_brl ?? 0) };
+  });
+
   // ── Monta os 3 cards (Fernando gerente + Ana/Alan vendedores) ──────────────
   const cards: CardModel[] = [];
 
@@ -102,6 +118,7 @@ export default async function RemuneracaoPage({
       rt: "SETOR_CUIT", nome: VENDOR_LABELS.SETOR_CUIT.name, region: VENDOR_LABELS.SETOR_CUIT.region, papel: "Gerente",
       fixo: Number(g.fixo_brl), faturado: Number(g.faturado_brl), meta: Number(g.meta_brl), atingimento: g.atingimento_pct,
       comissaoLabel: "Comissao (3 baldes)", comissao: Number(g.comissao_brl),
+      comissaoBaldes,
       bonusBreak: [{ label: "Bonus por faixa de atingimento", val: Number(g.bonus_brl) }], bonus: Number(g.bonus_brl),
       total: Number(g.total_ganho_brl), custoPct: g.custo_comercial_pct, extra: null,
     });
@@ -202,6 +219,7 @@ export default async function RemuneracaoPage({
                   <div style={{ borderTop: `1px solid ${theme.colors.borderDefault}`, paddingTop: 12, display: "flex", flexDirection: "column", gap: 6 }}>
                     <Row label="Salario fixo" val={c.fixo} />
                     <Row label={c.comissaoLabel} val={c.comissao} />
+                    {c.comissaoBaldes?.map((b, i) => (<Row key={`cb${i}`} label={b.label} val={b.comissao} sub />))}
                     {c.bonusBreak.map((b, i) => (<Row key={i} label={b.label} val={b.val} sub />))}
                     <div style={{ borderTop: `1px dashed ${theme.colors.borderDefault}`, marginTop: 4, paddingTop: 6 }}>
                       <Row label="Total" val={c.total} bold />
