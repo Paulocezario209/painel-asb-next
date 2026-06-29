@@ -41,17 +41,13 @@ export default async function MinhaComissaoPage({
 }: {
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
-  // ── Gate: tela do VENDEDOR. Gestor/manager nao tem comissao de vendedor → manda p/ visao do time ──
+  // ── Gate: "minha comissao" = a comissao de QUEM esta logado ──
   const supabase = await createClient();
   await supabase.auth.getUser();
   const ctx = await getUserContext();
   if (!ctx) redirect("/login");
-  if (!ctx.isVendedor || !ctx.routing_team) {
-    redirect(ctx.isGestor ? "/dashboard/remuneracao" : "/dashboard");
-  }
-  const team = ctx.routing_team; // server-derived: o vendedor SO ve este routing_team
 
-  // ── Mes selecionavel ────────────────────────────────────────────────────────
+  // ── Mes selecionavel (compartilhado) ────────────────────────────────────────
   const sp = await searchParams;
   const now = new Date();
   const mesAtualYM = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
@@ -59,11 +55,79 @@ export default async function MinhaComissaoPage({
   const primeiroDiaMes = `${mesYM}-01`;
   const [ano, mesNum] = mesYM.split("-").map(Number);
 
-  // ── RLS-by-vendedor: filtro server-side por ctx.routing_team (server-derived, nunca sem o .eq) ──
   const srk = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const svc = srk
     ? createServiceClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, srk, { auth: { persistSession: false } })
     : supabase;
+
+  // ── GERENTE (Fernando): ve SO a propria comissao de gerente (3 baldes), SEM simulador ──
+  if (ctx.comissaoPerfil === "gerente") {
+    const [{ data: gRows }, { data: bRows }] = await Promise.all([
+      svc.from("v_comissao_gerente_resumo")
+        .select("faturado_brl, meta_brl, atingimento_pct, fixo_brl, comissao_brl, bonus_brl, total_ganho_brl, custo_comercial_pct")
+        .eq("mes", primeiroDiaMes),
+      svc.from("v_comissao_gerente_mensal")
+        .select("balde, clientes, faturado_brl, comissao_brl")
+        .eq("mes", primeiroDiaMes),
+    ]);
+    const ger = (gRows ?? [])[0] as undefined | {
+      faturado_brl: number; meta_brl: number; atingimento_pct: number | null; fixo_brl: number;
+      comissao_brl: number; bonus_brl: number; total_ganho_brl: number; custo_comercial_pct: number | null;
+    };
+    const fmtBRL0 = (v: number) => (Number(v) || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    const BL: Record<string, string> = { NOVO: "Novos", RESGATE: "Resgate", CRESCIMENTO: "Crescimento", CARTEIRA: "Carteira (piso)" };
+    const baldesRows = (bRows ?? []) as unknown as { balde: string; clientes: number; faturado_brl: number; comissao_brl: number }[];
+    const baldes = ["NOVO", "RESGATE", "CRESCIMENTO", "CARTEIRA"].map((b) => {
+      const x = baldesRows.find(y => y.balde === b);
+      return { label: `${BL[b]} (${Number(x?.clientes ?? 0)} cli - fat ${fmtBRL0(Number(x?.faturado_brl ?? 0))})`, comissao: Number(x?.comissao_brl ?? 0) };
+    });
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 20, maxWidth: 720 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 12 }}>
+          <div>
+            <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>Minha Comissao</h1>
+            <p style={S.muted}>Fernando Carvalho &middot; Gerente Comercial &middot; so voce ve estes numeros</p>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <Link href={`/dashboard/minha-comissao?mes=${shiftMonth(mesYM, -1)}`} style={{ ...S.muted, textDecoration: "none", padding: "4px 10px", border: `1px solid ${theme.colors.borderDefault}`, borderRadius: 6 }}>{"<"}</Link>
+            <span style={{ ...S.label, color: "#FFFFFF", fontSize: 12 }}>{MESES[mesNum]} {ano}</span>
+            <Link href={`/dashboard/minha-comissao?mes=${shiftMonth(mesYM, 1)}`} style={{ ...S.muted, textDecoration: "none", padding: "4px 10px", border: `1px solid ${theme.colors.borderDefault}`, borderRadius: 6 }}>{">"}</Link>
+          </div>
+        </div>
+        {!ger ? (
+          <div style={{ ...S.card, padding: 24 }}><p style={S.muted}>Sem comissao apurada para {MESES[mesNum]} {ano}.</p></div>
+        ) : (
+          <div className="asb-card" style={{ padding: "20px 22px", borderTop: `2px solid ${theme.colors.accent}`, display: "flex", flexDirection: "column", gap: 14 }}>
+            <div>
+              <p style={S.label}>Total a receber ({MESES[mesNum]})</p>
+              <p style={{ ...S.value, marginTop: 8 }}>{fmtBRL(ger.total_ganho_brl)}</p>
+            </div>
+            <div style={{ display: "flex", gap: 18, flexWrap: "wrap" }}>
+              <div><p style={{ ...S.label, fontSize: 8 }}>Faturado (time)</p><p style={{ fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", color: "#FFFFFF", fontSize: 13 }}>{fmtBRL(ger.faturado_brl)}</p></div>
+              <div><p style={{ ...S.label, fontSize: 8 }}>Meta (time)</p><p style={{ fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", color: "#c0d0e0", fontSize: 13 }}>{fmtBRL(ger.meta_brl)}</p></div>
+              <div><p style={{ ...S.label, fontSize: 8 }}>Atingimento</p><p style={{ fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", fontWeight: 700, fontSize: 13, color: pctColor(ger.atingimento_pct) }}>{ger.atingimento_pct != null ? `${Number(ger.atingimento_pct).toFixed(1)}%` : "-"}</p></div>
+            </div>
+            <div style={{ borderTop: `1px solid ${theme.colors.borderDefault}`, paddingTop: 12, display: "flex", flexDirection: "column", gap: 6 }}>
+              <Row label="Salario fixo" val={ger.fixo_brl} />
+              <Row label="Comissao (3 baldes)" val={ger.comissao_brl} />
+              {baldes.map((b, i) => (<Row key={`gb${i}`} label={b.label} val={b.comissao} sub />))}
+              <Row label="Bonus por faixa de atingimento" val={ger.bonus_brl} sub />
+              <div style={{ borderTop: `1px dashed ${theme.colors.borderDefault}`, marginTop: 4, paddingTop: 6 }}>
+                <Row label="Total" val={ger.total_ganho_brl} bold />
+              </div>
+            </div>
+            <p style={{ ...S.muted, fontSize: 9 }}>Custo {ger.custo_comercial_pct != null ? `${Number(ger.custo_comercial_pct).toFixed(2)}%` : "-"} s/ faturado do time</p>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ── VENDEDOR: so o proprio (RLS-by-ctx, server-derived). Diretor -> tela do time; demais -> /dashboard ──
+  if (!ctx.isVendedor || !ctx.routing_team) {
+    redirect(ctx.isDiretor ? "/dashboard/remuneracao" : "/dashboard");
+  }
+  const team = ctx.routing_team;
 
   const { data } = await svc
     .from("v_comissao_vendedor_resumo")

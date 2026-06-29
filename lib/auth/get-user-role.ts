@@ -6,10 +6,12 @@ export interface UserContext {
   email: string;
   role: UserRole;
   routing_team: string | null;
+  comissaoPerfil: string | null;   // 'diretor' | 'gerente' | null (gate das telas de remuneracao)
   isGestor: boolean;
   isManager: boolean;
   isVendedor: boolean;
   isTecnicoCompras: boolean;
+  isDiretor: boolean;              // gestor + comissao_perfil='diretor' (so Paulo ve a tela do time)
 }
 
 const VENDOR_BLOCKED: string[] = [
@@ -43,20 +45,23 @@ export async function getUserContext(): Promise<UserContext | null> {
 
   const { data: profile } = await supabase
     .from("user_profiles")
-    .select("role, routing_team")
+    .select("role, routing_team, comissao_perfil")
     .eq("email", user.email)
     .single();
 
   if (!profile) return null;
 
   const role = (profile.role || "vendedor") as UserRole;
+  const comissaoPerfil = (profile.comissao_perfil ?? null) as string | null;
   return {
     email: user.email,
     role,
     routing_team: profile.routing_team,
+    comissaoPerfil,
     isGestor: role === "gestor",
     isManager: role === "manager",
     isVendedor: role === "vendedor",
     isTecnicoCompras: role === "tecnico_compras",
+    isDiretor: role === "gestor" && comissaoPerfil === "diretor",
   };
 }

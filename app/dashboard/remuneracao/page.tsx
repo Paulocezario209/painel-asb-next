@@ -55,11 +55,11 @@ export default async function RemuneracaoPage({
 }: {
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
-  // ── GATE SERVER-SIDE (tela de salario: nao confiar so na sidebar) ──────────
+  // ── GATE SERVER-SIDE: tela do TIME = exclusiva do DIRETOR (Paulo). Fernando (gestor+gerente) barrado ──
   const supabase = await createClient();
   await supabase.auth.getUser();
   const ctx = await getUserContext();
-  if (!ctx || !ctx.isGestor) redirect("/dashboard");
+  if (!ctx || !ctx.isGestor || ctx.comissaoPerfil !== "diretor") redirect("/dashboard");
 
   // ── Mes selecionavel (default = mes corrente) ──────────────────────────────
   const sp = await searchParams;
