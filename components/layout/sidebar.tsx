@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, Bell, BarChart2, PhoneCall, FlaskConical, Upload, Flame, Filter, UserCheck, DollarSign, Target, Briefcase, Columns3, Wallet } from "lucide-react";
+import { LayoutDashboard, Users, Bell, BarChart2, PhoneCall, FlaskConical, Upload, Flame, Filter, UserCheck, DollarSign, Target, Briefcase, Columns3, Wallet, Banknote } from "lucide-react";
 
 const navItems = [
   { href: "/dashboard",            label: "Dashboard",   icon: LayoutDashboard },
@@ -11,6 +11,7 @@ const navItems = [
   { href: "/dashboard/vendedores", label: "Vendedores",  icon: UserCheck },
   { href: "/dashboard/vendas",     label: "Vendas",      icon: DollarSign },
   { href: "/dashboard/gerente",   label: "Gerente",     icon: Target },
+  { href: "/dashboard/remuneracao", label: "Remuneracao", icon: Banknote },
   { href: "/dashboard/leads",      label: "Leads",       icon: Users },
   { href: "/dashboard/clientes",   label: "Clientes",    icon: Briefcase },
   { href: "/dashboard/carteira-ativa", label: "Carteira Ativa", icon: Wallet },
@@ -22,8 +23,8 @@ const navItems = [
   { href: "/dashboard/hot-leads",  label: "Leads Quentes", icon: Flame },
 ];
 
-const VENDOR_BLOCKED = new Set(["/dashboard/funil", "/dashboard/vendedores", "/dashboard/gerente", "/dashboard/insights", "/dashboard/simulator", "/dashboard/uploads", "/dashboard/churn", "/dashboard/up-sell"]);
-const MANAGER_BLOCKED = new Set(["/dashboard/gerente", "/dashboard/simulator", "/dashboard/uploads"]);
+const VENDOR_BLOCKED = new Set(["/dashboard/funil", "/dashboard/vendedores", "/dashboard/gerente", "/dashboard/insights", "/dashboard/simulator", "/dashboard/uploads", "/dashboard/churn", "/dashboard/up-sell", "/dashboard/remuneracao"]);
+const MANAGER_BLOCKED = new Set(["/dashboard/gerente", "/dashboard/simulator", "/dashboard/uploads", "/dashboard/remuneracao"]);
 
 export function Sidebar({
   isOpen = false,
