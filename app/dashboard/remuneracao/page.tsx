@@ -43,7 +43,7 @@ function shiftMonth(ym: string, delta: number): string {
 // Modelo unificado de card (gerente + vendedor normalizados)
 interface CardModel {
   rt: string; nome: string; region: string; papel: "Gerente" | "Vendedor";
-  fixo: number; faturado: number; meta: number; atingimento: number | null;
+  fixo: number; faturado: number; asb: number; cnb: number; meta: number; atingimento: number | null;
   comissaoLabel: string; comissao: number;
   comissaoBaldes?: { label: string; comissao: number }[];   // so o gerente (3 baldes)
   bonusBreak: { label: string; val: number }[]; bonus: number;
@@ -75,7 +75,7 @@ export default async function RemuneracaoPage({
     ? createServiceClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, srk, { auth: { persistSession: false } })
     : supabase;
 
-  const [{ data: rawGer }, { data: rawGerBaldes }, { data: rawVend }] = await Promise.all([
+  const [{ data: rawGer }, { data: rawGerBaldes }, { data: rawVend }, { data: rawSplit }] = await Promise.all([
     svc.from("v_comissao_gerente_resumo")
       .select("mes, faturado_brl, meta_brl, atingimento_pct, fixo_brl, comissao_brl, bonus_brl, total_ganho_brl, custo_comercial_pct")
       .eq("mes", primeiroDiaMes),
@@ -84,6 +84,10 @@ export default async function RemuneracaoPage({
       .eq("mes", primeiroDiaMes),
     svc.from("v_comissao_vendedor_resumo")
       .select("vendedor_routing_team, mes, fixo_brl, faturado_mes, meta_mes, atingimento_pct, comissao_02pct, dias_batidos, bonus_diario_brl, bonus_semanal_brl, crescimento_pct, bonus_crescimento_brl, bonus_total_brl, total_ganho_brl, custo_comercial_pct")
+      .eq("mes", primeiroDiaMes),
+    // Quebra ASB|CNB so p/ display (NAO toca as views de comissao; total segue delas)
+    svc.from("v_faturamento_unificado")
+      .select("vendedor_routing_team, origem, valor")
       .eq("mes", primeiroDiaMes),
   ]);
 
@@ -97,6 +101,17 @@ export default async function RemuneracaoPage({
     bonus_diario_brl: number; bonus_semanal_brl: number; crescimento_pct: number | null;
     bonus_crescimento_brl: number; bonus_total_brl: number; total_ganho_brl: number; custo_comercial_pct: number | null;
   }[];
+
+  // ── Quebra ASB|CNB por routing_team (so display; gerente = company-wide = soma dos times) ──
+  const splitRows = (rawSplit ?? []) as unknown as { vendedor_routing_team: string; origem: string; valor: number }[];
+  const splitByRt: Record<string, { asb: number; cnb: number }> = {};
+  let asbTime = 0, cnbTime = 0;
+  for (const sr of splitRows) {
+    const rt = sr.vendedor_routing_team; const val = Number(sr.valor) || 0;
+    if (!splitByRt[rt]) splitByRt[rt] = { asb: 0, cnb: 0 };
+    if (sr.origem === "CNB") { splitByRt[rt].cnb += val; cnbTime += val; }
+    else { splitByRt[rt].asb += val; asbTime += val; }
+  }
 
   // ── Baldes do gerente (v_comissao_gerente_mensal) — ordem fixa + label/cli/faturado ──
   type BaldeRow = { balde: string; clientes: number; faturado_brl: number; comissao_brl: number };
@@ -116,7 +131,7 @@ export default async function RemuneracaoPage({
   if (g) {
     cards.push({
       rt: "SETOR_CUIT", nome: VENDOR_LABELS.SETOR_CUIT.name, region: VENDOR_LABELS.SETOR_CUIT.region, papel: "Gerente",
-      fixo: Number(g.fixo_brl), faturado: Number(g.faturado_brl), meta: Number(g.meta_brl), atingimento: g.atingimento_pct,
+      fixo: Number(g.fixo_brl), faturado: Number(g.faturado_brl), asb: asbTime, cnb: cnbTime, meta: Number(g.meta_brl), atingimento: g.atingimento_pct,
       comissaoLabel: "Comissao (3 baldes)", comissao: Number(g.comissao_brl),
       comissaoBaldes,
       bonusBreak: [{ label: "Bonus por faixa de atingimento", val: Number(g.bonus_brl) }], bonus: Number(g.bonus_brl),
@@ -127,13 +142,13 @@ export default async function RemuneracaoPage({
     const v = vend.find(x => x.vendedor_routing_team === rt);
     const lbl = VENDOR_LABELS[rt];
     if (!v) {
-      cards.push({ rt, nome: lbl.name, region: lbl.region, papel: "Vendedor", fixo: 0, faturado: 0, meta: 0, atingimento: null,
+      cards.push({ rt, nome: lbl.name, region: lbl.region, papel: "Vendedor", fixo: 0, faturado: 0, asb: 0, cnb: 0, meta: 0, atingimento: null,
         comissaoLabel: "Comissao 0,2%", comissao: 0, bonusBreak: [], bonus: 0, total: 0, custoPct: null, extra: "sem dados no mes" });
       continue;
     }
     cards.push({
       rt, nome: lbl.name, region: lbl.region, papel: "Vendedor",
-      fixo: Number(v.fixo_brl), faturado: Number(v.faturado_mes), meta: Number(v.meta_mes), atingimento: v.atingimento_pct,
+      fixo: Number(v.fixo_brl), faturado: Number(v.faturado_mes), asb: splitByRt[rt]?.asb ?? 0, cnb: splitByRt[rt]?.cnb ?? 0, meta: Number(v.meta_mes), atingimento: v.atingimento_pct,
       comissaoLabel: "Comissao 0,2%", comissao: Number(v.comissao_02pct),
       bonusBreak: [
         { label: "Bonus diario", val: Number(v.bonus_diario_brl) },
@@ -202,6 +217,10 @@ export default async function RemuneracaoPage({
                     <div>
                       <p style={{ ...S.label, fontSize: 8 }}>Faturado</p>
                       <p style={{ ...S.num, fontSize: 13 }}>{fmtBRL(c.faturado)}</p>
+                      <p style={{ fontSize: 10, fontFamily: theme.font.label, color: "#8aa0b8", marginTop: 3 }}>
+                        ASB {fmtBRL(c.asb)}
+                        {c.cnb > 0 ? <> &middot; <span style={{ color: theme.colors.accent, fontWeight: 700 }}>CNB {fmtBRL(c.cnb)}</span></> : null}
+                      </p>
                     </div>
                     <div>
                       <p style={{ ...S.label, fontSize: 8 }}>Meta</p>

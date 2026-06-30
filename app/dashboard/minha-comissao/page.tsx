@@ -62,14 +62,22 @@ export default async function MinhaComissaoPage({
 
   // ── GERENTE (Fernando): ve SO a propria comissao de gerente (3 baldes), SEM simulador ──
   if (ctx.comissaoPerfil === "gerente") {
-    const [{ data: gRows }, { data: bRows }] = await Promise.all([
+    const [{ data: gRows }, { data: bRows }, { data: gSplit }] = await Promise.all([
       svc.from("v_comissao_gerente_resumo")
         .select("faturado_brl, meta_brl, atingimento_pct, fixo_brl, comissao_brl, bonus_brl, total_ganho_brl, custo_comercial_pct")
         .eq("mes", primeiroDiaMes),
       svc.from("v_comissao_gerente_mensal")
         .select("balde, clientes, faturado_brl, comissao_brl")
         .eq("mes", primeiroDiaMes),
+      // Quebra ASB|CNB company-wide (gerente = total empresa); so display
+      svc.from("v_faturamento_unificado")
+        .select("origem, valor")
+        .eq("mes", primeiroDiaMes),
     ]);
+    let gAsb = 0, gCnb = 0;
+    for (const s of (gSplit ?? []) as unknown as { origem: string; valor: number }[]) {
+      const val = Number(s.valor) || 0; if (s.origem === "CNB") gCnb += val; else gAsb += val;
+    }
     const ger = (gRows ?? [])[0] as undefined | {
       faturado_brl: number; meta_brl: number; atingimento_pct: number | null; fixo_brl: number;
       comissao_brl: number; bonus_brl: number; total_ganho_brl: number; custo_comercial_pct: number | null;
@@ -103,7 +111,11 @@ export default async function MinhaComissaoPage({
               <p style={{ ...S.value, marginTop: 8 }}>{fmtBRL(ger.total_ganho_brl)}</p>
             </div>
             <div style={{ display: "flex", gap: 18, flexWrap: "wrap" }}>
-              <div><p style={{ ...S.label, fontSize: 8 }}>Faturado (time)</p><p style={{ fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", color: "#FFFFFF", fontSize: 13 }}>{fmtBRL(ger.faturado_brl)}</p></div>
+              <div>
+                <p style={{ ...S.label, fontSize: 8 }}>Faturado (time)</p>
+                <p style={{ fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", color: "#FFFFFF", fontSize: 13 }}>{fmtBRL(ger.faturado_brl)}</p>
+                <p style={{ fontSize: 10, fontFamily: theme.font.label, color: "#8aa0b8", marginTop: 3 }}>ASB {fmtBRL(gAsb)}{gCnb > 0 ? <> &middot; <span style={{ color: theme.colors.accent, fontWeight: 700 }}>CNB {fmtBRL(gCnb)}</span></> : null}</p>
+              </div>
               <div><p style={{ ...S.label, fontSize: 8 }}>Meta (time)</p><p style={{ fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", color: "#c0d0e0", fontSize: 13 }}>{fmtBRL(ger.meta_brl)}</p></div>
               <div><p style={{ ...S.label, fontSize: 8 }}>Atingimento</p><p style={{ fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", fontWeight: 700, fontSize: 13, color: pctColor(ger.atingimento_pct) }}>{ger.atingimento_pct != null ? `${Number(ger.atingimento_pct).toFixed(1)}%` : "-"}</p></div>
             </div>
@@ -142,6 +154,17 @@ export default async function MinhaComissaoPage({
     total_ganho_brl: number; custo_comercial_pct: number | null;
   };
 
+  // Quebra ASB|CNB do proprio vendedor (filtrada por team -> isolamento); so display
+  const { data: vSplit } = await svc
+    .from("v_faturamento_unificado")
+    .select("origem, valor")
+    .eq("vendedor_routing_team", team)
+    .eq("mes", primeiroDiaMes);
+  let vAsb = 0, vCnb = 0;
+  for (const s of (vSplit ?? []) as unknown as { origem: string; valor: number }[]) {
+    const val = Number(s.valor) || 0; if (s.origem === "CNB") vCnb += val; else vAsb += val;
+  }
+
   const nome = VENDOR_NOME[team] ?? "Vendedor";
 
   return (
@@ -174,7 +197,11 @@ export default async function MinhaComissaoPage({
               <p style={{ ...S.value, marginTop: 8 }}>{fmtBRL(r.total_ganho_brl)}</p>
             </div>
             <div style={{ display: "flex", gap: 18, flexWrap: "wrap" }}>
-              <div><p style={{ ...S.label, fontSize: 8 }}>Faturado</p><p style={{ fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", color: "#FFFFFF", fontSize: 13 }}>{fmtBRL(r.faturado_mes)}</p></div>
+              <div>
+                <p style={{ ...S.label, fontSize: 8 }}>Faturado</p>
+                <p style={{ fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", color: "#FFFFFF", fontSize: 13 }}>{fmtBRL(r.faturado_mes)}</p>
+                <p style={{ fontSize: 10, fontFamily: theme.font.label, color: "#8aa0b8", marginTop: 3 }}>ASB {fmtBRL(vAsb)}{vCnb > 0 ? <> &middot; <span style={{ color: theme.colors.accent, fontWeight: 700 }}>CNB {fmtBRL(vCnb)}</span></> : null}</p>
+              </div>
               <div><p style={{ ...S.label, fontSize: 8 }}>Minha meta</p><p style={{ fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", color: "#c0d0e0", fontSize: 13 }}>{fmtBRL(r.meta_mes)}</p></div>
               <div><p style={{ ...S.label, fontSize: 8 }}>Atingimento</p><p style={{ fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", fontWeight: 700, fontSize: 13, color: pctColor(r.atingimento_pct) }}>{r.atingimento_pct != null ? `${Number(r.atingimento_pct).toFixed(1)}%` : "-"}</p></div>
             </div>
