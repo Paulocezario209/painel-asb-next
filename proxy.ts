@@ -36,7 +36,8 @@ export async function proxy(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser();
 
-  const isAuthRoute = request.nextUrl.pathname.startsWith("/login");
+  const { pathname } = request.nextUrl;
+  const isAuthRoute = pathname.startsWith("/login");
 
   if (!user && !isAuthRoute) {
     return NextResponse.redirect(new URL("/login", request.url));
@@ -44,6 +45,23 @@ export async function proxy(request: NextRequest) {
 
   if (user && isAuthRoute) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+
+  // Bloqueio de ESCRITA p/ role 'financeiro' (consultor DRE = SOMENTE LEITURA).
+  // Sessao ja e exigida acima (no-session -> /login); aqui so falta barrar o financeiro.
+  const MUTATING = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+  if (user?.email && pathname.startsWith("/api/") && MUTATING.has(request.method)) {
+    const { data: profile } = await supabase
+      .from("user_profiles")
+      .select("role")
+      .eq("email", user.email)
+      .single();
+    if (profile?.role === "financeiro") {
+      return NextResponse.json(
+        { error: "forbidden: conta somente leitura (financeiro)" },
+        { status: 403 },
+      );
+    }
   }
 
   return supabaseResponse;
