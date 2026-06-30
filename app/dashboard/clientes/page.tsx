@@ -21,8 +21,15 @@ const TABS = [
 
 type TabKey = (typeof TABS)[number]["key"];
 
-// ── DRE de Carteira (hero ATIVOS) — novos × churn × saldo do mês, da view v_carteira_dre_mensal ──
+// ── Movimento de Carteira (hero ATIVOS) — entrou/voltou × deixou de faturar × saldo, M vs M-1 ──
+// Fonte: v_carteira_movimento_mensal (pedidos_espelho faturado, eixo data_faturamento; pura comparação de conjuntos).
 const MESES_DRE = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"];
+
+const brl = (n: number | null) =>
+  (n ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+const sBrl = (n: number) => (n >= 0 ? "+" : "") + brl(n);   // R$ com sinal explícito
+const sNum = (n: number) => (n >= 0 ? `+${n}` : `${n}`);
 
 function shiftMonthDre(ym: string, delta: number): string {
   const [y, m] = ym.split("-").map(Number);
@@ -36,35 +43,36 @@ async function DRECarteiraCard({ mes }: { mes?: string }) {
   const mesYM = mes && /^\d{4}-\d{2}$/.test(mes) && mes <= curYM ? mes : curYM; // nunca além do corrente
   const [y, m] = mesYM.split("-").map(Number);
 
-  // Query escopada: 1 linha do mês (não reusa o fetch de ativos). Sem row (mês sem novos/churn) → 0/0/0.
+  // Query escopada: 1 linha do mês (não reusa o fetch de ativos). Sem row → tudo 0 (não quebra).
   const supabase = await createClient();
   const { data } = await supabase
-    .from("v_carteira_dre_mensal")
-    .select("novos, churn, saldo, maturacao")
+    .from("v_carteira_movimento_mensal")
+    .select("entraram, receita_entrou, sairam, receita_saiu, saldo_clientes, saldo_receita")
     .eq("mes", `${mesYM}-01`)
     .maybeSingle();
-  const novos = Number(data?.novos ?? 0);
-  const churn = Number(data?.churn ?? 0);
-  const saldo = Number(data?.saldo ?? novos - churn);
-  const maturacao = (data?.maturacao as string | undefined) ?? (mesYM === curYM ? "corrente" : "fechado");
+  const entraram = Number(data?.entraram ?? 0);
+  const receitaEntrou = Number(data?.receita_entrou ?? 0);
+  const sairam = Number(data?.sairam ?? 0);
+  const receitaSaiu = Number(data?.receita_saiu ?? 0);
+  const saldoCli = Number(data?.saldo_clientes ?? entraram - sairam);
+  const saldoRec = Number(data?.saldo_receita ?? receitaEntrou - receitaSaiu);
 
   const prevYM = shiftMonthDre(mesYM, -1);
   const nextYM = shiftMonthDre(mesYM, 1);
   const canNext = nextYM <= curYM;
   const navBase = "px-2 py-1 rounded border text-xs transition-colors";
-  const badge = maturacao === "corrente" ? "mês em curso · perda em maturação"
-    : maturacao === "anterior" ? "parcial · perda ainda maturando (31-60d)" : null;
+  const isMTD = mesYM === curYM;
 
   return (
     <div className="bg-[#16161c] border border-[#2a2a35] rounded-lg p-4 shadow-[0_0_24px_-8px_rgba(79,125,240,0.45)]">
       <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
         <div className="flex items-center gap-2">
           <h2 className="text-xs font-bold uppercase tracking-wider text-white">
-            DRE de Carteira · {MESES_DRE[m - 1]} {y}
+            Movimento de Carteira · {MESES_DRE[m - 1]} {y}
           </h2>
-          {badge && (
+          {isMTD && (
             <span className="text-[9px] uppercase font-bold px-2 py-0.5 rounded" style={{ background: "#D4A01722", color: "#D4A017" }}>
-              {badge}
+              MTD · mês em curso
             </span>
           )}
         </div>
@@ -79,21 +87,22 @@ async function DRECarteiraCard({ mes }: { mes?: string }) {
       </div>
       <div className="grid grid-cols-3 gap-4">
         <div>
-          <div className="text-3xl font-bold" style={{ color: "#22c55e" }}>{novos}</div>
-          <div className="text-[10px] uppercase tracking-wider font-bold text-white mt-1">Novos</div>
-          <div className="text-[10px] text-slate-400">1ª compra no mês</div>
+          <div className="text-3xl font-bold" style={{ color: "#22c55e" }}>{entraram}</div>
+          <div className="text-sm font-bold" style={{ color: "#22c55e" }}>{brl(receitaEntrou)}</div>
+          <div className="text-[10px] uppercase tracking-wider font-bold text-white mt-1">Entrou / Voltou</div>
+          <div className="text-[10px] text-slate-400">faturou no mês, não no anterior</div>
         </div>
         <div>
-          <div className="text-3xl font-bold" style={{ color: "#D4A017" }}>{churn}</div>
-          <div className="text-[10px] uppercase tracking-wider font-bold text-white mt-1">Churn</div>
-          <div className="text-[10px] text-slate-400">&ge;31d sem comprar</div>
+          <div className="text-3xl font-bold" style={{ color: "#D4A017" }}>{sairam}</div>
+          <div className="text-sm font-bold" style={{ color: "#D4A017" }}>{brl(receitaSaiu)}</div>
+          <div className="text-[10px] uppercase tracking-wider font-bold text-white mt-1">Deixou de Faturar</div>
+          <div className="text-[10px] text-slate-400">faturava e parou no mês</div>
         </div>
         <div>
-          <div className="text-3xl font-bold" style={{ color: saldo >= 0 ? "#22c55e" : "#C8102E" }}>
-            {saldo >= 0 ? `+${saldo}` : saldo}
-          </div>
+          <div className="text-3xl font-bold" style={{ color: saldoCli >= 0 ? "#22c55e" : "#C8102E" }}>{sNum(saldoCli)}</div>
+          <div className="text-sm font-bold" style={{ color: saldoRec >= 0 ? "#22c55e" : "#C8102E" }}>{sBrl(saldoRec)}</div>
           <div className="text-[10px] uppercase tracking-wider font-bold text-white mt-1">Saldo</div>
-          <div className="text-[10px] text-slate-400">líquido</div>
+          <div className="text-[10px] text-slate-400">líquido (entrou − saiu)</div>
         </div>
       </div>
     </div>
