@@ -21,8 +21,87 @@ const TABS = [
 
 type TabKey = (typeof TABS)[number]["key"];
 
+// ── DRE de Carteira (hero ATIVOS) — novos × churn × saldo do mês, da view v_carteira_dre_mensal ──
+const MESES_DRE = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"];
+
+function shiftMonthDre(ym: string, delta: number): string {
+  const [y, m] = ym.split("-").map(Number);
+  const d = new Date(y, m - 1 + delta, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+async function DRECarteiraCard({ mes }: { mes?: string }) {
+  const now = new Date();
+  const curYM = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const mesYM = mes && /^\d{4}-\d{2}$/.test(mes) && mes <= curYM ? mes : curYM; // nunca além do corrente
+  const [y, m] = mesYM.split("-").map(Number);
+
+  // Query escopada: 1 linha do mês (não reusa o fetch de ativos). Sem row (mês sem novos/churn) → 0/0/0.
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("v_carteira_dre_mensal")
+    .select("novos, churn, saldo, maturacao")
+    .eq("mes", `${mesYM}-01`)
+    .maybeSingle();
+  const novos = Number(data?.novos ?? 0);
+  const churn = Number(data?.churn ?? 0);
+  const saldo = Number(data?.saldo ?? novos - churn);
+  const maturacao = (data?.maturacao as string | undefined) ?? (mesYM === curYM ? "corrente" : "fechado");
+
+  const prevYM = shiftMonthDre(mesYM, -1);
+  const nextYM = shiftMonthDre(mesYM, 1);
+  const canNext = nextYM <= curYM;
+  const navBase = "px-2 py-1 rounded border text-xs transition-colors";
+  const badge = maturacao === "corrente" ? "mês em curso · perda em maturação"
+    : maturacao === "anterior" ? "parcial · perda ainda maturando (31-60d)" : null;
+
+  return (
+    <div className="bg-[#16161c] border border-[#2a2a35] rounded-lg p-4 shadow-[0_0_24px_-8px_rgba(79,125,240,0.45)]">
+      <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
+        <div className="flex items-center gap-2">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-white">
+            DRE de Carteira · {MESES_DRE[m - 1]} {y}
+          </h2>
+          {badge && (
+            <span className="text-[9px] uppercase font-bold px-2 py-0.5 rounded" style={{ background: "#D4A01722", color: "#D4A017" }}>
+              {badge}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          <Link href={`/dashboard/clientes?tab=ativos&mes=${prevYM}`} className={`${navBase} border-[#2a2a35] text-slate-200 hover:border-[#185FA5]`}>{"<"}</Link>
+          {canNext ? (
+            <Link href={`/dashboard/clientes?tab=ativos&mes=${nextYM}`} className={`${navBase} border-[#2a2a35] text-slate-200 hover:border-[#185FA5]`}>{">"}</Link>
+          ) : (
+            <span className={`${navBase} border-[#1a1a1a] text-gray-700 cursor-not-allowed`} aria-disabled>{">"}</span>
+          )}
+        </div>
+      </div>
+      <div className="grid grid-cols-3 gap-4">
+        <div>
+          <div className="text-3xl font-bold" style={{ color: "#22c55e" }}>{novos}</div>
+          <div className="text-[10px] uppercase tracking-wider font-bold text-white mt-1">Novos</div>
+          <div className="text-[10px] text-slate-400">1ª compra no mês</div>
+        </div>
+        <div>
+          <div className="text-3xl font-bold" style={{ color: "#D4A017" }}>{churn}</div>
+          <div className="text-[10px] uppercase tracking-wider font-bold text-white mt-1">Churn</div>
+          <div className="text-[10px] text-slate-400">&ge;31d sem comprar</div>
+        </div>
+        <div>
+          <div className="text-3xl font-bold" style={{ color: saldo >= 0 ? "#22c55e" : "#C8102E" }}>
+            {saldo >= 0 ? `+${saldo}` : saldo}
+          </div>
+          <div className="text-[10px] uppercase tracking-wider font-bold text-white mt-1">Saldo</div>
+          <div className="text-[10px] text-slate-400">líquido</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Aba ATIVOS / Carteira viva — fetch (server) → AtivosCarteira (client, busca + colunas) ──────
-async function AtivosPanel({ healthFilter }: { healthFilter: string }) {
+async function AtivosPanel({ healthFilter, mes }: { healthFilter: string; mes?: string }) {
   const supabase = await createClient();
 
   // Fonte: v_carteira_360 — carteira REAL ARES. Só a carteira VIVA (ativo/atencao = está comprando);
@@ -36,7 +115,12 @@ async function AtivosPanel({ healthFilter }: { healthFilter: string }) {
     .in("customer_status", ["ativo", "atencao"])
     .order("total_revenue_brl", { ascending: false, nullsFirst: false });
 
-  return <AtivosCarteira rows={(carteira ?? []) as Carteira[]} healthFilter={healthFilter} />;
+  return (
+    <>
+      <DRECarteiraCard mes={mes} />
+      <AtivosCarteira rows={(carteira ?? []) as Carteira[]} healthFilter={healthFilter} />
+    </>
+  );
 }
 
 // ── Aba COMPLETA — carteira INTEIRA por vendedor (1259, todos os status + sem_movimentacao) ──────
@@ -89,6 +173,7 @@ export default async function ClientesPage({
   const rawTab = sp.tab ?? "ativos";
   const tab: TabKey = (TABS.some((t) => t.key === rawTab) ? rawTab : "ativos") as TabKey;
   const healthFilter = sp.health ?? "all";
+  const mes = sp.mes; // YYYY-MM p/ o DRE de Carteira (default = mes corrente no DRECarteiraCard)
 
   return (
     <div className="space-y-4">
@@ -140,7 +225,7 @@ export default async function ClientesPage({
       ) : tab === "completa" ? (
         <CompletaPanel healthFilter={healthFilter} />
       ) : (
-        <AtivosPanel healthFilter={healthFilter} />
+        <AtivosPanel healthFilter={healthFilter} mes={mes} />
       )}
     </div>
   );
