@@ -9,6 +9,10 @@ const STATUS_COLS = CHURN_STATES.map((k) => ({ key: k, ...CUSTOMER_STATUS[k] }))
 const brl = (n: number | null) =>
   (n ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 
+// % pt-BR, 1 decimal, virgula (ex: 14,6)
+const pct = (n: number) =>
+  n.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
 type Customer = {
   ares_pessoa_id: number;
   lead_id: string | null;
@@ -34,6 +38,18 @@ export default async function ChurnPage() {
     .in("customer_status", ["risco", "pre_churn", "churn_comercial", "inativo_definitivo"])
     .order("total_revenue_brl", { ascending: false, nullsFirst: false });
 
+  // Denominador do % = carteira TOTAL (v_carteira_360, todos os status), nao so os 4 churn.
+  // Query escopada (id/status/receita) — NAO contamina `customers` (consumido por byStatus + total).
+  // Bounded (~327 < 1000), entao soma client-side e segura (sem o truncamento do DEBT-P2).
+  const { data: carteiraTotal } = await supabase
+    .from("v_carteira_360")
+    .select("ares_pessoa_id, customer_status, total_revenue_brl");
+  const totCli = (carteiraTotal ?? []).length;
+  const totRec = (carteiraTotal ?? []).reduce(
+    (s: number, c: { total_revenue_brl: number | null }) => s + (Number(c.total_revenue_brl) || 0),
+    0,
+  );
+
   const byStatus: Record<string, Customer[]> = { risco: [], pre_churn: [], churn_comercial: [], inativo_definitivo: [] };
   for (const c of (customers ?? []) as Customer[]) {
     if (byStatus[c.customer_status]) byStatus[c.customer_status].push(c);
@@ -54,6 +70,10 @@ export default async function ChurnPage() {
       <div className="grid grid-cols-4 gap-4">
         {STATUS_COLS.map((col) => {
           const count = byStatus[col.key].length;
+          const receita = byStatus[col.key].reduce((s, c) => s + (Number(c.total_revenue_brl) || 0), 0);
+          const pctRec = totRec ? (receita / totRec) * 100 : 0;
+          const pctCli = totCli ? (count / totCli) * 100 : 0;
+          const verbo = col.key === "inativo_definitivo" ? "perdido" : "em risco";
           return (
             <div
               key={col.key}
@@ -64,6 +84,8 @@ export default async function ChurnPage() {
                 {col.label}
               </div>
               <div className="text-4xl font-bold text-white mt-2">{count}</div>
+              <div className="text-sm font-bold text-white mt-1">{brl(receita)} {verbo}</div>
+              <div className="text-[10px] text-slate-400 mt-0.5">{pct(pctRec)}% da receita · {pct(pctCli)}% da carteira</div>
               <div className="text-[10px] text-slate-200 mt-2 leading-tight">{col.desc}</div>
             </div>
           );
