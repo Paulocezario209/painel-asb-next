@@ -40,6 +40,10 @@ export async function proxy(request: NextRequest) {
   const isAuthRoute = pathname.startsWith("/login");
 
   if (!user && !isAuthRoute) {
+    // /api sem sessao -> 401 JSON (cliente de API); paginas -> redirect /login
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+    }
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
