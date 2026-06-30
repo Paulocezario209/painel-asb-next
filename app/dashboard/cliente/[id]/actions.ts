@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { getUserContext } from "@/lib/auth/get-user-role";
 
 type Result = { ok: boolean; err?: string; data?: unknown };
 
@@ -11,8 +12,15 @@ async function getActor(): Promise<string> {
   return user?.email ? `painel:${user.email}` : "painel";
 }
 
+// Server actions NAO passam pelo middleware -> guard de escrita aqui (financeiro = somente leitura)
+async function assertNotReadOnly(): Promise<void> {
+  const ctx = await getUserContext();
+  if (ctx?.isFinanceiro) throw new Error("forbidden: conta somente leitura (financeiro)");
+}
+
 export async function markClienteAtivoAction(leadId: string): Promise<Result> {
   try {
+    await assertNotReadOnly();
     const supabase = await createClient();
     const actor = await getActor();
     const { data, error } = await supabase.rpc("mark_cliente_ativo", {
@@ -31,6 +39,7 @@ export async function markClienteAtivoAction(leadId: string): Promise<Result> {
 
 export async function markClienteRecorrenteAction(leadId: string): Promise<Result> {
   try {
+    await assertNotReadOnly();
     const supabase = await createClient();
     const actor = await getActor();
     const { data, error } = await supabase.rpc("mark_cliente_recorrente", {
@@ -53,6 +62,7 @@ export async function setCustomerHealthAction(
   reason?: string
 ): Promise<Result> {
   try {
+    await assertNotReadOnly();
     const supabase = await createClient();
     const actor = await getActor();
     const { data, error } = await supabase.rpc("set_customer_health", {
@@ -76,6 +86,7 @@ export async function markCustomerLostAction(
   reason: string
 ): Promise<Result> {
   try {
+    await assertNotReadOnly();
     if (!reason || reason.trim().length < 2) {
       return { ok: false, err: "Motivo obrigatório" };
     }
@@ -102,6 +113,7 @@ export async function reassignCustomerVendorAction(
   motivo: string
 ): Promise<Result> {
   try {
+    await assertNotReadOnly();
     if (!motivo || motivo.trim().length < 2) {
       return { ok: false, err: "Motivo obrigatório" };
     }

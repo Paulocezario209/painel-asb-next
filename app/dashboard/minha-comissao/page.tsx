@@ -123,9 +123,9 @@ export default async function MinhaComissaoPage({
     );
   }
 
-  // ── VENDEDOR: so o proprio (RLS-by-ctx, server-derived). Diretor -> tela do time; demais -> /dashboard ──
+  // ── VENDEDOR: so o proprio (RLS-by-ctx, server-derived). Diretor/financeiro -> tela do time; demais -> /dashboard ──
   if (!ctx.isVendedor || !ctx.routing_team) {
-    redirect(ctx.isDiretor ? "/dashboard/remuneracao" : "/dashboard");
+    redirect(ctx.isDiretor || ctx.isFinanceiro ? "/dashboard/remuneracao" : "/dashboard");
   }
   const team = ctx.routing_team;
 
