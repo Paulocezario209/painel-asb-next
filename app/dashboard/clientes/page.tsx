@@ -50,7 +50,7 @@ async function DRECarteiraCard({ mes }: { mes?: string }) {
   const [movRes, recRes] = await Promise.all([
     supabase
       .from("v_carteira_movimento_mensal")
-      .select("entraram, receita_entrou, sairam, receita_saiu, saldo_clientes, saldo_receita")
+      .select("entraram, receita_entrou, sairam, receita_saiu, saldo_clientes, saldo_receita, novos_clientes, receita_novos")
       .eq("mes", `${mesYM}-01`)
       .maybeSingle(),
     supabase
@@ -67,6 +67,9 @@ async function DRECarteiraCard({ mes }: { mes?: string }) {
   const recMesLabel = MESES_DRE[Number(recMesAlvo.split("-")[1]) - 1];
   const entraram = Number(data?.entraram ?? 0);
   const receitaEntrou = Number(data?.receita_entrou ?? 0);
+  // Novos = só first order no mês (recuperados fora) — coluna aditiva da view (variante B).
+  const novosClientes = Number(data?.novos_clientes ?? 0);
+  const receitaNovos = Number(data?.receita_novos ?? 0);
   const sairam = Number(data?.sairam ?? 0);
   const receitaSaiu = Number(data?.receita_saiu ?? 0);
   const saldoCli = Number(data?.saldo_clientes ?? entraram - sairam);
@@ -102,10 +105,10 @@ async function DRECarteiraCard({ mes }: { mes?: string }) {
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div>
-          <div className="text-3xl font-bold" style={{ color: "#22c55e" }}>{entraram}</div>
-          <div className="text-sm font-bold" style={{ color: "#22c55e" }}>{brl(receitaEntrou)}</div>
-          <div className="text-[10px] uppercase tracking-wider font-bold text-white mt-1">Entrou / Voltou</div>
-          <div className="text-[10px] text-slate-400">faturou no mês, não no anterior</div>
+          <div className="text-3xl font-bold" style={{ color: "#22c55e" }}>{novosClientes}</div>
+          <div className="text-sm font-bold" style={{ color: "#22c55e" }}>{brl(receitaNovos)}</div>
+          <div className="text-[10px] uppercase tracking-wider font-bold text-white mt-1">Novos Clientes</div>
+          <div className="text-[10px] text-slate-400">convertidos no mês com pedido</div>
         </div>
         <div>
           <div className="text-3xl font-bold" style={{ color: "#D4A017" }}>{sairam}</div>
