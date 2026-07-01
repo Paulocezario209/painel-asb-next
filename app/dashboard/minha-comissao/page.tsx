@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { theme } from "@/lib/theme";
 import { getUserContext } from "@/lib/auth/get-user-role";
+import { RegrasComissaoModal } from "../remuneracao/regras-modal";
 import { MinhaComissaoSimulador } from "./minha-comissao-sim";
 
 export const dynamic = "force-dynamic";
@@ -109,6 +110,7 @@ export default async function MinhaComissaoPage({
           <p style={S.muted}>{nome} &middot; base FATURADO &middot; so voce ve estes numeros</p>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <RegrasComissaoModal perfil="vendedor" />
           <Link href={`/dashboard/minha-comissao?mes=${shiftMonth(mesYM, -1)}`} style={{ ...S.muted, textDecoration: "none", padding: "4px 10px", border: `1px solid ${theme.colors.borderDefault}`, borderRadius: 6 }}>{"<"}</Link>
           <span style={{ ...S.label, color: "#FFFFFF", fontSize: 12 }}>{MESES[mesNum]} {ano}</span>
           <Link href={`/dashboard/minha-comissao?mes=${shiftMonth(mesYM, 1)}`} style={{ ...S.muted, textDecoration: "none", padding: "4px 10px", border: `1px solid ${theme.colors.borderDefault}`, borderRadius: 6 }}>{">"}</Link>
