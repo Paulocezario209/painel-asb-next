@@ -64,7 +64,7 @@ export default async function MinhaComissaoPage({
   if (ctx.comissaoPerfil === "gerente") {
     const [{ data: gRows }, { data: bRows }, { data: gSplit }] = await Promise.all([
       svc.from("v_comissao_gerente_resumo")
-        .select("faturado_brl, meta_brl, atingimento_pct, fixo_brl, comissao_brl, bonus_brl, total_ganho_brl, custo_comercial_pct")
+        .select("faturado_brl, meta_brl, atingimento_pct, fixo_brl, comissao_brl, bonus_brl, bonus_crescimento_brl, crescimento_pct, total_ganho_brl, custo_comercial_pct")
         .eq("mes", primeiroDiaMes),
       svc.from("v_comissao_gerente_mensal")
         .select("balde, clientes, faturado_brl, comissao_brl")
@@ -80,7 +80,8 @@ export default async function MinhaComissaoPage({
     }
     const ger = (gRows ?? [])[0] as undefined | {
       faturado_brl: number; meta_brl: number; atingimento_pct: number | null; fixo_brl: number;
-      comissao_brl: number; bonus_brl: number; total_ganho_brl: number; custo_comercial_pct: number | null;
+      comissao_brl: number; bonus_brl: number; bonus_crescimento_brl: number; crescimento_pct: number | null;
+      total_ganho_brl: number; custo_comercial_pct: number | null;
     };
     const fmtBRL0 = (v: number) => (Number(v) || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0, maximumFractionDigits: 0 });
     const BL: Record<string, string> = { NOVO: "Novos", RESGATE: "Resgate", CRESCIMENTO: "Crescimento", CARTEIRA: "Carteira (piso)" };
@@ -124,6 +125,7 @@ export default async function MinhaComissaoPage({
               <Row label="Comissao (3 baldes)" val={ger.comissao_brl} />
               {baldes.map((b, i) => (<Row key={`gb${i}`} label={b.label} val={b.comissao} sub />))}
               <Row label="Bonus por faixa de atingimento" val={ger.bonus_brl} sub />
+              <Row label={`Bonus crescimento (${Number(ger.crescimento_pct ?? 0).toFixed(1)}% vs mês anterior)`} val={Number(ger.bonus_crescimento_brl ?? 0)} sub />
               <div style={{ borderTop: `1px dashed ${theme.colors.borderDefault}`, marginTop: 4, paddingTop: 6 }}>
                 <Row label="Total" val={ger.total_ganho_brl} bold />
               </div>

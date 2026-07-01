@@ -77,7 +77,7 @@ export default async function RemuneracaoPage({
 
   const [{ data: rawGer }, { data: rawGerBaldes }, { data: rawVend }, { data: rawSplit }] = await Promise.all([
     svc.from("v_comissao_gerente_resumo")
-      .select("mes, faturado_brl, meta_brl, atingimento_pct, fixo_brl, comissao_brl, bonus_brl, total_ganho_brl, custo_comercial_pct")
+      .select("mes, faturado_brl, meta_brl, atingimento_pct, fixo_brl, comissao_brl, bonus_brl, bonus_crescimento_brl, crescimento_pct, total_ganho_brl, custo_comercial_pct")
       .eq("mes", primeiroDiaMes),
     svc.from("v_comissao_gerente_mensal")
       .select("balde, clientes, faturado_brl, comissao_brl")
@@ -93,7 +93,8 @@ export default async function RemuneracaoPage({
 
   const g = (rawGer ?? [])[0] as undefined | {
     faturado_brl: number; meta_brl: number; atingimento_pct: number | null; fixo_brl: number;
-    comissao_brl: number; bonus_brl: number; total_ganho_brl: number; custo_comercial_pct: number | null;
+    comissao_brl: number; bonus_brl: number; bonus_crescimento_brl: number; crescimento_pct: number | null;
+    total_ganho_brl: number; custo_comercial_pct: number | null;
   };
   const vend = (rawVend ?? []) as unknown as {
     vendedor_routing_team: string; fixo_brl: number; faturado_mes: number; meta_mes: number;
@@ -134,7 +135,10 @@ export default async function RemuneracaoPage({
       fixo: Number(g.fixo_brl), faturado: Number(g.faturado_brl), asb: asbTime, cnb: cnbTime, meta: Number(g.meta_brl), atingimento: g.atingimento_pct,
       comissaoLabel: "Comissao (3 baldes)", comissao: Number(g.comissao_brl),
       comissaoBaldes,
-      bonusBreak: [{ label: "Bonus por faixa de atingimento", val: Number(g.bonus_brl) }], bonus: Number(g.bonus_brl),
+      bonusBreak: [
+        { label: "Bonus por faixa de atingimento", val: Number(g.bonus_brl) },
+        { label: `Bonus crescimento (${Number(g.crescimento_pct ?? 0).toFixed(1)}% vs mês anterior)`, val: Number(g.bonus_crescimento_brl ?? 0) },
+      ], bonus: Number(g.bonus_brl),
       total: Number(g.total_ganho_brl), custoPct: g.custo_comercial_pct, extra: null,
     });
   }
