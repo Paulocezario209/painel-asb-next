@@ -151,28 +151,40 @@ async function AtivosPanel({ healthFilter, mes }: { healthFilter: string; mes?: 
       .order("total_revenue_brl", { ascending: false, nullsFirst: false }),
     supabase
       .from("v_clientes_recuperados")
-      .select("ares_cliente_id")
-      .eq("mes_retorno", `${mesYM}-01`),
+      .select("ares_cliente_id, cliente_nome, vendedor_routing_team, data_retorno, gap_dias, valor_retorno")
+      .eq("mes_retorno", `${mesYM}-01`)
+      .order("data_retorno", { ascending: false }),
   ]);
-  const recIds = [...new Set((recData ?? []).map((r) => (r as { ares_cliente_id: number }).ares_cliente_id))];
+  const recRows = (recData ?? []) as {
+    ares_cliente_id: number; cliente_nome: string | null; vendedor_routing_team: string | null;
+    data_retorno: string; gap_dias: number; valor_retorno: number | null;
+  }[];
+  const recIds = [...new Set(recRows.map((r) => r.ares_cliente_id))];
   const recuperadosCount = recIds.length;
   const recuperadosMes = MESES_DRE[Number(mesYM.split("-")[1]) - 1];
-  // Clientes recuperados do mês (TODOS os status — muitos estão risco/pre_churn, fora da carteira viva).
-  // Base da lista quando o filtro "recuperados" está ativo; badges de status atual reais.
-  let recuperadosRows: Carteira[] = [];
+  // cidade: v_clientes_recuperados.cliente_cidade vem NULL → pega `city` da v_carteira_360 por id.
+  const cityById = new Map<number, string | null>();
   if (recIds.length) {
-    const { data: recCli } = await supabase
+    const { data: recCity } = await supabase
       .from("v_carteira_360")
-      .select("ares_pessoa_id, lead_id, name, city, vendedor_nome, customer_status, customer_tier, dias_sem_compra, total_revenue_brl, total_orders")
-      .in("ares_pessoa_id", recIds)
-      .order("total_revenue_brl", { ascending: false, nullsFirst: false });
-    recuperadosRows = (recCli ?? []) as Carteira[];
+      .select("ares_pessoa_id, city")
+      .in("ares_pessoa_id", recIds);
+    for (const x of (recCity ?? []) as { ares_pessoa_id: number; city: string | null }[]) cityById.set(x.ares_pessoa_id, x.city);
   }
+  const recuperadosDetalhe = recRows.map((r) => ({
+    ares_cliente_id: r.ares_cliente_id,
+    cliente_nome: r.cliente_nome,
+    cidade: cityById.get(r.ares_cliente_id) ?? null,
+    vendedor_routing_team: r.vendedor_routing_team,
+    data_retorno: r.data_retorno,
+    gap_dias: r.gap_dias,
+    valor_retorno: r.valor_retorno,
+  }));
 
   return (
     <>
       <DRECarteiraCard mes={mes} />
-      <AtivosCarteira rows={(carteira ?? []) as Carteira[]} healthFilter={healthFilter} recuperadosCount={recuperadosCount} recuperadosMes={recuperadosMes} recuperadosRows={recuperadosRows} />
+      <AtivosCarteira rows={(carteira ?? []) as Carteira[]} healthFilter={healthFilter} recuperadosCount={recuperadosCount} recuperadosMes={recuperadosMes} recuperadosDetalhe={recuperadosDetalhe} />
     </>
   );
 }
