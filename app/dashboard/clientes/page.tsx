@@ -139,16 +139,28 @@ async function AtivosPanel({ healthFilter, mes }: { healthFilter: string; mes?: 
   // nome/cidade é client-side (zero chamada nova) no AtivosCarteira.
   // RBAC: a aba hoje não escopa por vendedor logado (mostra a carteira inteira).
   // universo VIVO completo (ativo+atencao); o filtro por status é client-side no AtivosCarteira.
-  const { data: carteira } = await supabase
-    .from("v_carteira_360")
-    .select("ares_pessoa_id, lead_id, name, city, vendedor_nome, customer_status, customer_tier, dias_sem_compra, total_revenue_brl, total_orders")
-    .in("customer_status", ["ativo", "atencao"])
-    .order("total_revenue_brl", { ascending: false, nullsFirst: false });
+  // RECUPERADOS (KPI informativo, não-clicável): contagem do mês selecionado — mesma resolução do hero.
+  const now = new Date();
+  const curYM = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const mesYM = mes && /^\d{4}-\d{2}$/.test(mes) && mes <= curYM ? mes : curYM;
+  const [{ data: carteira }, { data: recData }] = await Promise.all([
+    supabase
+      .from("v_carteira_360")
+      .select("ares_pessoa_id, lead_id, name, city, vendedor_nome, customer_status, customer_tier, dias_sem_compra, total_revenue_brl, total_orders")
+      .in("customer_status", ["ativo", "atencao"])
+      .order("total_revenue_brl", { ascending: false, nullsFirst: false }),
+    supabase
+      .from("v_clientes_recuperados")
+      .select("ares_cliente_id")
+      .eq("mes_retorno", `${mesYM}-01`),
+  ]);
+  const recuperadosCount = new Set((recData ?? []).map((r) => (r as { ares_cliente_id: number }).ares_cliente_id)).size;
+  const recuperadosMes = MESES_DRE[Number(mesYM.split("-")[1]) - 1];
 
   return (
     <>
       <DRECarteiraCard mes={mes} />
-      <AtivosCarteira rows={(carteira ?? []) as Carteira[]} healthFilter={healthFilter} />
+      <AtivosCarteira rows={(carteira ?? []) as Carteira[]} healthFilter={healthFilter} recuperadosCount={recuperadosCount} recuperadosMes={recuperadosMes} />
     </>
   );
 }

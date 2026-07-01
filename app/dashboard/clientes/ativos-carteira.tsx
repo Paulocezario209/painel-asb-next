@@ -30,11 +30,15 @@ export function AtivosCarteira({
   healthFilter,
   tab = "ativos",
   statusKeys = LIVE_STATUS,
+  recuperadosCount,
+  recuperadosMes,
 }: {
   rows: Carteira[];
   healthFilter: string;
   tab?: string;
   statusKeys?: readonly string[];
+  recuperadosCount?: number;
+  recuperadosMes?: string;
 }) {
   const [q, setQ] = useState("");
   const termo = q.trim().toLowerCase();
@@ -107,6 +111,18 @@ export function AtivosCarteira({
             </Link>
           );
         })}
+        {recuperadosCount != null && (
+          <div
+            className="bg-[#16161c] border rounded-lg p-4 block"
+            style={{ borderColor: "#2a2a35", borderTop: "3px solid #22c55e", boxShadow: "0 0 24px -8px rgba(79,125,240,0.45)" }}
+          >
+            <div className="text-[10px] uppercase tracking-wider font-bold truncate" style={{ color: "#22c55e" }}>
+              Recuperados{recuperadosMes ? ` · ${recuperadosMes}` : ""}
+            </div>
+            <div className="text-3xl font-bold text-white mt-2">{recuperadosCount}</div>
+            <div className="text-[10px] text-slate-200 mt-2 leading-tight truncate">voltaram após 60+ dias fora</div>
+          </div>
+        )}
       </div>
 
       <div className="flex items-center justify-between flex-wrap gap-2">
