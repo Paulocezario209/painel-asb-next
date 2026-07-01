@@ -45,8 +45,8 @@ async function DRECarteiraCard({ mes }: { mes?: string }) {
 
   // Query escopada: 1 linha do mês (não reusa o fetch de ativos). Sem row → tudo 0 (não quebra).
   const supabase = await createClient();
-  // RECUPERADOS = último mês FECHADO (mês em curso ainda não fechou → usa o anterior).
-  const recMesAlvo = mesYM === curYM ? shiftMonthDre(mesYM, -1) : mesYM;
+  // RECUPERADOS segue o mês selecionado no seletor: corrente = MTD (acumulando); fechado = mês fechado.
+  const recMesAlvo = mesYM;
   const [movRes, recRes] = await Promise.all([
     supabase
       .from("v_carteira_movimento_mensal")
