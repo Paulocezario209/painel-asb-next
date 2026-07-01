@@ -144,12 +144,14 @@ export default async function RemuneracaoPage({
       total: Number(g.total_ganho_brl), custoPct: g.custo_comercial_pct, extra: null,
     });
   }
+  // Salário fixo do vendedor é GARANTIDO — pago mesmo sem faturamento no mês (não zera).
+  const FIXO_VENDEDOR = 2552.80;
   for (const rt of ["SETOR_SOROCABA_SAO_PAULO", "SETOR_CAMPINAS_JUNDIAI"]) {
     const v = vend.find(x => x.vendedor_routing_team === rt);
     const lbl = VENDOR_LABELS[rt];
     if (!v) {
-      cards.push({ rt, nome: lbl.name, region: lbl.region, papel: "Vendedor", fixo: 0, faturado: 0, asb: 0, cnb: 0, meta: 0, atingimento: null,
-        comissaoLabel: "Comissao 0,2%", comissao: 0, bonusBreak: [], bonus: 0, total: 0, custoPct: null, extra: "sem dados no mes" });
+      cards.push({ rt, nome: lbl.name, region: lbl.region, papel: "Vendedor", fixo: FIXO_VENDEDOR, faturado: 0, asb: 0, cnb: 0, meta: 0, atingimento: null,
+        comissaoLabel: "Comissao 0,2%", comissao: 0, bonusBreak: [], bonus: 0, total: FIXO_VENDEDOR, custoPct: null, extra: "sem faturamento no mês · só fixo" });
       continue;
     }
     cards.push({
