@@ -154,13 +154,25 @@ async function AtivosPanel({ healthFilter, mes }: { healthFilter: string; mes?: 
       .select("ares_cliente_id")
       .eq("mes_retorno", `${mesYM}-01`),
   ]);
-  const recuperadosCount = new Set((recData ?? []).map((r) => (r as { ares_cliente_id: number }).ares_cliente_id)).size;
+  const recIds = [...new Set((recData ?? []).map((r) => (r as { ares_cliente_id: number }).ares_cliente_id))];
+  const recuperadosCount = recIds.length;
   const recuperadosMes = MESES_DRE[Number(mesYM.split("-")[1]) - 1];
+  // Clientes recuperados do mês (TODOS os status — muitos estão risco/pre_churn, fora da carteira viva).
+  // Base da lista quando o filtro "recuperados" está ativo; badges de status atual reais.
+  let recuperadosRows: Carteira[] = [];
+  if (recIds.length) {
+    const { data: recCli } = await supabase
+      .from("v_carteira_360")
+      .select("ares_pessoa_id, lead_id, name, city, vendedor_nome, customer_status, customer_tier, dias_sem_compra, total_revenue_brl, total_orders")
+      .in("ares_pessoa_id", recIds)
+      .order("total_revenue_brl", { ascending: false, nullsFirst: false });
+    recuperadosRows = (recCli ?? []) as Carteira[];
+  }
 
   return (
     <>
       <DRECarteiraCard mes={mes} />
-      <AtivosCarteira rows={(carteira ?? []) as Carteira[]} healthFilter={healthFilter} recuperadosCount={recuperadosCount} recuperadosMes={recuperadosMes} />
+      <AtivosCarteira rows={(carteira ?? []) as Carteira[]} healthFilter={healthFilter} recuperadosCount={recuperadosCount} recuperadosMes={recuperadosMes} recuperadosRows={recuperadosRows} />
     </>
   );
 }

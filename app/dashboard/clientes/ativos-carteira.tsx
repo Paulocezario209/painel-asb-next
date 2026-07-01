@@ -32,6 +32,7 @@ export function AtivosCarteira({
   statusKeys = LIVE_STATUS,
   recuperadosCount,
   recuperadosMes,
+  recuperadosRows,
 }: {
   rows: Carteira[];
   healthFilter: string;
@@ -39,6 +40,7 @@ export function AtivosCarteira({
   statusKeys?: readonly string[];
   recuperadosCount?: number;
   recuperadosMes?: string;
+  recuperadosRows?: Carteira[];
 }) {
   const [q, setQ] = useState("");
   const termo = q.trim().toLowerCase();
@@ -60,8 +62,13 @@ export function AtivosCarteira({
   ];
 
   // filtro de status (client-side) → depois a busca por nome/cidade.
+  // "recuperados" é um filtro especial: base = recuperadosRows (todos os status, não o rows viva).
   const statusBase =
-    healthFilter && healthFilter !== "all" ? rows.filter((c) => c.customer_status === healthFilter) : rows;
+    healthFilter === "recuperados"
+      ? (recuperadosRows ?? [])
+      : healthFilter && healthFilter !== "all"
+        ? rows.filter((c) => c.customer_status === healthFilter)
+        : rows;
   const filtradas = termo
     ? statusBase.filter(
         (c) => (c.name ?? "").toLowerCase().includes(termo) || (c.city ?? "").toLowerCase().includes(termo)
@@ -112,16 +119,21 @@ export function AtivosCarteira({
           );
         })}
         {recuperadosCount != null && (
-          <div
-            className="bg-[#16161c] border rounded-lg p-4 block"
-            style={{ borderColor: "#2a2a35", borderTop: "3px solid #22c55e", boxShadow: "0 0 24px -8px rgba(79,125,240,0.45)" }}
+          <Link
+            href={`/dashboard/clientes?tab=${tab}&health=${healthFilter === "recuperados" ? "all" : "recuperados"}`}
+            className="bg-[#16161c] border rounded-lg p-4 transition-all block"
+            style={{
+              borderColor: healthFilter === "recuperados" ? "#22c55e" : "#2a2a35",
+              borderTop: "3px solid #22c55e",
+              boxShadow: healthFilter === "recuperados" ? "0 0 28px -6px #22c55e" : "0 0 24px -8px rgba(79,125,240,0.45)",
+            }}
           >
             <div className="text-[10px] uppercase tracking-wider font-bold truncate" style={{ color: "#22c55e" }}>
               Recuperados{recuperadosMes ? ` · ${recuperadosMes}` : ""}
             </div>
             <div className="text-3xl font-bold text-white mt-2">{recuperadosCount}</div>
             <div className="text-[10px] text-slate-200 mt-2 leading-tight truncate">voltaram após 60+ dias fora</div>
-          </div>
+          </Link>
         )}
       </div>
 
