@@ -120,8 +120,8 @@ async function DRECarteiraCard({ mes }: { mes?: string }) {
           <div className="text-[10px] text-slate-400">líquido (entrou − saiu)</div>
         </div>
         <div>
-          <div className="text-3xl font-bold" style={{ color: "#22c55e" }}>{recCount}</div>
-          <div className="text-sm font-bold" style={{ color: "#22c55e" }}>{brl(recReceita)}</div>
+          <div className="text-3xl font-bold" style={{ color: "#f97316" }}>{recCount}</div>
+          <div className="text-sm font-bold" style={{ color: "#f97316" }}>{brl(recReceita)}</div>
           <div className="text-[10px] uppercase tracking-wider font-bold text-white mt-1">Recuperados · {recMesLabel}</div>
           <div className="text-[10px] text-slate-400">voltaram após 60+ dias fora · gap méd {recGap}d</div>
         </div>

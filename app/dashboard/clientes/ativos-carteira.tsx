@@ -160,12 +160,12 @@ export function AtivosCarteira({
             onClick={() => setFilter(isRec ? "all" : "recuperados")}
             className={kpiClass}
             style={{
-              borderColor: isRec ? "#22c55e" : "#2a2a35",
-              borderTop: "3px solid #22c55e",
-              boxShadow: isRec ? "0 0 28px -6px #22c55e" : "0 0 24px -8px rgba(79,125,240,0.45)",
+              borderColor: isRec ? "#f97316" : "#2a2a35",
+              borderTop: "3px solid #f97316",
+              boxShadow: isRec ? "0 0 28px -6px #f97316" : "0 0 24px -8px rgba(79,125,240,0.45)",
             }}
           >
-            <div className="text-[10px] uppercase tracking-wider font-bold truncate" style={{ color: "#22c55e" }}>
+            <div className="text-[10px] uppercase tracking-wider font-bold truncate" style={{ color: "#f97316" }}>
               Recuperados{recuperadosMes ? ` · ${recuperadosMes}` : ""}
             </div>
             <div className="text-3xl font-bold text-white mt-2">{recuperadosCount}</div>
@@ -215,7 +215,7 @@ export function AtivosCarteira({
                         </div>
                         <span
                           className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded shrink-0"
-                          style={{ background: "#22c55e", color: "#0a0a0a" }}
+                          style={{ background: "#f97316", color: "#0a0a0a" }}
                         >
                           gap {r.gap_dias}d
                         </span>
