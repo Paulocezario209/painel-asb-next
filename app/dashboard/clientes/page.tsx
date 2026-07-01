@@ -45,11 +45,26 @@ async function DRECarteiraCard({ mes }: { mes?: string }) {
 
   // Query escopada: 1 linha do mês (não reusa o fetch de ativos). Sem row → tudo 0 (não quebra).
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("v_carteira_movimento_mensal")
-    .select("entraram, receita_entrou, sairam, receita_saiu, saldo_clientes, saldo_receita")
-    .eq("mes", `${mesYM}-01`)
-    .maybeSingle();
+  // RECUPERADOS = último mês FECHADO (mês em curso ainda não fechou → usa o anterior).
+  const recMesAlvo = mesYM === curYM ? shiftMonthDre(mesYM, -1) : mesYM;
+  const [movRes, recRes] = await Promise.all([
+    supabase
+      .from("v_carteira_movimento_mensal")
+      .select("entraram, receita_entrou, sairam, receita_saiu, saldo_clientes, saldo_receita")
+      .eq("mes", `${mesYM}-01`)
+      .maybeSingle(),
+    supabase
+      .from("v_clientes_recuperados")
+      .select("ares_cliente_id, valor_retorno, gap_dias")
+      .eq("mes_retorno", `${recMesAlvo}-01`),
+  ]);
+  const data = movRes.data;
+  // RECUPERADOS: view devolve 1 linha por retorno → agrega no server (distinct cliente, soma, média gap).
+  const recRows = (recRes.data ?? []) as { ares_cliente_id: number; valor_retorno: number; gap_dias: number }[];
+  const recCount = new Set(recRows.map((r) => r.ares_cliente_id)).size;
+  const recReceita = recRows.reduce((s, r) => s + Number(r.valor_retorno || 0), 0);
+  const recGap = recRows.length ? Math.round(recRows.reduce((s, r) => s + Number(r.gap_dias || 0), 0) / recRows.length) : 0;
+  const recMesLabel = MESES_DRE[Number(recMesAlvo.split("-")[1]) - 1];
   const entraram = Number(data?.entraram ?? 0);
   const receitaEntrou = Number(data?.receita_entrou ?? 0);
   const sairam = Number(data?.sairam ?? 0);
@@ -85,7 +100,7 @@ async function DRECarteiraCard({ mes }: { mes?: string }) {
           )}
         </div>
       </div>
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div>
           <div className="text-3xl font-bold" style={{ color: "#22c55e" }}>{entraram}</div>
           <div className="text-sm font-bold" style={{ color: "#22c55e" }}>{brl(receitaEntrou)}</div>
@@ -103,6 +118,12 @@ async function DRECarteiraCard({ mes }: { mes?: string }) {
           <div className="text-sm font-bold" style={{ color: saldoRec >= 0 ? "#22c55e" : "#C8102E" }}>{sBrl(saldoRec)}</div>
           <div className="text-[10px] uppercase tracking-wider font-bold text-white mt-1">Saldo</div>
           <div className="text-[10px] text-slate-400">líquido (entrou − saiu)</div>
+        </div>
+        <div>
+          <div className="text-3xl font-bold" style={{ color: "#22c55e" }}>{recCount}</div>
+          <div className="text-sm font-bold" style={{ color: "#22c55e" }}>{brl(recReceita)}</div>
+          <div className="text-[10px] uppercase tracking-wider font-bold text-white mt-1">Recuperados · {recMesLabel}</div>
+          <div className="text-[10px] text-slate-400">voltaram após 60+ dias fora · gap méd {recGap}d</div>
         </div>
       </div>
     </div>
