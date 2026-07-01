@@ -27,7 +27,6 @@ const VENDOR_BLOCKED: string[] = [
 const MANAGER_BLOCKED: string[] = [
   "/dashboard/simulator",
   "/dashboard/uploads",
-  "/dashboard/remuneracao",
 ];
 
 export function canAccess(role: UserRole, route: string): boolean {

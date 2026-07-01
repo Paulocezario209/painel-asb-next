@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { theme } from "@/lib/theme";
 import { getUserContext } from "@/lib/auth/get-user-role";
+import { RegrasComissaoModal } from "./regras-modal";
 
 export const dynamic = "force-dynamic";
 
@@ -59,7 +60,8 @@ export default async function RemuneracaoPage({
   const supabase = await createClient();
   await supabase.auth.getUser();
   const ctx = await getUserContext();
-  if (!ctx || !(ctx.isDiretor || ctx.isFinanceiro)) redirect("/dashboard");
+  // Diretor (Paulo) + Financeiro (consultor DRE) + Gerente (Fernando, is_manager) veem a tela do time.
+  if (!ctx || !(ctx.isDiretor || ctx.isFinanceiro || ctx.isManager)) redirect("/dashboard");
 
   // ── Mes selecionavel (default = mes corrente) ──────────────────────────────
   const sp = await searchParams;
@@ -183,6 +185,7 @@ export default async function RemuneracaoPage({
           <p style={S.muted}>Comissao do time comercial &middot; base FATURADO &middot; privada (gestor)</p>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <RegrasComissaoModal perfil="ambos" />
           <Link href={`/dashboard/remuneracao?mes=${shiftMonth(mesYM, -1)}`} style={{ ...S.muted, textDecoration: "none", padding: "4px 10px", border: `1px solid ${theme.colors.borderDefault}`, borderRadius: 6 }}>{"<"}</Link>
           <span style={{ ...S.label, color: "#FFFFFF", fontSize: 12 }}>{MESES[mesNum]} {ano}</span>
           <Link href={`/dashboard/remuneracao?mes=${shiftMonth(mesYM, 1)}`} style={{ ...S.muted, textDecoration: "none", padding: "4px 10px", border: `1px solid ${theme.colors.borderDefault}`, borderRadius: 6 }}>{">"}</Link>

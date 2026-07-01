@@ -25,7 +25,8 @@ const navItems = [
 ];
 
 const VENDOR_BLOCKED = new Set(["/dashboard/funil", "/dashboard/vendedores", "/dashboard/gerente", "/dashboard/insights", "/dashboard/simulator", "/dashboard/uploads", "/dashboard/churn", "/dashboard/up-sell", "/dashboard/remuneracao"]);
-const MANAGER_BLOCKED = new Set(["/dashboard/gerente", "/dashboard/simulator", "/dashboard/uploads", "/dashboard/remuneracao"]);
+// manager (Fernando): ganha Remuneracao (tela do time); perde Minha Comissao (redireciona p/ Remuneracao).
+const MANAGER_BLOCKED = new Set(["/dashboard/gerente", "/dashboard/simulator", "/dashboard/uploads", "/dashboard/minha-comissao"]);
 
 export function Sidebar({
   isOpen = false,
@@ -39,8 +40,10 @@ export function Sidebar({
   const pathname = usePathname();
 
   const visibleItems = navItems.filter(item => {
-    if (role === "gestor") return true;
+    // gestor (Paulo) vê tudo, EXCETO Minha Comissao (usa a tela do time em Remuneracao).
+    if (role === "gestor") return item.href !== "/dashboard/minha-comissao";
     if (role === "manager") return !MANAGER_BLOCKED.has(item.href);
+    // vendedor: mantém Minha Comissao (visão própria); Remuneracao segue bloqueada (VENDOR_BLOCKED).
     return !VENDOR_BLOCKED.has(item.href);
   });
 

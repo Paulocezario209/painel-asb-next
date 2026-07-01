@@ -62,6 +62,8 @@ export default async function MinhaComissaoPage({
 
   // ── GERENTE (Fernando): ve SO a propria comissao de gerente (3 baldes), SEM simulador ──
   if (ctx.comissaoPerfil === "gerente") {
+    // Gerente (Fernando) agora usa a tela do time em Remuneracao — visão própria descontinuada.
+    redirect("/dashboard/remuneracao");
     const [{ data: gRows }, { data: bRows }, { data: gSplit }] = await Promise.all([
       svc.from("v_comissao_gerente_resumo")
         .select("faturado_brl, meta_brl, atingimento_pct, fixo_brl, comissao_brl, bonus_brl, bonus_crescimento_brl, crescimento_pct, total_ganho_brl, custo_comercial_pct")
