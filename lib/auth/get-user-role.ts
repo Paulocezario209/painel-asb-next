@@ -13,6 +13,7 @@ export interface UserContext {
   isTecnicoCompras: boolean;
   isFinanceiro: boolean;          // consultor externo DRE: ve tudo, READ-ONLY (escrita barrada no middleware)
   isDiretor: boolean;              // gestor + comissao_perfil='diretor' (so Paulo ve a tela do time)
+  isGerente: boolean;              // comissao_perfil='gerente' (Fernando): usa a tela do time (Remuneracao), nao a Minha Comissao
 }
 
 const VENDOR_BLOCKED: string[] = [
@@ -65,5 +66,6 @@ export async function getUserContext(): Promise<UserContext | null> {
     isTecnicoCompras: role === "tecnico_compras",
     isFinanceiro: role === "financeiro",
     isDiretor: role === "gestor" && comissaoPerfil === "diretor",
+    isGerente: comissaoPerfil === "gerente",
   };
 }

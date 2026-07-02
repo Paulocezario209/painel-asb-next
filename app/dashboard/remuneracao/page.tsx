@@ -61,7 +61,7 @@ export default async function RemuneracaoPage({
   await supabase.auth.getUser();
   const ctx = await getUserContext();
   // Diretor (Paulo) + Financeiro (consultor DRE) + Gerente (Fernando, is_manager) veem a tela do time.
-  if (!ctx || !(ctx.isDiretor || ctx.isFinanceiro || ctx.isManager)) redirect("/dashboard");
+  if (!ctx || !(ctx.isDiretor || ctx.isFinanceiro || ctx.isManager || ctx.isGerente)) redirect("/dashboard");
 
   // ── Mes selecionavel (default = mes corrente) ──────────────────────────────
   const sp = await searchParams;
