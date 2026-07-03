@@ -36,12 +36,6 @@ function bizDays(from: Date, to: Date): number {
   }
   return n;
 }
-function median(arr: number[]): number {
-  if (!arr.length) return 0;
-  const s = [...arr].sort((a, b) => a - b);
-  const m = Math.floor(s.length / 2);
-  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
-}
 function semaforo(pct: number): { cor: string; label: string } {
   if (pct <= 54) return { cor: "#2ea043", label: "OK" };
   if (pct <= 65) return { cor: "#d29922", label: "ALERTA" };
@@ -172,19 +166,6 @@ export default async function ResultadosPage({
           : (compras > 0 ? "sem_dado" : r.semaforo)) as DiaCalendario["semaforo"],
     };
   });
-  // compDia migrado p/ base de ENTREGA (DEBT-042): usa o agregado já keyed por `dia` da view do calendário
-  const compDia: Record<string, number> = {};
-  for (const r of calRows) compDia[r.dia] = Number(r.compras_brl || 0);
-
-  // últimos 7 dias úteis (SEG-SÁB) até hoje
-  const last7: Date[] = [];
-  const cur = new Date(hoje);
-  while (last7.length < 7 && cur >= inicioMes) {
-    if (cur.getDay() !== 0) last7.push(new Date(cur));
-    cur.setDate(cur.getDate() - 1);
-  }
-  const medCompras = median(last7.map((d) => compDia[iso(d)] || 0));
-
   const duDecorridos = bizDays(inicioMes, fimJanela); // corrente: até hoje; passado: mês inteiro
   const duTotal = bizDays(inicioMes, fimMes);
   const duRestantes = Math.max(0, duTotal - duDecorridos);
@@ -201,14 +182,23 @@ export default async function ResultadosPage({
   const ritmoAmortecido = 1 + (ritmoReal - 1) * peso;
   const fatorRitmo = ritmoReal;                                       // "Ritmo % da meta" (indicador, inalterado)
 
-  // Compras: mediana 7 dias úteis × dias úteis restantes (INALTERADA)
-  const projCompras = comprasMtd + medCompras * duRestantes;
   const projFaturado = metaAcum > 0
     ? faturadoMtd + metaRestante * ritmoAmortecido
     : metaMensal;                                                    // edge: dia 1 antes de meta acumulada → meta mensal
+
+  // Compras: ÂNCORA no TETO 54% do FATURADO PROJETADO (já meta-based, DEBT-220), com o ritmo REAL
+  // de compra amortecido pelo mesmo peso do faturado. ritmoCompras = quanto do orçamento de 54%
+  // já consumi até hoje; converge ao ritmo real no fim do mês. comprasMtd = comprometido (gate box).
+  const TETO = 0.54;
+  const ritmoCompras = faturadoMtd > 0 ? comprasMtd / (TETO * faturadoMtd) : 1;
+  const ritmoComprasAmort = 1 + (ritmoCompras - 1) * peso;
+  const orcamentoRestante = Math.max(0, TETO * (projFaturado - faturadoMtd));
+  const projCompras = faturadoMtd > 0
+    ? comprasMtd + orcamentoRestante * ritmoComprasAmort
+    : TETO * projFaturado;                                           // edge: sem faturado MTD → teto puro do projetado
   const pctProj = projFaturado > 0 ? Math.round((projCompras / projFaturado) * 1000) / 10 : 0;
   const semProj = semaforo(pctProj);
-  const gap54 = projCompras - 0.54 * projFaturado;
+  const gap54 = projCompras - TETO * projFaturado;                   // reusa TETO (era 0.54 literal)
 
   const labelS: React.CSSProperties = {
     fontSize: 9,
@@ -347,7 +337,7 @@ export default async function ResultadosPage({
       {isMesCorrente ? (
         <div style={{ background: "#0f1428", border: `1px solid ${semProj.cor}`, borderRadius: 6, padding: 18 }}>
           <div style={{ ...labelS, marginBottom: 8 }}>
-            Projeção fechamento do mês (FATURADO: META × RITMO AMORTECIDO · COMPRAS: MEDIANA 7 DIAS ÚTEIS)
+            Projeção fechamento do mês (FATURADO: META × RITMO AMORTECIDO · COMPRAS: TETO 54% × RITMO AMORTECIDO)
           </div>
           {metaRows.length === 0 ? (
             <div style={{ ...labelS, textTransform: "none", letterSpacing: 0 }}>Sem meta de vendedores neste período — projeção indisponível</div>
@@ -355,6 +345,7 @@ export default async function ResultadosPage({
             <div style={{ display: "flex", gap: 24, flexWrap: "wrap", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", fontSize: 13, color: "#c8d8e8" }}>
               <span>Faturado proj.: <b>{brl(projFaturado)}</b></span>
               <span>Compras proj.: <b>{brl(projCompras)}</b></span>
+              <span style={{ color: "#8aa0b8" }}>Teto 54%: <b>{brl(TETO * projFaturado)}</b></span>
               <span style={{ color: semProj.cor }}>% proj.: <b>{pctProj}% {semProj.label}</b></span>
               <span>Gap vs 54%: <b style={{ color: gap54 > 0 ? "#f85149" : "#2ea043" }}>{brl(gap54)}</b></span>
               <span style={{ color: fatorRitmo >= 1 ? "#2ea043" : "#d29922" }}>
