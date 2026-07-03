@@ -141,8 +141,13 @@ export default async function ResultadosPage({
     .reduce((s, r) => s + Number(r.valor_total_brl || 0), 0) - devolucaoMtd;
   const aChegarMtd = comprasMtd - recebidoMtd;
 
-  // Card topo = RECEBIDO real (entregue - devolucao); a-chegar fica so na projecao de baixo.
-  const pct = faturadoMtd > 0 ? Math.round((recebidoMtd / faturadoMtd) * 1000) / 10 : 0;
+  // Compras COMPROMETIDAS para o box % e headline — espelha o gate dual de v_resultado_mensal
+  // (fonte dos tiles ANO): mes CORRENTE = tudo !cancelado (comprasMtd, compromisso financeiro MTD);
+  // mes FECHADO = entregue real (recebidoMtd, custo do mes, exclui a-chegar que nao chegou).
+  // Mantem o box coerente com o tile do mes em AMBOS os cenarios. Split Recebido/A chegar (abaixo)
+  // segue como composicao secundaria, intacto.
+  const comprasParaPct = isMesCorrente ? comprasMtd : recebidoMtd;
+  const pct = faturadoMtd > 0 ? Math.round((comprasParaPct / faturadoMtd) * 1000) / 10 : 0;
   const sem = semaforo(pct);
 
   // diário (para projeção)
@@ -305,7 +310,8 @@ export default async function ResultadosPage({
             <div style={{ ...labelS, marginTop: 10, textTransform: "none", letterSpacing: 0 }}>Sem dados de compras neste período</div>
           ) : (
             <>
-              <div style={{ fontSize: 26, fontWeight: 700, color: "#FFFFFF", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", marginTop: 6 }}>{brl(recebidoMtd)}</div>
+              {/* Headline = compras COMPROMETIDAS (gate dual, mesmo comprasParaPct do box %). */}
+              <div style={{ fontSize: 26, fontWeight: 700, color: "#FFFFFF", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", marginTop: 6 }}>{brl(comprasParaPct)}</div>
               <div style={{ ...labelS, marginTop: 8, color: "#c0d0e0", textTransform: "none", letterSpacing: 0 }}>
                 Recebido (NF): <b style={{ color: "#2ea043" }}>{brl(recebidoMtd)}</b> · A chegar: <b style={{ color: "#d29922" }}>{brl(aChegarMtd)}</b>
               </div>
