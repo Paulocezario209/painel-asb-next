@@ -83,12 +83,13 @@ export default async function ResultadosPage({
       .lte("data_emissao", iso(fimJanela))
       .neq("status_compra", "cancelado")
       .in("id_pessoa_emitente", [1, 2074]),
-    // meta dos vendedores (todos) por dia — base da projeção por fator de ritmo
+    // meta dos vendedores (todos) por dia — base da projeção por ritmo amortecido.
+    // Janela = MÊS INTEIRO (fimMes, não fimJanela): precisa da meta futura p/ metaRestante.
     supabase
       .from("v_calendario_metas")
       .select("dia, meta_diaria_brl")
       .gte("dia", iso(inicioMes))
-      .lte("dia", iso(fimJanela)),
+      .lte("dia", iso(fimMes)),
     // calendário/dashboard (Fase 1.5) — agregado diário + semáforo + sinalizadores
     supabase
       .from("v_calendario_compras_dia")
@@ -188,14 +189,23 @@ export default async function ResultadosPage({
   const duTotal = bizDays(inicioMes, fimMes);
   const duRestantes = Math.max(0, duTotal - duDecorridos);
 
-  // Faturado: projeção por RITMO REAL (faturado MTD / dias úteis decorridos × dias úteis totais) — espelha compras
+  // Faturado: ÂNCORA na META MENSAL com RITMO AMORTECIDO por progresso do mês (spec §D.2).
+  // ritmoReal = quanto o time está batendo da meta acumulada; amortecido pelo peso (dias úteis
+  // decorridos/total) p/ não super-extrapolar cedo no mês. Converge ao realizado no fim do mês.
   const todayISO = iso(hoje);
-  const metaAteHoje = metaRows.filter((r) => r.dia <= todayISO).reduce((s, r) => s + Number(r.meta_diaria_brl || 0), 0);
-  const fatorRitmo = metaAteHoje > 0 ? faturadoMtd / metaAteHoje : 1;
+  const metaAcum = metaRows.filter((r) => r.dia <= todayISO).reduce((s, r) => s + Number(r.meta_diaria_brl || 0), 0);
+  const metaMensal = metaRows.reduce((s, r) => s + Number(r.meta_diaria_brl || 0), 0);
+  const metaRestante = Math.max(0, metaMensal - metaAcum);
+  const ritmoReal = metaAcum > 0 ? faturadoMtd / metaAcum : 1;
+  const peso = duTotal > 0 ? duDecorridos / duTotal : 1;              // progresso do mês (dias úteis)
+  const ritmoAmortecido = 1 + (ritmoReal - 1) * peso;
+  const fatorRitmo = ritmoReal;                                       // "Ritmo % da meta" (indicador, inalterado)
 
-  // Compras: mediana 7 dias úteis × dias úteis restantes
+  // Compras: mediana 7 dias úteis × dias úteis restantes (INALTERADA)
   const projCompras = comprasMtd + medCompras * duRestantes;
-  const projFaturado = duDecorridos > 0 ? (faturadoMtd / duDecorridos) * duTotal : faturadoMtd;
+  const projFaturado = metaAcum > 0
+    ? faturadoMtd + metaRestante * ritmoAmortecido
+    : metaMensal;                                                    // edge: dia 1 antes de meta acumulada → meta mensal
   const pctProj = projFaturado > 0 ? Math.round((projCompras / projFaturado) * 1000) / 10 : 0;
   const semProj = semaforo(pctProj);
   const gap54 = projCompras - 0.54 * projFaturado;
@@ -337,7 +347,7 @@ export default async function ResultadosPage({
       {isMesCorrente ? (
         <div style={{ background: "#0f1428", border: `1px solid ${semProj.cor}`, borderRadius: 6, padding: 18 }}>
           <div style={{ ...labelS, marginBottom: 8 }}>
-            Projeção fechamento do mês (faturado: ritmo real até hoje · compras: mediana 7 dias úteis)
+            Projeção fechamento do mês (FATURADO: META × RITMO AMORTECIDO · COMPRAS: MEDIANA 7 DIAS ÚTEIS)
           </div>
           {metaRows.length === 0 ? (
             <div style={{ ...labelS, textTransform: "none", letterSpacing: 0 }}>Sem meta de vendedores neste período — projeção indisponível</div>
