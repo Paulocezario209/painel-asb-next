@@ -233,6 +233,24 @@ function VendedorTab() {
         <p style={st.sectionLabel}>Bônus de meta</p>
         <Line label="Bônus diário (por dia de meta batida)" val="R$ 100" color={GREEN} />
         <Line label="Bônus semanal (semana com 2 dias batidos)" val="R$ 100" color={ORANGE} />
+
+        {/* RESGATE (compensacao semanal) — regra JA paga (asb-comissao-rules §1, matriz 4 cenarios); conteudo apenas */}
+        <p style={{ fontSize: 11, fontFamily: theme.font.label, color: "#e4e9f0", fontWeight: 700, letterSpacing: ".04em", marginTop: 14, marginBottom: 4 }}>
+          Bônus RESGATE (compensação semanal)
+        </p>
+        <p style={{ fontSize: 11, fontFamily: theme.font.label, color: "#c0d0e0", lineHeight: 1.5, marginBottom: 8 }}>
+          Não bateu uma das 2 metas da semana? Se a SOMA dos 2 dias cobrir a soma das 2 metas, o dia não
+          batido é RESGATADO: você recebe os 2 bônus diários (R$ 200). Só o bônus semanal exige os 2 dias
+          batidos individualmente. Condição: pelo menos 1 dia batido no próprio dia — semana sem nenhum dia
+          batido não tem resgate.
+        </p>
+        <Line label="Dia 1 bateu · Dia 2 bateu — diário 200 + semanal 100" val="R$ 300" color={GREEN} />
+        <Line label="Dia 1 bateu · Dia 2 não · soma cobre — resgate 200 + semanal 0" val="R$ 200" color={GREEN} />
+        <Line label="Dia 1 bateu · Dia 2 não · soma NÃO cobre — 100 + 0" val="R$ 100" color={ORANGE} />
+        <Line label="Nenhum dia batido (mesmo com soma alta)" val="R$ 0" color={RED} />
+        <p style={{ fontSize: 10, fontFamily: theme.font.label, color: "#8aa0b8", lineHeight: 1.5, marginTop: 8 }}>
+          Ana / CUIT: a última meta da semana é COMBINADA (QUI+SEX contam como uma) — regra §9 vigente.
+        </p>
       </div>
 
       <div>
