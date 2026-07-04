@@ -98,12 +98,12 @@ export default async function UpSellPage() {
         <div className="bg-[#16161c] border border-[#2a2a35] rounded-lg p-4 shadow-[0_0_24px_-8px_rgba(79,125,240,0.45)]" style={{ borderTop: "3px solid #BA7517" }}>
           <div className="text-[10px] uppercase tracking-wider font-bold text-[#BA7517]">Up-sell Ticket</div>
           <div className="text-3xl font-bold text-white mt-1">{upsellRows.length}</div>
-          <div className="text-[10px] text-slate-200 mt-1">clientes &lt; 80% da média do tier</div>
+          <div className="text-[10px] text-slate-200 mt-1">ticket 20%+ abaixo da média do tier (&lt; 80%)</div>
         </div>
         <div className="bg-[#16161c] border border-[#2a2a35] rounded-lg p-4 shadow-[0_0_24px_-8px_rgba(79,125,240,0.45)]" style={{ borderTop: "3px solid #BA1717" }}>
           <div className="text-[10px] uppercase tracking-wider font-bold text-[#BA1717]">Risco Queda</div>
           <div className="text-3xl font-bold text-white mt-1">{downsellRows.length}</div>
-          <div className="text-[10px] text-slate-200 mt-1">clientes &gt; 120% da média do tier</div>
+          <div className="text-[10px] text-slate-200 mt-1">ticket 20%+ acima da média do tier (&gt; 120%)</div>
         </div>
         <div className="bg-[#16161c] border border-[#2a2a35] rounded-lg p-4 shadow-[0_0_24px_-8px_rgba(79,125,240,0.45)]" style={{ borderTop: "3px solid #185FA5" }}>
           <div className="text-[10px] uppercase tracking-wider font-bold text-[#185FA5]">Tier Upgrade</div>
@@ -127,6 +127,8 @@ export default async function UpSellPage() {
         ) : (
           <div className="space-y-1.5">
             {upsellRows.map((r) => {
+              // % da média = posição do ticket vs média do tier (client-side; view intocada)
+              const pctMedia = Math.round((r.cliente_ticket / r.tier_avg_ticket) * 100);
               const row = (
                 <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_auto] gap-2 items-center bg-[#0f0f0f] hover:bg-[#181818] border border-[#2a2a35] hover:border-[#BA7517] rounded p-3 text-xs transition-all shadow-[0_0_12px_-9px_rgba(79,125,240,0.6)]">
                   <div className="text-white font-semibold truncate">
@@ -144,8 +146,8 @@ export default async function UpSellPage() {
                     <span className="text-white">{fmtBRL(r.tier_avg_ticket)}</span>
                   </div>
                   <div className="text-slate-200">
-                    <span className="text-slate-200 text-[10px]">Gap:</span>{" "}
-                    <span className="text-[#E0993A] font-bold">{r.gap_pct}%</span>
+                    <span className="text-slate-200 text-[10px]">Ticket vs média:</span>{" "}
+                    <span className="text-[#E0993A] font-bold">{pctMedia}% da média</span>
                   </div>
                   <div className="text-slate-200">
                     <span className="text-slate-200 text-[10px]">Potencial/ano:</span>{" "}
@@ -174,6 +176,8 @@ export default async function UpSellPage() {
         ) : (
           <div className="space-y-1.5">
             {downsellRows.map((r) => {
+              // % da média = posição do ticket vs média do tier (client-side; view intocada)
+              const pctMedia = Math.round((r.cliente_ticket / r.tier_avg_ticket) * 100);
               const row = (
                 <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_auto] gap-2 items-center bg-[#0f0f0f] hover:bg-[#181818] border border-[#2a2a35] hover:border-[#BA1717] rounded p-3 text-xs transition-all shadow-[0_0_12px_-9px_rgba(79,125,240,0.6)]">
                   <div className="text-white font-semibold truncate">
@@ -191,8 +195,8 @@ export default async function UpSellPage() {
                     <span className="text-white">{fmtBRL(r.tier_avg_ticket)}</span>
                   </div>
                   <div className="text-slate-200">
-                    <span className="text-slate-200 text-[10px]">Acima:</span>{" "}
-                    <span className="text-[#E84545] font-bold">+{r.excesso_pct}%</span>
+                    <span className="text-slate-200 text-[10px]">Ticket vs média:</span>{" "}
+                    <span className="text-[#E84545] font-bold">{pctMedia}% da média</span>
                   </div>
                   <div className="text-slate-200">
                     <span className="text-slate-200 text-[10px]">Revenue em risco:</span>{" "}
@@ -259,8 +263,8 @@ export default async function UpSellPage() {
       </div>
 
       <div className="text-[10px] text-gray-600 text-center mt-4">
-        Up-sell via <code>v_upsell_oportunidades</code> (cliente &lt; 80% média tier).{" "}
-        Risco queda via <code>v_downsell_risco_queda</code> (cliente &gt; 120% média tier).{" "}
+        Up-sell via <code>v_upsell_oportunidades</code> (ticket 20%+ abaixo da média do tier &middot; &lt; 80%).{" "}
+        Risco queda via <code>v_downsell_risco_queda</code> (ticket 20%+ acima da média do tier &middot; &gt; 120%).{" "}
         Tier upgrade via <code>v_tier_upgrade_candidates</code> (weekly_volume_kg justifica tier maior).{" "}
         Fonte: carteira real ARES (v_carteira_360).
       </div>
