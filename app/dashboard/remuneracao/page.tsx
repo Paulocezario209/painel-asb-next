@@ -82,7 +82,7 @@ export default async function RemuneracaoPage({
       .select("mes, faturado_brl, meta_brl, atingimento_pct, fixo_brl, comissao_brl, bonus_crescimento_meta_brl, total_ganho_brl, custo_comercial_pct")
       .eq("mes", primeiroDiaMes),
     svc.from("v_comissao_gerente_mensal")
-      .select("balde, clientes, faturado_brl, comissao_brl")
+      .select("balde, clientes, faturado_brl, comissao_brl, comissao_mix_novo_brl, comissao_same_product_brl, regra_balde")
       .eq("mes", primeiroDiaMes),
     svc.from("v_comissao_vendedor_resumo")
       .select("vendedor_routing_team, mes, fixo_brl, faturado_mes, meta_mes, atingimento_pct, comissao_02pct, dias_batidos, bonus_diario_brl, bonus_semanal_brl, crescimento_pct, bonus_crescimento_brl, bonus_total_brl, total_ganho_brl, custo_comercial_pct")
@@ -117,15 +117,28 @@ export default async function RemuneracaoPage({
   }
 
   // ── Baldes do gerente (v_comissao_gerente_mensal) — ordem fixa + label/cli/faturado ──
-  type BaldeRow = { balde: string; clientes: number; faturado_brl: number; comissao_brl: number };
+  type BaldeRow = {
+    balde: string; clientes: number; faturado_brl: number; comissao_brl: number;
+    comissao_mix_novo_brl: number | null; comissao_same_product_brl: number | null;
+    regra_balde: "atual" | "mix" | null;
+  };
   const baldesRaw = (rawGerBaldes ?? []) as unknown as BaldeRow[];
   const fmtBRL0 = (v: number) => (Number(v) || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0, maximumFractionDigits: 0 });
   const BALDE_LABEL: Record<string, string> = { NOVO: "Novos", RESGATE: "Resgate", CRESCIMENTO: "Crescimento", CARTEIRA: "Carteira (piso)" };
-  const comissaoBaldes = ["NOVO", "RESGATE", "CRESCIMENTO", "CARTEIRA"].map((b) => {
+  const comissaoBaldes = ["NOVO", "RESGATE", "CRESCIMENTO", "CARTEIRA"].flatMap((b) => {
     const r = baldesRaw.find(x => x.balde === b);
     const cli = Number(r?.clientes ?? 0);
     const fat = Number(r?.faturado_brl ?? 0);
-    return { label: `${BALDE_LABEL[b]} (${cli} cli - fat ${fmtBRL0(fat)})`, comissao: Number(r?.comissao_brl ?? 0) };
+    const base = { label: `${BALDE_LABEL[b]} (${cli} cli - fat ${fmtBRL0(fat)})`, comissao: Number(r?.comissao_brl ?? 0) };
+    // Quebra MIX do Crescimento (vigência Ago/2026: regra_balde='mix'). Meses atuais renderizam como hoje.
+    if (b === "CRESCIMENTO" && r?.regra_balde === "mix") {
+      return [
+        base,
+        { label: "↳ mix novo · SKU novo (0,6%)", comissao: Number(r?.comissao_mix_novo_brl ?? 0) },
+        { label: "↳ recorrente · same-product (0,1%)", comissao: Number(r?.comissao_same_product_brl ?? 0) },
+      ];
+    }
+    return [base];
   });
 
   // ── Monta os 3 cards (Fernando gerente + Ana/Alan vendedores) ──────────────

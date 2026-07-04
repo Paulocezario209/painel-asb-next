@@ -203,6 +203,12 @@ function GerenteTab() {
         {GERENTE_BALDES.map((b) => (
           <Line key={b.label} label={b.label} val={b.val} color={b.color} />
         ))}
+        <p style={{ fontSize: 10, fontFamily: theme.font.label, color: "#8aa0b8", marginTop: 10, lineHeight: 1.5 }}>
+          Crescimento (0,6%): cliente recorrente que expande o <b>mix</b> — SKU novo (não comprado nos últimos
+          6 meses) representa ≥ 25% do faturado-itens do mês. <b>Vigência Ago/2026:</b> a 0,6% passa a incidir
+          <b> só sobre o faturamento dos SKUs novos</b>; o restante (same-product, mérito do cliente) cai na
+          Carteira (0,1%). Até Jul/2026: 0,6% sobre todo o faturado do cliente Crescimento (regra anterior).
+        </p>
       </div>
 
       <div>
