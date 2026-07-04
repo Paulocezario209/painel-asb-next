@@ -98,12 +98,12 @@ export default async function UpSellPage() {
         <div className="bg-[#16161c] border border-[#2a2a35] rounded-lg p-4 shadow-[0_0_24px_-8px_rgba(79,125,240,0.45)]" style={{ borderTop: "3px solid #BA7517" }}>
           <div className="text-[10px] uppercase tracking-wider font-bold text-[#BA7517]">Up-sell Ticket</div>
           <div className="text-3xl font-bold text-white mt-1">{upsellRows.length}</div>
-          <div className="text-[10px] text-slate-200 mt-1">clientes &lt; 70% da média do tier</div>
+          <div className="text-[10px] text-slate-200 mt-1">clientes &lt; 80% da média do tier</div>
         </div>
         <div className="bg-[#16161c] border border-[#2a2a35] rounded-lg p-4 shadow-[0_0_24px_-8px_rgba(79,125,240,0.45)]" style={{ borderTop: "3px solid #BA1717" }}>
           <div className="text-[10px] uppercase tracking-wider font-bold text-[#BA1717]">Risco Queda</div>
           <div className="text-3xl font-bold text-white mt-1">{downsellRows.length}</div>
-          <div className="text-[10px] text-slate-200 mt-1">clientes &gt; 130% da média do tier</div>
+          <div className="text-[10px] text-slate-200 mt-1">clientes &gt; 120% da média do tier</div>
         </div>
         <div className="bg-[#16161c] border border-[#2a2a35] rounded-lg p-4 shadow-[0_0_24px_-8px_rgba(79,125,240,0.45)]" style={{ borderTop: "3px solid #185FA5" }}>
           <div className="text-[10px] uppercase tracking-wider font-bold text-[#185FA5]">Tier Upgrade</div>
@@ -259,8 +259,8 @@ export default async function UpSellPage() {
       </div>
 
       <div className="text-[10px] text-gray-600 text-center mt-4">
-        Up-sell via <code>v_upsell_oportunidades</code> (cliente &lt; 70% média tier).{" "}
-        Risco queda via <code>v_downsell_risco_queda</code> (cliente &gt; 130% média tier).{" "}
+        Up-sell via <code>v_upsell_oportunidades</code> (cliente &lt; 80% média tier).{" "}
+        Risco queda via <code>v_downsell_risco_queda</code> (cliente &gt; 120% média tier).{" "}
         Tier upgrade via <code>v_tier_upgrade_candidates</code> (weekly_volume_kg justifica tier maior).{" "}
         Fonte: carteira real ARES (v_carteira_360).
       </div>

@@ -115,6 +115,15 @@ export default async function GerentePage() {
   const somaFatVendedores = resumo.reduce((s, r) => s + Number(r.realizado_mes_brl ?? 0), 0);
   const naoAtribuido = Math.max(0, totalFaturadoReal - somaFatVendedores);
 
+  // ── Indicador Up-sell / Risco da carteira (visibilidade; sem aliquota nova) ──────
+  const [{ data: upsellG }, { data: downsellG }] = await Promise.all([
+    supabase.from("v_upsell_oportunidades").select("potencial_anual_brl"),
+    supabase.from("v_downsell_risco_queda").select("ares_pessoa_id"),
+  ]);
+  const upsellN = (upsellG ?? []).length;
+  const upsellPot = (upsellG ?? []).reduce((s, r) => s + Number((r as { potencial_anual_brl: number | null }).potencial_anual_brl ?? 0), 0);
+  const riscoN = (downsellG ?? []).length;
+
   // ── Aggregate per vendor (realizado OFICIAL = faturamento §5; emissao = prévia) ───
   type VendorAgg = { realizado: number; emissao: number; meta: number };
   const agg: Record<string, VendorAgg> = {};
@@ -215,6 +224,19 @@ export default async function GerentePage() {
           {naoAtribuido > 0 ? ` + não-atribuído ${fmtBRL(naoAtribuido)}` : ""}
         </p>
       </div>
+
+      {/* ── Up-sell / Risco da carteira (visibilidade; resultado pago pelo balde Crescimento) ── */}
+      <Link href="/dashboard/up-sell" style={{ textDecoration: "none" }}>
+        <div style={{ ...S.card, padding: "16px 20px", borderTop: "2px solid #f97316", maxWidth: 420 }}>
+          <p style={S.label}>Up-sell / Risco (carteira)</p>
+          <p style={{ ...S.value, fontSize: 18, marginTop: 8 }}>
+            {upsellN} up-sell &middot; {fmtBRL(upsellPot)} &middot; {riscoN} risco
+          </p>
+          <p style={{ ...S.muted, fontSize: 9, marginTop: 6 }}>
+            oportunidades da carteira &middot; resultado pago pelo balde Crescimento (0,6%)
+          </p>
+        </div>
+      </Link>
 
       {/* ── E3 Sprint Fernando: Órfãos de atendimento (worklist gestor) ────── */}
       <div style={{ ...S.card, padding: "20px 24px", borderTop: orfaos.length > 0 ? "2px solid #ef4444" : `2px solid ${theme.colors.success}` }}>
