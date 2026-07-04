@@ -36,13 +36,6 @@ const GERENTE_BALDES: { label: string; val: string; color: string }[] = [
   { label: "Resgate",     val: "1,0%", color: RED },
 ];
 
-// Bonus por faixa de atingimento (realizado / meta) — gerente.
-const GERENTE_ATINGIMENTO: { pct: string; val: string; color: string }[] = [
-  { pct: "130%", val: "R$ 1.500", color: GREEN },
-  { pct: "150%", val: "R$ 2.500", color: ORANGE },
-  { pct: "180%", val: "R$ 5.000", color: RED },
-];
-
 // Bonus de crescimento — vendedor.
 const VENDEDOR_CRESCIMENTO: { pct: string; val: string; color: string }[] = [
   { pct: ">3%",  val: "R$ 150", color: GREEN },
@@ -213,17 +206,14 @@ function GerenteTab() {
       </div>
 
       <div>
-        <p style={st.sectionLabel}>Bônus por faixa de atingimento (realizado / meta)</p>
-        {GERENTE_ATINGIMENTO.map((b) => (
-          <Line key={b.pct} label={b.pct} val={b.val} color={b.color} />
-        ))}
-      </div>
-
-      <div>
-        <p style={st.sectionLabel}>Bônus de crescimento mensal (faturamento vs mês anterior)</p>
+        <p style={st.sectionLabel}>Bônus crescimento vs META (realizado / meta − 1)</p>
         {GERENTE_CRESCIMENTO.map((b) => (
           <Line key={b.pct} label={b.pct} val={b.val} color={b.color} />
         ))}
+        <p style={{ fontSize: 10, fontFamily: theme.font.label, color: "#8aa0b8", marginTop: 10, lineHeight: 1.5 }}>
+          Vigência Jul/2026. Até Jun/2026: bônus por faixa de atingimento (130/150/180) + crescimento
+          vs mês anterior, cumulativos (regra histórica).
+        </p>
       </div>
     </div>
   );
