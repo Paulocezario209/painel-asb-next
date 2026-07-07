@@ -377,14 +377,16 @@ export function CalendarSection({
             {/* FIX: incluir sábado/domingo se for dia-meta + esconder dias completamente vazios */}
             {diasOrdenados
               .filter(d => d.status_dia !== "weekend")
-              .filter(d => d.is_dia_meta || Number(d.realizado_brl) > 0) // esconder Meta=0 + Real=0
+              .filter(d => d.is_dia_meta) // v2: só dias de meta do vendedor; dias sem meta = célula neutra (não renderiza R$ solto)
               .map(d => {
               const isSelected = diaSelecionado === d.dia;
               const dt = new Date(d.dia + "T00:00:00");
               const diaNum = dt.getDate();
               const dow = DOW[dt.getDay()];
-              const saldo = Number(d.realizado_brl) - Number(d.meta_diaria_brl);
-              const isEncaixe = !d.is_dia_meta && Number(d.realizado_brl) > 0;
+              // v2: célula de dia-meta exibe SÓ realizado_meta_brl (fold) vs meta do vendedor
+              const realCoerente = Number(d.realizado_meta_brl ?? d.realizado_brl);
+              const saldo = realCoerente - Number(d.meta_diaria_brl);
+              const isEncaixe = false;
               let accent: string = theme.colors.neutral;
               if (d.status_dia === "batida") accent = theme.colors.success;
               else if (d.status_dia === "abaixo") accent = theme.colors.critical;
@@ -422,8 +424,8 @@ export function CalendarSection({
                         <span style={{ color: "#c8d8e8", textAlign: "right" }}><span className="priv-brl">{fmtBRL(d.meta_diaria_brl)}</span></span>
                       </>
                     )}
-                    <span style={{ color: theme.colors.neutral }}>{isEncaixe ? "Encaixe:" : "Real:"}</span>
-                    <span style={{ color: d.realizado_brl > 0 ? "#FFFFFF" : "#3a4555", textAlign: "right" }}><span className="priv-brl">{fmtBRL(d.realizado_brl)}</span></span>
+                    <span style={{ color: theme.colors.neutral }}>Real (meta):</span>
+                    <span style={{ color: realCoerente > 0 ? "#FFFFFF" : "#3a4555", textAlign: "right" }}><span className="priv-brl">{fmtBRL(realCoerente)}</span></span>
                     {d.is_dia_meta && !d.is_futuro && (
                       <>
                         <span style={{ color: theme.colors.neutral }}>{saldo >= 0 ? "Super." : "Déb.:"}</span>
@@ -448,8 +450,19 @@ export function CalendarSection({
       </div>
 
       {modalOpen && !pendingModal && (() => {
-        // FIX-ETAPA2: modal completo (GerenteDayModal) — meta/realizado(fold)/faturado da célula
+        // FIX-ETAPA2: modal completo (GerenteDayModal). D2/D5: split meta × dia-próprio × fora-de-meta.
+        // Re-agrega colunas que a view JÁ entrega (realizado_brl/realizado_meta_brl); NÃO recalcula fold.
         const cell = diasOrdenados.find(d => d.dia === modalDia);
+        const teamScope = restrictedToVendor ?? vendor;
+        const dayRows = calendario.filter(c => c.dia === modalDia
+          && (teamScope === "all" ? true : c.vendedor_routing_team === teamScope));
+        // v2: só os vendedores COM dia-meta no dia entram na meta e no % (fold). Sexta = só Alan.
+        const comMeta = dayRows.filter(c => c.is_dia_meta && Number(c.meta_diaria_brl) > 0);
+        const metaDia = comMeta.reduce((s, c) => s + Number(c.meta_diaria_brl), 0);
+        const realizadoMeta = comMeta.reduce((s, c) => s + Number(c.realizado_meta_brl ?? 0), 0);
+        // Faturado FÍSICO do dia (por data_faturamento, inclui CNB) — só informativo, NUNCA entra no %
+        const faturadoDia = dayRows.reduce((s, c) => s + Number(c.realizado_brl), 0);
+        const hojeStr = new Date().toISOString().slice(0, 10);
         return (
           <GerenteDayModal
             dia={modalDia}
@@ -457,9 +470,11 @@ export function CalendarSection({
             pedidos={modalPedidos}
             cnb={modalCnb}
             ausentes={modalAusentes}
-            meta={Number(cell?.meta_diaria_brl ?? 0)}
-            realizado={cell?.is_dia_meta ? Number(cell?.realizado_meta_brl ?? cell?.realizado_brl ?? 0) : Number(cell?.realizado_brl ?? 0)}
+            metaDia={metaDia}
+            realizadoMeta={realizadoMeta}
+            faturadoDia={faturadoDia}
             faturado={Number(cell?.faturado_brl ?? 0)}
+            agendado={modalDia > hojeStr}
             onClose={() => setModalOpen(false)}
           />
         );

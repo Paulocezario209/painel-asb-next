@@ -174,9 +174,11 @@ export function MetasCalendarioGerente() {
             pedidos={modalPedidos}
             cnb={modalCnb}
             ausentes={modalAusentes}
-            meta={Number(d?.meta_diaria_brl ?? 0)}
-            realizado={Number(d?.realizado_brl ?? 0)}
+            metaDia={Number(d?.meta_diaria_brl ?? 0)}
+            realizadoMeta={Number(d?.realizado_meta_brl ?? d?.realizado_brl ?? 0)}
+            faturadoDia={Number(d?.realizado_brl ?? 0)}
             faturado={Number(d?.faturado_brl ?? 0)}
+            agendado={!!d?.is_futuro}
             onClose={() => setModalDia(null)}
           />
         );

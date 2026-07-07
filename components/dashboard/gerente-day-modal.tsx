@@ -12,9 +12,11 @@ type Props = {
   pedidos: Pedido[];
   cnb: CnbVenda[];
   ausentes: Ausente[];
-  meta: number;
-  realizado: number;
-  faturado: number;
+  metaDia: number;                              // Σ metas dos vendedores COM dia-meta no dia
+  realizadoMeta: number;                        // v2: fold (encaixe) dos que têm dia-meta — numerador do %
+  faturadoDia: number;                          // v2: faturado FÍSICO do dia (por data_faturamento, + CNB) — informativo
+  faturado: number;                             // ASB (p/ pizza)
+  agendado: boolean;                            // D3: dia futuro (previsão de entrega) vs faturado
   onClose: () => void;
 };
 
@@ -37,7 +39,7 @@ const S = {
   badge: { display: "inline-block", padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 700 },
 };
 
-export default function GerenteDayModal({ dia, vendorLabel, pedidos, cnb, ausentes, meta, realizado, faturado, onClose }: Props) {
+export default function GerenteDayModal({ dia, vendorLabel, pedidos, cnb, ausentes, metaDia, realizadoMeta, faturadoDia, faturado, agendado, onClose }: Props) {
   useEffect(() => {
     const fn = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", fn);
@@ -47,10 +49,11 @@ export default function GerenteDayModal({ dia, vendorLabel, pedidos, cnb, ausent
   const validos = pedidos.filter(p => p.status_pedido !== "cancelado");
   const cnbTotal = cnb.reduce((s, r) => s + Number(r.valor_total_brl), 0);
   const aresTotal = faturado;
-  const pctMeta = meta > 0 ? Math.round((realizado / meta) * 100) : 0;
-  const pctAres = realizado > 0 ? Math.round((aresTotal / realizado) * 100) : 0;
-  const pctCnb = realizado > 0 ? Math.round((cnbTotal / realizado) * 100) : 0;
-  const saldo = realizado - meta;
+  // D2/D5: % da meta usa SÓ o realizado de quem tem dia-meta (fold) ÷ Σ metas — nunca o total do dia
+  const pctMeta = metaDia > 0 ? Math.round((realizadoMeta / metaDia) * 1000) / 10 : 0;
+  const pctAres = faturadoDia > 0 ? Math.round((aresTotal / faturadoDia) * 100) : 0;
+  const pctCnb = faturadoDia > 0 ? Math.round((cnbTotal / faturadoDia) * 100) : 0;
+  const saldo = realizadoMeta - metaDia;
 
   const pieData = [
     { name: "ASB", value: aresTotal, color: "#185FA5" },
@@ -74,12 +77,11 @@ export default function GerenteDayModal({ dia, vendorLabel, pedidos, cnb, ausent
           <p style={S.sectionTitle}>Resumo do dia</p>
           <div style={S.kpiRow}>
             {[
-              { label: "Meta", value: fmtBRL(meta), color: "#ff7b1c" },
-              { label: "Realizado", value: fmtBRL(realizado), color: pctMeta >= 100 ? "#22c55e" : "#D4A017" },
-              { label: "↳ ASB", value: fmtBRL(aresTotal), color: "#185FA5" },
-              { label: "↳ CNB", value: fmtBRL(cnbTotal), color: "#D85A30" },
+              { label: "Meta", value: fmtBRL(metaDia), color: "#ff7b1c" },
+              { label: "Realizado (meta)", value: fmtBRL(realizadoMeta), color: pctMeta >= 100 ? "#22c55e" : "#D4A017" },
               { label: "% Meta", value: `${pctMeta}%`, color: pctMeta >= 100 ? "#22c55e" : "#C8102E" },
               { label: "Saldo", value: (saldo >= 0 ? "+" : "") + fmtBRL(saldo), color: saldo >= 0 ? "#22c55e" : "#C8102E" },
+              { label: "Faturado físico do dia", value: fmtBRL(faturadoDia), color: "#7788a0" },
             ].map(k => (
               <div key={k.label} style={S.kpi}>
                 <p style={S.kpiLabel}>{k.label}</p>
@@ -105,23 +107,28 @@ export default function GerenteDayModal({ dia, vendorLabel, pedidos, cnb, ausent
                 </ResponsiveContainer>
               </div>
               <div style={{ display: "flex", flexDirection: "column" as const, gap: 8 }}>
-                <div><span style={{ ...S.badge, background: "#185FA520", color: "#185FA5" }}>ASB</span> <span style={{ color: "#c0c8d8", fontSize: 13 }}>{fmtBRL(aresTotal)} ({pctAres}% da meta)</span></div>
-                <div><span style={{ ...S.badge, background: "#D85A3020", color: "#D85A30" }}>CNB</span> <span style={{ color: "#c0c8d8", fontSize: 13 }}>{fmtBRL(cnbTotal)} ({pctCnb}% da meta)</span></div>
+                <div><span style={{ ...S.badge, background: "#185FA520", color: "#185FA5" }}>ASB</span> <span style={{ color: "#c0c8d8", fontSize: 13 }}>{fmtBRL(aresTotal)} ({pctAres}% do total do dia)</span></div>
+                <div><span style={{ ...S.badge, background: "#D85A3020", color: "#D85A30" }}>CNB</span> <span style={{ color: "#c0c8d8", fontSize: 13 }}>{fmtBRL(cnbTotal)} ({pctCnb}% do total do dia)</span></div>
               </div>
             </div>
           </div>
         )}
 
-        {/* Pedidos ARES */}
+        {/* Pedidos ARES — D3: badge AGENDADO (previsão) vs FATURADO (dia passado) */}
         {validos.length > 0 && (
           <div style={S.section}>
-            <p style={S.sectionTitle}>Pedidos ASB ({validos.length})</p>
+            <p style={S.sectionTitle}>Pedidos ASB {agendado ? "agendados (previsão de entrega)" : "faturados"} ({validos.length})</p>
             <table style={S.table}>
-              <thead><tr><th style={S.th}>Cliente</th><th style={{ ...S.th, textAlign: "right" }}>Valor</th></tr></thead>
+              <thead><tr><th style={S.th}>Cliente</th><th style={S.th}>Situação</th><th style={{ ...S.th, textAlign: "right" }}>Valor</th></tr></thead>
               <tbody>
                 {validos.map((p, i) => (
                   <tr key={i}>
                     <td style={S.td}>{p.cliente_nome}</td>
+                    <td style={S.td}>
+                      <span style={{ ...S.badge, background: agendado ? "#D4A01720" : "#22c55e20", color: agendado ? "#D4A017" : "#22c55e" }}>
+                        {agendado ? "AGENDADO" : "FATURADO"}
+                      </span>
+                    </td>
                     <td style={S.tdVal}>{fmtBRL(Number(p.valor_faturado_brl ?? p.valor_total_brl))}</td>
                   </tr>
                 ))}
