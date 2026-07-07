@@ -41,6 +41,10 @@ function shiftMonth(ym: string, delta: number): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
+// FASE D: detalhe por-meta (fold vs resgate) p/ o card do vendedor
+type MetaDiaView = { dia: string; meta: number; fold: number; bateu: boolean; resgatada: boolean };
+type SemanaMetaView = { label: string; metas: MetaDiaView[]; pago: number; resgate: boolean; temSemanal: boolean };
+
 // Modelo unificado de card (gerente + vendedor normalizados)
 interface CardModel {
   rt: string; nome: string; region: string; papel: "Gerente" | "Vendedor";
@@ -49,6 +53,46 @@ interface CardModel {
   comissaoBaldes?: { label: string; comissao: number }[];   // so o gerente (3 baldes)
   bonusBreak: { label: string; val: number }[]; bonus: number;
   total: number; custoPct: number | null; extra: string | null;
+  metaSemanas?: SemanaMetaView[];                            // FASE D: so vendedores (fold do painel)
+}
+
+// FASE D: agrupa dias-meta do vendedor por semana ISO e classifica (mesma regra do motor: bateu por FOLD,
+// resgate por soma own-day). Espelha v_comissao_vendedor_mensal — origem auditável na tela.
+function semanasDoVendedor(rows: Record<string, unknown>[] | null, rt: string): SemanaMetaView[] {
+  const dm = (rows ?? [])
+    .filter((r) => r.vendedor_routing_team === rt && r.is_dia_meta && Number(r.meta_diaria_brl) > 0)
+    .map((r) => {
+      const meta = Number(r.meta_diaria_brl);
+      const fold = Number(r.realizado_meta_brl ?? 0);   // fold §5/§9 (= 'bateu' da comissão)
+      const own = Number(r.realizado_brl ?? 0);         // dia próprio (feed do resgate)
+      return { dia: String(r.dia).slice(0, 10), meta, fold, own, bateu: fold >= meta };
+    });
+  const byWeek = new Map<string, typeof dm>();
+  for (const d of dm) {
+    const dt = new Date(d.dia + "T00:00:00");
+    const monday = new Date(dt);
+    monday.setDate(dt.getDate() - ((dt.getDay() + 6) % 7));   // segunda da semana ISO
+    const key = monday.toISOString().slice(0, 10);
+    if (!byWeek.has(key)) byWeek.set(key, []);
+    byWeek.get(key)!.push(d);
+  }
+  const fmt = (d: Date) => `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`;
+  return [...byWeek.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([wk, metas]) => {
+    metas.sort((a, b) => a.dia.localeCompare(b.dia));
+    const diasBateu = metas.filter((m) => m.bateu).length;
+    const metaSem = metas.reduce((s, m) => s + m.meta, 0);
+    const realSem = metas.reduce((s, m) => s + m.own, 0);        // own-day (igual ao motor)
+    const resgate = diasBateu === 1 && realSem >= metaSem;
+    const temSemanal = diasBateu >= 2;
+    const pago = diasBateu * 100 + (resgate ? 100 : 0) + (temSemanal ? 100 : 0);
+    const ws = new Date(wk + "T00:00:00");
+    const we = new Date(ws); we.setDate(ws.getDate() + 6);
+    return {
+      label: `${fmt(ws)}–${fmt(we)}`,
+      pago, resgate, temSemanal,
+      metas: metas.map((m) => ({ dia: m.dia, meta: m.meta, fold: m.fold, bateu: m.bateu, resgatada: !m.bateu && resgate })),
+    };
+  });
 }
 
 export default async function RemuneracaoPage({
@@ -77,7 +121,7 @@ export default async function RemuneracaoPage({
     ? createServiceClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, srk, { auth: { persistSession: false } })
     : supabase;
 
-  const [{ data: rawGer }, { data: rawGerBaldes }, { data: rawVend }, { data: rawSplit }] = await Promise.all([
+  const [{ data: rawGer }, { data: rawGerBaldes }, { data: rawVend }, { data: rawSplit }, { data: rawCal }] = await Promise.all([
     svc.from("v_comissao_gerente_resumo")
       .select("mes, faturado_brl, meta_brl, atingimento_pct, fixo_brl, comissao_brl, bonus_crescimento_meta_brl, total_ganho_brl, custo_comercial_pct")
       .eq("mes", primeiroDiaMes),
@@ -91,6 +135,9 @@ export default async function RemuneracaoPage({
     svc.from("v_faturamento_unificado")
       .select("vendedor_routing_team, origem, valor")
       .eq("mes", primeiroDiaMes),
+    // FASE D (fix bateu-fold): detalhe por-meta (fold do painel) p/ mostrar batida-fold vs resgate no card.
+    // MESMO fold que a comissão agora usa em 'bateu' (paridade validada). RPC = mês histórico/corrente.
+    svc.rpc("calendario_metas_mes", { p_ano: ano, p_mes: mesNum }),
   ]);
 
   const g = (rawGer ?? [])[0] as undefined | {
@@ -182,6 +229,7 @@ export default async function RemuneracaoPage({
       bonus: Number(v.bonus_total_brl),
       total: Number(v.total_ganho_brl), custoPct: v.custo_comercial_pct,
       extra: `${Number(v.dias_batidos)} dias de meta batidos`,
+      metaSemanas: semanasDoVendedor(rawCal as unknown as Record<string, unknown>[] | null, rt),
     });
   }
 
@@ -269,6 +317,38 @@ export default async function RemuneracaoPage({
                       <Row label="Total" val={c.total} bold />
                     </div>
                   </div>
+
+                  {/* FASE D: metas da semana — batida (fold) vs recuperada (resgate), origem auditável */}
+                  {c.metaSemanas && c.metaSemanas.length > 0 && (
+                    <div style={{ borderTop: `1px solid ${theme.colors.borderDefault}`, paddingTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+                      <p style={S.label}>Metas da semana · fold (até o último faturamento)</p>
+                      {c.metaSemanas.map((sem, i) => (
+                        <div key={i} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                            <span style={{ fontSize: 10, fontFamily: theme.font.label, color: "#c0d0e0", fontWeight: 700 }}>{sem.label}</span>
+                            <span style={{ fontSize: 11, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", fontWeight: 700, color: sem.temSemanal ? theme.colors.success : (sem.resgate ? "#f0a04b" : "#8aa0b8") }}>
+                              {fmtBRL(sem.pago)}{sem.temSemanal ? " · dupla meta" : sem.resgate ? " · resgate" : ""}
+                            </span>
+                          </div>
+                          {sem.metas.map((m, j) => (
+                            <div key={j} style={{ display: "flex", justifyContent: "space-between", fontSize: 9, fontFamily: theme.font.label, paddingLeft: 10 }}>
+                              <span style={{ color: m.bateu ? theme.colors.success : (m.resgatada ? "#f0a04b" : "#7788a0") }}>
+                                {m.dia.slice(8, 10)}/{m.dia.slice(5, 7)} · {m.bateu ? "✓ batida (fold)" : m.resgatada ? "↻ recuperada (resgate)" : "✗ não batida"}
+                              </span>
+                              <span style={{ color: "#8aa0b8", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" }}>
+                                {fmtBRL(m.fold)} / {fmtBRL(m.meta)}
+                              </span>
+                            </div>
+                          ))}
+                          {sem.resgate && (
+                            <span style={{ fontSize: 8, color: "#f0a04b", fontFamily: theme.font.label, paddingLeft: 10, lineHeight: 1.5 }}>
+                              resgate: o excedente cobre a meta perdida (R$200), mas NÃO gera o bônus semanal de +R$100 (que exige as 2 metas batidas) → R$200, não R$300.
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
                   <p style={{ ...S.muted, fontSize: 9 }}>
                     Custo {c.custoPct != null ? `${Number(c.custoPct).toFixed(2)}%` : "-"} s/ faturado{c.extra ? ` · ${c.extra}` : ""}
