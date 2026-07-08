@@ -136,12 +136,11 @@ export default async function ResultadosPage({
     .reduce((s, r) => s + Number(r.valor_total_brl || 0), 0) - devolucaoMtd;
   const aChegarMtd = comprasMtd - recebidoMtd;
 
-  // Compras COMPROMETIDAS para o box % e headline — espelha o gate dual de v_resultado_mensal
-  // (fonte dos tiles ANO): mes CORRENTE = tudo !cancelado (comprasMtd, compromisso financeiro MTD);
-  // mes FECHADO = entregue real (recebidoMtd, custo do mes, exclui a-chegar que nao chegou).
-  // Mantem o box coerente com o tile do mes em AMBOS os cenarios. Split Recebido/A chegar (abaixo)
-  // segue como composicao secundaria, intacto.
-  const comprasParaPct = isMesCorrente ? comprasMtd : recebidoMtd;
+  // Compras REAIS para o box % e headline — regra Paulo 2026-07-08: ESTADO REAL = status entregue
+  // SEMPRE (corrente inclusive). recebidoMtd = entregue − devolução (espelha v_resultado_mensal, que
+  // passou a usar entregue em todos os meses). pendente/aprovado (a-chegar) ficam SÓ na projeção
+  // (comprasMtd, abaixo, INTOCADO); cancelado fora. Split Recebido/A chegar (sublinha) segue informativo.
+  const comprasParaPct = recebidoMtd;
   const pct = faturadoMtd > 0 ? Math.round((comprasParaPct / faturadoMtd) * 1000) / 10 : 0;
   const sem = semaforo(pct);
 
