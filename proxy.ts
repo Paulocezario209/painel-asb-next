@@ -38,8 +38,11 @@ export async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
   const isAuthRoute = pathname.startsWith("/login");
+  // Rota PÚBLICA (sem login): política de privacidade — exigência LGPD/GATE-2
+  // do CAPI (runbook GO_LIVE 2026-07-08). Página estática, zero dado de negócio.
+  const isPublicRoute = pathname.startsWith("/privacidade");
 
-  if (!user && !isAuthRoute) {
+  if (!user && !isAuthRoute && !isPublicRoute) {
     // /api sem sessao -> 401 JSON (cliente de API); paginas -> redirect /login
     if (pathname.startsWith("/api/")) {
       return NextResponse.json({ error: "unauthorized" }, { status: 401 });
