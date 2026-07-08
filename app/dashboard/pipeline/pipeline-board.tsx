@@ -3,7 +3,7 @@
 // Move ESCREVE em produção via /api/pipeline/move. Otimista com rollback de card se a RPC falhar.
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { theme } from "@/lib/theme";
 import { useRouter } from "next/navigation";
 
@@ -18,6 +18,10 @@ export type PipelineLead = {
   handoff_at: string | null;
   seller_first_reply_at: string | null;
   created_at: string;
+  // Reconciliação 2026-07-08 (G1-G3 da qualificação → contexto do vendedor)
+  motivo_handoff: string | null;
+  interesse_preco: boolean | null;
+  pediu_catalogo: boolean | null;
 };
 export type PipelineCtx = { isGestor: boolean; routing_team: string | null; canMoveAll: boolean };
 
@@ -48,6 +52,7 @@ type ModalState =
   | { tipo: "perdido"; lead: PipelineLead; from: string }
   | { tipo: "fechar"; lead: PipelineLead; from: string }
   | { tipo: "lista"; stage: string }
+  | { tipo: "sugestao"; lead: PipelineLead; stage: string }
   | null;
 
 export function PipelineBoard({
@@ -178,14 +183,39 @@ export function PipelineBoard({
                         opacity: dragId === lead.id ? 0.5 : 1,
                       }}
                     >
-                      <div style={{ color: "#fff", fontSize: 11, fontFamily: theme.font.label, fontWeight: 600, marginBottom: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {lead.restaurant_name || "Lead sem nome"}
+                      <div style={{ display: "flex", alignItems: "flex-start", gap: 6, marginBottom: 3 }}>
+                        <div style={{ flex: 1, color: "#fff", fontSize: 11, fontFamily: theme.font.label, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {lead.restaurant_name || "Lead sem nome"}
+                        </div>
+                        {/* 💡 Estrategista (asb-deal-strategies, Fase A): sugestão por etapa p/ copiar */}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setModal({ tipo: "sugestao", lead, stage }); }}
+                          title="Sugestão do estrategista para esta etapa"
+                          style={{ background: "transparent", border: "1px solid #2e2e2e", borderRadius: 4, cursor: "pointer", fontSize: 10, lineHeight: 1, padding: "3px 5px", color: "#e4e9f0" }}
+                        >💡</button>
                       </div>
                       <div style={{ display: "flex", gap: 8, color: "#c0d0e0", fontSize: 9, fontFamily: theme.font.label, flexWrap: "wrap" }}>
                         {lead.weekly_volume_kg ? <span>{lead.weekly_volume_kg}kg</span> : null}
                         {lead.city ? <span>· {lead.city}</span> : null}
                         {dias != null ? <span style={{ color: dias > 7 ? "#f59e0b" : "#e4e9f0" }}>· {dias}d</span> : null}
                       </div>
+                      {/* Chips de contexto da qualificação (G1-G3) — mudam a abordagem do vendedor */}
+                      {(lead.motivo_handoff === "insistencia_preco" || lead.interesse_preco || lead.pediu_catalogo) && (
+                        <div style={{ display: "flex", gap: 4, marginTop: 5, flexWrap: "wrap" }}>
+                          {lead.motivo_handoff === "insistencia_preco" && (
+                            <span title="Veio por insistência de preço — NÃO abrir com preço; ancorar valor"
+                              style={{ fontSize: 8, fontFamily: theme.font.label, color: "#f59e0b", border: "1px solid rgba(245,158,11,.4)", borderRadius: 3, padding: "1px 5px" }}>⚡ PREÇO</span>
+                          )}
+                          {lead.motivo_handoff !== "insistencia_preco" && lead.interesse_preco && (
+                            <span title="Perguntou preço durante a qualificação"
+                              style={{ fontSize: 8, fontFamily: theme.font.label, color: "#e4e9f0", border: "1px solid #2e2e2e", borderRadius: 3, padding: "1px 5px" }}>perguntou preço</span>
+                          )}
+                          {lead.pediu_catalogo && (
+                            <span title="Pediu catálogo/portfólio"
+                              style={{ fontSize: 8, fontFamily: theme.font.label, color: "#e4e9f0", border: "1px solid #2e2e2e", borderRadius: 3, padding: "1px 5px" }}>📋 catálogo</span>
+                          )}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -211,6 +241,10 @@ export function PipelineBoard({
       {modal?.tipo === "fechar" && (
         <ModalFechar lead={modal.lead} onCancel={() => setModal(null)}
           onConfirm={() => persistir(modal.lead, modal.from, "pedido_fechado", {})} />
+      )}
+      {/* Modal sugestão do estrategista (Fase A: gerar + copiar) */}
+      {modal?.tipo === "sugestao" && (
+        <ModalSugestao lead={modal.lead} stage={modal.stage} onClose={() => setModal(null)} />
       )}
       {/* Modal lista da etapa (só leitura; linhas abrem o lead) */}
       {modal?.tipo === "lista" && (
@@ -349,5 +383,90 @@ function BtnCancel({ onClick }: { onClick: () => void }) {
     <button onClick={onClick} style={{ background: "transparent", border: "1px solid #2e2e2e", borderRadius: 6, padding: "8px 16px", color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label, cursor: "pointer" }}>
       Cancelar
     </button>
+  );
+}
+
+// ── Modal Sugestão do Estrategista (asb-deal-strategies, Fase A) ─────────────
+// Gera on-demand via /api/pipeline/suggest (CP /internal/deal/suggest → GPT com
+// as regras da skill: nunca inventa preço, protege margem, mensagem curta).
+// Fase A = COPIAR (o clique do vendedor no WhatsApp é a ação humana).
+type Sugestao = { diagnostico: string; estrategia: string; mensagem_whatsapp: string; proximo_passo: string };
+
+function ModalSugestao({ lead, stage, onClose }: { lead: PipelineLead; stage: string; onClose: () => void }) {
+  const [data, setData] = useState<Sugestao | null>(null);
+  const [erro, setErro] = useState<string | null>(null);
+  const [copiado, setCopiado] = useState(false);
+
+  useEffect(() => {
+    let vivo = true;
+    (async () => {
+      try {
+        const res = await fetch("/api/pipeline/suggest", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phone: lead.phone, stage }),
+        });
+        const j = await res.json();
+        if (!vivo) return;
+        if (!res.ok) { setErro(j?.error ?? "falha ao gerar sugestão"); return; }
+        setData(j as Sugestao);
+      } catch {
+        if (vivo) setErro("falha de conexão");
+      }
+    })();
+    return () => { vivo = false; };
+  }, [lead.phone, stage]);
+
+  const copiar = async () => {
+    if (!data?.mensagem_whatsapp) return;
+    try {
+      await navigator.clipboard.writeText(data.mensagem_whatsapp);
+      setCopiado(true);
+      setTimeout(() => setCopiado(false), 2000);
+    } catch { /* clipboard bloqueado — usuário seleciona manualmente */ }
+  };
+
+  const bloco = (titulo: string, texto: string) => (
+    <div style={{ marginBottom: 10 }}>
+      <p style={{ color: "#e4e9f0", fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".12em", textTransform: "uppercase", marginBottom: 3 }}>{titulo}</p>
+      <p style={{ color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label, lineHeight: 1.5, whiteSpace: "pre-wrap" }}>{texto}</p>
+    </div>
+  );
+
+  return (
+    <Backdrop>
+      <p style={{ color: "#fff", fontSize: 12, fontFamily: theme.font.label, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 4 }}>
+        💡 Estrategista · {STAGE_COL[stage]?.label ?? stage}
+      </p>
+      <p style={{ color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label, marginBottom: 14 }}>
+        {lead.restaurant_name || "Lead"}{lead.city ? ` · ${lead.city}` : ""}
+      </p>
+
+      {!data && !erro && (
+        <p style={{ color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label, padding: "12px 0" }}>gerando sugestão…</p>
+      )}
+      {erro && (
+        <p style={{ color: "#f85149", fontSize: 11, fontFamily: theme.font.label, padding: "8px 0" }}>{erro}</p>
+      )}
+      {data && (
+        <div style={{ maxHeight: "50vh", overflowY: "auto", paddingRight: 4 }}>
+          {bloco("Diagnóstico", data.diagnostico)}
+          {bloco("Estratégia", data.estrategia)}
+          <div style={{ marginBottom: 10, background: "#0d1117", border: "1px solid #2e2e2e", borderRadius: 6, padding: "10px 12px" }}>
+            <p style={{ color: "#e4e9f0", fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".12em", textTransform: "uppercase", marginBottom: 4 }}>Mensagem sugerida (edite ao colar)</p>
+            <p style={{ color: "#fff", fontSize: 11, fontFamily: theme.font.label, lineHeight: 1.55, whiteSpace: "pre-wrap" }}>{data.mensagem_whatsapp}</p>
+          </div>
+          {bloco("Próximo passo", data.proximo_passo)}
+        </div>
+      )}
+
+      <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 14 }}>
+        <BtnCancel onClick={onClose} />
+        <button onClick={copiar} disabled={!data?.mensagem_whatsapp}
+          style={{ background: copiado ? "#238636" : "#185FA5", border: "none", borderRadius: 6, padding: "8px 16px", color: "#fff", fontSize: 11, fontFamily: theme.font.label, fontWeight: 700, cursor: data?.mensagem_whatsapp ? "pointer" : "not-allowed", opacity: data?.mensagem_whatsapp ? 1 : 0.5 }}>
+          {copiado ? "✓ Copiado" : "Copiar mensagem"}
+        </button>
+      </div>
+    </Backdrop>
   );
 }

@@ -16,6 +16,15 @@ export const PIPELINE_STAGES = [
   "handoff", "lead_em_andamento", "negociacao", "proposta_enviada", "pedido_teste", "pedido_fechado", "lead_perdido",
 ] as const;
 
+// Reconciliação 2026-07-08: legados ainda vivos no banco entram no board via alias
+// (antes ficavam INVISÍVEIS — funil os contava, pipeline não os mostrava).
+const LEGACY_STAGES = ["vendedor_assumiu", "diagnostico_comercial"] as const;
+const STAGE_ALIAS: Record<string, string> = {
+  vendedor_assumiu: "lead_em_andamento",
+  diagnostico_comercial: "lead_em_andamento",
+};
+const aliasStage = (s: string | null) => (s && STAGE_ALIAS[s]) || s || "handoff";
+
 // Ativos = em aberto (exclui fechado/perdido). Base dos KPIs.
 const ATIVOS = new Set(["handoff", "lead_em_andamento", "negociacao", "proposta_enviada", "pedido_teste"]);
 const PRECO_KG = 25; // R$/kg medio (definicao Paulo) para valor estimado de pipeline
@@ -55,9 +64,9 @@ export default async function PipelinePage({ searchParams }: { searchParams: Pro
 
   let q = supabase
     .from("ai_sdr_leads")
-    .select("id, phone, restaurant_name, city, weekly_volume_kg, funnel_stage, routing_team, handoff_at, seller_first_reply_at, created_at")
+    .select("id, phone, restaurant_name, city, weekly_volume_kg, funnel_stage, routing_team, handoff_at, seller_first_reply_at, created_at, motivo_handoff, interesse_preco, pediu_catalogo")
     .eq("is_test", false)
-    .in("funnel_stage", PIPELINE_STAGES as unknown as string[])
+    .in("funnel_stage", [...PIPELINE_STAGES, ...LEGACY_STAGES] as unknown as string[])
     .order("handoff_at", { ascending: false, nullsFirst: false })
     .limit(500);
   if (vendFiltro) q = q.eq("routing_team", vendFiltro);
@@ -66,13 +75,13 @@ export default async function PipelinePage({ searchParams }: { searchParams: Pro
   const { data: rawLeads } = await q;
   const leads = (rawLeads ?? []) as PipelineLead[];
 
-  // Agrupa por etapa (server-side, sobre a lista já filtrada)
+  // Agrupa por etapa (server-side, sobre a lista já filtrada; alias colapsa legados)
   const byStage: Record<string, PipelineLead[]> = {};
   for (const s of PIPELINE_STAGES) byStage[s] = [];
-  for (const l of leads) (byStage[l.funnel_stage ?? "handoff"] ??= []).push(l);
+  for (const l of leads) (byStage[aliasStage(l.funnel_stage)] ??= []).push(l);
 
-  // KPIs (sobre os ATIVOS — em aberto)
-  const ativos = leads.filter((l) => ATIVOS.has(l.funnel_stage ?? ""));
+  // KPIs (sobre os ATIVOS — em aberto; alias inclui legados em "em andamento")
+  const ativos = leads.filter((l) => ATIVOS.has(aliasStage(l.funnel_stage)));
   const valorEstimado = ativos.reduce((s, l) => s + (l.weekly_volume_kg ?? 0) * PRECO_KG, 0);
   const seteDiasMs = 7 * 86400000;
   const parados7d = ativos.filter((l) => l.handoff_at && Date.now() - new Date(l.handoff_at).getTime() > seteDiasMs).length;

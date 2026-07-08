@@ -36,12 +36,13 @@ const getFunilContagem = unstable_cache(
 // Camadas: SDR (lead_novo→handoff) · LEAD (lead_em_andamento→pedido_teste) · CLIENTE (cliente_em_ativacao→cliente_recorrente).
 // Removidas da vista: cobertura_validada + diagnostico_comercial (órfãs, sem writer). lead_perdido = bucket LATERAL (abaixo).
 const STAGE_ORDER = [
-  // Camada SDR
+  // Camada SDR — reconciliada com a ESCADA FERNANDO (2026-07-08): o CP só emite
+  // atendido_sdr (qs1) → qualificacao_inicial (qs2-4) → lead_qualificado (qs7).
+  // produto_definido/volume_definido viraram LEGADO (Fernando dropou a coleta
+  // de produto; volume não emite rótulo) → colapsadas via STAGE_ALIAS abaixo.
   "lead_novo",
   "atendido_sdr",
   "qualificacao_inicial",
-  "produto_definido",
-  "volume_definido",
   "lead_qualificado",
   "handoff",
   // Camada LEAD (vendedor)
@@ -58,9 +59,11 @@ const STAGE_ORDER = [
 // STAGE_ALIAS — colapsa LEGACY ainda vivo no banco no equivalente v2, ANTES de contar.
 // PONTE até a Fase 3 do Funil v2 (drop dos legacy do CHECK) — ver DEBT-157.
 const STAGE_ALIAS: Record<string, string> = {
-  vendedor_assumiu:      "lead_em_andamento",   // legacy → LEAD
-  diagnostico_comercial: "lead_em_andamento",   // legacy → LEAD
-  pedido_fechado:        "cliente_em_ativacao", // legacy → CLIENTE
+  vendedor_assumiu:      "lead_em_andamento",    // legacy → LEAD
+  diagnostico_comercial: "lead_em_andamento",    // legacy → LEAD
+  pedido_fechado:        "cliente_em_ativacao",  // legacy → CLIENTE
+  produto_definido:      "qualificacao_inicial", // legacy escada antiga → SDR (Fernando, 2026-07-08)
+  volume_definido:       "qualificacao_inicial", // legacy escada antiga → SDR (Fernando, 2026-07-08)
 };
 const aliasStage = (s: string) => STAGE_ALIAS[s] ?? s;
 
