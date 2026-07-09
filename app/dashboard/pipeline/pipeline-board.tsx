@@ -22,6 +22,9 @@ export type PipelineLead = {
   motivo_handoff: string | null;
   interesse_preco: boolean | null;
   pediu_catalogo: boolean | null;
+  // Redesenho 2026-07-09: true = lead faturou no ARES (v_carteira_360.lead_id) —
+  // conversão CONFIRMADA, independe do arraste manual do vendedor.
+  ares_confirmado?: boolean;
 };
 export type PipelineCtx = { isGestor: boolean; routing_team: string | null; canMoveAll: boolean };
 
@@ -33,7 +36,9 @@ const STAGE_COL: Record<string, { label: string; cor: string }> = {
   negociacao:        { label: "Negociação",   cor: "#a855f7" },
   proposta_enviada:  { label: "Proposta",     cor: "#8b5cf6" },
   pedido_teste:      { label: "Pedido Teste",  cor: "#3b82f6" },
-  pedido_fechado:    { label: "Fechado",      cor: "#22c55e" },
+  // Redesenho 2026-07-09: pipeline TERMINA na conversão — "Convertido" = 1ª compra
+  // faturada (ARES confirma via v_carteira_360.lead_id; arraste manual = antecipação).
+  pedido_fechado:    { label: "Convertido",   cor: "#22c55e" },
   lead_perdido:      { label: "Perdido",      cor: "#C8102E" },
 };
 
@@ -200,8 +205,12 @@ export function PipelineBoard({
                         {dias != null ? <span style={{ color: dias > 7 ? "#f59e0b" : "#e4e9f0" }}>· {dias}d</span> : null}
                       </div>
                       {/* Chips de contexto da qualificação (G1-G3) — mudam a abordagem do vendedor */}
-                      {(lead.motivo_handoff === "insistencia_preco" || lead.interesse_preco || lead.pediu_catalogo) && (
+                      {(lead.ares_confirmado || lead.motivo_handoff === "insistencia_preco" || lead.interesse_preco || lead.pediu_catalogo) && (
                         <div style={{ display: "flex", gap: 4, marginTop: 5, flexWrap: "wrap" }}>
+                          {lead.ares_confirmado && (
+                            <span title="Conversão confirmada — este lead já faturou no ARES"
+                              style={{ fontSize: 8, fontFamily: theme.font.label, color: "#22c55e", border: "1px solid rgba(34,197,94,.4)", borderRadius: 3, padding: "1px 5px" }}>✓ ARES</span>
+                          )}
                           {lead.motivo_handoff === "insistencia_preco" && (
                             <span title="Veio por insistência de preço — NÃO abrir com preço; ancorar valor"
                               style={{ fontSize: 8, fontFamily: theme.font.label, color: "#f59e0b", border: "1px solid rgba(245,158,11,.4)", borderRadius: 3, padding: "1px 5px" }}>⚡ PREÇO</span>
@@ -326,8 +335,8 @@ function ModalPerdido({ lead, onConfirm, onCancel }: { lead: PipelineLead; onCon
 function ModalFechar({ lead, onConfirm, onCancel }: { lead: PipelineLead; onConfirm: () => void; onCancel: () => void }) {
   return (
     <Backdrop>
-      <p style={{ color: "#22c55e", fontSize: 12, fontFamily: theme.font.label, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 4 }}>Fechar Pedido</p>
-      <p style={{ color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label, marginBottom: 14 }}>{lead.restaurant_name || "Lead"} → Fechado</p>
+      <p style={{ color: "#22c55e", fontSize: 12, fontFamily: theme.font.label, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 4 }}>Confirmar Conversão</p>
+      <p style={{ color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label, marginBottom: 14 }}>{lead.restaurant_name || "Lead"} → Convertido (1ª compra) · o ARES confirma quando faturar</p>
       <p style={{ color: "#c8d8e8", fontSize: 11, fontFamily: theme.font.label, marginBottom: 18, lineHeight: 1.5 }}>
         Marca o lead como convertido (grava <span style={{ color: "#22c55e" }}>first_order_at</span>). Confirma o fechamento do pedido?
       </p>

@@ -23,7 +23,7 @@ const getFunilContagem = unstable_cache(
     );
     const { data } = await supabase
       .from("ai_sdr_leads")
-      .select("funnel_stage")
+      .select("id, funnel_stage")   // id: cruza com v_carteira_360.lead_id (Convertido via ARES)
       .eq("is_test", false)
       .or("routing_team.is.null,routing_team.neq.fora_de_rota");   // DEBT-167 4: Total Leads sem fora_de_rota (cone já excluía)
     return data ?? [];
@@ -76,7 +76,10 @@ const FASES = [
     stages: ["lead_qualificado"] },
   { key: "com_vendedor", label: "Com vendedor",    fill: "#D4A017",
     stages: ["handoff", "lead_em_andamento", "vendedor_assumiu", "negociacao", "proposta_enviada", "pedido_teste"] },
-  { key: "cliente",      label: "Cliente",         fill: "#22c55e",
+  // Redesenho 2026-07-09 (decisão Paulo): pipeline TERMINA na conversão. A 4ª fase é
+  // "Convertido" = funnel_stage de fechamento OU lead presente na carteira real
+  // (v_carteira_360.lead_id — faturou no ARES, mesmo que o vendedor não tenha arrastado).
+  { key: "convertido",   label: "Convertido (1ª compra)", fill: "#22c55e",
     stages: ["pedido_fechado", "cliente_em_ativacao", "cliente_ativo", "cliente_recorrente"] },
 ] as const;
 const FASE_STAGES = new Set([...FASES.flatMap(f => f.stages), "lead_perdido"]);  // lateral incluso
@@ -128,7 +131,28 @@ const S = {
 
 // ── Interfaces ────────────────────────────────────────────────────────────────
 interface FunnelLead {
+  id: string | null;
   funnel_stage: string | null;
+}
+
+// ── Camada CLIENTE (Bloco 2 do funil) — fontes = as MESMAS das sidebars ─────────
+// v_carteira_360 (carteira real ARES, régua fn_status_cliente) + v_clientes_recuperados.
+// Buckets mutuamente exclusivos: churn/perdido vencem (régua de dias); entre saudáveis
+// (ativo/atenção), separa por nº de pedidos (decisão Paulo 2026-07-09):
+// 1 pedido = Ativação · 2 = Recompra · 3+ = Recorrente.
+interface CarteiraRow {
+  lead_id: string | null;
+  customer_status: string | null;
+  total_orders: number | null;
+}
+const CHURN_SET = new Set(["risco", "pre_churn", "churn_comercial"]);
+function bucketCliente(c: CarteiraRow): "ativacao" | "recompra" | "recorrente" | "churn" | "perdido" {
+  if (c.customer_status === "inativo_definitivo") return "perdido";
+  if (c.customer_status && CHURN_SET.has(c.customer_status)) return "churn";
+  const n = c.total_orders ?? 1;
+  if (n >= 3) return "recorrente";
+  if (n === 2) return "recompra";
+  return "ativacao";
 }
 
 interface FunnelEvent {
@@ -154,6 +178,19 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
   const rawLeads = await getFunilContagem();
   const leads = (rawLeads ?? []) as unknown as FunnelLead[];
   const total = leads.length;
+
+  // Query CLIENTE (Bloco 2) — carteira real ARES + recuperados do mês corrente.
+  // Bounded (~330 < 1000) — mesmas fontes de /clientes e /carteira-ativa (zero view nova).
+  const _mesRecup = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}-01`;
+  const [{ data: rawCarteira }, { data: rawRecup }] = await Promise.all([
+    supabase.from("v_carteira_360").select("lead_id, customer_status, total_orders"),
+    supabase.from("v_clientes_recuperados").select("ares_cliente_id").eq("mes_retorno", _mesRecup),
+  ]);
+  const carteira = (rawCarteira ?? []) as CarteiraRow[];
+  const recuperados = new Set((rawRecup ?? []).map((r: { ares_cliente_id: number }) => r.ares_cliente_id)).size;
+  // Ponte lead→cliente: lead que já FATUROU no ARES conta como Convertido no cone,
+  // mesmo que o vendedor não tenha movido o card (ARES vence o arraste manual).
+  const carteiraLeadIds = new Set(carteira.map((c) => c.lead_id).filter(Boolean) as string[]);
 
   // Query B — ultimos 20 eventos non-backfill
   const { data: rawEvents } = await supabase
@@ -207,16 +244,27 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
     stageCounts[s] = (stageCounts[s] ?? 0) + 1;
   }
 
-  // Cone de 4 FASES sobre funnel_stage CRU (cobre legados). rawCounts ANTES dos KPIs (recompute por fase).
+  // Cone de 4 FASES — por LEAD (não por stage cru): Convertido vence tudo (faturou no
+  // ARES ou stage de fechamento), Perdido é lateral, o resto cai na fase do stage.
   const rawCounts: Record<string, number> = {};
   for (const l of leads) { const s = l.funnel_stage ?? "lead_novo"; rawCounts[s] = (rawCounts[s] ?? 0) + 1; }
-  const faseCount = (f: typeof FASES[number]) => f.stages.reduce((a, s) => a + (rawCounts[s] ?? 0), 0);
   const orfaos = Object.keys(rawCounts).filter(s => !FASE_STAGES.has(s));  // não silenciar (catcher)
 
-  // Perdidos — saída LATERAL (fora do cone).
-  const perdidos = leads.filter(l => l.funnel_stage === "lead_perdido").length;
+  const CONVERTED_STAGES = new Set(FASES[3].stages as readonly string[]);
+  const isConvertido = (l: FunnelLead) =>
+    CONVERTED_STAGES.has(l.funnel_stage ?? "") || (!!l.id && carteiraLeadIds.has(l.id));
+  const faseCounts: Record<string, number> = { qualificacao: 0, qualificado: 0, com_vendedor: 0, convertido: 0 };
+  let perdidos = 0;
+  for (const l of leads) {
+    if (isConvertido(l)) { faseCounts.convertido++; continue; }   // ARES vence, inclusive sobre perdido
+    if (l.funnel_stage === "lead_perdido") { perdidos++; continue; }
+    const s = l.funnel_stage ?? "lead_novo";
+    const fase = FASES.find(f => (f.stages as readonly string[]).includes(s));
+    if (fase) faseCounts[fase.key]++;
+  }
+  const faseCount = (f: typeof FASES[number]) => faseCounts[f.key] ?? 0;
 
-  // KPIs recomputados sobre as fases (ajuste B): Em Qualificação = fase 0; Handoff+ = com_vendedor + cliente.
+  // KPIs recomputados sobre as fases (ajuste B): Em Qualificação = fase 0; Handoff+ = com_vendedor + convertido.
   const emQualificacao = faseCount(FASES[0]);
   const emHandoffPlus  = faseCount(FASES[2]) + faseCount(FASES[3]);
   const taxaHandoff    = total > 0 ? ((emHandoffPlus / total) * 100).toFixed(1) : null;
@@ -229,6 +277,17 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
     const pct = totalAtivos > 0 ? Math.round((count / totalAtivos) * 100) : null;
     return { label: f.label, count, pct, fill: f.fill, funnelWidth: N_FASES - i };
   });
+
+  // ── Bloco 2 — Camada CLIENTE (carteira real ARES, mesmas fontes das sidebars) ──
+  const clienteCounts = { ativacao: 0, recompra: 0, recorrente: 0, churn: 0, perdido: 0 };
+  for (const c of carteira) clienteCounts[bucketCliente(c)]++;
+  const CLIENTE_ETAPAS = [
+    { key: "ativacao",   label: "1ª compra (Ativação)", count: clienteCounts.ativacao,   cor: "#D4A017", href: "/dashboard/clientes?tab=ativos",   sub: "1 pedido faturado" },
+    { key: "recompra",   label: "Recompra",             count: clienteCounts.recompra,   cor: "#185FA5", href: "/dashboard/carteira-ativa",        sub: "2 pedidos" },
+    { key: "recorrente", label: "Recorrente",           count: clienteCounts.recorrente, cor: "#22c55e", href: "/dashboard/carteira-ativa",        sub: "3+ pedidos · saudável" },
+    { key: "churn",      label: "Churn",                count: clienteCounts.churn,      cor: "#C8102E", href: "/dashboard/clientes?tab=churn",    sub: "risco → churn (15–59d)" },
+    { key: "perdido",    label: "Perdido",              count: clienteCounts.perdido,    cor: "#6b7280", href: "/dashboard/clientes?tab=churn",    sub: "inativo ≥60d" },
+  ];
 
   // ── Leads parados por etapa (FIX-ETAPA2) — top 10 por etapa, etapas não-terminais ──
   const TERMINAIS = new Set(["cliente_em_ativacao", "cliente_ativo", "cliente_recorrente"]);
@@ -250,7 +309,7 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
         <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
           Funil de Vendas
         </h1>
-        <p style={S.muted}>14 etapas (Funil v2) · {total} leads · atualizado agora</p>
+        <p style={S.muted}>Bloco 1: aquisição (lead → 1ª compra) · Bloco 2: camada cliente (carteira real ARES) · {total} leads · atualizado agora</p>
       </div>
 
       {/* P2 — filtro mês+vendedor (afeta SÓ a seção "Conversão por Marcos") */}
@@ -337,12 +396,43 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
         </div>
       </div>
 
+      {/* ── Bloco 2 — CAMADA CLIENTE (pós 1ª compra) ─────────────────────────────
+          Fonte = carteira real ARES (v_carteira_360 + v_clientes_recuperados), as
+          MESMAS views das telas Clientes e Carteira Ativa — cada etapa é um atalho
+          para a tela que já trata aquele grupo. Zero lógica nova de cliente aqui. */}
+      <div style={{ ...S.card, padding: "20px 24px", borderTop: "2px solid #22c55e" }}>
+        <p style={S.section}>
+          <span style={{ color: "#22c55e", marginRight: 6 }}>{"◆"}</span>
+          Camada Cliente · pós 1ª compra <span style={{ color: "#e4e9f0", textTransform: "none", letterSpacing: 0 }}>· carteira real ARES ({carteira.length} clientes) · clique para abrir a tela</span>
+        </p>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 10 }}>
+          {CLIENTE_ETAPAS.map((e) => (
+            <Link key={e.key} href={e.href} style={{ textDecoration: "none" }}>
+              <div style={{ background: "#0d1117", border: "1px solid #2a2a2a", borderTop: `2px solid ${e.cor}`, borderRadius: 6, padding: "14px 12px", height: "100%" }}>
+                <p style={{ ...S.label, color: e.cor }}>{e.label}</p>
+                <p style={{ ...S.value, fontSize: 24, marginTop: 10 }}>{e.count}</p>
+                <p style={{ ...S.muted, fontSize: 9, marginTop: 6 }}>{e.sub}</p>
+              </div>
+            </Link>
+          ))}
+        </div>
+        {/* Recuperado — entrada LATERAL da camada cliente (voltou a faturar após churn/inativo) */}
+        <Link href="/dashboard/clientes" style={{ textDecoration: "none" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 12, background: "rgba(34,197,94,.06)", border: "1px solid rgba(34,197,94,.3)", borderRadius: 6, padding: "10px 14px" }}>
+            <span style={{ color: "#22c55e", fontSize: 14 }}>{"↩"}</span>
+            <span style={{ ...S.label, color: "#22c55e" }}>Recuperados no mês</span>
+            <span style={{ color: "#FFFFFF", fontSize: 18, fontWeight: 700, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" }}>{recuperados}</span>
+            <span style={{ ...S.muted, fontSize: 9 }}>voltaram a faturar após churn/inativo · saem de Perdido no dia em que compram</span>
+          </div>
+        </Link>
+      </div>
+
       {/* Perdidos — saída LATERAL (fora do cone). Destaque: maior balde da base. */}
       {perdidos > 0 && (
         <div style={{ ...S.card, padding: "20px 24px", borderTop: "2px solid #C8102E" }}>
           <p style={S.section}>
             <span style={{ color: "#C8102E", marginRight: 6 }}>{"✕"}</span>
-            Perdidos · saída lateral
+            Perdidos (aquisição) · saída lateral do pipeline
           </p>
           <div style={{ display: "flex", alignItems: "baseline", gap: 14 }}>
             <span style={{ ...S.value, color: "#C8102E" }}>{perdidos}</span>

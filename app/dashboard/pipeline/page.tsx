@@ -18,10 +18,18 @@ export const PIPELINE_STAGES = [
 
 // Reconciliação 2026-07-08: legados ainda vivos no banco entram no board via alias
 // (antes ficavam INVISÍVEIS — funil os contava, pipeline não os mostrava).
-const LEGACY_STAGES = ["vendedor_assumiu", "diagnostico_comercial"] as const;
+const LEGACY_STAGES = [
+  "vendedor_assumiu", "diagnostico_comercial",
+  // Redesenho 2026-07-09: stages de cliente em ai_sdr_leads são LEGADO — a camada
+  // cliente vive na carteira real (v_carteira_360). Aqui colapsam em "Convertido".
+  "cliente_em_ativacao", "cliente_ativo", "cliente_recorrente",
+] as const;
 const STAGE_ALIAS: Record<string, string> = {
   vendedor_assumiu: "lead_em_andamento",
   diagnostico_comercial: "lead_em_andamento",
+  cliente_em_ativacao: "pedido_fechado",
+  cliente_ativo: "pedido_fechado",
+  cliente_recorrente: "pedido_fechado",
 };
 const aliasStage = (s: string | null) => (s && STAGE_ALIAS[s]) || s || "handoff";
 
@@ -72,16 +80,27 @@ export default async function PipelinePage({ searchParams }: { searchParams: Pro
   if (vendFiltro) q = q.eq("routing_team", vendFiltro);
   if (mesIni && mesFimEx) q = q.gte("handoff_at", mesIni).lt("handoff_at", mesFimEx);
 
-  const { data: rawLeads } = await q;
-  const leads = (rawLeads ?? []) as PipelineLead[];
+  // Ponte lead→ARES (redesenho 2026-07-09): lead presente em v_carteira_360 já FATUROU →
+  // conversão CONFIRMADA. Agrupa em "Convertido" mesmo sem o vendedor arrastar o card.
+  const [{ data: rawLeads }, { data: rawPonte }] = await Promise.all([
+    q,
+    supabase.from("v_carteira_360").select("lead_id").not("lead_id", "is", null),
+  ]);
+  const aresLeadIds = new Set(((rawPonte ?? []) as { lead_id: string }[]).map((r) => r.lead_id));
+  const leads = ((rawLeads ?? []) as PipelineLead[]).map((l) => ({
+    ...l, ares_confirmado: aresLeadIds.has(l.id),
+  }));
+
+  // Etapa efetiva: ARES vence o funnel_stage manual (badge ✓ ARES no card).
+  const stageEfetiva = (l: PipelineLead) => (l.ares_confirmado ? "pedido_fechado" : aliasStage(l.funnel_stage));
 
   // Agrupa por etapa (server-side, sobre a lista já filtrada; alias colapsa legados)
   const byStage: Record<string, PipelineLead[]> = {};
   for (const s of PIPELINE_STAGES) byStage[s] = [];
-  for (const l of leads) (byStage[aliasStage(l.funnel_stage)] ??= []).push(l);
+  for (const l of leads) (byStage[stageEfetiva(l)] ??= []).push(l);
 
   // KPIs (sobre os ATIVOS — em aberto; alias inclui legados em "em andamento")
-  const ativos = leads.filter((l) => ATIVOS.has(aliasStage(l.funnel_stage)));
+  const ativos = leads.filter((l) => ATIVOS.has(stageEfetiva(l)));
   const valorEstimado = ativos.reduce((s, l) => s + (l.weekly_volume_kg ?? 0) * PRECO_KG, 0);
   const seteDiasMs = 7 * 86400000;
   const parados7d = ativos.filter((l) => l.handoff_at && Date.now() - new Date(l.handoff_at).getTime() > seteDiasMs).length;
@@ -89,7 +108,7 @@ export default async function PipelinePage({ searchParams }: { searchParams: Pro
   const boardCtx: PipelineCtx = { isGestor: ctx.isGestor, routing_team: ctx.routing_team, canMoveAll: ctx.isGestor };
 
   const kpis = [
-    { label: "Leads ativos", value: String(ativos.length), accent: "#185FA5", sub: "em aberto (exclui fechado/perdido)" },
+    { label: "Leads ativos", value: String(ativos.length), accent: "#185FA5", sub: "em aberto (exclui convertido/perdido)" },
     { label: "Valor estimado", value: brl(valorEstimado), accent: "#22c55e", sub: `${ativos.length} leads × R$${PRECO_KG}/kg` },
     { label: "Parados >7d", value: String(parados7d), accent: parados7d > 0 ? "#f59e0b" : "#e4e9f0", sub: "sem mover desde o handoff" },
   ];
