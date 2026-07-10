@@ -51,12 +51,11 @@ export type FatTipoRow = {
 };
 
 import { theme } from "@/lib/theme";
-const SEM: Record<string, string> = { verde: "#2ea043", amarelo: "#d29922", vermelho: "#f85149", sem_dado: "#2a3340", credito: "#58a6ff" };
+import { COR_SEMAFORO as SEM, brl } from "@/lib/compras/regras";
 const FLAG_EMOJI: Record<string, string> = {
   pico_compras: "🔥", top_faturado: "💰", margem_critica: "⚠️", abaixo_meta: "📉", acima_meta: "🎯",
 };
 const DONUT: Record<string, string> = { NF: "#2ea043", Recibo: "#d29922" };
-const brl = (n: number) => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 const ddmm = (iso: string) => iso.slice(8, 10) + "/" + iso.slice(5, 7);
 
 export function CalendarDashboard({

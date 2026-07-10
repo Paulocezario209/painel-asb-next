@@ -29,7 +29,6 @@ export type Noticia = {
 };
 
 import { theme } from "@/lib/theme";
-const GREEN = "#2ea043";
 
 // Cores semânticas (skill elite) — ÓTICA DO COMPRADOR.
 const C_CRIT = "#C8102E";   // alta de preço / EVITAR — ruim p/ comprar

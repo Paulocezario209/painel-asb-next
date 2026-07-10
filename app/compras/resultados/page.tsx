@@ -16,8 +16,7 @@ import {
 export const dynamic = "force-dynamic";
 
 import { theme } from "@/lib/theme";
-const brl = (n: number) =>
-  n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+import { EMITENTES_ASB, brl, semaforoPct, nivelSemaforo, corSemaforoLabel } from "@/lib/compras/regras";
 const MESES_PT = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
 type MensalRow = {
@@ -25,8 +24,6 @@ type MensalRow = {
   faturado_brl: number; compras_brl: number; pct_compras_faturado: number;
   semaforo: "OK" | "ALERTA" | "CRITICO" | string;
 };
-// cor da bolinha do semáforo da view (OK/ALERTA/CRITICO)
-const semCor = (s: string) => (s === "CRITICO" ? "#f85149" : s === "ALERTA" ? "#d29922" : "#2ea043");
 
 // Dias úteis ASB: SEG-SÁB (exclui só domingo — ASB opera ter-sáb, sábado conta)
 function bizDays(from: Date, to: Date): number {
@@ -37,11 +34,6 @@ function bizDays(from: Date, to: Date): number {
     d.setDate(d.getDate() + 1);
   }
   return n;
-}
-function semaforo(pct: number): { cor: string; label: string } {
-  if (pct <= 54) return { cor: "#2ea043", label: "OK" };
-  if (pct <= 65) return { cor: "#d29922", label: "ALERTA" };
-  return { cor: "#f85149", label: "CRÍTICO" };
 }
 
 export default async function ResultadosPage({
@@ -78,7 +70,7 @@ export default async function ResultadosPage({
       .gte("data_emissao", iso(inicioMes))
       .lte("data_emissao", iso(fimJanela))
       .neq("status_compra", "cancelado")
-      .in("id_pessoa_emitente", [1, 2074]),
+      .in("id_pessoa_emitente", EMITENTES_ASB),
     // meta dos vendedores (todos) por dia — base da projeção por ritmo amortecido.
     // Janela = MÊS INTEIRO (fimMes, não fimJanela): precisa da meta futura p/ metaRestante.
     supabase
@@ -100,7 +92,7 @@ export default async function ResultadosPage({
       .gte("dia", iso(inicioMes))
       .lte("dia", iso(fimJanela))
       .neq("status_compra", "cancelado")
-      .in("id_pessoa_emitente", [1, 2074]),
+      .in("id_pessoa_emitente", EMITENTES_ASB),
     // Fase 1.6 — split NF/Recibo do mês corrente
     supabase
       .from("faturamento_tipo_dia")
@@ -115,7 +107,7 @@ export default async function ResultadosPage({
       .select("data_devolucao, valor_vnf, n_nf, fornecedor_nome, ref_nfe_chave")
       .gte("data_devolucao", iso(inicioMes))
       .lte("data_devolucao", iso(fimJanela))
-      .in("id_pessoa_emitente", [1, 2074]),
+      .in("id_pessoa_emitente", EMITENTES_ASB),
   ]);
   const fatRows = (fatRes.data ?? []) as { dia: string; faturado_brl: number }[];
   const compRows = (compRes.data ?? []) as CompraRow[];
@@ -144,7 +136,7 @@ export default async function ResultadosPage({
   // (comprasMtd, abaixo, INTOCADO); cancelado fora. Split Recebido/A chegar (sublinha) segue informativo.
   const comprasParaPct = recebidoMtd;
   const pct = faturadoMtd > 0 ? Math.round((comprasParaPct / faturadoMtd) * 1000) / 10 : 0;
-  const sem = semaforo(pct);
+  const sem = semaforoPct(pct);
 
   // diário (para projeção)
   const fatDia: Record<string, number> = {};
@@ -163,7 +155,7 @@ export default async function ResultadosPage({
       semaforo: (compras < 0
         ? "credito"
         : fat > 0
-          ? (pctDia! <= 54 ? "verde" : pctDia! <= 65 ? "amarelo" : "vermelho")
+          ? nivelSemaforo(pctDia!)
           : (compras > 0 ? "sem_dado" : r.semaforo)) as DiaCalendario["semaforo"],
     };
   });
@@ -198,7 +190,7 @@ export default async function ResultadosPage({
     ? comprasMtd + orcamentoRestante * ritmoComprasAmort
     : TETO * projFaturado;                                           // edge: sem faturado MTD → teto puro do projetado
   const pctProj = projFaturado > 0 ? Math.round((projCompras / projFaturado) * 1000) / 10 : 0;
-  const semProj = semaforo(pctProj);
+  const semProj = semaforoPct(pctProj);
   const gap54 = projCompras - TETO * projFaturado;                   // reusa TETO (era 0.54 literal)
 
   const labelS: React.CSSProperties = {
@@ -212,7 +204,6 @@ export default async function ResultadosPage({
   // Painel ANO 2026: 12 tiles. Mês corrente do calendário (para fechado/andamento/futuro).
   const mesCorrenteNum = hoje.getFullYear() === 2026 ? hoje.getMonth() + 1 : 13; // se não for 2026, todos "fechados"
   const mensalByNum = new Map(mensalRows.filter((r) => r.ano === 2026).map((r) => [r.mes_num, r]));
-  const brl0 = (n: number) => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -249,7 +240,7 @@ export default async function ResultadosPage({
             const futuro = mn > mesCorrenteNum;
             const corrente = mn === mesCorrenteNum;
             const status = futuro ? "futuro" : corrente ? "em andamento" : "fechado";
-            const cor = row ? semCor(row.semaforo) : "#e4e9f0";
+            const cor = row ? corSemaforoLabel(row.semaforo) : "#e4e9f0";
 
             const tile = (
               <div
@@ -270,8 +261,8 @@ export default async function ResultadosPage({
                 <div style={{ ...labelS, marginTop: 4, fontSize: 8, color: corrente ? "#d29922" : "#e4e9f0" }}>{status}</div>
                 {row ? (
                   <div style={{ marginTop: 6, fontSize: 10, color: "#c0d0e0", lineHeight: 1.5 }}>
-                    <div>Fat: <b style={{ color: "#c8d8e8" }}>{brl0(Number(row.faturado_brl || 0))}</b></div>
-                    <div>Comp: <b style={{ color: "#c8d8e8" }}>{brl0(Number(row.compras_brl || 0))}</b></div>
+                    <div>Fat: <b style={{ color: "#c8d8e8" }}>{brl(Number(row.faturado_brl || 0))}</b></div>
+                    <div>Comp: <b style={{ color: "#c8d8e8" }}>{brl(Number(row.compras_brl || 0))}</b></div>
                     <div style={{ color: cor, fontWeight: 700 }}>{Number(row.pct_compras_faturado ?? 0).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%</div>
                   </div>
                 ) : (
