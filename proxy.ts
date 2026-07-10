@@ -69,6 +69,19 @@ export async function proxy(request: NextRequest) {
         { status: 403 },
       );
     }
+    // Escrita no workspace COMPRAS (limpar-mes, restore, uploads de âncora/custos,
+    // chat de mercado): só gestor e tecnico_compras. Auditoria 2026-07-10 — sem este
+    // guard, qualquer sessão não-financeiro podia apagar meses de custos_registro_diario.
+    if (
+      pathname.startsWith("/api/compras/") &&
+      profile?.role !== "gestor" &&
+      profile?.role !== "tecnico_compras"
+    ) {
+      return NextResponse.json(
+        { error: "forbidden: escrita em compras restrita a gestor/tecnico_compras" },
+        { status: 403 },
+      );
+    }
   }
 
   return supabaseResponse;
