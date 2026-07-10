@@ -105,7 +105,10 @@ export default function MercadoClient({
       .map(([, v]) => v);
   }, [historico]);
 
-  const dataAtualizacao = cotacoes[0]?.data_cotacao ? fmtData(cotacoes[0].data_cotacao) : "—";
+  // Data mais RECENTE do conjunto (a view ordena por proteína — [0] seria sempre a do boi).
+  const dataAtualizacao = cotacoes.length
+    ? fmtData(cotacoes.reduce((max, c) => (c.data_cotacao > max ? c.data_cotacao : max), cotacoes[0].data_cotacao))
+    : "—";
   const analiseGeral = sinalPorProt["geral"];
 
   return (

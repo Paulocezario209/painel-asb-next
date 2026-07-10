@@ -1,5 +1,6 @@
 // app/compras/estoque/page.tsx — Fase 2 M1 (cru): tabela saldo + cobertura por produto.
-// Fonte: v_estoque_cobertura (16 KG ancorados). Banner mostra cobertura parcial até inventário ARES 30/05.
+// Fonte: v_estoque_cobertura. Desde OPT-B (30/05) saldo_atual = Σ consumo_movimento (espelho ARES)
+// para TODOS os produtos com movimentação; a âncora XLSX virou auditoria/fallback, não base do saldo.
 import { createClient } from "@/lib/supabase/server";
 import { AncoraUpload } from "@/components/uploads/ancora-upload";
 import EstoqueClient, { type CoberturaRow } from "./estoque-client";
@@ -24,15 +25,15 @@ export default async function EstoquePage() {
           Estoque Atual
         </h1>
         <p style={{ color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label }}>
-          Saldo por produto (âncora + Σ movimento) · cobertura em dias (saldo ÷ consumo/dia) · semáforo de ruptura.
+          Saldo por produto (Σ movimentação ARES espelhada — OPT-B) · cobertura em dias (saldo ÷ consumo/dia) · semáforo de ruptura.
         </p>
       </div>
 
       {/* Banner cobertura parcial */}
       <div style={{ border: "1px solid #d29922", background: "rgba(210,153,34,.08)", borderRadius: 6, padding: "10px 14px" }}>
         <p style={{ color: "#d29922", fontSize: 11, fontFamily: theme.font.label }}>
-          {rows.length} produto(s) ancorado(s) de {totalProdutos} totais. Os demais aguardam o inventário ARES de 30/05,
-          que o sync espelha automaticamente e expande esta cobertura.
+          {rows.length} produto(s) com saldo calculado de {totalProdutos} totais. Saldo = Σ movimentação ARES espelhada
+          (OPT-B 30/05); contagem física é auditoria. Os demais não têm movimentação capturada na janela do espelho.
         </p>
       </div>
 

@@ -62,8 +62,8 @@ export default async function InventarioPage() {
       <div style={{ border: "1px solid #d29922", background: "rgba(210,153,34,.08)", borderRadius: 6, padding: "10px 14px" }}>
         <p style={{ color: "#d29922", fontSize: 11, fontFamily: theme.font.label }}>
           {comFisica} produto(s) com contagem física · {emRevisao} em revisão (ambíguos da transcrição).
-          Janela do espelho = 90 dias: o único acerto de inventário nela é 01/05 (por isso ~25 dias em todos).
-          Contagens anteriores a 90d não aparecem (DEBT-072). Inventário 30/05 (módulo ARES) expande. Ambíguos: aba Estoque.
+          Atenção: a janela do espelho é de 90 dias — contagens e acertos anteriores a isso não aparecem aqui,
+          então &quot;dias desde contagem&quot; pode subestimar o tempo real (DEBT-072). Ambíguos: aba Estoque.
         </p>
       </div>
 

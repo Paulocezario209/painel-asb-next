@@ -77,7 +77,7 @@ export default async function PrevisaoPage() {
       <div style={{ border: "1px solid #f85149", background: "rgba(248,81,73,.07)", borderRadius: 6, padding: "10px 14px" }}>
         <p style={{ color: "#f85149", fontSize: 11, fontFamily: theme.font.label }}>
           🔴 REPOR AGORA: {reporTotal} insumo(s) abaixo do ponto de reposição.
-          <span style={{ color: "#e4e9f0" }}> &quot;s/ âncora&quot; = saldo não confiável até inventário 30/05 (assume 0).</span>
+          <span style={{ color: "#e4e9f0" }}> &quot;s/ âncora&quot; = sem saldo calculado (sem movimentação capturada no espelho — assume 0; confira antes de comprar).</span>
         </p>
       </div>
 

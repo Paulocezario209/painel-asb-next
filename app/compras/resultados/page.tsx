@@ -1,5 +1,7 @@
 // app/compras/resultados/page.tsx — Camada Resultados (Compras × Faturamento)
-// Regra Compras MTD (CLAUDE.md): status != cancelado, data_emissao, emit 1+2074, ts_delete via espelho.
+// Regra Compras MTD (CLAUDE.md, atualizada 2026-07-08): ESTADO REAL (cards/headline/semáforo,
+// corrente inclusive) = status_compra='entregue'; "tudo exceto cancelado" (comprometido, inclui
+// a-chegar) vale SÓ para projeção. data_emissao, emit 1+2074, ts_delete via espelho.
 // Seletor de mês (?mes=YYYY-MM): corrente = MTD + projeção; passado = realizado, sem projeção.
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
@@ -309,7 +311,7 @@ export default async function ResultadosPage({
             <div style={{ ...labelS, marginTop: 10, textTransform: "none", letterSpacing: 0 }}>Sem dados de compras neste período</div>
           ) : (
             <>
-              {/* Headline = compras COMPROMETIDAS (gate dual, mesmo comprasParaPct do box %). */}
+              {/* Headline = compras REAIS (entregue − devolução; mesmo comprasParaPct do box %). */}
               <div style={{ fontSize: 26, fontWeight: 700, color: "#FFFFFF", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", marginTop: 6 }}>{brl(comprasParaPct)}</div>
               <div style={{ ...labelS, marginTop: 8, color: "#c0d0e0", textTransform: "none", letterSpacing: 0 }}>
                 Recebido (NF): <b style={{ color: "#2ea043" }}>{brl(recebidoMtd)}</b> · A chegar: <b style={{ color: "#d29922" }}>{brl(aChegarMtd)}</b>
