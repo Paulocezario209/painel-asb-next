@@ -164,9 +164,11 @@ export default async function ResultadosPage({
   const duRestantes = Math.max(0, duTotal - duDecorridos);
 
   // PROJEÇÃO — regra Paulo 2026-07-10 (substitui META×ritmo-amortecido e a mediana da DEBT-220):
-  // faturado projetado = RITMO DO FATURAMENTO DO PERÍODO (MTD ÷ dias úteis decorridos × dias úteis
-  // do mês); compras projetadas = TETO 54% desse faturado (ORÇAMENTO do mês — não extrapolar o
-  // ritmo de compra: compra é grumosa, um pedido grande cobre semanas e não é tendência diária).
+  // faturado projetado = RITMO DO FATURAMENTO DO PERÍODO com DIAS ÚTEIS COMPLETOS (até ontem —
+  // o dia em andamento fica fora do numerador E do denominador, senão a projeção amanhece diluída
+  // e sobe ao longo do dia); compras projetadas = TETO 54% desse faturado (ORÇAMENTO do mês — não
+  // extrapolar o ritmo de compra: compra é grumosa, um pedido grande cobre semanas, não é tendência).
+  // Backtest jun/2026: essa régua projetou acima no meio do mês e convergiu (879k vs real 878k).
   // "Disponível" = orçamento − comprometido (≠cancelado, líquido de devolução) já assumido.
   const todayISO = iso(hoje);
   const metaAcum = metaRows.filter((r) => r.dia <= todayISO).reduce((s, r) => s + Number(r.meta_diaria_brl || 0), 0);
@@ -174,9 +176,15 @@ export default async function ResultadosPage({
   const fatorRitmo = metaAcum > 0 ? faturadoMtd / metaAcum : 1;       // "Ritmo % da meta" (indicador)
 
   const TETO = 0.54;
-  const projFaturado = duDecorridos > 0
-    ? (faturadoMtd / duDecorridos) * duTotal
-    : metaMensal;                                                    // edge: dia 1 sem faturamento → meta mensal
+  const fimCompleto = isMesCorrente ? new Date(anoSel, mesSel, hoje.getDate() - 1) : fimMes;
+  const duCompletos = fimCompleto >= inicioMes ? bizDays(inicioMes, fimCompleto) : 0;
+  const isoFimCompleto = iso(fimCompleto);
+  const fatCompletos = fatRows
+    .filter((r) => r.dia <= isoFimCompleto)
+    .reduce((s, r) => s + Number(r.faturado_brl || 0), 0);
+  const projFaturado = duCompletos > 0
+    ? (fatCompletos / duCompletos) * duTotal
+    : metaMensal;                                                    // edge: dia 1 do mês sem dia completo → meta mensal
   const projCompras = TETO * projFaturado;                           // orçamento 54% do projetado
   const disponivelCompras = projCompras - comprasMtd;                // o que ainda cabe comprar no mês
   const pctComprometido = projFaturado > 0 ? Math.round((comprasMtd / projFaturado) * 1000) / 10 : 0;
