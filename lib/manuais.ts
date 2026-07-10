@@ -353,7 +353,8 @@ export const MANUAIS: Record<string, ManualTela> = {
       "CAC por canal: v_cac_por_canal e v_cac_mensal_canal.",
     ],
     comoUsar: [
-      "Canal sem origem = lead que chegou sem UTM/rastreio — % alto aqui pede revisão dos links de campanha.",
+      "Compare o CAC entre canais no mesmo mês — canal caro sustentado pede revisão de criativo ou verba.",
+      "Canais: instagram (ctwa) · google · site (lp) · organico · indicacao. Parte dos leads chega sem atribuição (DEBT-119) — o gasto deles aparece na tela Anúncios, bloco 'sem retorno'.",
     ],
   },
   "/marketing/anuncios": {
@@ -369,12 +370,13 @@ export const MANUAIS: Record<string, ManualTela> = {
   },
   "/marketing/funil-cac": {
     titulo: "Marketing · Funil & CAC",
-    oQueE: "O funil por canal (lead → qualificado → handoff → cliente) com o CAC em cada etapa.",
+    oQueE: "O funil por canal (lead → qualificado → handoff → convertido) com gasto, CAC por lead e custo por conversão de cada canal.",
     fontes: [
-      "v_funil_por_canal (etapas por origem) + v_cac_mensal_canal (custo).",
+      "Funil: v_funil_por_canal — qualificado = escada completa (qual_stage ≥ 7), handoff = vendedor respondeu, convertido = 1º pedido.",
+      "Gasto/CAC/Custo por conversão: v_cac_por_canal. Conversão mensal: v_cac_mensal_canal.",
     ],
     comoUsar: [
-      "Canal barato no lead mas caro no CLIENTE = funil vazando — olhe a etapa em que ele perde.",
+      "Canal com CAC/lead baixo mas custo por conversão alto = funil vazando — veja em qual etapa ele perde.",
       "É o melhor lugar para decidir realocação de verba entre canais.",
     ],
   },

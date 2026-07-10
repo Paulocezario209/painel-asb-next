@@ -31,6 +31,12 @@ const MANAGER_BLOCKED: string[] = [
 ];
 
 export function canAccess(role: UserRole, route: string): boolean {
+  // /marketing (gasto/CAC/ROAS/receita = informação de gestão): gestor, manager e
+  // financeiro. Vendedor e tecnico_compras FORA (auditoria 2026-07-10 — antes era
+  // rota sem trava e qualquer sessão via o gasto de mídia).
+  if (route.startsWith("/marketing")) {
+    return role === "gestor" || role === "manager" || role === "financeiro";
+  }
   // financeiro (consultor externo DRE): vê TUDO (read-only — escrita barrada no middleware)
   if (role === "gestor" || role === "financeiro") return true;
   if (role === "manager") return !MANAGER_BLOCKED.includes(route);

@@ -35,7 +35,8 @@ export default async function CalendarioPage({
   searchParams: Promise<{ ano?: string }>;
 }) {
   const sp = await searchParams;
-  const ano = /^\d{4}$/.test(sp?.ano ?? "") ? (sp!.ano as string) : "2026";
+  // default = ano corrente (era "2026" fixo — em jan/2027 a tela abriria vazia)
+  const ano = /^\d{4}$/.test(sp?.ano ?? "") ? (sp!.ano as string) : String(new Date().getFullYear());
 
   const supabase = await createClient();
   // hidrata a sessão (view REVOKE anon / GRANT authenticated — DEBT-110)

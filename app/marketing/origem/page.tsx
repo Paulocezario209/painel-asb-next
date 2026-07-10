@@ -13,11 +13,13 @@ export default async function OrigemPage() {
   const [canalRes, mensalRes] = await Promise.all([
     supabase
       .from("v_cac_por_canal")
-      .select("canal, leads, convertidos, receita_brl, gasto_total, cac_por_lead, custo_por_conversao, roas"),
+      .select("canal, leads, convertidos, receita_brl, gasto_total, cac_por_lead, roas")
+      .limit(50),
     supabase
       .from("v_cac_mensal_canal")
       .select("mes, canal, leads, gasto_total, cac_por_lead, roas")
-      .order("mes", { ascending: true }),
+      .order("mes", { ascending: true })
+      .limit(2000),
   ]);
 
   const canais = (canalRes.error ? [] : (canalRes.data ?? [])) as unknown as CanalConsolidado[];

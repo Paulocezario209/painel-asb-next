@@ -7,12 +7,12 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
 } from "recharts";
 import { theme } from "@/lib/theme";
+import {
+  RED, GREEN, YELLOW, MUT, GRID, CANAL_COR,
+  fmtBRLc, fmtMes, tooltipStyle, axisStyle, type CacMensalRow,
+} from "@/lib/marketing/ui";
 
-export type CacMensalRow = {
-  mes: string; canal: string;
-  leads: number; convertidos: number; receita_brl: number;
-  gasto_total: number; cac_por_lead: number | null; roas: number | null;
-};
+export type { CacMensalRow };
 export type RankRow = {
   ad_name: string | null; campaign_name: string | null;
   cpl: number | null; leads: number; spend: number;
@@ -22,39 +22,6 @@ export type AlertaRow = {
   canal: string | null; valor_atual: number | null; valor_referencia: number | null;
   descricao: string; severidade: "info" | "warning" | "critical";
 };
-
-// Cores 100% via theme (tokens chartNavy/chartYellow/gridLine adicionados na migração marketing).
-const RED = theme.colors.critical;       // #C8102E
-const BLUE = theme.colors.chartNavy;     // #2A3F8F
-const GREEN = theme.colors.success;      // #22c55e
-const YELLOW = theme.colors.chartYellow; // #e8b923
-const MUT = theme.colors.neutral;        // #e4e9f0
-const GRID = theme.colors.gridLine;
-
-const CANAL_COR: Record<string, string> = {
-  "instagram (ctwa)": RED,
-  "site (lp)": BLUE,
-  "organico": GREEN,
-};
-
-function fmtBRL(v: number) {
-  return Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0, maximumFractionDigits: 0 });
-}
-function fmtBRLc(v: number) {
-  return Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-const MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
-function fmtMes(iso: string) {
-  const m = Number(iso.slice(5, 7)) - 1;
-  return MESES[m] ?? iso.slice(0, 7);
-}
-
-const tooltipStyle = {
-  contentStyle: { background: "#1a1a1a", border: `1px solid ${RED}`, borderRadius: 3, fontSize: 11, fontFamily: theme.font.num, color: "#c8d8e8" },
-  itemStyle: { color: "#c8d8e8" },
-  labelStyle: { color: MUT, fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase" as const },
-};
-const axisStyle = { fontSize: 10, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" as const, fill: MUT };
 
 const PERIODOS = [
   { k: "30d", label: "30d", meses: 1 },
@@ -227,7 +194,7 @@ export function OverviewClient({ cac, rank, alertas }: { cac: CacMensalRow[]; ra
       </Card>
 
       <p style={{ color: MUT, fontSize: 9, fontFamily: theme.font.label }}>
-        Fontes: v_cac_mensal_canal (KPIs + gasto×CAC mês a mês), v_funil_por_canal (funil), v_ranking_criativo (top CPL 30d). Barras = gasto por canal (eixo esq.) · linha = CAC blendado (eixo dir.). Período dos KPIs ≈ últimos 1/3/6 meses. Leads atribuídos desde 02/06.
+        Fontes: v_cac_mensal_canal (KPIs + gasto×CAC mês a mês) e v_ranking_criativo (top CPL 30d); funil vive em /marketing/funil-cac. Barras = gasto por canal (eixo esq.) · linha = CAC blendado (eixo dir.). Período dos KPIs ≈ últimos 1/3/6 meses. Leads atribuídos desde 02/06.
       </p>
     </div>
   );

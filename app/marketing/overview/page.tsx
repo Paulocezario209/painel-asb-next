@@ -21,7 +21,8 @@ const getCachedCacMensal = unstable_cache(
     const { data } = await svc()
       .from("v_cac_mensal_canal")
       .select("mes, canal, leads, convertidos, receita_brl, gasto_total, cac_por_lead, roas")
-      .order("mes", { ascending: true });
+      .order("mes", { ascending: true })
+      .limit(2000);
     return (data ?? []) as unknown as CacMensalRow[];
   },
   ["marketing-cac-mensal"],
@@ -32,7 +33,8 @@ const getCachedAlertas = unstable_cache(
   async () => {
     const { data } = await svc()
       .from("v_marketing_alertas")
-      .select("flag, ad_id, ad_name, campaign_name, canal, valor_atual, valor_referencia, descricao, severidade");
+      .select("flag, ad_id, ad_name, campaign_name, canal, valor_atual, valor_referencia, descricao, severidade")
+      .limit(200);
     return (data ?? []) as unknown as AlertaRow[];
   },
   ["marketing-alertas"],
@@ -51,7 +53,8 @@ export default async function OverviewPage() {
     supabase
       .from("v_ranking_criativo")
       .select("ad_name, campaign_name, cpl, leads, spend")
-      .eq("periodo", "30d"),
+      .eq("periodo", "30d")
+      .limit(500),
     getCachedAlertas(),
   ]);
 

@@ -13,21 +13,11 @@ export type DiaRow = {
   cpl: number | null;
 };
 
-const RED = theme.colors.critical;       // #C8102E
-const GREEN = theme.colors.success;      // #22c55e
-const YELLOW = theme.colors.chartYellow; // #e8b923
-const MUT = theme.colors.neutral;        // #e4e9f0
+import { RED, GREEN, YELLOW, MUT, MESES as MESES_ABR, fmtBRL, fmtBRLc } from "@/lib/marketing/ui";
 
 const MESES_FULL = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-const MESES_ABR = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
 const DOW = ["D", "S", "T", "Q", "Q", "S", "S"];
 
-function fmtBRL(v: number) {
-  return Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0, maximumFractionDigits: 0 });
-}
-function fmtBRLc(v: number) {
-  return Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
 const pad2 = (n: number) => String(n).padStart(2, "0");
 function pctDelta(a: number, b: number): number | null {
   if (!b) return null;

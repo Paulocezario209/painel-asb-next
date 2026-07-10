@@ -1,6 +1,7 @@
-// app/marketing/layout.tsx
+// app/marketing/layout.tsx — gate de papel (auditoria 2026-07-10): gasto/CAC/receita
+// são informação de gestão; least-privilege igual ao /dashboard (canAccess decide).
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { getUserContext, canAccess } from "@/lib/auth/get-user-role";
 import { MarketingShell } from "./_components/marketing-shell";
 
 export default async function MarketingLayout({
@@ -8,15 +9,14 @@ export default async function MarketingLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/login");
+  const ctx = await getUserContext();
+  if (!ctx) redirect("/login");
+  if (!canAccess(ctx.role, "/marketing")) {
+    redirect(ctx.isTecnicoCompras ? "/compras" : "/dashboard");
   }
 
   return (
-    <MarketingShell email={user.email ?? ""}>
+    <MarketingShell email={ctx.email}>
       {children}
     </MarketingShell>
   );

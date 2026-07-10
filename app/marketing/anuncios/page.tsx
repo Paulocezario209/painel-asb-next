@@ -17,7 +17,8 @@ const getCachedRankingCriativo = unstable_cache(
     );
     const { data } = await supabase
       .from("v_ranking_criativo")
-      .select("ad_id, ad_name, campaign_name, periodo, spend, leads, conversoes, cpl, taxa_conversao, roas, status_meta, objetivo");
+      .select("ad_id, ad_name, campaign_name, periodo, spend, leads, cpl, roas, status_meta")
+      .limit(5000);
     return (data ?? []) as unknown as RankRow[];
   },
   ["marketing-ranking-criativo"],
@@ -38,7 +39,8 @@ export default async function AnunciosPage() {
       .from("v_performance_diaria")
       .select("ad_id, data, spend")
       .gte("data", desde7)
-      .order("data", { ascending: true }),
+      .order("data", { ascending: true })
+      .limit(5000),
   ]);
 
   const spark = (sparkRes.error ? [] : (sparkRes.data ?? [])) as unknown as SparkRow[];

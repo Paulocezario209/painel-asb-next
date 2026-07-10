@@ -2,31 +2,20 @@
 
 import { useState, useMemo } from "react";
 import { theme } from "@/lib/theme";
+import { RED, GREEN, YELLOW, MUT, fmtBRLc, th, td, PERIODOS_RANKING } from "@/lib/marketing/ui";
 
 export type RankRow = {
   ad_id: string;
   ad_name: string | null;
   campaign_name: string | null;
-  periodo: string;          // '30d' | '90d'
+  periodo: string;          // '30d' | '60d' | '90d' | '6m' | '12m' (v3 — os 5 vivos no banco)
   spend: number;
   leads: number;
-  conversoes: number;
   cpl: number | null;
-  taxa_conversao: number | null;
   roas: number | null;
   status_meta: string | null;
-  objetivo: string | null;
 };
 export type SparkRow = { ad_id: string; data: string; spend: number };
-
-const RED = theme.colors.critical;       // #C8102E
-const GREEN = theme.colors.success;      // #22c55e
-const YELLOW = theme.colors.chartYellow; // #e8b923
-const MUT = theme.colors.neutral;        // #e4e9f0
-
-function fmtBRLc(v: number) {
-  return Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
 
 // status_meta → label + cor (ATIVO verde · PAUSADO/ADSET_PAUSED/CAMPAIGN_PAUSED cinza · WITH_ISSUES amarelo)
 function statusInfo(s: string | null): { label: string; cor: string } {
@@ -121,7 +110,7 @@ export function AnunciosClient({ rank, spark }: { rank: RankRow[]; spark: SparkR
       {/* Filtros */}
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
         <div style={{ display: "flex", gap: 6 }}>
-          {(["30d", "60d", "90d", "6m", "12m"] as const).map(p => {
+          {PERIODOS_RANKING.map(p => {
             const active = periodo === p;
             return (
               <button key={p} onClick={() => setPeriodo(p)} style={{
@@ -210,7 +199,7 @@ export function AnunciosClient({ rank, spark }: { rank: RankRow[]; spark: SparkR
                 );
               })}
               <tr style={{ borderTop: "2px solid #2a2a2a" }}>
-                <td style={{ ...td, color: "#FFFFFF", fontWeight: 700 }} colSpan={3}>TOTAL ({comRetorno.length})</td>
+                <td style={{ ...td, color: "#FFFFFF", fontWeight: 700 }} colSpan={3}>TOTAL com retorno ({comRetorno.length}) — CPL exclui o bloco DEBT-119</td>
                 <td style={{ ...td, textAlign: "right", color: YELLOW, fontWeight: 700 }}>{fmtBRLc(tot.spend)}</td>
                 <td style={{ ...td, textAlign: "center", fontWeight: 700 }}>{tot.leads}</td>
                 <td style={{ ...td, textAlign: "right", color: cacTot != null ? "#FFFFFF" : MUT, fontWeight: 700 }}>{cacTot != null ? fmtBRLc(cacTot) : "—"}</td>
@@ -247,5 +236,3 @@ function Sparkline({ serie }: { serie: number[] }) {
   );
 }
 
-const th: React.CSSProperties = { fontSize: 9, color: "#e4e9f0", fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", padding: "6px 10px", textAlign: "center" };
-const td: React.CSSProperties = { padding: "8px 10px", color: "#c8d8e8", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" };

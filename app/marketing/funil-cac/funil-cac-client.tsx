@@ -6,37 +6,21 @@ import {
 } from "recharts";
 import { FunnelVisual, type FunnelStage } from "@/components/dashboard/funnel-visual";
 import { theme } from "@/lib/theme";
+import { GREEN, YELLOW, MUT, GRID, fmtBRLc, fmtMes, tooltipStyle, axisStyle, th, td } from "@/lib/marketing/ui";
 
 export type FunilRow = {
   canal: string;
-  leads_total: number; qualificados: number; qualificados_real: number; handoffs: number; convertidos: number;
-  pct_qualificacao: number | null; pct_qualificacao_real: number | null; pct_handoff: number | null; pct_conversao: number | null;
+  leads_total: number; qualificados_real: number; handoffs: number; convertidos: number;
+  pct_qualificacao_real: number | null; pct_handoff: number | null; pct_conversao: number | null;
 };
 export type ConvMensalRow = { mes: string; leads: number; convertidos: number };
+export type CacCanalRow = { canal: string; gasto_total: number; cac_por_lead: number | null; custo_por_conversao: number | null };
 
-// Cores 100% via theme (tokens chartYellow/gridLine adicionados na migração marketing).
-const RED = theme.colors.critical;       // #C8102E
-const GREEN = theme.colors.success;      // #22c55e
-const YELLOW = theme.colors.chartYellow; // #e8b923
-const MUT = theme.colors.neutral;        // #e4e9f0
-const GRID = theme.colors.gridLine;
 // FIX2: cores semânticas do funil (topo→fundo)
 const FUNNEL_FILL = ["#185FA5", "#534AB7", "#1f7a6a", "#0F6E56"];
 
-const MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
-function fmtMes(iso: string) {
-  const m = Number(iso.slice(5, 7)) - 1;
-  return MESES[m] ?? iso.slice(0, 7);
-}
-
-const tooltipStyle = {
-  contentStyle: { background: "#1a1a1a", border: `1px solid ${RED}`, borderRadius: 3, fontSize: 11, fontFamily: theme.font.num, color: "#c8d8e8" },
-  itemStyle: { color: "#c8d8e8" },
-  labelStyle: { color: MUT, fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase" as const },
-};
-const axisStyle = { fontSize: 10, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" as const, fill: MUT };
-
-export function FunilCacClient({ funil, mensal }: { funil: FunilRow[]; mensal: ConvMensalRow[] }) {
+export function FunilCacClient({ funil, mensal, cac }: { funil: FunilRow[]; mensal: ConvMensalRow[]; cac: CacCanalRow[] }) {
+  const cacPorCanal = useMemo(() => new Map(cac.map(c => [c.canal, c])), [cac]);
   // Funil agregado (soma dos canais)
   const agg = useMemo(() => funil.reduce(
     (a, f) => ({
@@ -117,10 +101,15 @@ export function FunilCacClient({ funil, mensal }: { funil: FunilRow[]; mensal: C
                 <th style={th}>% Qualif.</th>
                 <th style={th}>% Handoff</th>
                 <th style={th}>% Conv.</th>
+                <th style={th}>Gasto</th>
+                <th style={th}>CAC/lead</th>
+                <th style={th}>Custo/conv.</th>
               </tr>
             </thead>
             <tbody>
-              {[...funil].sort((a, b) => Number(b.leads_total) - Number(a.leads_total)).map(f => (
+              {[...funil].sort((a, b) => Number(b.leads_total) - Number(a.leads_total)).map(f => {
+                const c = cacPorCanal.get(f.canal);
+                return (
                 <tr key={f.canal} style={{ borderTop: "1px solid #2a2a2a" }}>
                   <td style={{ ...td, color: "#FFFFFF", textTransform: "uppercase" }}>{f.canal}</td>
                   <td style={{ ...td, textAlign: "center" }}>{f.leads_total}</td>
@@ -130,8 +119,11 @@ export function FunilCacClient({ funil, mensal }: { funil: FunilRow[]; mensal: C
                   <td style={{ ...td, textAlign: "center", color: "#c0d0e0" }}>{pctFmt(f.pct_qualificacao_real)}</td>
                   <td style={{ ...td, textAlign: "center", color: "#c0d0e0" }}>{pctFmt(f.pct_handoff)}</td>
                   <td style={{ ...td, textAlign: "center", color: "#c0d0e0" }}>{pctFmt(f.pct_conversao)}</td>
+                  <td style={{ ...td, textAlign: "center", color: YELLOW }}>{c ? fmtBRLc(Number(c.gasto_total ?? 0)) : "—"}</td>
+                  <td style={{ ...td, textAlign: "center", color: "#FFFFFF", fontWeight: 700 }}>{c?.cac_por_lead != null ? fmtBRLc(Number(c.cac_por_lead)) : "—"}</td>
+                  <td style={{ ...td, textAlign: "center", color: "#c0d0e0" }}>{c?.custo_por_conversao != null ? fmtBRLc(Number(c.custo_por_conversao)) : "—"}</td>
                 </tr>
-              ))}
+              );})}
             </tbody>
           </table>
         )}
@@ -160,7 +152,7 @@ export function FunilCacClient({ funil, mensal }: { funil: FunilRow[]; mensal: C
       </div>
 
       <p style={{ color: MUT, fontSize: 9, fontFamily: theme.font.label }}>
-        Fonte: v_funil_por_canal (qualificado = qual_stage ≥ 7 / lead realmente qualificado · handoff=seller_first_reply_at · convertido=first_order_at) + v_cac_mensal_canal (conversão mensal). % do funil = razão sobre Leads. Leads atribuídos desde 02/06.
+        Fonte: v_funil_por_canal (qualificado = qual_stage ≥ 7 / lead realmente qualificado · handoff=seller_first_reply_at · convertido=first_order_at) + v_cac_por_canal (Gasto/CAC/Custo por conversão) + v_cac_mensal_canal (conversão mensal). % do funil = razão sobre Leads. Leads atribuídos desde 02/06.
       </p>
     </div>
   );
@@ -170,6 +162,3 @@ function pctFmt(p: number | null) {
   if (p == null) return "—";
   return `${(Number(p) * 100).toFixed(1)}%`;
 }
-
-const th: React.CSSProperties = { fontSize: 9, color: "#e4e9f0", fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", padding: "6px 10px", textAlign: "center" };
-const td: React.CSSProperties = { padding: "8px 10px", color: "#c8d8e8", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" };
