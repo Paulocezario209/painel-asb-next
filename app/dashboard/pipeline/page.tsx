@@ -3,6 +3,7 @@
 // asb-dashboard-elite: 1 pergunta — "onde está cada lead do vendedor agora?" + KPIs de topo.
 // Fonte: query direta (LISTA de leads pós-handoff, não agregação numérica — cada lead 1x, limit explícito).
 import { redirect } from "next/navigation";
+import { PRECO_KG } from "@/lib/pricing";
 import { theme } from "@/lib/theme";
 import { getUserContext, canAccess } from "@/lib/auth/get-user-role";
 import { PIPELINE_STAGES, PIPELINE_ATIVOS, LEGACY_ALIAS, CONVERTIDO_STAGES } from "@/lib/funnel/stages";
@@ -28,7 +29,6 @@ const aliasStage = (s: string | null) => (s && BOARD_ALIAS[s]) || s || "handoff"
 
 // Ativos = em aberto (exclui fechado/perdido). Base dos KPIs.
 const ATIVOS = PIPELINE_ATIVOS;
-const PRECO_KG = 25; // R$/kg medio (definicao Paulo) para valor estimado de pipeline
 
 const S = {
   card: { background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8 } as React.CSSProperties,

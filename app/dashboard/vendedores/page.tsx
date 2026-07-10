@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { PRECO_KG } from "@/lib/pricing";
 import Link from "next/link";
 
 import { redirect } from "next/navigation";
@@ -11,7 +12,6 @@ import { VENDOR_LABELS as VENDOR_NAMES, VENDOR_ORDER } from "@/lib/vendor-labels
 export const dynamic = "force-dynamic";
 
 // ETAPA9B: preço médio estimado por kg para valor potencial de pipeline
-const PRECO_KG = 35;
 
 // ── Corte temporal: 11/05/2026 00:00 BRT = 03:00 UTC ─────────────────────────
 const METRICS_CUTOFF = "2026-05-11T03:00:00";

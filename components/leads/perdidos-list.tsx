@@ -1,12 +1,12 @@
 "use client";
 
 import { theme } from "@/lib/theme";
+import { PRECO_KG } from "@/lib/pricing";
 import { useState } from "react";
 
 // ETAPA9C — fila de recuperação de leads perdidos (aba PERDIDOS em /leads).
 // Presentacional (server-renderable): wa.me é <a>, sem interatividade client.
 
-const PRECO_KG = 35;
 
 export type LostLead = {
   phone: string;
