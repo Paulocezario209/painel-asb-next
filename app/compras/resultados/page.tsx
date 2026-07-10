@@ -163,35 +163,24 @@ export default async function ResultadosPage({
   const duTotal = bizDays(inicioMes, fimMes);
   const duRestantes = Math.max(0, duTotal - duDecorridos);
 
-  // Faturado: ÂNCORA na META MENSAL com RITMO AMORTECIDO por progresso do mês (spec §D.2).
-  // ritmoReal = quanto o time está batendo da meta acumulada; amortecido pelo peso (dias úteis
-  // decorridos/total) p/ não super-extrapolar cedo no mês. Converge ao realizado no fim do mês.
+  // PROJEÇÃO — regra Paulo 2026-07-10 (substitui META×ritmo-amortecido e a mediana da DEBT-220):
+  // faturado projetado = RITMO DO FATURAMENTO DO PERÍODO (MTD ÷ dias úteis decorridos × dias úteis
+  // do mês); compras projetadas = TETO 54% desse faturado (ORÇAMENTO do mês — não extrapolar o
+  // ritmo de compra: compra é grumosa, um pedido grande cobre semanas e não é tendência diária).
+  // "Disponível" = orçamento − comprometido (≠cancelado, líquido de devolução) já assumido.
   const todayISO = iso(hoje);
   const metaAcum = metaRows.filter((r) => r.dia <= todayISO).reduce((s, r) => s + Number(r.meta_diaria_brl || 0), 0);
   const metaMensal = metaRows.reduce((s, r) => s + Number(r.meta_diaria_brl || 0), 0);
-  const metaRestante = Math.max(0, metaMensal - metaAcum);
-  const ritmoReal = metaAcum > 0 ? faturadoMtd / metaAcum : 1;
-  const peso = duTotal > 0 ? duDecorridos / duTotal : 1;              // progresso do mês (dias úteis)
-  const ritmoAmortecido = 1 + (ritmoReal - 1) * peso;
-  const fatorRitmo = ritmoReal;                                       // "Ritmo % da meta" (indicador, inalterado)
+  const fatorRitmo = metaAcum > 0 ? faturadoMtd / metaAcum : 1;       // "Ritmo % da meta" (indicador)
 
-  const projFaturado = metaAcum > 0
-    ? faturadoMtd + metaRestante * ritmoAmortecido
-    : metaMensal;                                                    // edge: dia 1 antes de meta acumulada → meta mensal
-
-  // Compras: ÂNCORA no TETO 54% do FATURADO PROJETADO (já meta-based, DEBT-220), com o ritmo REAL
-  // de compra amortecido pelo mesmo peso do faturado. ritmoCompras = quanto do orçamento de 54%
-  // já consumi até hoje; converge ao ritmo real no fim do mês. comprasMtd = comprometido (gate box).
   const TETO = 0.54;
-  const ritmoCompras = faturadoMtd > 0 ? comprasMtd / (TETO * faturadoMtd) : 1;
-  const ritmoComprasAmort = 1 + (ritmoCompras - 1) * peso;
-  const orcamentoRestante = Math.max(0, TETO * (projFaturado - faturadoMtd));
-  const projCompras = faturadoMtd > 0
-    ? comprasMtd + orcamentoRestante * ritmoComprasAmort
-    : TETO * projFaturado;                                           // edge: sem faturado MTD → teto puro do projetado
-  const pctProj = projFaturado > 0 ? Math.round((projCompras / projFaturado) * 1000) / 10 : 0;
-  const semProj = semaforoPct(pctProj);
-  const gap54 = projCompras - TETO * projFaturado;                   // reusa TETO (era 0.54 literal)
+  const projFaturado = duDecorridos > 0
+    ? (faturadoMtd / duDecorridos) * duTotal
+    : metaMensal;                                                    // edge: dia 1 sem faturamento → meta mensal
+  const projCompras = TETO * projFaturado;                           // orçamento 54% do projetado
+  const disponivelCompras = projCompras - comprasMtd;                // o que ainda cabe comprar no mês
+  const pctComprometido = projFaturado > 0 ? Math.round((comprasMtd / projFaturado) * 1000) / 10 : 0;
+  const semProj = semaforoPct(pctComprometido);
 
   const labelS: React.CSSProperties = {
     fontSize: 9,
@@ -329,22 +318,23 @@ export default async function ResultadosPage({
       {isMesCorrente ? (
         <div style={{ background: "#0f1428", border: `1px solid ${semProj.cor}`, borderRadius: 6, padding: 18 }}>
           <div style={{ ...labelS, marginBottom: 8 }}>
-            Projeção fechamento do mês (FATURADO: META × RITMO AMORTECIDO · COMPRAS: TETO 54% × RITMO AMORTECIDO)
+            Projeção fechamento do mês (FATURADO: RITMO DO PERÍODO · COMPRAS: TETO 54% DO PROJETADO)
           </div>
-          {metaRows.length === 0 ? (
-            <div style={{ ...labelS, textTransform: "none", letterSpacing: 0 }}>Sem meta de vendedores neste período — projeção indisponível</div>
-          ) : (
-            <div style={{ display: "flex", gap: 24, flexWrap: "wrap", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", fontSize: 13, color: "#c8d8e8" }}>
-              <span>Faturado proj.: <b>{brl(projFaturado)}</b></span>
-              <span>Compras proj.: <b>{brl(projCompras)}</b></span>
-              <span style={{ color: "#8aa0b8" }}>Teto 54%: <b>{brl(TETO * projFaturado)}</b></span>
-              <span style={{ color: semProj.cor }}>% proj.: <b>{pctProj}% {semProj.label}</b></span>
-              <span>Gap vs 54%: <b style={{ color: gap54 > 0 ? "#f85149" : "#2ea043" }}>{brl(gap54)}</b></span>
+          <div style={{ display: "flex", gap: 24, flexWrap: "wrap", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", fontSize: 13, color: "#c8d8e8" }}>
+            <span>Faturado proj.: <b>{brl(projFaturado)}</b></span>
+            <span>Orçamento compras (54%): <b>{brl(projCompras)}</b></span>
+            <span>Comprometido até hoje: <b>{brl(comprasMtd)}</b></span>
+            <span>
+              Disponível p/ comprar:{" "}
+              <b style={{ color: disponivelCompras >= 0 ? "#2ea043" : "#f85149" }}>{brl(disponivelCompras)}</b>
+            </span>
+            <span style={{ color: semProj.cor }}>% comprometido do proj.: <b>{pctComprometido}% {semProj.label}</b></span>
+            {metaAcum > 0 && (
               <span style={{ color: fatorRitmo >= 1 ? "#2ea043" : "#d29922" }}>
                 Ritmo: <b>{Math.round(fatorRitmo * 100)}%</b> da meta {fatorRitmo >= 1 ? "↑" : "↓"}
               </span>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       ) : (
         <div style={{ background: "#0f1428", border: "1px solid #1B2A6B", borderRadius: 6, padding: 14 }}>
