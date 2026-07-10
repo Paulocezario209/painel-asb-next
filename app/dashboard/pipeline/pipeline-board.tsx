@@ -348,6 +348,41 @@ function ModalFechar({ lead, onConfirm, onCancel }: { lead: PipelineLead; onConf
 }
 
 // Modal de lista expandida da etapa — só leitura; cada linha abre o lead.
+// Cards clicáveis fase 2 (pedido Paulo): KPI abre a lista correspondente no
+// mesmo ModalLista das colunas. leads=undefined → card estático.
+export function PipelineKpis({ kpis }: {
+  kpis: { label: string; value: string; accent: string; sub: string; leads?: PipelineLead[] }[];
+}) {
+  const [open, setOpen] = useState<number | null>(null);
+  const router = useRouter();
+  const card: React.CSSProperties = { background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8 };
+  return (
+    <>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+        {kpis.map((k, i) => (
+          <div
+            key={k.label}
+            onClick={() => k.leads && setOpen(i)}
+            style={{ ...card, padding: "16px 18px", borderTop: `2px solid ${k.accent}`, cursor: k.leads ? "pointer" : "default" }}
+          >
+            <p style={{ fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", color: "#e4e9f0", fontFamily: theme.font.label, marginBottom: 8 }}>{k.label}</p>
+            <p style={{ fontSize: 24, fontWeight: 700, color: "#FFFFFF", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>{k.value}</p>
+            <p style={{ color: "#c0d0e0", fontSize: 9, fontFamily: theme.font.label, marginTop: 6 }}>{k.sub}{k.leads ? " · clique p/ ver a lista" : ""}</p>
+          </div>
+        ))}
+      </div>
+      {open !== null && kpis[open]?.leads && (
+        <ModalLista
+          stage={kpis[open].label}
+          leads={kpis[open].leads!}
+          onClose={() => setOpen(null)}
+          onOpenLead={(phone) => router.push(`/dashboard/leads/${phone}`)}
+        />
+      )}
+    </>
+  );
+}
+
 function ModalLista({ stage, leads, onClose, onOpenLead }: { stage: string; leads: PipelineLead[]; onClose: () => void; onOpenLead: (phone: string) => void }) {
   const col = STAGE_COL[stage] ?? { label: stage, cor: "#c0d0e0" };
   return (

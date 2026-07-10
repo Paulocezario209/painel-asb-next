@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import Link from "next/link";
 import { theme } from "@/lib/theme";
 import { HandoffsTable, type Handoff } from "@/components/handoffs/handoffs-table";
 import { getLeadScoreMap } from "@/lib/get-lead-scores";
@@ -14,7 +15,9 @@ const S = {
   muted:   { color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label } as React.CSSProperties,
 };
 
-export default async function HandoffsPage() {
+export default async function HandoffsPage({ searchParams }: { searchParams?: Promise<{ f?: string }> }) {
+  const sp = searchParams ? await searchParams : undefined;
+  const filtroKpi = sp?.f === "criticos" || sp?.f === "hoje" ? sp.f : undefined;
   const supabase = await createClient();
 
   const [{ data: raw, error }, scoreMap] = await Promise.all([
@@ -61,10 +64,12 @@ export default async function HandoffsPage() {
     h.scheduled_at && h.scheduled_at.slice(0, 10) === todayStr
   ).length;
 
+  // Cards clicáveis fase 2 (pedido Paulo): KPI filtra a tabela via ?f= (o filtro
+  // vive na própria tabela — sobrevive ao refetch do Realtime).
   const kpis = [
-    { label: "Total Pendentes",    value: totalPending,  accent: "#f59e0b", sub: "aguardando confirmação" },
-    { label: "Críticos (> 4h)",    value: criticalCount, accent: "#C8102E", sub: "sem confirmação há > 4h" },
-    { label: "Agendados Hoje",     value: todayCount,    accent: "#22c55e", sub: "scheduled_at = hoje" },
+    { label: "Total Pendentes",    value: totalPending,  accent: "#f59e0b", sub: "aguardando confirmação · clique p/ ver todos", href: "/dashboard/handoffs" },
+    { label: "Críticos (> 4h)",    value: criticalCount, accent: "#C8102E", sub: "sem confirmação há > 4h · clique p/ filtrar", href: "/dashboard/handoffs?f=criticos" },
+    { label: "Agendados Hoje",     value: todayCount,    accent: "#22c55e", sub: "com horário marcado p/ hoje · clique p/ filtrar", href: "/dashboard/handoffs?f=hoje" },
   ];
 
   return (
@@ -79,12 +84,14 @@ export default async function HandoffsPage() {
 
       {/* KPIs */}
       <div className="asb-grid-kpi">
-        {kpis.map(({ label, value, accent, sub }) => (
-          <div key={label} style={{ ...S.card, padding: "20px", borderTop: `2px solid ${accent}` }}>
-            <p style={{ ...S.label, color: accent }}>{label}</p>
-            <p style={{ ...S.value, marginTop: 12 }}>{value}</p>
-            <p style={{ ...S.muted, marginTop: 6, fontSize: 10 }}>{sub}</p>
-          </div>
+        {kpis.map(({ label, value, accent, sub, href }) => (
+          <Link key={label} href={href} style={{ textDecoration: "none" }}>
+            <div style={{ ...S.card, padding: "20px", borderTop: `2px solid ${accent}`, height: "100%" }}>
+              <p style={{ ...S.label, color: accent }}>{label}</p>
+              <p style={{ ...S.value, marginTop: 12 }}>{value}</p>
+              <p style={{ ...S.muted, marginTop: 6, fontSize: 10 }}>{sub}</p>
+            </div>
+          </Link>
         ))}
       </div>
 
@@ -94,7 +101,7 @@ export default async function HandoffsPage() {
           <span style={{ color: "#C8102E", marginRight: 6 }}>▲</span>
           Handoffs Pendentes
         </p>
-        <HandoffsTable initial={handoffs} />
+        <HandoffsTable initial={handoffs} initialFilter={filtroKpi} />
       </div>
     </div>
   );

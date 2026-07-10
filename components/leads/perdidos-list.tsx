@@ -1,4 +1,7 @@
+"use client";
+
 import { theme } from "@/lib/theme";
+import { useState } from "react";
 
 // ETAPA9C — fila de recuperação de leads perdidos (aba PERDIDOS em /leads).
 // Presentacional (server-renderable): wa.me é <a>, sem interatividade client.
@@ -69,10 +72,13 @@ function Pill({ label, color }: { label: string; color: string }) {
 }
 
 export function PerdidosList({ leads }: { leads: LostLead[] }) {
+  // Cards clicáveis fase 2: "% por Preço" filtra a lista (os mais recuperáveis).
+  const [soPreco, setSoPreco] = useState(false);
   const total = leads.length;
   const precoCount = leads.filter(l => isPreco(l.lost_reason)).length;
   const pctPreco = total > 0 ? Math.round((precoCount / total) * 100) : 0;
   const valorPotencial = leads.reduce((acc, l) => acc + Number(l.weekly_volume_kg ?? 0) * PRECO_KG, 0);
+  const visiveis = soPreco ? leads.filter(l => isPreco(l.lost_reason)) : leads;
 
   const card: React.CSSProperties = { background: theme.colors.bgCard, border: `1px solid ${theme.colors.borderDefault}`, borderRadius: 8 };
   const label: React.CSSProperties = { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", color: theme.colors.neutral, fontFamily: theme.font.mono };
@@ -85,10 +91,14 @@ export function PerdidosList({ leads }: { leads: LostLead[] }) {
           <p style={label}>Perdidos (180d)</p>
           <p style={{ fontSize: 26, fontWeight: 700, color: "#fff", marginTop: 10 }}>{total}</p>
         </div>
-        <div style={{ ...card, padding: 20, borderTop: `2px solid ${theme.colors.warning}` }}>
+        <div
+          onClick={() => setSoPreco(v => !v)}
+          style={{ ...card, padding: 20, borderTop: `2px solid ${theme.colors.warning}`, cursor: "pointer",
+                   outline: soPreco ? `1px solid ${theme.colors.warning}` : "none" }}
+        >
           <p style={{ ...label, color: theme.colors.warning }}>% por Preço</p>
           <p style={{ fontSize: 26, fontWeight: 700, color: "#fff", marginTop: 10 }}>{pctPreco}%</p>
-          <p style={{ ...label, marginTop: 6, fontSize: 10 }}>os mais recuperáveis</p>
+          <p style={{ ...label, marginTop: 6, fontSize: 10 }}>{soPreco ? "filtrando · clique p/ limpar" : "os mais recuperáveis · clique p/ filtrar"}</p>
         </div>
         <div style={{ ...card, padding: 20, borderTop: `2px solid ${theme.colors.brandAsb}` }}>
           <p style={{ ...label, color: theme.colors.brandAsb }}>Pipeline Perdido</p>
@@ -107,7 +117,7 @@ export function PerdidosList({ leads }: { leads: LostLead[] }) {
           </p>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            {leads.map((l) => {
+            {visiveis.map((l) => {
               const nome = l.restaurant_name || l.name || l.phone;
               const segLabel = l.segment ? (SEG_LABELS[l.segment] ?? l.segment) : "seu negócio";
               const dias = diasDesde(l.lost_at);

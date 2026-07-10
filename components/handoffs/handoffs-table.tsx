@@ -85,10 +85,11 @@ const S = {
   muted: { color: "#c0d0e0", fontSize: 10, fontFamily: "'Courier New', monospace" },
 };
 
-export function HandoffsTable({ initial }: { initial: Handoff[] }) {
+export function HandoffsTable({ initial, initialFilter }: { initial: Handoff[]; initialFilter?: "criticos" | "hoje" }) {
   const [rows, setRows]           = useState<Handoff[]>(initial);
   const [vendorFilter, setVendor] = useState<string>("todos");
-  const [urgentOnly, setUrgent]   = useState(false);
+  const [urgentOnly, setUrgent]   = useState(initialFilter === "criticos");
+  const [hojeOnly]                = useState(initialFilter === "hoje");
   const [loading, setLoading]     = useState<Record<string, boolean>>({});
   const [errors, setErrors]       = useState<Record<string, string>>({});
   const [live, setLive]           = useState(false);   // ETAPA7: canal Realtime conectado
@@ -136,12 +137,14 @@ export function HandoffsTable({ initial }: { initial: Handoff[] }) {
   }, []);
 
   const filtered = useMemo(() => {
+    const hojeStr = new Date().toISOString().slice(0, 10);
     return rows.filter(r => {
       if (vendorFilter !== "todos" && r.routing_team !== vendorFilter) return false;
       if (urgentOnly && elapsedMinutes(r.handoff_at) < 240) return false;
+      if (hojeOnly && (r.scheduled_at ?? "").slice(0, 10) !== hojeStr) return false;
       return true;
     });
-  }, [rows, vendorFilter, urgentOnly]);
+  }, [rows, vendorFilter, urgentOnly, hojeOnly]);
 
   async function handleConfirm(phone: string) {
     setLoading(p => ({ ...p, [phone]: true }));

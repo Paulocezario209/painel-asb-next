@@ -9,7 +9,7 @@ import { PIPELINE_STAGES, PIPELINE_ATIVOS, LEGACY_ALIAS, CONVERTIDO_STAGES } fro
 import { VENDOR_LABELS } from "@/lib/vendor-labels";
 import { createClient } from "@/lib/supabase/server";
 import { DashboardFilters } from "@/components/dashboard/dashboard-filters";
-import { PipelineBoard, type PipelineLead, type PipelineCtx } from "./pipeline-board";
+import { PipelineBoard, PipelineKpis, type PipelineLead, type PipelineCtx } from "./pipeline-board";
 
 export const dynamic = "force-dynamic";
 
@@ -96,10 +96,11 @@ export default async function PipelinePage({ searchParams }: { searchParams: Pro
 
   const boardCtx: PipelineCtx = { isGestor: ctx.isGestor, routing_team: ctx.routing_team, canMoveAll: ctx.isGestor };
 
+  const paradosList = ativos.filter((l) => l.handoff_at && Date.now() - new Date(l.handoff_at).getTime() > seteDiasMs);
   const kpis = [
-    { label: "Leads ativos", value: String(ativos.length), accent: "#185FA5", sub: "em aberto (exclui convertido/perdido)" },
-    { label: "Valor estimado", value: brl(valorEstimado), accent: "#22c55e", sub: `${ativos.length} leads × R$${PRECO_KG}/kg` },
-    { label: "Parados >7d", value: String(parados7d), accent: parados7d > 0 ? "#f59e0b" : "#e4e9f0", sub: "sem mover desde o handoff" },
+    { label: "Leads ativos", value: String(ativos.length), accent: "#185FA5", sub: "em aberto (exclui convertido/perdido)", leads: ativos },
+    { label: "Valor estimado", value: brl(valorEstimado), accent: "#22c55e", sub: `${ativos.length} leads × R$${PRECO_KG}/kg`, leads: ativos },
+    { label: "Parados >7d", value: String(parados7d), accent: parados7d > 0 ? "#f59e0b" : "#e4e9f0", sub: "sem mover desde o handoff", leads: paradosList },
   ];
 
   return (
@@ -113,16 +114,8 @@ export default async function PipelinePage({ searchParams }: { searchParams: Pro
         <p style={S.muted}>{leads.length} lead(s) no pipeline · clique no card para abrir · arraste para mover · clique no topo da coluna para a lista</p>
       </div>
 
-      {/* KPIs de topo (3 cards) */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
-        {kpis.map((k) => (
-          <div key={k.label} style={{ ...S.card, padding: "16px 18px", borderTop: `2px solid ${k.accent}` }}>
-            <p style={{ ...S.kpiLabel, marginBottom: 8 }}>{k.label}</p>
-            <p style={S.kpiValue}>{k.value}</p>
-            <p style={{ ...S.muted, fontSize: 9, marginTop: 6 }}>{k.sub}</p>
-          </div>
-        ))}
-      </div>
+      {/* KPIs de topo (3 cards, clicáveis → lista no modal) */}
+      <PipelineKpis kpis={kpis} />
 
       {/* Filtro: mês (todos) + vendedor (só gestor — vendedor é travado no seu) */}
       <div style={{ ...S.card, padding: "12px 16px" }}>
