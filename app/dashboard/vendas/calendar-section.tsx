@@ -140,6 +140,7 @@ export function CalendarSection({
             pedidos_total: 0,
             clientes_total: 0,
             realizado_meta_brl: 0,
+            is_dia_meta: false,
           });
         }
         const cur = byDay.get(c.dia)!;
@@ -148,7 +149,12 @@ export function CalendarSection({
         cur.faturado_brl = Number(cur.faturado_brl) + Number(c.faturado_brl);
         cur.pedidos_total = Number(cur.pedidos_total) + Number(c.pedidos_total);
         cur.clientes_total = Number(cur.clientes_total) + Number(c.clientes_total);
-        cur.realizado_meta_brl = Number(cur.realizado_meta_brl ?? 0) + Number(c.realizado_meta_brl ?? 0);
+        // Mesma régua do modal (comMeta): fold só de quem TEM dia-meta no dia.
+        // Sem o gate, fold órfão (remanejo/feriado) de um setor batia a meta de outro (falso verde 09/07).
+        if (c.is_dia_meta && Number(c.meta_diaria_brl) > 0) {
+          cur.realizado_meta_brl = Number(cur.realizado_meta_brl ?? 0) + Number(c.realizado_meta_brl ?? 0);
+          cur.is_dia_meta = true;
+        }
       }
       return Array.from(byDay.values()).map(c => {
         // DEBT-132: ✓/✗ e % do consolidado sobre o realizado FOLD (igual à view)
