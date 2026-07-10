@@ -16,6 +16,7 @@
  * Modo GRAVA (dry_run=false): UPSERT em metas.
  */
 import { NextRequest, NextResponse } from "next/server";
+import { getUserContext, canAccess } from "@/lib/auth/get-user-role";
 import * as XLSX from "xlsx";
 import { createClient } from "@supabase/supabase-js";
 
@@ -75,6 +76,12 @@ type ParsedMeta = {
 };
 
 export async function POST(req: NextRequest) {
+  // Gap fechado 2026-07-10: a PÁGINA /uploads bloqueava vendedor/manager, mas a
+  // API aceitava POST de qualquer sessão. Mesma régua da página (canAccess).
+  const ctx = await getUserContext();
+  if (!ctx || !canAccess(ctx.role, "/dashboard/uploads")) {
+    return NextResponse.json({ error: "Sem permissão para uploads" }, { status: 403 });
+  }
   try {
     const form = await req.formData();
     const file = form.get("file") as File | null;

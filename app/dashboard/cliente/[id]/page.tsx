@@ -66,9 +66,11 @@ export default async function ClientePage({
     .eq("lead_id", id)
     .maybeSingle();
 
-  // 3b: status oficial (régua absoluta fn_status_cliente) via v_cliente_360
+  // 3b: status oficial (régua absoluta fn_status_cliente) — fonte CANÔNICA
+  // v_carteira_360 (carteira real ARES). Era o ÚLTIMO consumidor de v_cliente_360
+  // (em depreciação, DEBT-179) — mesmas colunas, zero mudança visual (fix 2026-07-10).
   const { data: cliente360 } = await supabase
-    .from("v_cliente_360")
+    .from("v_carteira_360")
     .select("customer_status, dias_sem_compra")
     .eq("lead_id", id)
     .maybeSingle();

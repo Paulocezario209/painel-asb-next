@@ -40,19 +40,26 @@ export default async function FollowupsPage({ searchParams }: { searchParams: Pr
       .from("ai_sdr_leads")
       .select("phone, name, city, routing_team, weekly_volume_kg, next_followup_at")
       .eq("is_test", false),
-    // Alerta: vencidos não disparados (next_followup_at <= NOW)
+    // Alerta: vencidos não disparados (next_followup_at <= NOW).
+    // DEBT-146 (fix 2026-07-10): contadores agora espelham os GUARDS do Engine —
+    // human_active=false (lead com humano não recebe follow-up) e sem fora_de_rota
+    // (a lista abaixo já excluía; contador divergia = falso-positivo no alerta).
     supabase
       .from("ai_sdr_leads")
       .select("id", { count: "exact", head: true })
       .eq("is_test", false)
       .eq("followup_eligible", true)
+      .eq("human_active", false)
+      .or("routing_team.is.null,routing_team.neq.fora_de_rota")
       .lte("next_followup_at", new Date().toISOString()),
-    // Alerta: elegíveis sem data
+    // Alerta: elegíveis sem data (mesmos guards)
     supabase
       .from("ai_sdr_leads")
       .select("id", { count: "exact", head: true })
       .eq("is_test", false)
       .eq("followup_eligible", true)
+      .eq("human_active", false)
+      .or("routing_team.is.null,routing_team.neq.fora_de_rota")
       .is("next_followup_at", null),
   ]);
 

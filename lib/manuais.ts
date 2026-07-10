@@ -140,7 +140,7 @@ export const MANUAIS: Record<string, ManualTela> = {
     comoUsar: [
       "Taxa de resposta por ângulo mostra qual abordagem funciona — o Ângulo Top é o campeão.",
       "Clique nos KPIs para filtrar a lista.",
-      "Parte dos “vencidos” pode estar com atendimento humano ativo (o motor não dispara nesses) — em revisão.",
+      "Os contadores seguem as mesmas regras do motor (sem leads em atendimento humano, sem fora de rota) — alerta aqui é atraso real.",
     ],
   },
   "/dashboard/insights": {
