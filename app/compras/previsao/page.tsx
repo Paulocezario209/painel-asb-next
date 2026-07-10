@@ -84,7 +84,8 @@ export default async function PrevisaoPage() {
       <PrevisaoClient rows={merged} />
 
       <p style={{ color: "#e4e9f0", fontSize: 9, fontFamily: theme.font.label }}>
-        Comprável = produto com histórico de compra. CMD tipos 1+4 (90d). Fornecedor = mais frequente no histórico.
+        Comprável = produto com histórico de compra. CMD-90 = tipos 1+4, 90 dias corridos — janela longa p/
+        planejamento (o Estoque usa CMD-30, ruptura). Fornecedor = mais frequente no histórico.
         Edição de config + sort interativo = ciclo 2. CMD de MP transformada: DEBT-069.
       </p>
     </div>

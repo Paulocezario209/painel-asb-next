@@ -40,7 +40,8 @@ export default async function EstoquePage() {
       {/* Tabela M1 + busca (client) */}
       <EstoqueClient rows={rows} />
       <p style={{ color: "#e4e9f0", fontSize: 9, fontFamily: theme.font.label }}>
-        CMD = saídas (venda + consumo produção), |qtd|, média 30d úteis. &quot;SEM CMD&quot; = matéria-prima sem saída
+        CMD-30 = saídas (venda + consumo produção), |qtd|, média 30d úteis — janela curta p/ reagir a ruptura
+        (a Previsão usa CMD-90, planejamento). &quot;SEM CMD&quot; = matéria-prima sem saída
         capturada (DEBT-069: transformação interna). Ordenado por menor cobertura.
       </p>
 

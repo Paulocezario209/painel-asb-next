@@ -77,7 +77,7 @@ export default function PrevisaoClient({ rows }: { rows: PrevRow[] }) {
 
       <table style={{ width: "100%", borderCollapse: "collapse" }}>
         <thead><tr>
-          <th style={{ ...th, textAlign: "left" }}>Insumo</th><th style={th}>CMD/dia</th><th style={th}>Saldo</th>
+          <th style={{ ...th, textAlign: "left" }}>Insumo</th><th style={th} title="Consumo médio diário — janela 90 dias corridos (planejamento estável)">CMD-90/dia</th><th style={th}>Saldo</th>
           <th style={th}>Em pedido</th><th style={th}>Comprar</th><th style={{ ...th, textAlign: "left" }}>Fornecedor (LT)</th>
         </tr></thead>
         <tbody>

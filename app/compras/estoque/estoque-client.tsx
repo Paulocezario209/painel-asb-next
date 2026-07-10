@@ -77,7 +77,7 @@ export default function EstoqueClient({ rows }: { rows: CoberturaRow[] }) {
             <th style={{ ...th, textAlign: "left" }}>Grupo</th>
             <th style={th}>Un</th>
             <th style={th}>Saldo</th>
-            <th style={th}>CMD/dia</th>
+            <th style={th} title="Consumo médio diário — janela 30 dias úteis (reação a ruptura)">CMD-30/dia</th>
             <th style={th}>Cobertura (dias)</th>
             <th style={{ ...th, textAlign: "center" }}>Semáforo</th>
           </tr>
