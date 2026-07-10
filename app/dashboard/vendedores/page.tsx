@@ -193,11 +193,13 @@ export default async function VendedoresPage() {
 
       {/* ETAPA9B: resumo de pipeline da equipe */}
       <div className="asb-grid-kpi">
-        <div style={{ ...S.card, padding: "20px", borderTop: `2px solid ${theme.colors.brandAsb}` }}>
-          <p style={{ ...S.label, color: theme.colors.brandAsb }}>Total em Pipeline</p>
-          <p style={{ ...S.value, fontSize: 24, marginTop: 12, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" }}>{fmtBRL0(teamPipelineValue)}</p>
-          <p style={{ ...S.muted, marginTop: 6, fontSize: 10 }}>Σ volume × R$ {PRECO_KG}/kg (leads em pipeline)</p>
-        </div>
+        <Link href="/dashboard/pipeline" style={{ textDecoration: "none" }}>
+          <div style={{ ...S.card, padding: "20px", borderTop: `2px solid ${theme.colors.brandAsb}`, height: "100%" }}>
+            <p style={{ ...S.label, color: theme.colors.brandAsb }}>Total em Pipeline</p>
+            <p style={{ ...S.value, fontSize: 24, marginTop: 12, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" }}>{fmtBRL0(teamPipelineValue)}</p>
+            <p style={{ ...S.muted, marginTop: 6, fontSize: 10 }}>Σ volume × R$ {PRECO_KG}/kg (leads em pipeline) · clique p/ abrir o board</p>
+          </div>
+        </Link>
         <div style={{ ...S.card, padding: "20px", borderTop: `2px solid ${theme.colors.success}` }}>
           <p style={{ ...S.label, color: theme.colors.success }}>Win Rate Equipe</p>
           <p style={{ ...S.value, fontSize: 24, marginTop: 12 }}>{teamWinRate !== null ? `${teamWinRate.toFixed(0)}%` : "—"}</p>

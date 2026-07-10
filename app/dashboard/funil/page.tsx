@@ -241,17 +241,22 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
       {/* KPI row */}
       <div className="asb-grid-kpi">
         {[
-          { label: "Total Leads",          value: String(total),                                   accent: "#185FA5", sub: "na base · inclui perdidos" },
-          { label: "Em Qualificacao",       value: String(emQualificacao),                         accent: "#f59e0b", sub: "fase: em qualificação" },
-          { label: "Handoff+",             value: String(emHandoffPlus),                           accent: "#22c55e", sub: "com vendedor + cliente" },
-          { label: "Taxa SDR → Handoff", value: taxaHandoff ? `${taxaHandoff}%` : "—", accent: "#C8102E", sub: total > 0 ? `${emHandoffPlus} de ${total} leads` : "" },
-        ].map(({ label, value, accent, sub }) => (
-          <div key={label} style={{ ...S.card, padding: "20px", borderTop: `2px solid ${accent}` }}>
-            <p style={{ ...S.label, color: accent }}>{label}</p>
-            <p style={{ ...S.value, marginTop: 12 }}>{value}</p>
-            <p style={{ ...S.muted, marginTop: 6, fontSize: 10 }}>{sub}</p>
-          </div>
-        ))}
+          { label: "Total Leads",          value: String(total),                                   accent: "#185FA5", sub: "na base · inclui perdidos", href: "/dashboard/leads" as string | undefined },
+          { label: "Em Qualificacao",       value: String(emQualificacao),                         accent: "#f59e0b", sub: "fase: em qualificação", href: "/dashboard/leads" },
+          { label: "Handoff+",             value: String(emHandoffPlus),                           accent: "#22c55e", sub: "com vendedor + cliente · abre o pipeline", href: "/dashboard/pipeline" },
+          { label: "Taxa SDR → Handoff", value: taxaHandoff ? `${taxaHandoff}%` : "—", accent: "#C8102E", sub: total > 0 ? `${emHandoffPlus} de ${total} leads` : "", href: undefined },
+        ].map(({ label, value, accent, sub, href }) => {
+          const card = (
+            <div style={{ ...S.card, padding: "20px", borderTop: `2px solid ${accent}`, height: "100%" }}>
+              <p style={{ ...S.label, color: accent }}>{label}</p>
+              <p style={{ ...S.value, marginTop: 12 }}>{value}</p>
+              <p style={{ ...S.muted, marginTop: 6, fontSize: 10 }}>{sub}</p>
+            </div>
+          );
+          return href
+            ? <Link key={label} href={href} style={{ textDecoration: "none" }}>{card}</Link>
+            : <div key={label}>{card}</div>;
+        })}
       </div>
 
       {/* P5/P2 — Conversão por marcos (timestamps confiáveis; filtrável por mês/vendedor) */}

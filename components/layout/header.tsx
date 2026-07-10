@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Menu } from "lucide-react";
 import { StoreSwitcher } from "./store-switcher";
+import { ManualTelaButton } from "./manual-tela";
 
 export function Header({
   email,
@@ -39,6 +40,7 @@ export function Header({
       </div>
 
       <div className="flex items-center gap-3">
+        <ManualTelaButton />
         <span className="hidden sm:inline" style={{ color: "#c0d0e0", fontSize: 11, fontFamily: "'Courier New', monospace" }}>
           <span style={{ color: "#C8102E" }}>›</span> {email}
         </span>

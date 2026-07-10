@@ -4,6 +4,7 @@ import { VENDOR_LABELS } from "@/lib/vendor-labels";
 import { PainDonut }    from "@/components/insights/pain-donut";
 import { SupplierBar }  from "@/components/insights/supplier-bar";
 
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getUserContext, canAccess } from "@/lib/auth/get-user-role";
 // ETAPA6 (DEBT-137): cache real dos agregados históricos (dado global, sem auth).
@@ -191,17 +192,22 @@ export default async function InsightsPage() {
           {/* KPI row */}
           <div className="asb-grid-kpi">
             {[
-              { label: "Taxa Qualificação",  value: `${taxaQual}%`,         accent: "#C8102E",  sub: `${qualified} de ${total} leads` },
-              { label: "Leads c/ Dor",       value: `${taxaPain}%`,         accent: "#f59e0b",  sub: `${withPain} identificadas` },
-              { label: "Handoffs Realizados",value: String(withHandoff),     accent: "#22c55e",  sub: `${total > 0 ? Math.round(withHandoff/total*100) : 0}% da base` },
-              { label: "Volume Médio",        value: avgVolume ? `${avgVolume} kg` : "—", accent: "#185FA5", sub: "por semana/lead" },
-            ].map(({ label, value, accent, sub }) => (
-              <div key={label} style={{ ...S.card, padding: "20px", borderTop: `2px solid ${accent}` }}>
-                <p style={{ ...S.label, color: accent }}>{label}</p>
-                <p style={{ ...S.value, marginTop: 12 }}>{value}</p>
-                <p style={{ ...S.muted, marginTop: 6, fontSize: 10 }}>{sub}</p>
-              </div>
-            ))}
+              { label: "Taxa Qualificação",  value: `${taxaQual}%`,         accent: "#C8102E",  sub: `${qualified} de ${total} leads`, href: "/dashboard/leads?status=qualified" },
+              { label: "Leads c/ Dor",       value: `${taxaPain}%`,         accent: "#f59e0b",  sub: `${withPain} identificadas`, href: undefined as string | undefined },
+              { label: "Handoffs Realizados",value: String(withHandoff),     accent: "#22c55e",  sub: `${total > 0 ? Math.round(withHandoff/total*100) : 0}% da base`, href: "/dashboard/handoffs" },
+              { label: "Volume Médio",        value: avgVolume ? `${avgVolume} kg` : "—", accent: "#185FA5", sub: "por semana/lead", href: undefined },
+            ].map(({ label, value, accent, sub, href }) => {
+              const card = (
+                <div key={label} style={{ ...S.card, padding: "20px", borderTop: `2px solid ${accent}`, height: "100%" }}>
+                  <p style={{ ...S.label, color: accent }}>{label}</p>
+                  <p style={{ ...S.value, marginTop: 12 }}>{value}</p>
+                  <p style={{ ...S.muted, marginTop: 6, fontSize: 10 }}>{sub}</p>
+                </div>
+              );
+              return href
+                ? <Link key={label} href={href} style={{ textDecoration: "none" }}>{card}</Link>
+                : card;
+            })}
           </div>
 
           {/* Temperatura da carteira */}
