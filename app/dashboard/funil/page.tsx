@@ -6,6 +6,7 @@ import Link from "next/link";
 
 import { redirect } from "next/navigation";
 import { getUserContext, canAccess } from "@/lib/auth/get-user-role";
+import { STAGE_ORDER, STAGE_LABELS, FASES, LEGACY_ALIAS, CONVERTIDO_SET } from "@/lib/funnel/stages";
 // ETAPA6 (DEBT-137): cache real da contagem global por etapa (sem auth — dado global).
 import { unstable_cache } from "next/cache";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
@@ -32,93 +33,11 @@ const getFunilContagem = unstable_cache(
   { revalidate: 300, tags: ["funil-contagem-etapas"] },
 );
 
-// ── Ordem canonica do Funil v2 (14 etapas — docs/extensao-v2/FUNIL_V2_SPEC.md) ──
-// Camadas: SDR (lead_novo→handoff) · LEAD (lead_em_andamento→pedido_teste) · CLIENTE (cliente_em_ativacao→cliente_recorrente).
-// Removidas da vista: cobertura_validada + diagnostico_comercial (órfãs, sem writer). lead_perdido = bucket LATERAL (abaixo).
-const STAGE_ORDER = [
-  // Camada SDR — reconciliada com a ESCADA FERNANDO (2026-07-08): o CP só emite
-  // atendido_sdr (qs1) → qualificacao_inicial (qs2-4) → lead_qualificado (qs7).
-  // produto_definido/volume_definido viraram LEGADO (Fernando dropou a coleta
-  // de produto; volume não emite rótulo) → colapsadas via STAGE_ALIAS abaixo.
-  "lead_novo",
-  "atendido_sdr",
-  "qualificacao_inicial",
-  "lead_qualificado",
-  "handoff",
-  // Camada LEAD (vendedor)
-  "lead_em_andamento",
-  "negociacao",
-  "proposta_enviada",
-  "pedido_teste",
-  // Camada CLIENTE (carteira)
-  "cliente_em_ativacao",
-  "cliente_ativo",
-  "cliente_recorrente",
-] as const;
-
-// STAGE_ALIAS — colapsa LEGACY ainda vivo no banco no equivalente v2, ANTES de contar.
-// PONTE até a Fase 3 do Funil v2 (drop dos legacy do CHECK) — ver DEBT-157.
-const STAGE_ALIAS: Record<string, string> = {
-  vendedor_assumiu:      "lead_em_andamento",    // legacy → LEAD
-  diagnostico_comercial: "lead_em_andamento",    // legacy → LEAD
-  pedido_fechado:        "cliente_em_ativacao",  // legacy → CLIENTE
-  produto_definido:      "qualificacao_inicial", // legacy escada antiga → SDR (Fernando, 2026-07-08)
-  volume_definido:       "qualificacao_inicial", // legacy escada antiga → SDR (Fernando, 2026-07-08)
-};
-const aliasStage = (s: string) => STAGE_ALIAS[s] ?? s;
-
-// FASE A redesenho: cone de 4 FASES (agrega funnel_stage CRU, cobre legados). Perdidos = lateral.
-// Cores: SÓ tokens existentes (#185FA5 ASB · #D4A017 âmbar · #22c55e sucesso).
-const FASES = [
-  { key: "qualificacao", label: "Em qualificação", fill: "#185FA5",
-    stages: ["lead_novo", "atendido_sdr", "qualificacao_inicial", "produto_definido", "volume_definido"] },
-  { key: "qualificado",  label: "Qualificado",     fill: "#185FA5",
-    stages: ["lead_qualificado"] },
-  { key: "com_vendedor", label: "Com vendedor",    fill: "#D4A017",
-    stages: ["handoff", "lead_em_andamento", "vendedor_assumiu", "negociacao", "proposta_enviada", "pedido_teste"] },
-  // Redesenho 2026-07-09 (decisão Paulo): pipeline TERMINA na conversão. A 4ª fase é
-  // "Convertido" = funnel_stage de fechamento OU lead presente na carteira real
-  // (v_carteira_360.lead_id — faturou no ARES, mesmo que o vendedor não tenha arrastado).
-  { key: "convertido",   label: "Convertido (1ª compra)", fill: "#22c55e",
-    stages: ["pedido_fechado", "cliente_em_ativacao", "cliente_ativo", "cliente_recorrente"] },
-] as const;
-const FASE_STAGES = new Set([...FASES.flatMap(f => f.stages), "lead_perdido"]);  // lateral incluso
-
-const STAGE_LABELS: Record<string, string> = {
-  lead_novo:              "Lead Novo",
-  atendido_sdr:           "Atendido SDR",
-  qualificacao_inicial:   "Qualif. Inicial",
-  cobertura_validada:     "Cobertura Valid.",      // legacy/órfã — fora do STAGE_ORDER (só timeline histórica)
-  produto_definido:       "Produto Definido",
-  volume_definido:        "Volume Definido",
-  lead_qualificado:       "Lead Qualificado",
-  handoff:                "Handoff",
-  vendedor_assumiu:       "Vendedor Assumiu",      // legacy → aliased p/ lead_em_andamento (só timeline)
-  diagnostico_comercial:  "Diag. Comercial",       // legacy → aliased (só timeline)
-  lead_em_andamento:      "Lead em Andamento",     // v2 LEAD
-  negociacao:             "Negociacao",
-  proposta_enviada:       "Proposta Enviada",
-  pedido_teste:           "Pedido Teste",          // v2 LEAD
-  pedido_fechado:         "Pedido Fechado",        // legacy → aliased p/ cliente_em_ativacao (só timeline)
-  cliente_em_ativacao:    "Cliente em Ativacao",   // v2 CLIENTE
-  cliente_ativo:          "Cliente Ativo",
-  cliente_recorrente:     "Cliente Recorrente",
-  lead_perdido:           "Perdidos",              // LATERAL
-};
-
-const HANDOFF_PLUS = new Set([
-  "lead_qualificado", "handoff",
-  // v2 LEAD/CLIENTE
-  "lead_em_andamento", "negociacao", "proposta_enviada", "pedido_teste",
-  "cliente_em_ativacao", "cliente_ativo", "cliente_recorrente",
-  // legacy (KPI lê funnel_stage CRU → conta certo mesmo antes do alias)
-  "vendedor_assumiu", "diagnostico_comercial", "pedido_fechado",
-]);
-
-const QUALIFICACAO = new Set([
-  "atendido_sdr", "qualificacao_inicial", "cobertura_validada",
-  "produto_definido", "volume_definido",
-]);
+// Vocabulário de etapas: FONTE ÚNICA em lib/funnel/stages.ts (DEBT-157 fechada).
+// Aqui ficam SÓ as projeções específicas desta tela.
+const FASE_STAGES = new Set([...FASES.flatMap(f => [...f.stages]), "lead_perdido"]);  // lateral incluso
+// Alias canônico de legado (pedido_fechado NÃO é alias — conta via CONVERTIDO_SET).
+const aliasStage = (s: string): string => LEGACY_ALIAS[s] ?? s;
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const S = {
@@ -250,9 +169,8 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
   for (const l of leads) { const s = l.funnel_stage ?? "lead_novo"; rawCounts[s] = (rawCounts[s] ?? 0) + 1; }
   const orfaos = Object.keys(rawCounts).filter(s => !FASE_STAGES.has(s));  // não silenciar (catcher)
 
-  const CONVERTED_STAGES = new Set(FASES[3].stages as readonly string[]);
   const isConvertido = (l: FunnelLead) =>
-    CONVERTED_STAGES.has(l.funnel_stage ?? "") || (!!l.id && carteiraLeadIds.has(l.id));
+    CONVERTIDO_SET.has(l.funnel_stage ?? "") || (!!l.id && carteiraLeadIds.has(l.id));
   const faseCounts: Record<string, number> = { qualificacao: 0, qualificado: 0, com_vendedor: 0, convertido: 0 };
   let perdidos = 0;
   for (const l of leads) {
@@ -290,7 +208,7 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
   ];
 
   // ── Leads parados por etapa (FIX-ETAPA2) — top 10 por etapa, etapas não-terminais ──
-  const TERMINAIS = new Set(["cliente_em_ativacao", "cliente_ativo", "cliente_recorrente"]);
+  const TERMINAIS = CONVERTIDO_SET;  // convertidos não são "parados" (pedido_fechado incluso)
   const leadsPorEtapa: Record<string, typeof leadRows> = {};
   for (const r of leadRows) {
     const s = aliasStage(r.funnel_stage ?? "lead_novo");

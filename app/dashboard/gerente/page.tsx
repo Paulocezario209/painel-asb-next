@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { getUserContext } from "@/lib/auth/get-user-role";
 import { MetasCalendarioGerente } from "@/components/dashboard/metas-calendario-gerente";
 import { businessDaysInMonth, businessDaysElapsed, dateAfterNBusinessDays } from "@/lib/utils/business-days";
+import { VENDOR_LABELS as VENDOR_NAMES, VENDOR_ORDER } from "@/lib/vendor-labels";
 
 export const dynamic = "force-dynamic";
 
@@ -18,13 +19,12 @@ const S = {
   muted:   { color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label } as React.CSSProperties,
 };
 
+// Nomes vêm da fonte única (@/lib/vendor-labels); region é detalhe local desta tela.
 const VENDOR_LABELS: Record<string, { name: string; region: string }> = {
-  SETOR_SOROCABA_SAO_PAULO: { name: "Ana Paula", region: "Sorocaba / Grande SP" },
-  SETOR_CAMPINAS_JUNDIAI:   { name: "Alan", region: "Campinas / Jundiai" },
-  SETOR_CUIT:               { name: "SETOR CUIT", region: "CUIT — key accounts" },
+  SETOR_SOROCABA_SAO_PAULO: { name: VENDOR_NAMES.SETOR_SOROCABA_SAO_PAULO, region: "Sorocaba / Grande SP" },
+  SETOR_CAMPINAS_JUNDIAI:   { name: VENDOR_NAMES.SETOR_CAMPINAS_JUNDIAI, region: "Campinas / Jundiai" },
+  SETOR_CUIT:               { name: VENDOR_NAMES.SETOR_CUIT, region: "CUIT — key accounts" },
 };
-
-const VENDOR_ORDER = ["SETOR_SOROCABA_SAO_PAULO", "SETOR_CAMPINAS_JUNDIAI", "SETOR_CUIT"];
 
 const VENDOR_ACCENT: Record<string, string> = {
   SETOR_SOROCABA_SAO_PAULO: theme.colors.critical,

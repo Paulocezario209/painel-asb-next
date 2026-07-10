@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { MessageCircle, CheckCircle, TrendingUp, AlertTriangle } from "lucide-react";
 import { LeadScoreBadge } from "@/components/dashboard/lead-score-badge";
 import { resolveOrigem, origemDetalhe, ORIGEM_FILTER_OPTIONS } from "@/lib/origem-canal";
+import { VENDOR_LABELS } from "@/lib/vendor-labels";
 
 type Lead = {
   phone: string;
@@ -81,8 +82,6 @@ const ABC_CFG: Record<"A" | "B" | "C", BadgeCfg> = {
   B: { label: "B", color: C.amber,   bg: "rgba(245,158,11,.1)",   border: "rgba(245,158,11,.35)" },
   C: { label: "C", color: C.muted,   bg: "rgba(136,153,170,.08)", border: "rgba(136,153,170,.2)" },
 };
-
-const VENDOR_LABELS: Record<string, string> = { SETOR_SOROCABA_SAO_PAULO: "Ana Paula", SETOR_CAMPINAS_JUNDIAI: "Alan", SETOR_CUIT: "CUIT" };
 
 const PRODUCT_LABELS: Record<string, string> = {
   hamburguer: "Hambúrguer", espeto: "Espeto", boteco: "Boteco",

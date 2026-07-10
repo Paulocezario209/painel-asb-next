@@ -6,6 +6,7 @@ import { getUserContext, canAccess } from "@/lib/auth/get-user-role";
 import { getLeadScoreMap } from "@/lib/get-lead-scores";
 import { LeadScoreBadge } from "@/components/dashboard/lead-score-badge";
 import { theme } from "@/lib/theme";
+import { VENDOR_LABELS as VENDOR_NAMES, VENDOR_ORDER } from "@/lib/vendor-labels";
 
 export const dynamic = "force-dynamic";
 
@@ -15,13 +16,12 @@ const PRECO_KG = 35;
 // ── Corte temporal: 11/05/2026 00:00 BRT = 03:00 UTC ─────────────────────────
 const METRICS_CUTOFF = "2026-05-11T03:00:00";
 
+// Nomes vêm da fonte única (@/lib/vendor-labels); region é detalhe local desta tela.
 const VENDOR_LABELS: Record<string, { name: string; region: string }> = {
-  SETOR_SOROCABA_SAO_PAULO: { name: "Ana Paula", region: "Sorocaba / Grande SP" },
-  SETOR_CAMPINAS_JUNDIAI:   { name: "Alan", region: "Campinas / Jundiai" },
-  SETOR_CUIT:               { name: "SETOR CUIT", region: "CUIT — key accounts" },
+  SETOR_SOROCABA_SAO_PAULO: { name: VENDOR_NAMES.SETOR_SOROCABA_SAO_PAULO, region: "Sorocaba / Grande SP" },
+  SETOR_CAMPINAS_JUNDIAI:   { name: VENDOR_NAMES.SETOR_CAMPINAS_JUNDIAI, region: "Campinas / Jundiai" },
+  SETOR_CUIT:               { name: VENDOR_NAMES.SETOR_CUIT, region: "CUIT — key accounts" },
 };
-
-const VENDOR_ORDER = ["SETOR_SOROCABA_SAO_PAULO", "SETOR_CAMPINAS_JUNDIAI", "SETOR_CUIT"];
 
 const PIPELINE_STAGES = new Set([
   "handoff", "vendedor_assumiu", "diagnostico_comercial",

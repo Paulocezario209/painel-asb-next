@@ -4,11 +4,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getUserContext } from "@/lib/auth/get-user-role";
+import { MOVIVEIS } from "@/lib/funnel/stages";
 
-// Stages que sao DESTINO de drag (cada um -> 1 RPC). "handoff" e origem (sem RPC), nao e destino.
-const MOVIVEIS = new Set([
-  "lead_em_andamento", "negociacao", "proposta_enviada", "pedido_teste", "pedido_fechado", "lead_perdido",
-]);
 
 export async function POST(req: NextRequest) {
   let body: {

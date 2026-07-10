@@ -5,21 +5,11 @@
 import { createClient } from "@/lib/supabase/server";
 import { getUserContext } from "@/lib/auth/get-user-role";
 import { ConfirmMatchButton } from "./confirm-match-button";
+import { vendorLabel } from "@/lib/vendor-labels";
 
 const mono = "'Courier New', monospace";
 const brl = (n: number) =>
   `R$ ${Number(n || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-
-const VENDOR_LABELS: Record<string, string> = {
-  SETOR_SOROCABA_SAO_PAULO: "Ana Paula",
-  SETOR_CAMPINAS_JUNDIAI: "Alan",
-  SETOR_CUIT: "CUIT",
-};
-
-function fmtVendor(team: string | null): string {
-  if (!team) return "—";
-  return VENDOR_LABELS[team] ?? team.replace("SETOR_", "");
-}
 
 // Badge de origem: pago (instagram/lp/google/meta) destacado; organico/null mudo.
 function OrigemBadge({ canal, adId }: { canal: string | null; adId: string | null }) {
@@ -92,7 +82,7 @@ function MatchRow({ r }: { r: Row }) {
       <td style={{ ...td, color: "#c0d0e0", fontSize: 11 }}>{r.cidade || "—"}</td>
       <td style={{ ...td, textAlign: "right" }}>{r.n_pedidos}</td>
       <td style={{ ...td, textAlign: "right", color: "#2ea043", fontWeight: 700 }}>{brl(r.receita_brl)}</td>
-      <td style={{ ...td, color: "#c0d0e0", fontSize: 11 }}>{fmtVendor(r.vendedor_routing_team)}</td>
+      <td style={{ ...td, color: "#c0d0e0", fontSize: 11 }}>{vendorLabel(r.vendedor_routing_team)}</td>
       <td style={{ ...td, textAlign: "right" }}>
         <ConfirmMatchButton leadId={r.lead_id} aresPessoaId={r.ares_pessoa_id} />
       </td>

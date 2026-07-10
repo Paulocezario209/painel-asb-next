@@ -4,6 +4,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { MOVIVEIS, LOST_REASONS, STAGE_COLORS } from "@/lib/funnel/stages";
 import { theme } from "@/lib/theme";
 import { useRouter } from "next/navigation";
 
@@ -30,21 +31,16 @@ export type PipelineCtx = { isGestor: boolean; routing_team: string | null; canM
 
 
 // Cores semânticas por etapa (asb-dashboard-elite — cor com propósito, não decorativa).
-const STAGE_COL: Record<string, { label: string; cor: string }> = {
-  handoff:           { label: "Handoff",      cor: "#f59e0b" },
-  lead_em_andamento: { label: "Em Andamento", cor: "#eab308" },
-  negociacao:        { label: "Negociação",   cor: "#a855f7" },
-  proposta_enviada:  { label: "Proposta",     cor: "#8b5cf6" },
-  pedido_teste:      { label: "Pedido Teste",  cor: "#3b82f6" },
-  // Redesenho 2026-07-09: pipeline TERMINA na conversão — "Convertido" = 1ª compra
-  // faturada (ARES confirma via v_carteira_360.lead_id; arraste manual = antecipação).
-  pedido_fechado:    { label: "Convertido",   cor: "#22c55e" },
-  lead_perdido:      { label: "Perdido",      cor: "#C8102E" },
+// Rótulos de COLUNA (view do board — "Convertido" é projeção, ver lib/funnel/stages).
+// Cores: fonte única STAGE_COLORS (DEBT-157).
+const COL_LABEL: Record<string, string> = {
+  handoff: "Handoff", lead_em_andamento: "Em Andamento", negociacao: "Negociação",
+  proposta_enviada: "Proposta", pedido_teste: "Pedido Teste",
+  pedido_fechado: "Convertido", lead_perdido: "Perdido",
 };
-
-// handoff = origem (sem RPC). Demais são destinos de drag.
-const MOVIVEIS = new Set(["lead_em_andamento", "negociacao", "proposta_enviada", "pedido_teste", "pedido_fechado", "lead_perdido"]);
-const LOST_REASONS = ["Sem orcamento", "Comprou concorrente", "Sem interesse", "Sem retorno", "Outro"];
+const STAGE_COL: Record<string, { label: string; cor: string }> = Object.fromEntries(
+  Object.entries(COL_LABEL).map(([k, label]) => [k, { label, cor: STAGE_COLORS[k] ?? "#c0d0e0" }]),
+);
 
 function diasDesde(iso: string | null): number | null {
   if (!iso) return null;

@@ -10,6 +10,7 @@ import { CardReconciliarAres } from "@/components/dashboard/card-reconciliar-are
 import { MotivosPerdaChart, type MotivoPerda } from "@/components/dashboard/motivos-perda-chart";
 import { DashboardFilters } from "@/components/dashboard/dashboard-filters";
 import { theme } from "@/lib/theme";
+import { VENDOR_LABELS } from "@/lib/vendor-labels";
 import { S } from "./lib/dashboard-tokens";
 
 export const dynamic = "force-dynamic";
@@ -163,9 +164,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const weeklyData = Object.entries(weekMap).map(([week, count]) => ({ week, count }));
 
   // Vendor
-  const VENDORS: Record<string, string> = { SETOR_SOROCABA_SAO_PAULO: "Ana Paula", SETOR_CAMPINAS_JUNDIAI: "Alan", SETOR_CUIT: "CUIT" };
   const vendorMap: Record<string, { handoffs: number; confirmed: number; converted: number }> = {};
-  for (const key of Object.keys(VENDORS)) vendorMap[key] = { handoffs: 0, confirmed: 0, converted: 0 };
+  for (const key of Object.keys(VENDOR_LABELS)) vendorMap[key] = { handoffs: 0, confirmed: 0, converted: 0 };
   for (const l of leads) {
     const v = l.routing_team;
     if (!v || !(v in vendorMap)) continue;
@@ -173,7 +173,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     if (l.handoff_confirmed) vendorMap[v].confirmed++;
     if (l.first_order_at) vendorMap[v].converted++;
   }
-  const vendorData = Object.entries(vendorMap).map(([key, vals]) => ({ label: VENDORS[key], ...vals }));
+  const vendorData = Object.entries(vendorMap).map(([key, vals]) => ({ label: VENDOR_LABELS[key], ...vals }));
 
   const convertidos = leads.filter(l => l.first_order_at).length;
 

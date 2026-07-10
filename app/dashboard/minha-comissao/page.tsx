@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { theme } from "@/lib/theme";
 import { getUserContext } from "@/lib/auth/get-user-role";
+import { VENDOR_LABELS } from "@/lib/vendor-labels";
 import { RegrasComissaoModal } from "../remuneracao/regras-modal";
 import { MinhaComissaoSimulador } from "./minha-comissao-sim";
 
@@ -16,10 +17,6 @@ const S = {
   muted:   { color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label } as React.CSSProperties,
 };
 
-const VENDOR_NOME: Record<string, string> = {
-  SETOR_SOROCABA_SAO_PAULO: "Ana Paula",
-  SETOR_CAMPINAS_JUNDIAI: "Alan",
-};
 const MESES = ["", "Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
 function fmtBRL(v: number | null | undefined): string {
@@ -97,7 +94,7 @@ export default async function MinhaComissaoPage({
     const val = Number(s.valor) || 0; if (s.origem === "CNB") vCnb += val; else vAsb += val;
   }
 
-  const nome = VENDOR_NOME[team] ?? "Vendedor";
+  const nome = VENDOR_LABELS[team] ?? "Vendedor";
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20, maxWidth: 720 }}>

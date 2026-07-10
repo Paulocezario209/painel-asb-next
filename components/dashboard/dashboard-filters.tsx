@@ -4,15 +4,14 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { VENDOR_LABELS, VENDOR_ORDER } from "@/lib/vendor-labels";
 
 const mono = "'Courier New', monospace";
 const GREEN = "#2ea043";
 
 const VENDEDORES = [
   { v: "", label: "Todos" },
-  { v: "SETOR_SOROCABA_SAO_PAULO", label: "Ana" },
-  { v: "SETOR_CAMPINAS_JUNDIAI", label: "Alan" },
-  { v: "SETOR_CUIT", label: "CUIT" },
+  ...VENDOR_ORDER.map(v => ({ v, label: VENDOR_LABELS[v] })),
 ];
 
 export function DashboardFilters({ showMonth = true, showVendedor = true, defaultMes, maxMonth }: { showMonth?: boolean; showVendedor?: boolean; defaultMes?: string; maxMonth?: string }) {

@@ -1,5 +1,6 @@
 import { SegmentChart } from "@/components/insights/segment-chart";
 import { theme } from "@/lib/theme";
+import { VENDOR_LABELS } from "@/lib/vendor-labels";
 import { PainDonut }    from "@/components/insights/pain-donut";
 import { SupplierBar }  from "@/components/insights/supplier-bar";
 
@@ -156,11 +157,6 @@ export default async function InsightsPage() {
   const topCities = countBy(leads, l => l.city, 10);
 
   // ── Distribuição por vendedor ─────────────────────────────────────────────────
-  const VENDOR_LABELS: Record<string, string> = {
-    SETOR_SOROCABA_SAO_PAULO: "Ana Paula",
-    SETOR_CAMPINAS_JUNDIAI:   "Alan",
-    SETOR_CUIT:               "CUIT",
-  };
   const vendorDist: Record<string, number> = {};
   for (const l of leads) {
     const v = l.routing_team;

@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { unstable_noStore as noStore } from "next/cache";
 import type { PedidoAtrasadoRow, ClienteDormenteRow } from "./alert-drawer";
+import { vendorLabel as vName } from "@/lib/vendor-labels";
 
 export type DayPedido = {
   ares_pedido_id: number | null;
@@ -77,17 +78,6 @@ export type AlertasResponse = {
   alertas: Alerta[];
   contadores: { vermelho: number; laranja: number; amarelo: number };
 };
-
-const VENDOR_NAMES: Record<string, string> = {
-  SETOR_CUIT: "SETOR CUIT",
-  SETOR_SOROCABA_SAO_PAULO: "Ana Paula",
-  SETOR_CAMPINAS_JUNDIAI: "Alan",
-};
-
-function vName(team: string | null | undefined): string {
-  if (!team) return "—";
-  return VENDOR_NAMES[team] ?? team;
-}
 
 export async function getAlertasComerciais(): Promise<AlertasResponse> {
   noStore();

@@ -9,6 +9,7 @@ import { MetaCalendarGrid } from "@/components/dashboard/meta-calendar-grid";
 import { MissaoDoDia } from "./missao-do-dia";
 import { PainelGestor } from "./painel-gestor";
 import { PreviewMissaoModal } from "./preview-missao-modal";
+import { VENDOR_LABELS as VENDOR_NAMES } from "@/lib/vendor-labels";
 
 type DayCell = {
   dia: string;
@@ -50,10 +51,11 @@ type ResumoVendor = {
   cor_card_mes: "verde" | "amarelo" | "laranja" | "vermelho" | "cinza";
 };
 
+// Nomes vêm da fonte única (@/lib/vendor-labels); region/accent são detalhes locais desta tela.
 const VENDOR_LABELS: Record<string, { name: string; region: string; accent: string }> = {
-  SETOR_CUIT:                { name: "SETOR CUIT",    region: "CUIT — key accounts",    accent: theme.colors.accent },
-  SETOR_SOROCABA_SAO_PAULO:  { name: "Ana Paula",     region: "Sorocaba / Grande SP",   accent: theme.colors.critical },
-  SETOR_CAMPINAS_JUNDIAI:    { name: "Alan",          region: "Campinas / Jundiai",     accent: theme.colors.success },
+  SETOR_CUIT:                { name: VENDOR_NAMES.SETOR_CUIT,                region: "CUIT — key accounts",  accent: theme.colors.accent },
+  SETOR_SOROCABA_SAO_PAULO:  { name: VENDOR_NAMES.SETOR_SOROCABA_SAO_PAULO,  region: "Sorocaba / Grande SP", accent: theme.colors.critical },
+  SETOR_CAMPINAS_JUNDIAI:    { name: VENDOR_NAMES.SETOR_CAMPINAS_JUNDIAI,    region: "Campinas / Jundiai",   accent: theme.colors.success },
 };
 const ORDER = ["SETOR_CUIT", "SETOR_SOROCABA_SAO_PAULO", "SETOR_CAMPINAS_JUNDIAI"];
 const COR_HEX: Record<string, string> = {

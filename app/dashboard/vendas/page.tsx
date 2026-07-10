@@ -8,6 +8,7 @@ import { VendasPrivacyShell } from "./vendas-privacy-shell";
 import { AlertasComerciais } from "./alertas-comerciais";
 import { RankingVendedores } from "./ranking-vendedores";
 import { getAlertasComerciais, getRankingVendedores, getEstrategiasComerciais } from "./actions";
+import { VENDOR_ORDER } from "@/lib/vendor-labels";
 
 export const dynamic = "force-dynamic";
 
@@ -19,8 +20,6 @@ const S = {
   section: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#c0c8d8", fontFamily: theme.font.label, marginBottom: 12 } as React.CSSProperties,
   muted:   { color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label } as React.CSSProperties,
 };
-
-const VENDOR_ORDER = ["SETOR_SOROCABA_SAO_PAULO", "SETOR_CAMPINAS_JUNDIAI", "SETOR_CUIT"];
 
 // ── Interfaces ────────────────────────────────────────────────────────────────
 interface DiaVendedor {

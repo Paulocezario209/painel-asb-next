@@ -4,6 +4,7 @@ import { Fragment, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { theme } from "@/lib/theme";
+import { VENDOR_LABELS } from "@/lib/vendor-labels";
 
 type Row = {
   phone: string;
@@ -43,10 +44,6 @@ const C = {
 const LABEL: React.CSSProperties = {
   fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase",
   color: C.muted, fontFamily: "'Courier New', monospace",
-};
-
-const VENDOR_LABELS: Record<string, string> = {
-  SETOR_SOROCABA_SAO_PAULO: "Ana Paula", SETOR_CAMPINAS_JUNDIAI: "Alan", SETOR_CUIT: "CUIT",
 };
 
 function fmt(iso: string | null) {

@@ -2,6 +2,7 @@
 
 import type { EstrategiasResponse } from "./actions";
 import { theme } from "@/lib/theme";
+import { VENDOR_LABELS } from "@/lib/vendor-labels";
 
 function fmtBRL(v: number, frac = 0): string {
   return Number(v).toLocaleString("pt-BR", {
@@ -31,12 +32,6 @@ const FRASES = [
   '"O abandonado de hoje é a venda perdida de amanhã. Reative."',
   '"Disciplina diária constrói meses incríveis."',
 ];
-
-const VENDOR_LABELS: Record<string, string> = {
-  SETOR_CUIT: "SETOR CUIT",
-  SETOR_SOROCABA_SAO_PAULO: "Ana Paula",
-  SETOR_CAMPINAS_JUNDIAI: "Alan",
-};
 
 type Props = {
   data: EstrategiasResponse;

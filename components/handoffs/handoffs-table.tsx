@@ -5,6 +5,7 @@ import Link from "next/link";
 import { LeadScoreBadge } from "@/components/dashboard/lead-score-badge";
 import { createClient } from "@/lib/supabase/client";
 import { computeLeadScore, tierOf } from "@/lib/lead-score";
+import { VENDOR_LABELS } from "@/lib/vendor-labels";
 
 export interface Handoff {
   phone: string;
@@ -23,12 +24,6 @@ export interface Handoff {
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-const VENDOR_LABELS: Record<string, string> = {
-  SETOR_SOROCABA_SAO_PAULO: "Ana Paula",
-  SETOR_CAMPINAS_JUNDIAI:   "Alan",
-  SETOR_CUIT:               "CUIT",
-};
-
 const SEG_LABELS: Record<string, string> = {
   hamburgueria: "Hamburgueria", restaurante: "Restaurante", bar: "Bar",
   distribuidora: "Distribuidora", rede: "Rede/Franquia", churrascaria: "Churrascaria",

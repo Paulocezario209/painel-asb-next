@@ -5,41 +5,30 @@
 import { redirect } from "next/navigation";
 import { theme } from "@/lib/theme";
 import { getUserContext, canAccess } from "@/lib/auth/get-user-role";
+import { PIPELINE_STAGES, PIPELINE_ATIVOS, LEGACY_ALIAS, CONVERTIDO_STAGES } from "@/lib/funnel/stages";
+import { VENDOR_LABELS } from "@/lib/vendor-labels";
 import { createClient } from "@/lib/supabase/server";
 import { DashboardFilters } from "@/components/dashboard/dashboard-filters";
 import { PipelineBoard, type PipelineLead, type PipelineCtx } from "./pipeline-board";
 
 export const dynamic = "force-dynamic";
 
-// Etapas-coluna do pipeline do VENDEDOR (pós-handoff). Ordem = fluxo. handoff = origem (não-destino).
-export const PIPELINE_STAGES = [
-  "handoff", "lead_em_andamento", "negociacao", "proposta_enviada", "pedido_teste", "pedido_fechado", "lead_perdido",
-] as const;
-
-// Reconciliação 2026-07-08: legados ainda vivos no banco entram no board via alias
-// (antes ficavam INVISÍVEIS — funil os contava, pipeline não os mostrava).
+// Vocabulário: FONTE ÚNICA em lib/funnel/stages.ts (DEBT-157 fechada).
+// Projeção desta tela: board TERMINA na conversão — stages de cliente (legado em
+// ai_sdr_leads) colapsam na coluna "Convertido" (pedido_fechado). Redesenho 2026-07-09.
 const LEGACY_STAGES = [
-  "vendedor_assumiu", "diagnostico_comercial",
-  // Redesenho 2026-07-09: stages de cliente em ai_sdr_leads são LEGADO — a camada
-  // cliente vive na carteira real (v_carteira_360). Aqui colapsam em "Convertido".
-  "cliente_em_ativacao", "cliente_ativo", "cliente_recorrente",
+  ...Object.keys(LEGACY_ALIAS),
+  ...CONVERTIDO_STAGES.filter(s => s !== "pedido_fechado"),
 ] as const;
-const STAGE_ALIAS: Record<string, string> = {
-  vendedor_assumiu: "lead_em_andamento",
-  diagnostico_comercial: "lead_em_andamento",
-  cliente_em_ativacao: "pedido_fechado",
-  cliente_ativo: "pedido_fechado",
-  cliente_recorrente: "pedido_fechado",
+const BOARD_ALIAS: Record<string, string> = {
+  ...LEGACY_ALIAS,
+  ...Object.fromEntries(CONVERTIDO_STAGES.filter(s => s !== "pedido_fechado").map(s => [s, "pedido_fechado"])),
 };
-const aliasStage = (s: string | null) => (s && STAGE_ALIAS[s]) || s || "handoff";
+const aliasStage = (s: string | null) => (s && BOARD_ALIAS[s]) || s || "handoff";
 
 // Ativos = em aberto (exclui fechado/perdido). Base dos KPIs.
-const ATIVOS = new Set(["handoff", "lead_em_andamento", "negociacao", "proposta_enviada", "pedido_teste"]);
+const ATIVOS = PIPELINE_ATIVOS;
 const PRECO_KG = 25; // R$/kg medio (definicao Paulo) para valor estimado de pipeline
-
-const VENDOR_LABELS: Record<string, string> = {
-  SETOR_SOROCABA_SAO_PAULO: "Ana Paula", SETOR_CAMPINAS_JUNDIAI: "Alan", SETOR_CUIT: "CUIT",
-};
 
 const S = {
   card: { background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8 } as React.CSSProperties,

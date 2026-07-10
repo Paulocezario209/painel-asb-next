@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Flame, ShoppingBag, Users, Search } from "lucide-react";
 import { LeadScoreBadge } from "@/components/dashboard/lead-score-badge";
+import { vendorLabel } from "@/lib/vendor-labels";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -278,7 +279,7 @@ export function HotLeadsTable({ leads }: { leads: HotLead[] }) {
 
                   {/* Roteamento */}
                   <td style={{ padding: "7px 10px", color: C.muted, fontSize: 9, whiteSpace: "nowrap" }}>
-                    {lead.routing_team?.replace("SETOR_","").replace("_"," ") ?? "—"}
+                    {vendorLabel(lead.routing_team)}
                   </td>
                 </tr>
               );
