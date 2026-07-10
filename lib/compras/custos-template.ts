@@ -10,6 +10,7 @@
  * Domínios espelham os CHECK constraints das tabelas producao_* — NÃO divergir.
  */
 import * as ExcelJS from "exceljs";
+import { CUSTO_KG_THR } from "@/lib/compras/custos-thresholds";
 
 export const MOMENTO = ["entrada", "meio", "saida", "final"];
 export const SETOR = ["camara_fria", "sala_modelagem", "expedicao", "recebimento"];
@@ -36,9 +37,9 @@ export const DEFAULT_CONFIG: CustosConfig = {
   custo_hora_moagem: 0,
   custo_hora_modelagem: 0,
   custo_hora_embalamento: 0,
-  threshold_custo_ideal: 18,
-  threshold_custo_atencao: 19,
-  threshold_custo_alerta: 20,
+  threshold_custo_ideal: CUSTO_KG_THR.ideal,
+  threshold_custo_atencao: CUSTO_KG_THR.atencao,
+  threshold_custo_alerta: CUSTO_KG_THR.alerta,
   threshold_temp_produto_max: 4,
   threshold_temp_setor: { camara_fria: 2, sala_modelagem: 12, expedicao: 4, recebimento: 7 },
 };

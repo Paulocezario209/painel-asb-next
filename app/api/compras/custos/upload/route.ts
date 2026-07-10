@@ -125,9 +125,13 @@ export async function POST(req: NextRequest) {
         ? await sb.from(s.tabela).upsert(tagged, { onConflict: s.onConflict })
         : await sb.from(s.tabela).insert(tagged);
       if (error) {
-        // marca o log como revertido (gravação parcial não fica "gravado")
+        // DEBT-254: reverter DE FATO os steps já gravados (antes só o log virava
+        // "revertido" e os dados ficavam) — mesmo delete por upload_id do /revert.
+        for (const t of steps.map((x) => x.tabela)) {
+          await sb.from(t).delete().eq("upload_id", uploadId);
+        }
         await sb.from("planilhas_upload_log").update({ status: "revertido" }).eq("id", uploadId);
-        return NextResponse.json({ error: `Falha em ${s.tabela}: ${error.message} (log ${uploadId} revertido)` }, { status: 500 });
+        return NextResponse.json({ error: `Falha em ${s.tabela}: ${error.message} (upload ${uploadId} revertido — linhas já gravadas removidas)` }, { status: 500 });
       }
     }
 

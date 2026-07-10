@@ -29,7 +29,19 @@ export async function POST(req: NextRequest) {
       const { error } = await sb.from("custos_registro_diario").upsert(registros, { onConflict: "data" });
       if (error) return NextResponse.json({ error: `registros: ${error.message}` }, { status: 500 });
     }
-    return NextResponse.json({ ok: true, restaurados: registros.length });
+
+    // DEBT-254: insumos do payload eram ignorados (restore parcial silencioso).
+    // id é bigserial (aceita explícito) e os ids vieram desta mesma tabela → upsert por id.
+    const insumos = (payload.insumos ?? []).map((i) => {
+      const { created_at: _ca, ...rest } = i as Record<string, unknown>;
+      void _ca;
+      return rest;
+    });
+    if (insumos.length > 0) {
+      const { error } = await sb.from("custos_insumo").upsert(insumos, { onConflict: "id" });
+      if (error) return NextResponse.json({ error: `insumos: ${error.message}` }, { status: 500 });
+    }
+    return NextResponse.json({ ok: true, restaurados: registros.length, insumosRestaurados: insumos.length });
   } catch (e) {
     return NextResponse.json({ error: (e as Error).message }, { status: 500 });
   }

@@ -1,7 +1,9 @@
 // Classificação de nível de custo/kg + cores (server-side, camada Custos 5.3).
+import { CUSTO_KG_THR, CUSTO_NIVEL_COR } from "@/lib/compras/custos-thresholds";
+
 export type Thr = { ideal: number; atencao: number; alerta: number };
-export const THR_DEFAULT: Thr = { ideal: 18, atencao: 19, alerta: 20 };
-export const COR = { ideal: "#22C55E", atencao: "#EAB308", alerta: "#F97316", critico: "#EF4444", projecao: "#e4e9f0" } as const;
+export const THR_DEFAULT: Thr = { ...CUSTO_KG_THR };
+export const COR = { ...CUSTO_NIVEL_COR, projecao: "#e4e9f0" } as const;
 export type Nivel = keyof typeof COR;
 
 export function nivelDe(custoKg: number | null | undefined, t: Thr = THR_DEFAULT): { nivel: Nivel; cor: string; label: string } {
@@ -18,6 +20,6 @@ export async function thrFromConfig(sb: { from: (t: string) => { select: (c: str
     const { data } = await sb.from("custos_alerta_config").select("nivel,valor_max");
     if (!data) return THR_DEFAULT;
     const f = (n: string) => data.find((x) => x.nivel === n)?.valor_max;
-    return { ideal: f("ideal") ?? 18, atencao: f("atencao") ?? 19, alerta: f("alerta") ?? 20 };
+    return { ideal: f("ideal") ?? CUSTO_KG_THR.ideal, atencao: f("atencao") ?? CUSTO_KG_THR.atencao, alerta: f("alerta") ?? CUSTO_KG_THR.alerta };
   } catch { return THR_DEFAULT; }
 }

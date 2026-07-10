@@ -85,7 +85,7 @@ export function DashboardCustos() {
         api.insumosConsumo().catch(() => ({ diario: [], comparativo: [], mensal: [] })), // endpoint novo: falha NUNCA derruba o dashboard
       ]);
       setRegs(r); setInsumos(ins as Insumo[]); setInsumosCons(ic);
-      if (Array.isArray(ac)) { const f = (n: string) => ac.find((x: { nivel: string }) => x.nivel === n)?.valor_max; setThresholds({ IDEAL: f("ideal") ?? 18, ATENCAO: f("atencao") ?? 19, ALERTA: f("alerta") ?? 20 }); }
+      if (Array.isArray(ac)) { const f = (n: string) => ac.find((x: { nivel: string }) => x.nivel === n)?.valor_max; setThresholds({ IDEAL: f("ideal") ?? THRESHOLDS_DEFAULT.IDEAL, ATENCAO: f("atencao") ?? THRESHOLDS_DEFAULT.ATENCAO, ALERTA: f("alerta") ?? THRESHOLDS_DEFAULT.ALERTA }); }
       if (Array.isArray(pc)) { const o: Record<string, number> = {}; pc.forEach((x: { etapa: string; custo_hora: number }) => (o[x.etapa] = Number(x.custo_hora))); setCustoHora({ moagem: o.moagem ?? 0, modelagem: o.modelagem ?? 0, embalamento: o.embalamento ?? 0 }); }
       if (ar?.ativos) setAlertasAtivos(ar.ativos);
     } catch (e) { setErro((e as Error).message); }
