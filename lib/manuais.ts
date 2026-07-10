@@ -240,6 +240,154 @@ export const MANUAIS: Record<string, ManualTela> = {
       "Cada KPI clica para a tela correspondente.",
     ],
   },
+
+  // ── WORKSPACE COMPRAS & ESTOQUE (lei Paulo 2026-07-10: toda tela tem manual) ──
+  "/compras/resultados": {
+    titulo: "Compras · Resultados",
+    oQueE: "Compras × Faturamento do mês: quanto entrou, quanto foi comprado, se o gasto cabe no teto de 54% — e a projeção de fechamento.",
+    fontes: [
+      "Faturado MTD: faturado por EMISSÃO (data de faturamento) — base escolhida para comparar com compras, que são por data de emissão. Por isso pode diferir levemente do faturado das telas comerciais (base data_meta).",
+      "Compras MTD (headline e % do semáforo) = só pedidos ENTREGUES, menos devoluções. 'A chegar' (pendente+aprovado) aparece na sublinha, mas não entra no % — estado real é o que chegou.",
+      "Semáforo % Compras/Faturado: 🟢 ≤54% · 🟡 54–65% · 🔴 >65%.",
+      "PROJEÇÃO (regra 10/07): Faturado proj = ritmo dos dias úteis COMPLETOS (até ontem) × dias úteis do mês; Compras proj = 54% desse faturado (ORÇAMENTO). Pedidos realizados NÃO projetam nada — PCP lança o mês de uma vez e criaria falso ritmo. 'Disponível' = orçamento − comprometido.",
+      "Cards do ano: v_resultado_mensal (mês fechado também usa só entregue).",
+    ],
+    comoUsar: [
+      "O 'Disponível p/ comprar' é a bússola do PCP: verde = ainda cabe; vermelho = comprometido já estourou o orçamento do ritmo atual.",
+      "A projeção oscila mais no início do mês (amostra pequena) e converge no fim — comportamento validado no backtest de junho (proj 879k × real 878k).",
+      "Clique num dia do calendário para ver os pedidos de compra e o % de margem daquele dia.",
+    ],
+  },
+  "/compras/estoque": {
+    titulo: "Compras · Estoque",
+    oQueE: "Saldo atual por produto com cobertura em dias e semáforo de ruptura.",
+    fontes: [
+      "Saldo = Σ da movimentação ARES espelhada (modelo OPT-B, desde 30/05). A contagem física (âncora) é só auditoria — não é a base do saldo.",
+      "CMD-30/dia = consumo médio (venda + consumo de produção), janela de 30 dias úteis — janela CURTA de propósito, para reagir rápido a ruptura.",
+      "Cobertura (dias) = saldo ÷ CMD-30. Semáforo: vermelho <7d · amarelo ≤14d · verde.",
+      "'SEM CMD' = matéria-prima sem saída capturada (transformação interna — limitação conhecida).",
+    ],
+    comoUsar: [
+      "Ordene pela menor cobertura — o topo da lista é o risco de ruptura da semana.",
+      "Produto fora da lista = sem movimentação capturada na janela do espelho (não significa saldo zero físico — confira no ARES).",
+      "O CMD daqui (30d) é DIFERENTE do da Previsão (90d) — propósitos distintos, não compare os números.",
+    ],
+  },
+  "/compras/previsao": {
+    titulo: "Compras · Previsão",
+    oQueE: "Lista de compra sugerida: o que repor, quanto, e de qual fornecedor — para o horizonte configurado.",
+    fontes: [
+      "A comprar = demanda do horizonte − saldo − carteira aberta (pedidos já feitos).",
+      "CMD-90/dia = consumo médio em 90 dias corridos — janela LONGA de propósito, para planejamento estável (não compare com o CMD-30 do Estoque).",
+      "'s/ âncora' = sem saldo calculado no espelho (assume 0) — confira antes de comprar.",
+      "Fornecedor sugerido = o mais frequente no histórico daquele insumo.",
+    ],
+    comoUsar: [
+      "'REPOR AGORA' (vermelho) = abaixo do ponto de reposição considerando lead time — prioridade da semana.",
+      "As colunas de pico mostram se o consumo tem rajadas — insumo com pico alto merece margem extra.",
+      "Config (horizonte/segurança/ciclo) ainda é editada via SQL nesta fase.",
+    ],
+  },
+  "/compras/inventario": {
+    titulo: "Compras · Inventário",
+    oQueE: "Saúde da contagem física: quando cada produto foi contado pela última vez, cobertura por grupo e divergências grandes.",
+    fontes: [
+      "Última contagem = contagem física (upload de âncora) OU acerto de inventário no ARES (tipos 16/17).",
+      "Divergência = contagem física × saldo calculado; >50 unidades marca 'divergência grande'.",
+      "⚠️ A janela do espelho é de 90 dias — contagens mais antigas não aparecem, então 'dias desde contagem' pode SUBESTIMAR o tempo real.",
+    ],
+    comoUsar: [
+      "'Precisam de contagem' lista os mais velhos/nunca contados — roteiro do próximo inventário.",
+      "'Em revisão' = linhas ambíguas da transcrição do XLSX — resolver na aba Estoque.",
+    ],
+  },
+  "/compras/custos": {
+    titulo: "Compras · Custos de Produção",
+    oQueE: "Custo de produção diário: kg produzido, custo total e custo/kg, com alertas por faixa, cartas de controle e projeção 12 meses.",
+    fontes: [
+      "Custo do dia = consumo de matéria-prima (ARES, movimentos tipo 4) + operacional (horas apontadas × custo-hora configurado).",
+      "Kg do dia = soma das OPs encerradas no dia (ARES — em validação, DEBT-073).",
+      "Faixas de custo/kg: IDEAL ≤18 · ATENÇÃO ≤19 · ALERTA ≤20 · CRÍTICO >20 (config na aba Alertas; estes são os padrões).",
+      "Registro manual e Sync ARES convivem: dias marcados 'manual' NUNCA são sobrescritos pelo sync.",
+      "Se o custo-hora estiver 0 (aguardando RH/financeiro), a composição colapsa toda em matéria-prima.",
+    ],
+    comoUsar: [
+      "Faça um Backup antes de operações grandes (limpar mês, restore) — o backup guarda registros E insumos.",
+      "Upload XLSX: use o Template gerado (aba Instruções tem os limites); se falhar no meio, o sistema desfaz o que gravou.",
+      "Cartas I-MR (Shewhart): pontos fora do limite = dia atípico para investigar, não necessariamente erro.",
+    ],
+  },
+  "/compras/mercado": {
+    titulo: "Compras · Mercado",
+    oQueE: "Inteligência de mercado de proteína: cotações CEPEA (boi/frango/suíno), sinal de compra por IA e notícias do setor — mais um chat para perguntar ao vivo.",
+    fontes: [
+      "Cotações e gráfico 90d: coleta diária automática às 06h (boi em R$/@; frango e suíno em R$/kg).",
+      "Sinal COMPRAR/AGUARDAR/EVITAR e notícias: análise batch diária por IA — pode ter até 24h de defasagem.",
+      "Chat: outra IA, com busca na web AO VIVO — resposta em tempo real pode divergir do sinal do card (que é de ontem). É esperado.",
+    ],
+    comoUsar: [
+      "Use o sinal do card como tendência e o chat para a decisão do dia ('como está o boi gordo hoje?').",
+      "Badge de pressão nas notícias é sob a ótica do COMPRADOR: pressão de alta = ruim para comprar.",
+      "'ATUALIZADO' mostra a data da cotação mais recente do conjunto.",
+    ],
+  },
+
+  // ── WORKSPACE MARKETING (mesma lei) ──
+  "/marketing/overview": {
+    titulo: "Marketing · Overview",
+    oQueE: "Pulso do marketing: CAC do mês por canal, alertas e ranking de criativos.",
+    fontes: [
+      "CAC mensal por canal: gasto de mídia ÷ leads/clientes atribuídos (v_cac_mensal_canal — atribuição capturada na entrada do lead, origem_*).",
+      "Alertas: v_marketing_alertas. Ranking de criativos: v_ranking_criativo (performance por anúncio).",
+    ],
+    comoUsar: [
+      "CAC subindo com ranking de criativo caindo = hora de trocar criativo, não necessariamente verba.",
+      "O gasto vem do ETL diário do Meta — divergência com o gerenciador de anúncios no MESMO dia é defasagem de sync.",
+    ],
+  },
+  "/marketing/origem": {
+    titulo: "Marketing · Origem",
+    oQueE: "De onde vêm os leads e quanto custa cada canal (orgânico × pago × indicação).",
+    fontes: [
+      "Atribuição: origem_* capturada no PRIMEIRO contato do lead (fonte única — o SDR é o dono da atribuição).",
+      "CAC por canal: v_cac_por_canal e v_cac_mensal_canal.",
+    ],
+    comoUsar: [
+      "Canal sem origem = lead que chegou sem UTM/rastreio — % alto aqui pede revisão dos links de campanha.",
+    ],
+  },
+  "/marketing/anuncios": {
+    titulo: "Marketing · Anúncios",
+    oQueE: "Performance por anúncio/criativo: gasto, leads e custo por lead de cada peça.",
+    fontes: [
+      "v_ranking_criativo (por anúncio) e v_performance_diaria (série diária) — leads casados ao anúncio pela atribuição de entrada.",
+    ],
+    comoUsar: [
+      "Compare custo/lead entre criativos da MESMA campanha — orçamento migra para o vencedor.",
+      "Criativo com muitos leads e poucos qualificados = atrai o público errado (ver funil-cac).",
+    ],
+  },
+  "/marketing/funil-cac": {
+    titulo: "Marketing · Funil & CAC",
+    oQueE: "O funil por canal (lead → qualificado → handoff → cliente) com o CAC em cada etapa.",
+    fontes: [
+      "v_funil_por_canal (etapas por origem) + v_cac_mensal_canal (custo).",
+    ],
+    comoUsar: [
+      "Canal barato no lead mas caro no CLIENTE = funil vazando — olhe a etapa em que ele perde.",
+      "É o melhor lugar para decidir realocação de verba entre canais.",
+    ],
+  },
+  "/marketing/calendario": {
+    titulo: "Marketing · Calendário",
+    oQueE: "Visão diária de gasto e leads — os dias fortes e fracos do mês, lado a lado.",
+    fontes: [
+      "v_performance_diaria (gasto e leads por dia, via ETL Meta + atribuição de entrada).",
+    ],
+    comoUsar: [
+      "Dias com gasto e zero leads merecem investigação (criativo reprovado? link quebrado?).",
+    ],
+  },
 };
 
 // Resolve o manual pela rota atual (prefixo mais longo vence; "/dashboard" é fallback do grupo).
