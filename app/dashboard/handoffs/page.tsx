@@ -21,16 +21,15 @@ export default async function HandoffsPage({ searchParams }: { searchParams?: Pr
   const supabase = await createClient();
 
   const [{ data: raw, error }, scoreMap] = await Promise.all([
+    // DEBT-208: fila lê a definição CANÔNICA (v_handoff_pendentes, security_invoker
+    // preserva RLS por vendedor). Resolver por qualquer via (confirmar / resposta do
+    // vendedor / funnel_stage) remove daqui, do card e do detector do CP juntos.
     supabase
-      .from("ai_sdr_leads")
+      .from("v_handoff_pendentes")
       .select(
         "phone, restaurant_name, city, segment, weekly_volume_kg, routing_team, " +
         "handoff_at, scheduled_at, pain_point, lead_temperature, qual_stage"
       )
-      .eq("is_test", false)
-      .eq("human_active", true)
-      .eq("handoff_confirmed", false)
-      .not("handoff_at", "is", null)
       .order("handoff_at", { ascending: true }),
     getLeadScoreMap(),  // ETAPA 4
   ]);

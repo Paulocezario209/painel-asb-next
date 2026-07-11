@@ -51,8 +51,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   let qTotal = supabase.from("ai_sdr_leads").select("*", { count: "exact", head: true }).eq("is_test", false).or("routing_team.is.null,routing_team.neq.fora_de_rota");  // DEBT-167 4
   if (vend) qTotal = qTotal.eq("routing_team", vend);
   if (mesIni && mesFimEx) qTotal = qTotal.gte("created_at", mesIni).lt("created_at", mesFimEx);
-  // ALERTA — handoff pendente (estado "agora", só vendedor)
-  let qHandoff = supabase.from("ai_sdr_leads").select("*", { count: "exact", head: true }).eq("is_test", false).eq("human_active", true).not("handoff_at", "is", null).eq("handoff_confirmed", false);
+  // ALERTA — handoff pendente (DEBT-208: definição CANÔNICA via v_handoff_pendentes;
+  // resolver por funnel_stage/confirmar/resposta remove de TODOS os detectores de uma vez)
+  let qHandoff = supabase.from("v_handoff_pendentes").select("id, phone, restaurant_name, qual_stage, first_order_at, routing_team, handoff_at, handoff_confirmed, weekly_volume_kg, city, product_groups, human_active, followup_eligible, next_followup_at, horas_desde_handoff");
   if (vend) qHandoff = qHandoff.eq("routing_team", vend);
   // KPI VOLUME — qualificados (mês + vendedor)
   let qQual = supabase.from("ai_sdr_leads").select("*", { count: "exact", head: true }).eq("is_test", false).gte("qual_stage", 7).or("routing_team.is.null,routing_team.neq.fora_de_rota");  // DEBT-167 4
@@ -64,7 +65,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
   const [
     { count: totalLeads },
-    { count: handoffPending },
+    { data: pendRaw },
     { count: qualifiedLeads },
     { data: allLeads },
     { data: motivosPerda },
@@ -75,6 +76,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   ]);
 
   const leads = allLeads ?? [];
+  const pend = pendRaw ?? [];                    // DEBT-208: pendentes canônicos
+  const handoffPending = pend.length;
   const motivos = (motivosPerda ?? []) as MotivoPerda[];
 
   // ── Alertas operacionais ─────────────────────────────────────────────────────
@@ -83,11 +86,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const _7dAgo      = new Date(_now.getTime() - 7 * 24 * 60 * 60 * 1000);
   const _todayStart = new Date(_now.getFullYear(), _now.getMonth(), _now.getDate());
 
-  const alertTierALeads = leads.filter(l =>
+  // DEBT-208: Tier A urgente = pendente CANÔNICO (view) com vol ≥300 e >4h
+  const alertTierALeads = pend.filter(l =>
     (l.weekly_volume_kg ?? 0) >= 300 &&
-    l.human_active === true &&
-    l.handoff_confirmed === false &&
-    l.handoff_at !== null &&
     new Date(l.handoff_at as string) < _4hAgo
   );
   const alertTierA = alertTierALeads.length;
@@ -107,10 +108,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   );
   const alertFollowupStale = alertFollowupStaleLeads.length;
 
-  const alertHandoffsTodayLeads = leads.filter(l =>
-    l.handoff_confirmed === false &&
-    l.human_active === true &&
-    l.handoff_at !== null &&
+  // DEBT-208: handoffs de hoje = pendentes canônicos entregues hoje
+  const alertHandoffsTodayLeads = pend.filter(l =>
     new Date(l.handoff_at as string) >= _todayStart
   );
   const alertHandoffsToday = alertHandoffsTodayLeads.length;
@@ -120,7 +119,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   // ABC
   const abcCount = { A: 0, B: 0, C: 0 };
   for (const l of leads) abcCount[abcCurve(l.weekly_volume_kg)]++;
-  const urgentALeads = leads.filter(l => abcCurve(l.weekly_volume_kg) === "A" && l.handoff_at && !l.handoff_confirmed);
+  const urgentALeads = pend.filter(l => abcCurve(l.weekly_volume_kg) === "A");  // DEBT-208: canônico
   const urgentA = urgentALeads.length;
 
   // Top cidades
