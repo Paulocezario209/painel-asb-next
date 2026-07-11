@@ -48,16 +48,38 @@ export function VerbaClient({ rows }: { rows: VerbaRow[] }) {
   }, [selMes]);
   const mesesComDado = useMemo(() => new Set(rows.map((r) => r.mes)), [rows]);
 
+  // ---- POTE ÚNICO: totais por mês (todos os canais somados — verba da Cránium cobre Meta+Google)
+  const totaisPorMes = useMemo(() => {
+    const m = new Map<string, { verba: number; gasto: number; saldo: number }>();
+    for (const r of rows) {
+      const cur = m.get(r.mes) ?? { verba: 0, gasto: 0, saldo: 0 };
+      cur.verba += Number(r.verba_brl);
+      cur.gasto += Number(r.gasto_brl);
+      cur.saldo += Number(r.saldo_brl);
+      m.set(r.mes, cur);
+    }
+    return m;
+  }, [rows]);
+
+  // aporte do mês (nível TOTAL) = verba do mês − saldo positivo herdado do mês anterior
+  const aporteDoMes = useMemo(() => {
+    const meses = Array.from(totaisPorMes.keys()).sort();
+    const m = new Map<string, number>();
+    let saldoAnterior = 0;
+    for (const mes of meses) {
+      const t = totaisPorMes.get(mes)!;
+      m.set(mes, Math.max(t.verba - Math.max(saldoAnterior, 0), 0));
+      saldoAnterior = t.saldo;
+    }
+    return m;
+  }, [totaisPorMes]);
+
   // ---- agregados do mês SELECIONADO (todos os canais)
   const isMesCorrente = selMes === mesAtual;
-  const atual = useMemo(() => {
-    const doMes = rows.filter((r) => r.mes === selMes);
-    return {
-      verba: doMes.reduce((a, r) => a + Number(r.verba_brl), 0),
-      gasto: doMes.reduce((a, r) => a + Number(r.gasto_brl), 0),
-      saldo: doMes.reduce((a, r) => a + Number(r.saldo_brl), 0),
-    };
-  }, [rows, selMes]);
+  const atual = useMemo(
+    () => totaisPorMes.get(selMes) ?? { verba: 0, gasto: 0, saldo: 0 },
+    [totaisPorMes, selMes],
+  );
 
   // aporte do mês seguinte ao selecionado = verba do próximo (se definida; senão a do selecionado como referência) − saldo positivo herdado
   const proximo = useMemo(() => {
@@ -104,19 +126,26 @@ export function VerbaClient({ rows }: { rows: VerbaRow[] }) {
 
   // ---- export CSV (Excel BR: ; como separador, vírgula decimal, BOM p/ acentos)
   function exportarCSV() {
-    const doAno = rows.filter((r) => r.mes.slice(0, 4) === selAno).sort((a, b) => a.mes.localeCompare(b.mes) || a.canal.localeCompare(b.canal));
     const num = (v: number) => Number(v).toFixed(2).replace(".", ",");
-    const linhas = [
-      "mes;canal;verba_brl;gasto_brl;saldo_brl;aporte_brl;nota",
-      ...doAno.map((r) =>
-        [
-          `${MESES_FULL[Number(r.mes.slice(5, 7)) - 1]}/${r.mes.slice(0, 4)}`,
-          CANAL_LABEL[r.canal] ?? r.canal,
-          num(Number(r.verba_brl)), num(Number(r.gasto_brl)), num(Number(r.saldo_brl)), num(Number(r.aporte_brl)),
-          `"${(r.nota ?? "").replace(/"/g, '""')}"`,
-        ].join(";"),
-      ),
-    ];
+    const fmtM = (mes: string) => `${MESES_FULL[Number(mes.slice(5, 7)) - 1]}/${mes.slice(0, 4)}`;
+    const mesesAno = Array.from(new Set(rows.filter((r) => r.mes.slice(0, 4) === selAno).map((r) => r.mes))).sort();
+    const linhas = ["mes;canal;verba_brl;gasto_brl;saldo_brl;aporte_brl;nota"];
+    for (const mes of mesesAno) {
+      const doMes = rows.filter((r) => r.mes === mes).sort((a, b) => a.canal.localeCompare(b.canal));
+      const t = totaisPorMes.get(mes)!;
+      linhas.push(
+        [fmtM(mes), "TOTAL", num(t.verba), num(t.gasto), num(t.saldo), num(aporteDoMes.get(mes) ?? 0),
+          `"${(doMes.find((r) => r.nota)?.nota ?? "").replace(/"/g, '""')}"`].join(";"),
+      );
+      if (doMes.length > 1) {
+        for (const r of doMes) {
+          linhas.push(
+            [fmtM(mes), CANAL_LABEL[r.canal] ?? r.canal, num(Number(r.verba_brl)), num(Number(r.gasto_brl)),
+              num(Number(r.saldo_brl)), "", `"${(r.nota ?? "").replace(/"/g, '""')}"`].join(";"),
+          );
+        }
+      }
+    }
     const blob = new Blob(["﻿" + linhas.join("\r\n")], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -266,28 +295,45 @@ export function VerbaClient({ rows }: { rows: VerbaRow[] }) {
             {rows.filter((r) => r.mes.slice(0, 4) === selAno).length === 0 && (
               <tr><td colSpan={7} style={{ ...td, textAlign: "center", color: MUT, padding: 24 }}>Sem dados em {selAno} — defina a primeira verba no formulário acima.</td></tr>
             )}
-            {rows.filter((r) => r.mes.slice(0, 4) === selAno).map((r) => {
-              const saldo = Number(r.saldo_brl);
-              const isMTD = r.mes === mesAtual;
-              return (
-                <tr key={`${r.mes}-${r.canal}`} style={{ borderBottom: "1px solid #222", background: r.mes === selMes ? "rgba(200,16,46,.07)" : "transparent" }}>
-                  <td style={{ ...td, textTransform: "capitalize" }}>
-                    {fmtMes(r.mes)}/{r.mes.slice(0, 4)}
-                    {isMTD && <span style={{ marginLeft: 6, fontSize: 8, color: "#e8b923", letterSpacing: ".1em" }}>MTD</span>}
-                  </td>
-                  <td style={td}>{CANAL_LABEL[r.canal] ?? r.canal}</td>
-                  <td style={{ ...td, textAlign: "right" }}>{fmtBRLc(Number(r.verba_brl))}</td>
-                  <td style={{ ...td, textAlign: "right" }}>{fmtBRLc(Number(r.gasto_brl))}</td>
-                  <td style={{ ...td, textAlign: "right", color: saldo >= 0 ? GREEN : RED, fontWeight: 700 }}>{fmtBRLc(saldo)}</td>
-                  <td style={{ ...td, textAlign: "right" }}>{fmtBRLc(Number(r.aporte_brl))}</td>
-                  <td style={{ ...td, color: MUT, fontSize: 10 }}>{r.nota ?? "—"}</td>
-                </tr>
-              );
-            })}
+            {Array.from(new Set(rows.filter((r) => r.mes.slice(0, 4) === selAno).map((r) => r.mes)))
+              .sort((a, b) => b.localeCompare(a))
+              .map((mes) => {
+                const doMes = rows.filter((r) => r.mes === mes).sort((a, b) => a.canal.localeCompare(b.canal));
+                const t = totaisPorMes.get(mes)!;
+                const isMTD = mes === mesAtual;
+                const multiCanal = doMes.length > 1;
+                return [
+                  <tr key={`${mes}-total`} style={{ borderBottom: multiCanal ? "none" : "1px solid #222", background: mes === selMes ? "rgba(200,16,46,.07)" : "transparent" }}>
+                    <td style={{ ...td, textTransform: "capitalize", color: "#FFFFFF", fontWeight: 700 }}>
+                      {fmtMes(mes)}/{mes.slice(0, 4)}
+                      {isMTD && <span style={{ marginLeft: 6, fontSize: 8, color: "#e8b923", letterSpacing: ".1em" }}>MTD</span>}
+                    </td>
+                    <td style={{ ...td, color: "#FFFFFF", fontWeight: 700 }}>{multiCanal ? "TOTAL" : (CANAL_LABEL[doMes[0].canal] ?? doMes[0].canal)}</td>
+                    <td style={{ ...td, textAlign: "right", color: "#FFFFFF", fontWeight: 700 }}>{fmtBRLc(t.verba)}</td>
+                    <td style={{ ...td, textAlign: "right", color: "#FFFFFF", fontWeight: 700 }}>{fmtBRLc(t.gasto)}</td>
+                    <td style={{ ...td, textAlign: "right", color: t.saldo >= 0 ? GREEN : RED, fontWeight: 700 }}>{fmtBRLc(t.saldo)}</td>
+                    <td style={{ ...td, textAlign: "right", color: "#FFFFFF", fontWeight: 700 }}>{fmtBRLc(aporteDoMes.get(mes) ?? 0)}</td>
+                    <td style={{ ...td, color: MUT, fontSize: 10 }}>{multiCanal ? (doMes.find((r) => r.nota)?.nota ?? "—") : (doMes[0].nota ?? "—")}</td>
+                  </tr>,
+                  ...(multiCanal
+                    ? doMes.map((r) => (
+                        <tr key={`${mes}-${r.canal}`} style={{ borderBottom: r === doMes[doMes.length - 1] ? "1px solid #222" : "none", background: mes === selMes ? "rgba(200,16,46,.04)" : "transparent" }}>
+                          <td style={td} />
+                          <td style={{ ...td, color: MUT, fontSize: 10, paddingLeft: 22 }}>↳ {CANAL_LABEL[r.canal] ?? r.canal}</td>
+                          <td style={{ ...td, textAlign: "right", color: MUT, fontSize: 10 }}>{fmtBRLc(Number(r.verba_brl))}</td>
+                          <td style={{ ...td, textAlign: "right", color: MUT, fontSize: 10 }}>{fmtBRLc(Number(r.gasto_brl))}</td>
+                          <td style={{ ...td, textAlign: "right", color: MUT, fontSize: 10 }}>{fmtBRLc(Number(r.saldo_brl))}</td>
+                          <td style={{ ...td, textAlign: "right", color: MUT, fontSize: 10 }}>—</td>
+                          <td style={{ ...td, color: MUT, fontSize: 10 }}>{r.nota ?? ""}</td>
+                        </tr>
+                      ))
+                    : []),
+                ];
+              })}
           </tbody>
         </table>
         <p style={{ color: MUT, fontSize: 9, fontFamily: theme.font.label, marginTop: 10 }}>
-          Saldo = verba − gasto do mês. Aporte do mês = verba − saldo positivo herdado do mês anterior (regra: o saldo que sobra abate o débito seguinte). Mês corrente é MTD (gasto parcial).
+          POTE ÚNICO: verba do mês cobre TODOS os canais somados (linha TOTAL); canais aparecem como detalhamento (↳). Saldo = verba − gasto do mês. Aporte do mês = verba − saldo positivo herdado do mês anterior (o saldo que sobra abate o débito seguinte). Mês corrente é MTD (gasto parcial).
         </p>
       </div>
     </div>
