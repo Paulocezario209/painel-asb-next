@@ -5,7 +5,7 @@ import { theme } from "@/lib/theme";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // AlertDrawer — drawer lateral reutilizável (drill-down dos cards de alerta).
-// Casa o padrão de day-detail-modal.tsx (overlay + ESC + tokens ASB inline);
+// Overlay + ESC + tokens ASB inline (padrão herdado do antigo day-detail-modal, removido na DEBT-231);
 // não introduz lib nova. Decisão pontual Paulo 2026-05-27 ("lista leve, preserva
 // contexto") — não altera o princípio P2 de asb-dashboard.
 // ─────────────────────────────────────────────────────────────────────────────

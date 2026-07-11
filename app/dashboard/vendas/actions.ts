@@ -360,10 +360,15 @@ export async function getEstrategiasComerciais(): Promise<EstrategiasResponse> {
   });
 
   // ── Pedidos pendentes (escritório precisa fechar) ──────────────────
+  // DEBT-084: mesmo filtro do A2/drawer (DEBT-083) — exclui AMERICAN STEAK
+  // interna (1,4,808), rascunhos R$0 e soft-deletados (DEBT-172 R1).
   const { data: pendentesRaw } = await supabase
     .from("pedidos_espelho")
     .select("vendedor_routing_team, valor_total_brl, data_emissao, previsao_entrega")
-    .in("status_pedido", ["pendente", "aprovado"]);
+    .in("status_pedido", ["pendente", "aprovado"])
+    .eq("is_deleted", false)
+    .not("ares_cliente_id", "in", "(1,4,808)")
+    .gt("valor_total_brl", 0);
 
   // Fix A (DEBT-174): "represado" = só pedido cujo dia de faturamento JÁ PASSOU.
   // dia_fat = previsao_entrega − 1 dia; §9 (operação Dom–Sex) rola fim de semana p/ sexta.
