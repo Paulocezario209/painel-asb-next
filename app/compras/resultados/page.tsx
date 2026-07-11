@@ -176,18 +176,38 @@ export default async function ResultadosPage({
   const fatorRitmo = metaAcum > 0 ? faturadoMtd / metaAcum : 1;       // "Ritmo % da meta" (indicador)
 
   const TETO = 0.54;
-  const fimCompleto = isMesCorrente ? new Date(anoSel, mesSel, hoje.getDate() - 1) : fimMes;
-  const duCompletos = fimCompleto >= inicioMes ? bizDays(inicioMes, fimCompleto) : 0;
-  const isoFimCompleto = iso(fimCompleto);
-  const fatCompletos = fatRows
-    .filter((r) => r.dia <= isoFimCompleto)
-    .reduce((s, r) => s + Number(r.faturado_brl || 0), 0);
-  const projFaturado = duCompletos > 0
-    ? (fatCompletos / duCompletos) * duTotal
-    : metaMensal;                                                    // edge: dia 1 do mês sem dia completo → meta mensal
-  const projCompras = TETO * projFaturado;                           // orçamento 54% do projetado
-  const disponivelCompras = projCompras - comprasMtd;                // o que ainda cabe comprar no mês
-  const pctComprometido = projFaturado > 0 ? Math.round((comprasMtd / projFaturado) * 1000) / 10 : 0;
+  // DEBT-082: fonte CANÔNICA da projeção = view v_projecao_fim_mes (mesma régua,
+  // paridade validada na criação). O cálculo local abaixo vira FALLBACK (view
+  // indisponível) — não evoluir a régua aqui sem atualizar a view junto.
+  const { data: projView } = isMesCorrente
+    ? await supabase
+        .from("v_projecao_fim_mes")
+        .select("proj_faturado, orcamento_compras, disponivel_compras, pct_comprometido")
+        .maybeSingle()
+    : { data: null };
+  let projFaturado: number;
+  let projCompras: number;
+  let disponivelCompras: number;
+  let pctComprometido: number;
+  if (projView) {
+    projFaturado = Number(projView.proj_faturado);
+    projCompras = Number(projView.orcamento_compras);
+    disponivelCompras = Number(projView.disponivel_compras);
+    pctComprometido = Number(projView.pct_comprometido);
+  } else {
+    const fimCompleto = isMesCorrente ? new Date(anoSel, mesSel, hoje.getDate() - 1) : fimMes;
+    const duCompletos = fimCompleto >= inicioMes ? bizDays(inicioMes, fimCompleto) : 0;
+    const isoFimCompleto = iso(fimCompleto);
+    const fatCompletos = fatRows
+      .filter((r) => r.dia <= isoFimCompleto)
+      .reduce((s, r) => s + Number(r.faturado_brl || 0), 0);
+    projFaturado = duCompletos > 0
+      ? (fatCompletos / duCompletos) * duTotal
+      : metaMensal;                                                  // edge: dia 1 do mês sem dia completo → meta mensal
+    projCompras = TETO * projFaturado;                               // orçamento 54% do projetado
+    disponivelCompras = projCompras - comprasMtd;                    // o que ainda cabe comprar no mês
+    pctComprometido = projFaturado > 0 ? Math.round((comprasMtd / projFaturado) * 1000) / 10 : 0;
+  }
   const semProj = semaforoPct(pctComprometido);
 
   const labelS: React.CSSProperties = {
