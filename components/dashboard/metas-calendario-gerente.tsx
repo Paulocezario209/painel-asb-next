@@ -1,11 +1,13 @@
 "use client";
 
 // Feature 1 / DEBT-108: Calendário de Metas MULTI-MÊS no /dashboard/gerente.
-// Navega qualquer mês (chama a RPC calendario_metas_mes) e reusa o MetaCalendarGrid
-// (mesmo grid do /vendas). NÃO altera o /vendas (que segue mono-mês via v_calendario_metas).
+// Navega qualquer mês e reusa o MetaCalendarGrid (mesmo grid do /vendas).
+// NÃO altera o /vendas (que segue mono-mês via v_calendario_metas).
+// ETAPA6 residual (DEBT-137): fetch via /api/metas/calendario (rota server com
+// unstable_cache, tag gerente-calendario-historico) — antes era RPC direto no
+// browser, fora do alcance do cache; invalidação acontece no metas/upload.
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { MetaCalendarGrid, type MetaCalDay } from "./meta-calendar-grid";
 import GerenteDayModal from "@/components/dashboard/gerente-day-modal";
 import { getDayPedidos, getDayCnb, getDayAusentes } from "@/app/dashboard/vendas/actions";
@@ -43,10 +45,10 @@ export function MetasCalendarioGerente() {
   const fetchMes = useCallback(async (a: number, m: number) => {
     setLoading(true); setErro(null);
     try {
-      const supabase = createClient();
-      const { data, error } = await supabase.rpc("calendario_metas_mes", { p_ano: a, p_mes: m });
-      if (error) { setErro(error.message); setRows([]); }
-      else setRows((data ?? []) as RpcRow[]);
+      const res = await fetch(`/api/metas/calendario?ano=${a}&mes=${m}`);
+      const json = await res.json();
+      if (!res.ok) { setErro(json?.error ?? res.statusText); setRows([]); }
+      else setRows((json.rows ?? []) as RpcRow[]);
     } catch (e) {
       setErro(String(e)); setRows([]);
     } finally {

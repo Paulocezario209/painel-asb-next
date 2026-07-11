@@ -17,6 +17,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { getUserContext, canAccess } from "@/lib/auth/get-user-role";
+import { revalidateTag } from "next/cache";
 import * as XLSX from "xlsx";
 import { createClient } from "@supabase/supabase-js";
 
@@ -185,6 +186,10 @@ export async function POST(req: NextRequest) {
         action: "insert",
       });
     }
+
+    // ETAPA6 residual (DEBT-137): metas alimentam o calendário do gerente →
+    // invalida o cache da rota /api/metas/calendario (Next 16: { expire: 0 }).
+    revalidateTag("gerente-calendario-historico", { expire: 0 });
 
     return NextResponse.json({
       mode: "applied",
