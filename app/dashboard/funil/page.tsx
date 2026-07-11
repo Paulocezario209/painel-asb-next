@@ -145,14 +145,14 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
   type Marcos = { criados: number; qualificados: number; handoff: number; assumidos: number; pedidos: number };
   const { data: _md } = await supabase.rpc("get_funil_marcos", { p_vendedor: vend, p_mes: mesParam });
   const _m = ((Array.isArray(_md) ? _md[0] : _md) ?? null) as Marcos | null;
-  // status: marco clicável → /dashboard/leads?status=X (deriva os mesmos estados do dropdown de /leads).
-  // "Leads criados" abre sem filtro (todos). Qualificados/Handoff/Vendedor/Pedido filtram.
+  // marco clicável → /dashboard/leads?mes=YYYY-MM&marco=X (modo coorte: abre SÓ os leads
+  // daquela linha — mesmo recorte mês/vendedor/critério da RPC get_funil_marcos).
   const marcos = _m ? [
-    { label: "Leads criados",    count: _m.criados,      status: "" },
-    { label: "Qualificados",     count: _m.qualificados, status: "qualified" },
-    { label: "Handoff",          count: _m.handoff,      status: "handoff" },
-    { label: "Vendedor assumiu", count: _m.assumidos,    status: "vendedor_assumiu" },
-    { label: "Pedido fechado",   count: _m.pedidos,      status: "pedido_fechado" },
+    { label: "Leads criados",    count: _m.criados,      marco: "criados" },
+    { label: "Qualificados",     count: _m.qualificados, marco: "qualificados" },
+    { label: "Handoff",          count: _m.handoff,      marco: "handoff" },
+    { label: "Vendedor assumiu", count: _m.assumidos,    marco: "vendedor_assumiu" },
+    { label: "Pedido fechado",   count: _m.pedidos,      marco: "pedido_fechado" },
   ] : [];
 
   // ── KPIs ──────────────────────────────────────────────────────────────────────
@@ -272,7 +272,9 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
               const prev = i > 0 ? marcos[i - 1].count : null;
               const pctTotal = base > 0 ? Math.round((mk.count / base) * 100) : 0;
               const pctPrev = prev && prev > 0 ? Math.round((mk.count / prev) * 100) : null;
-              const href = mk.status ? `/dashboard/leads?status=${mk.status}` : "/dashboard/leads";
+              const _qs = new URLSearchParams({ mes: mesParam, marco: mk.marco });
+              if (vend) _qs.set("vendedor", vend);
+              const href = `/dashboard/leads?${_qs.toString()}`;
               return (
                 <Link
                   key={mk.label}

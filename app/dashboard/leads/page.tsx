@@ -16,6 +16,16 @@ const VIEWS = [
   { key: "fora_de_rota", label: "Fora de Rota" },
 ] as const;
 
+// Modo COORTE (link das linhas de "Conversão da coorte" do /dashboard/funil):
+// ?mes=YYYY-MM&marco=X abre SÓ os leads daquele marco/mês — mesmos critérios da RPC get_funil_marcos.
+const MARCOS_COORTE: Record<string, string> = {
+  criados: "Leads criados",
+  qualificados: "Qualificados (qual_stage ≥ 7)",
+  handoff: "Handoff",
+  vendedor_assumiu: "Vendedor assumiu",
+  pedido_fechado: "Pedido fechado",
+};
+
 export default async function LeadsPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const sp = await searchParams;
   const view = sp.view === "perdidos" ? "perdidos" : sp.view === "fora_de_rota" ? "fora_de_rota" : "ativos";
@@ -23,14 +33,35 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
 
   const { data: { user } } = await supabase.auth.getUser();
 
+  const mesCoorte = sp.mes && /^\d{4}-(0[1-9]|1[0-2])$/.test(sp.mes) ? sp.mes : null;
+  const marcoCoorte = sp.marco && MARCOS_COORTE[sp.marco] ? sp.marco : null;
+  const vendCoorte = sp.vendedor && /^SETOR_[A-Z_]+$/.test(sp.vendedor) ? sp.vendedor : null;
+  const coorteAtiva = Boolean(mesCoorte && marcoCoorte && view === "ativos");
+
+  let leadsQuery = supabase
+    .from("ai_sdr_leads")
+    .select(
+      "phone, name, city, segment, weekly_volume_kg, lead_temperature, lead_status, routing_team, qual_stage, handoff_at, handoff_confirmed, handoff_confirmed_at, first_order_at, ai_active, created_at, updated_at, followup_count, pain_point, product_groups, scheduled_at, human_active, origem_canal, origem_utm_source, origem_utm_campaign, ad_id"
+    )
+    .eq("is_test", false);
+
+  if (coorteAtiva) {
+    // recorte da coorte: janela do mês + critério do marco (SEM excluir fora_de_rota — espelha a RPC)
+    const [y, m] = mesCoorte!.split("-").map(Number);
+    const ini = `${mesCoorte}-01`;
+    const fim = `${m === 12 ? y + 1 : y}-${String(m === 12 ? 1 : m + 1).padStart(2, "0")}-01`;
+    leadsQuery = leadsQuery.gte("created_at", ini).lt("created_at", fim);
+    if (vendCoorte) leadsQuery = leadsQuery.eq("routing_team", vendCoorte);
+    if (marcoCoorte === "qualificados") leadsQuery = leadsQuery.gte("qual_stage", 7);
+    if (marcoCoorte === "handoff") leadsQuery = leadsQuery.not("handoff_at", "is", null);
+    if (marcoCoorte === "vendedor_assumiu") leadsQuery = leadsQuery.not("seller_first_reply_at", "is", null);
+    if (marcoCoorte === "pedido_fechado") leadsQuery = leadsQuery.not("first_order_at", "is", null);
+  } else {
+    leadsQuery = leadsQuery.or("routing_team.is.null,routing_team.neq.fora_de_rota");   // DEBT-167 4: ATIVOS não lista fora_de_rota (NULL-safe)
+  }
+
   const [{ data: rawLeads }, scoreMap] = await Promise.all([
-    supabase
-      .from("ai_sdr_leads")
-      .select(
-        "phone, name, city, segment, weekly_volume_kg, lead_temperature, lead_status, routing_team, qual_stage, handoff_at, handoff_confirmed, handoff_confirmed_at, first_order_at, ai_active, created_at, updated_at, followup_count, pain_point, product_groups, scheduled_at, human_active, origem_canal, origem_utm_source, origem_utm_campaign, ad_id"
-      )
-      .eq("is_test", false)
-      .or("routing_team.is.null,routing_team.neq.fora_de_rota")   // DEBT-167 4: ATIVOS não lista fora_de_rota (NULL-safe)
+    leadsQuery
       .order("created_at", { ascending: false })
       .limit(100)
       .range(0, 99),
@@ -85,6 +116,16 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
             : view === "perdidos" ? "Fila de recuperação — perdidos nos últimos 180 dias"
             : "Fora de cobertura — registrados para expansão futura"}
         </p>
+        {coorteAtiva && (
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 10, marginTop: 8, background: "rgba(46,160,67,.12)", border: "1px solid #2ea043", borderRadius: 4, padding: "6px 12px" }}>
+            <span style={{ color: "#2ea043", fontSize: 11, fontFamily: theme.font.label, fontWeight: 700, letterSpacing: ".06em" }}>
+              COORTE {mesCoorte} · {MARCOS_COORTE[marcoCoorte!]}{vendCoorte ? ` · ${vendCoorte.replace("SETOR_", "")}` : ""}
+            </span>
+            <Link href="/dashboard/leads" style={{ color: "#c0d0e0", fontSize: 10, fontFamily: theme.font.label, textDecoration: "underline" }}>
+              limpar filtro
+            </Link>
+          </div>
+        )}
       </div>
 
       {/* ETAPA9C: toggle ATIVOS | PERDIDOS */}

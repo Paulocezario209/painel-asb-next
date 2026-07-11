@@ -25,7 +25,7 @@ export const MANUAIS: Record<string, ManualTela> = {
       "Convertido = fechou pedido OU faturou no ARES (mesmo sem o vendedor arrastar o card).",
     ],
     comoUsar: [
-      "Clique nos marcos ou nos cards da Camada Cliente para abrir a lista correspondente.",
+      "Clique numa linha da Conversão da Coorte para abrir SÓ os leads daquele marco (mesmo mês/vendedor do filtro) — a tela de Leads mostra a tarja verde COORTE com o recorte ativo e o link 'limpar filtro'.",
       "“Leads Parados por Etapa” lista os 10 mais antigos de cada etapa não-terminal — bom ponto de partida do dia.",
       "A contagem global tem cache de 5 minutos — pode atrasar levemente vs a tela de Leads.",
     ],
