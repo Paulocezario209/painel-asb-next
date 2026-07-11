@@ -368,6 +368,20 @@ export const MANUAIS: Record<string, ManualTela> = {
       "Criativo com muitos leads e poucos qualificados = atrai o público errado (ver funil-cac).",
     ],
   },
+  "/marketing/verba": {
+    titulo: "Marketing · Verba & Gasto",
+    oQueE: "Controle mensal de verba de mídia paga por canal: verba definida × gasto real, saldo do mês e aporte a pedir no mês seguinte.",
+    fontes: [
+      "Verba: marketing_verba_mensal (definida manualmente nesta tela, por mês/canal).",
+      "Gasto real: paid_media_daily (ETL Meta 06:10 BRT + Google 06:15 BRT). Cruzamento: v_verba_x_gasto_mensal.",
+      "Régua do aporte: verba do mês − saldo positivo herdado do mês anterior (saldo que sobra abate o débito seguinte; saldo negativo não abate).",
+    ],
+    comoUsar: [
+      "No início do mês, defina a verba de cada canal no formulário — o card 'Aporte' passa a mostrar exatamente quanto transferir.",
+      "Saldo VERDE = sobrou verba (mídia sub-investida); VERMELHO = gastou além do definido.",
+      "Compare a coluna Gasto com a fatura da plataforma/agência — divergência persistente = dinheiro repassado que não virou mídia (caso Cránium jan-jun/2026).",
+    ],
+  },
   "/marketing/funil-cac": {
     titulo: "Marketing · Funil & CAC",
     oQueE: "O funil por canal (lead → qualificado → handoff → convertido) com gasto, CAC por lead e custo por conversão de cada canal.",

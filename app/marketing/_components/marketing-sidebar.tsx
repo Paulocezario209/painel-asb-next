@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, CalendarDays, Radar, Megaphone, DollarSign } from "lucide-react";
+import { LayoutDashboard, CalendarDays, Radar, Megaphone, DollarSign, Wallet } from "lucide-react";
 
 const navItems = [
   { href: "/marketing/overview",   label: "Overview",         icon: LayoutDashboard },
@@ -11,6 +11,7 @@ const navItems = [
   { href: "/marketing/origem",     label: "Origem dos Leads", icon: Radar },
   { href: "/marketing/anuncios",   label: "Anúncios",         icon: Megaphone },
   { href: "/marketing/funil-cac",  label: "Funil CAC",        icon: DollarSign },
+  { href: "/marketing/verba",      label: "Verba & Gasto",    icon: Wallet },
 ];
 
 const RED = "#C8102E";
