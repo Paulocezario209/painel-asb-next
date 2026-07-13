@@ -1,0 +1,15 @@
+node_modules/
+.next*
+out/
+dist/
+build/
+coverage/
+*-lock.json
+*.lock
+pnpm-lock.yaml
+graphify-out/
+.env
+.env.*
+public/
+*.log
+*.sst
