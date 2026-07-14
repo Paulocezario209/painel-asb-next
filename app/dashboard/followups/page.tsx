@@ -2,6 +2,7 @@ import Link from "next/link";
 import { theme } from "@/lib/theme";
 import { createClient } from "@/lib/supabase/server";
 import { FollowupsTable } from "@/components/followups/followups-table";
+import { CadenciaBoard, type CadenciaLead } from "@/components/followups/cadencia-board";
 
 export const dynamic = "force-dynamic";
 
@@ -31,7 +32,7 @@ export default async function FollowupsPage({ searchParams }: { searchParams: Pr
   const sp = await searchParams;
   const supabase = await createClient();
 
-  const [{ data: followups }, { data: leads }, { count: vencidos }, { count: semData }] = await Promise.all([
+  const [{ data: followups }, { data: leads }, { count: vencidos }, { count: semData }, { data: cadencia }] = await Promise.all([
     supabase
       .from("followup_history")
       .select("phone, followup_sequence, phase, angle, message_sent, sent_at, responded, converted_after")
@@ -61,7 +62,13 @@ export default async function FollowupsPage({ searchParams }: { searchParams: Pr
       .eq("human_active", false)
       .or("routing_team.is.null,routing_team.neq.fora_de_rota")
       .is("next_followup_at", null),
+    // DEBT-288: board de cadência — leads que a automação nutre (mesmo conjunto que Ativos exclui).
+    supabase
+      .from("v_leads_cadencia")
+      .select("phone, name, city, segment, weekly_volume_kg, routing_team, qual_stage, lead_temperature, followup_phase, followup_count, next_followup_at, vencido")
+      .order("next_followup_at", { ascending: true, nullsFirst: false }),
   ]);
+  const cadenciaLeads = (cadencia ?? []) as CadenciaLead[];
 
   const leadsMap = Object.fromEntries((leads ?? []).map(l => [l.phone, l]));
   // DEBT-167 4: fora_de_rota não aparece em follow-ups (NULL-safe — mantém em-rota + NULL).
@@ -172,7 +179,14 @@ export default async function FollowupsPage({ searchParams }: { searchParams: Pr
         ))}
       </div>
 
-      {/* Table (client component — handles filters) */}
+      {/* DEBT-288: board de cadência — leads em nutrição automática, por fase.
+          Fica ACIMA do log (histórico). Estes leads saem da aba Ativos. */}
+      <CadenciaBoard leads={cadenciaLeads} />
+
+      {/* Histórico de disparos (log — não mexer) */}
+      <div>
+        <p style={{ ...S.label, marginBottom: 8 }}>Histórico de disparos</p>
+      </div>
       <FollowupsTable
         rows={enriched}
         angleLabels={ANGLE_LABELS}
