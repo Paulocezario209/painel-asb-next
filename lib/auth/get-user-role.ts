@@ -17,7 +17,8 @@ export interface UserContext {
 }
 
 const VENDOR_BLOCKED: string[] = [
-  "/dashboard/funil",
+  // /dashboard/funil LIBERADO ao vendedor (Paulo 2026-07-14): usa o Funil p/ navegar
+  // até seus leads (cards de etapa clicáveis) — inclui achar os que já assumiu.
   "/dashboard/vendedores",
   "/dashboard/insights",
   "/dashboard/simulator",

@@ -25,7 +25,8 @@ const navItems = [
   { href: "/dashboard/hot-leads",  label: "Leads Quentes", icon: Flame },
 ];
 
-const VENDOR_BLOCKED = new Set(["/dashboard/funil", "/dashboard/vendedores", "/dashboard/gerente", "/dashboard/insights", "/dashboard/simulator", "/dashboard/uploads", "/dashboard/churn", "/dashboard/up-sell", "/dashboard/remuneracao"]);
+// /dashboard/funil LIBERADO ao vendedor (Paulo 2026-07-14) — item aparece na sidebar.
+const VENDOR_BLOCKED = new Set(["/dashboard/vendedores", "/dashboard/gerente", "/dashboard/insights", "/dashboard/simulator", "/dashboard/uploads", "/dashboard/churn", "/dashboard/up-sell", "/dashboard/remuneracao"]);
 // manager (Fernando): ganha Remuneracao (tela do time); perde Minha Comissao (redireciona p/ Remuneracao).
 const MANAGER_BLOCKED = new Set(["/dashboard/gerente", "/dashboard/simulator", "/dashboard/uploads", "/dashboard/minha-comissao"]);
 
