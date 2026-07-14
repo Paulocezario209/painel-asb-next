@@ -7,6 +7,7 @@ import {
   CADENCIA_PHASES, CADENCIA_PHASE_LABEL, CADENCIA_PHASE_DESC, CADENCIA_PHASE_COLOR,
 } from "@/lib/followup/cadencia";
 import { VENDOR_LABELS } from "@/lib/vendor-labels";
+import { theme } from "@/lib/theme";
 
 // CADÊNCIA BOARD (DEBT-288) — leads que a automação de follow-up está nutrindo.
 // Fonte: view v_leads_cadencia (security_invoker → RLS por vendedor). O MESMO conjunto
@@ -29,7 +30,9 @@ export type CadenciaLead = {
 };
 
 const C = { bg: "#080b14", border: "#2a2a2a", text: "#FFFFFF", muted: "#c0d0e0", label: "#e4e9f0", red: "#C8102E", green: "#22c55e", amber: "#f59e0b" };
-const MONO: React.CSSProperties = { fontFamily: "'Courier New', monospace" };
+// Tipografia padrão do painel (commit 112f221): label/texto = Geist Sans · número = Geist Mono.
+const MONO: React.CSSProperties = { fontFamily: theme.font.label };
+const NUM: React.CSSProperties = { fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" };
 
 function maskPhone(p: string): string {
   if (p.length >= 13) return `+${p.slice(0, 2)} (${p.slice(2, 4)}) ****-${p.slice(-4)}`;
@@ -125,9 +128,9 @@ export function CadenciaBoard({ leads }: { leads: CadenciaLead[] }) {
               }}
             >
               {CADENCIA_PHASE_LABEL[p] ?? p}
-              <span style={{ color: pc, fontWeight: 700 }}>{cnt.total}</span>
+              <span style={{ ...NUM, color: pc, fontWeight: 700 }}>{cnt.total}</span>
               {cnt.vencidos > 0 && (
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 2, color: C.red, fontWeight: 700 }}>
+                <span style={{ ...NUM, display: "inline-flex", alignItems: "center", gap: 2, color: C.red, fontWeight: 700 }}>
                   <AlertTriangle style={{ width: 9, height: 9 }} />{cnt.vencidos}
                 </span>
               )}
@@ -165,19 +168,19 @@ export function CadenciaBoard({ leads }: { leads: CadenciaLead[] }) {
                   onClick={() => router.push(`/dashboard/leads/${encodeURIComponent(lead.phone)}`)}
                   style={{ borderBottom: `1px solid ${i < filtered.length - 1 ? "#0f1826" : "transparent"}`, background: i % 2 === 0 ? "transparent" : "rgba(27,42,107,.04)", cursor: "pointer", borderLeft: lead.vencido ? `3px solid ${C.red}` : "3px solid transparent" }}
                 >
-                  <td style={{ padding: "7px 10px", color: C.text, fontSize: 10, maxWidth: 170, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  <td style={{ padding: "8px 10px", color: C.text, fontSize: 11, maxWidth: 170, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {lead.name || "—"}
-                    <span style={{ color: C.muted, fontSize: 9, marginLeft: 6 }}>{maskPhone(lead.phone)}</span>
+                    <span style={{ ...NUM, color: C.muted, fontSize: 10, marginLeft: 6 }}>{maskPhone(lead.phone)}</span>
                   </td>
-                  <td style={{ padding: "7px 10px", color: C.muted, fontSize: 10, whiteSpace: "nowrap" }}>{lead.city ?? "—"}</td>
-                  <td style={{ padding: "7px 10px", color: C.muted, fontSize: 10, whiteSpace: "nowrap" }}>{lead.weekly_volume_kg ? `${lead.weekly_volume_kg} kg` : "—"}</td>
-                  <td style={{ padding: "7px 10px", fontSize: 10, fontWeight: 700, color: ABC_COLOR[a] }}>{a}</td>
-                  <td style={{ padding: "7px 10px", fontSize: 9, fontWeight: 700, color: TEMP_COLOR[temp] ?? C.muted, whiteSpace: "nowrap" }}>{temp}</td>
-                  <td style={{ padding: "7px 10px", color: C.muted, fontSize: 9, whiteSpace: "nowrap" }}>{(VENDOR_LABELS[lead.routing_team ?? ""] ?? lead.routing_team ?? "—").replace("SETOR_", "")}</td>
-                  <td style={{ padding: "7px 10px", fontSize: 10, fontWeight: 700, color: nt.color, whiteSpace: "nowrap" }}>
+                  <td style={{ padding: "8px 10px", color: C.muted, fontSize: 11, whiteSpace: "nowrap" }}>{lead.city ?? "—"}</td>
+                  <td style={{ ...NUM, padding: "8px 10px", color: C.muted, fontSize: 11, whiteSpace: "nowrap" }}>{lead.weekly_volume_kg ? `${lead.weekly_volume_kg} kg` : "—"}</td>
+                  <td style={{ padding: "8px 10px", fontSize: 11, fontWeight: 700, color: ABC_COLOR[a] }}>{a}</td>
+                  <td style={{ padding: "8px 10px", fontSize: 10, fontWeight: 700, color: TEMP_COLOR[temp] ?? C.muted, whiteSpace: "nowrap" }}>{temp}</td>
+                  <td style={{ padding: "8px 10px", color: C.muted, fontSize: 10, whiteSpace: "nowrap" }}>{(VENDOR_LABELS[lead.routing_team ?? ""] ?? lead.routing_team ?? "—").replace("SETOR_", "")}</td>
+                  <td style={{ ...NUM, padding: "8px 10px", fontSize: 11, fontWeight: 700, color: nt.color, whiteSpace: "nowrap" }}>
                     <Clock style={{ width: 10, height: 10, display: "inline", marginRight: 4, verticalAlign: "-1px" }} />{nt.label}
                   </td>
-                  <td style={{ padding: "7px 10px", color: C.muted, fontSize: 10 }}>{lead.followup_count ?? 0}</td>
+                  <td style={{ ...NUM, padding: "8px 10px", color: C.muted, fontSize: 11 }}>{lead.followup_count ?? 0}</td>
                 </tr>
               );
             })}
