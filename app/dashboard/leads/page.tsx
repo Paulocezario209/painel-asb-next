@@ -5,6 +5,7 @@ import { PerdidosList, type LostLead } from "@/components/leads/perdidos-list";
 import { ForaDeRotaTable, type ForaRotaLead } from "@/components/leads/fora-de-rota-table";
 import { ParadosList, type ParadoLead } from "@/components/leads/parados-list";
 import { CONVERTIDO_STAGES } from "@/lib/funnel/stages";
+import { LeadsCards } from "@/components/leads/leads-cards";
 import { getLeadScoreMap } from "@/lib/get-lead-scores";
 import { computeLeadScore, tierOf } from "@/lib/lead-score";
 import { theme } from "@/lib/theme";
@@ -139,6 +140,28 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
     paradosLeads = (data ?? []) as ParadoLead[];
   }
 
+  // Fase 1.2 (DEBT-286): contagens das 4 abas p/ os cards de resumo (head:true = só count).
+  // Ativos usa o MESMO filtro da lista (convertido já fora); Parados lê a MESMA fonte da aba
+  // (v_leads_parados) → card e aba nunca divergem.
+  const since180 = new Date(Date.now() - 180 * 86400000).toISOString();
+  const convInList = `(${CONVERTIDO_STAGES.join(",")})`;
+  const [cAtivos, cParados, cPerdidos, cFora] = await Promise.all([
+    supabase.from("ai_sdr_leads").select("phone", { count: "exact", head: true })
+      .eq("is_test", false).or("routing_team.is.null,routing_team.neq.fora_de_rota")
+      .is("first_order_at", null).not("funnel_stage", "in", convInList),
+    supabase.from("v_leads_parados").select("id", { count: "exact", head: true }),
+    supabase.from("ai_sdr_leads").select("phone", { count: "exact", head: true })
+      .eq("is_test", false).eq("funnel_stage", "lead_perdido").gte("lost_at", since180),
+    supabase.from("ai_sdr_leads").select("phone", { count: "exact", head: true })
+      .eq("is_test", false).eq("routing_team", "fora_de_rota"),
+  ]);
+  const cardCounts = {
+    ativos: cAtivos.count ?? 0,
+    parados: cParados.count ?? 0,
+    perdidos: cPerdidos.count ?? 0,
+    fora_de_rota: cFora.count ?? 0,
+  };
+
   return (
     <div className="space-y-4">
       <div>
@@ -160,6 +183,9 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
           </div>
         )}
       </div>
+
+      {/* Fase 1.2 (DEBT-286): cards de resumo das 4 abas (total + % · clicáveis) */}
+      <LeadsCards counts={cardCounts} active={view} />
 
       {/* ETAPA9C: toggle ATIVOS | PERDIDOS */}
       <div style={{ display: "flex", gap: 4, borderBottom: `1px solid ${theme.colors.borderDefault}` }}>
