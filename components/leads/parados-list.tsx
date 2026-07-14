@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { AlertTriangle, Search } from "lucide-react";
 import { stageLabel } from "@/lib/funnel/stages";
+import { theme } from "@/lib/theme";
 
 // PARADOS v4 (DEBT-290) — aba "Parados" em /dashboard/leads. Idade de ENTRADA no SDR.
 // Fonte: view v_leads_parados (security_invoker → vendor-scoped). Lead que entrou há 1–30 dias
@@ -23,7 +24,9 @@ export type ParadoLead = {
 };
 
 const C = { bg: "#080b14", border: "#2a2a2a", text: "#FFFFFF", muted: "#c0d0e0", label: "#e4e9f0" };
-const MONO: React.CSSProperties = { fontFamily: "'Courier New', monospace" };
+// Tipografia padrão do painel (commit 112f221): label/texto = Geist Sans · número = Geist Mono.
+const MONO: React.CSSProperties = { fontFamily: theme.font.label };
+const NUM: React.CSSProperties = { fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" };
 
 // faixas de idade (default = a mais recente/acionável)
 const FAIXAS: { key: string; label: string; cor: string; lo: number; hi: number }[] = [
@@ -89,7 +92,7 @@ export function ParadosList({ leads }: { leads: ParadoLead[] }) {
               }}
             >
               {f.label}
-              <span style={{ color: f.cor }}>{countByFaixa[f.key] ?? 0}</span>
+              <span style={{ ...NUM, color: f.cor, fontWeight: 700 }}>{countByFaixa[f.key] ?? 0}</span>
             </button>
           );
         })}
@@ -137,13 +140,13 @@ export function ParadosList({ leads }: { leads: ParadoLead[] }) {
                   cursor: "pointer",
                 }}
               >
-                <td style={{ padding: "7px 10px", color: C.muted, fontSize: 10, whiteSpace: "nowrap" }}>{maskPhone(lead.phone)}</td>
-                <td style={{ padding: "7px 10px", color: C.text, fontSize: 10, maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lead.restaurant_name ?? "—"}</td>
-                <td style={{ padding: "7px 10px", color: C.muted, fontSize: 10, whiteSpace: "nowrap" }}>{lead.city ?? "—"}</td>
-                <td style={{ padding: "7px 10px", color: C.muted, fontSize: 9, whiteSpace: "nowrap" }}>{(lead.routing_team ?? "—").replace("SETOR_", "")}</td>
-                <td style={{ padding: "7px 10px", color: C.muted, fontSize: 10, whiteSpace: "nowrap" }}>{stageLabel(lead.funnel_stage)}</td>
-                <td style={{ padding: "7px 10px", color: C.muted, fontSize: 10, whiteSpace: "nowrap" }}>{lead.qual_stage ?? "—"}</td>
-                <td style={{ padding: "7px 10px", color: sel.cor, fontSize: 10, fontWeight: 700, whiteSpace: "nowrap" }}>{lead.dias_parado ?? "—"}d</td>
+                <td style={{ ...NUM, padding: "8px 10px", color: C.muted, fontSize: 11, whiteSpace: "nowrap" }}>{maskPhone(lead.phone)}</td>
+                <td style={{ padding: "8px 10px", color: C.text, fontSize: 11, maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lead.restaurant_name ?? "—"}</td>
+                <td style={{ padding: "8px 10px", color: C.muted, fontSize: 11, whiteSpace: "nowrap" }}>{lead.city ?? "—"}</td>
+                <td style={{ padding: "8px 10px", color: C.muted, fontSize: 10, whiteSpace: "nowrap" }}>{(lead.routing_team ?? "—").replace("SETOR_", "")}</td>
+                <td style={{ padding: "8px 10px", color: C.muted, fontSize: 11, whiteSpace: "nowrap" }}>{stageLabel(lead.funnel_stage)}</td>
+                <td style={{ ...NUM, padding: "8px 10px", color: C.muted, fontSize: 11, whiteSpace: "nowrap" }}>{lead.qual_stage ?? "—"}</td>
+                <td style={{ ...NUM, padding: "8px 10px", color: sel.cor, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}>{lead.dias_parado ?? "—"}d</td>
               </tr>
             ))}
           </tbody>

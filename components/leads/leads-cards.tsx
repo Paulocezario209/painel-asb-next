@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { theme } from "@/lib/theme";
 
 // DEBT-286/290: cards de resumo das 4 abas de Leads (total + descritor · clicáveis → trocam aba).
 // Linha do tempo por idade no SDR (Paulo 2026-07-14): Leads SDR (entrou hoje) → Parados (1-30d)
@@ -7,7 +8,9 @@ import Link from "next/link";
 type Counts = { ativos: number; parados: number; perdidos: number; fora_de_rota: number };
 
 const C = { line: "#22304a", panel: "#0f1826", txt: "#fff", muted: "#c0d0e0", dim: "#7f8ea8" };
-const MONO: React.CSSProperties = { fontFamily: "'Courier New', monospace" };
+// Tipografia padrão do painel (commit 112f221): label/texto = Geist Sans · número = Geist Mono.
+const LABEL_FONT = theme.font.label;
+const NUM_FONT = theme.font.num;
 
 export function LeadsCards({ counts, active }: { counts: Counts; active: string }) {
   const cards = [
@@ -28,11 +31,11 @@ export function LeadsCards({ counts, active }: { counts: Counts; active: string 
               border: `1px solid ${on ? c.edge : C.line}`, borderTop: `2px solid ${c.edge}`, borderRadius: 10,
               padding: "13px 15px 12px", boxShadow: on ? `0 0 0 1px ${c.edge} inset` : "none", cursor: "pointer",
             }}>
-              <div style={{ ...MONO, fontSize: 10, letterSpacing: ".13em", textTransform: "uppercase", color: c.edge }}>{c.label}</div>
+              <div style={{ fontFamily: LABEL_FONT, fontSize: 10, letterSpacing: ".13em", textTransform: "uppercase", fontWeight: 700, color: c.edge }}>{c.label}</div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 9 }}>
-                <span style={{ fontSize: 28, fontWeight: 800, lineHeight: 1, color: C.txt, fontVariantNumeric: "tabular-nums" }}>{c.n}</span>
+                <span style={{ fontFamily: NUM_FONT, fontSize: 26, fontWeight: 800, lineHeight: 1, color: C.txt, fontVariantNumeric: "tabular-nums" }}>{c.n}</span>
               </div>
-              <div style={{ ...MONO, fontSize: 9.5, color: C.dim, marginTop: 8, letterSpacing: ".04em" }}>{c.sub}</div>
+              <div style={{ fontFamily: LABEL_FONT, fontSize: 10, color: C.dim, marginTop: 8 }}>{c.sub}</div>
             </div>
           </Link>
         );
