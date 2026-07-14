@@ -4,6 +4,7 @@ import { LeadsTable } from "@/components/leads/leads-table";
 import { PerdidosList, type LostLead } from "@/components/leads/perdidos-list";
 import { ForaDeRotaTable, type ForaRotaLead } from "@/components/leads/fora-de-rota-table";
 import { ParadosList, type ParadoLead } from "@/components/leads/parados-list";
+import { CONVERTIDO_STAGES } from "@/lib/funnel/stages";
 import { getLeadScoreMap } from "@/lib/get-lead-scores";
 import { computeLeadScore, tierOf } from "@/lib/lead-score";
 import { theme } from "@/lib/theme";
@@ -66,6 +67,13 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
     if (marcoCoorte === "pedido_fechado") leadsQuery = leadsQuery.not("first_order_at", "is", null);
   } else {
     leadsQuery = leadsQuery.or("routing_team.is.null,routing_team.neq.fora_de_rota");   // DEBT-167 4: ATIVOS não lista fora_de_rota (NULL-safe)
+    // Fase 1 / DEBT-286: convertido NÃO é lead ativo. Sai de Leads → vive na Carteira
+    // (v_carteira_360). Espelha o PIPELINE_ATIVOS (que já exclui). Dupla condição:
+    // first_order_at (marcação painel) + funnel_stage convertido (writer/ARES). O
+    // lead continua na tabela; só deixa de aparecer como "lead ativo".
+    leadsQuery = leadsQuery
+      .is("first_order_at", null)
+      .not("funnel_stage", "in", `(${CONVERTIDO_STAGES.join(",")})`);
   }
 
   // Item 6: busca server-side aplicada ANTES do limit (superset garantido vs busca client)
