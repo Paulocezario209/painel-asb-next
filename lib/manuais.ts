@@ -104,16 +104,18 @@ export const MANUAIS: Record<string, ManualTela> = {
   },
   "/dashboard/leads": {
     titulo: "Leads",
-    oQueE: "Todos os leads do SDR: ativos, perdidos (últimos 180 dias) e fora de rota — com score, origem e etapa.",
+    oQueE: "Todos os leads do SDR em 4 abas: Ativos, Parados (precisam de atenção), Perdidos (últimos 180 dias) e Fora de Rota — com score, origem e etapa.",
     fontes: [
-      "Tabela: leads reais (sem testes); score/tier da view de score (volume, segmento, etapa, temperatura).",
+      "Ativos: leads reais (sem testes), até 500; busca é server-side (varre todos, não só os carregados); score/tier da view de score.",
+      "Parados: view v_leads_parados (RLS por vendedor) em 4 baldes — Qualif. estagnada (mudo >48h, escada <qs7), Travado no follow-up (desligado ou 3+ falhas), Órfão de handoff (na fila e não pego), Nurturing longo (cadência mensal/semestral).",
       "Perdidos: motivo de perda registrado; “pipeline perdido” = volume × R$/kg médio.",
       "Fora de rota: municípios fora da cobertura atual (contato salvo para expansão).",
     ],
     comoUsar: [
       "Clique no lead para abrir o detalhe completo (conversa, timeline, ações).",
+      "Aba Parados abre em “Qualif. estagnada” (o mais acionável); troque de balde pelos chips.",
+      "Ativos: filtros combinam (busca + status + vendedor + ABC + produto + origem); a busca busca no servidor.",
       "“Reabordar” nos perdidos abre o WhatsApp direto com o lead.",
-      "Filtros combinam: busca + status + vendedor + ABC + produto + origem.",
     ],
   },
   "/dashboard/handoffs": {

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { LeadsTable } from "@/components/leads/leads-table";
 import { PerdidosList, type LostLead } from "@/components/leads/perdidos-list";
 import { ForaDeRotaTable, type ForaRotaLead } from "@/components/leads/fora-de-rota-table";
+import { ParadosList, type ParadoLead } from "@/components/leads/parados-list";
 import { getLeadScoreMap } from "@/lib/get-lead-scores";
 import { computeLeadScore, tierOf } from "@/lib/lead-score";
 import { theme } from "@/lib/theme";
@@ -12,6 +13,7 @@ export const dynamic = "force-dynamic";
 // ETAPA9C: abas da tela de leads
 const VIEWS = [
   { key: "ativos", label: "Ativos" },
+  { key: "parados", label: "Parados" },
   { key: "perdidos", label: "Perdidos" },
   { key: "fora_de_rota", label: "Fora de Rota" },
 ] as const;
@@ -28,7 +30,7 @@ const MARCOS_COORTE: Record<string, string> = {
 
 export default async function LeadsPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const sp = await searchParams;
-  const view = sp.view === "perdidos" ? "perdidos" : sp.view === "fora_de_rota" ? "fora_de_rota" : "ativos";
+  const view = sp.view === "perdidos" ? "perdidos" : sp.view === "fora_de_rota" ? "fora_de_rota" : sp.view === "parados" ? "parados" : "ativos";
   const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
@@ -118,12 +120,24 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
     foraRotaLeads = (data ?? []) as ForaRotaLead[];
   }
 
+  // Item 10: aba PARADOS — v_leads_parados (security_invoker → RLS vendor-scoped).
+  let paradosLeads: ParadoLead[] = [];
+  if (view === "parados") {
+    const { data } = await supabase
+      .from("v_leads_parados")
+      .select("balde, id, phone, restaurant_name, city, routing_team, funnel_stage, qual_stage, last_reply_at, followup_phase, followup_fail_count")
+      .order("last_reply_at", { ascending: true, nullsFirst: true })
+      .limit(1000);
+    paradosLeads = (data ?? []) as ParadoLead[];
+  }
+
   return (
     <div className="space-y-4">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Leads</h1>
         <p className="text-sm text-slate-200 mt-1">
           {view === "ativos" ? `${leads.length} leads encontrados`
+            : view === "parados" ? "Leads que precisam de atenção — 4 baldes (v_leads_parados)"
             : view === "perdidos" ? "Fila de recuperação — perdidos nos últimos 180 dias"
             : "Fora de cobertura — registrados para expansão futura"}
         </p>
@@ -171,6 +185,8 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
 
       {view === "perdidos" ? (
         <PerdidosList leads={lostLeads} />
+      ) : view === "parados" ? (
+        <ParadosList leads={paradosLeads} />
       ) : view === "fora_de_rota" ? (
         <ForaDeRotaTable leads={foraRotaLeads} />
       ) : (
