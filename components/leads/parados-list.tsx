@@ -115,8 +115,8 @@ export function ParadosList({ leads }: { leads: ParadoLead[] }) {
         <table style={{ width: "100%", borderCollapse: "collapse", ...MONO }}>
           <thead>
             <tr style={{ borderBottom: `1px solid ${C.border}` }}>
-              {["Phone", "Restaurante", "Cidade", "Setor", "Etapa", "QS", "Parado há"].map(h => (
-                <th key={h} style={{ padding: "6px 10px", textAlign: "left", fontSize: 9, letterSpacing: ".13em", textTransform: "uppercase", color: C.label, whiteSpace: "nowrap" }}>
+              {["Phone", "Restaurante", "Cidade", "Setor", "Etapa", "QS", "Parado há"].map((h, hi) => (
+                <th key={h} style={{ padding: "8px 6px", textAlign: hi >= 5 ? "right" : "left", fontSize: 9, letterSpacing: ".1em", textTransform: "uppercase", color: C.label, fontFamily: theme.font.label, whiteSpace: "nowrap" }}>
                   {h}
                 </th>
               ))}
@@ -140,13 +140,13 @@ export function ParadosList({ leads }: { leads: ParadoLead[] }) {
                   cursor: "pointer",
                 }}
               >
-                <td style={{ ...NUM, padding: "8px 10px", color: C.muted, fontSize: 11, whiteSpace: "nowrap" }}>{maskPhone(lead.phone)}</td>
-                <td style={{ padding: "8px 10px", color: C.text, fontSize: 11, maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lead.restaurant_name ?? "—"}</td>
-                <td style={{ padding: "8px 10px", color: C.muted, fontSize: 11, whiteSpace: "nowrap" }}>{lead.city ?? "—"}</td>
-                <td style={{ padding: "8px 10px", color: C.muted, fontSize: 10, whiteSpace: "nowrap" }}>{(lead.routing_team ?? "—").replace("SETOR_", "")}</td>
-                <td style={{ padding: "8px 10px", color: C.muted, fontSize: 11, whiteSpace: "nowrap" }}>{stageLabel(lead.funnel_stage)}</td>
-                <td style={{ ...NUM, padding: "8px 10px", color: C.muted, fontSize: 11, whiteSpace: "nowrap" }}>{lead.qual_stage ?? "—"}</td>
-                <td style={{ ...NUM, padding: "8px 10px", color: sel.cor, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}>{lead.dias_parado ?? "—"}d</td>
+                <td style={{ ...NUM, padding: "10px 6px", color: C.muted, fontSize: 11, whiteSpace: "nowrap" }}>{maskPhone(lead.phone)}</td>
+                <td style={{ padding: "10px 6px", color: C.text, fontSize: 12, fontWeight: 700, fontFamily: theme.font.label, maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lead.restaurant_name ?? "—"}</td>
+                <td style={{ padding: "10px 6px", color: C.muted, fontSize: 11, fontFamily: theme.font.label, whiteSpace: "nowrap" }}>{lead.city ?? "—"}</td>
+                <td style={{ padding: "10px 6px", color: C.muted, fontSize: 10, fontFamily: theme.font.label, whiteSpace: "nowrap" }}>{(lead.routing_team ?? "—").replace("SETOR_", "")}</td>
+                <td style={{ padding: "10px 6px", color: C.muted, fontSize: 11, fontFamily: theme.font.label, whiteSpace: "nowrap" }}>{stageLabel(lead.funnel_stage)}</td>
+                <td style={{ ...NUM, padding: "10px 6px", color: C.muted, fontSize: 11, textAlign: "right", whiteSpace: "nowrap" }}>{lead.qual_stage ?? "—"}</td>
+                <td style={{ ...NUM, padding: "10px 6px", color: sel.cor, fontSize: 11, fontWeight: 700, textAlign: "right", whiteSpace: "nowrap" }}>{lead.dias_parado ?? "—"}d</td>
               </tr>
             ))}
           </tbody>

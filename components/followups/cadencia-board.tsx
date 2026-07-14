@@ -148,7 +148,7 @@ export function CadenciaBoard({ leads }: { leads: CadenciaLead[] }) {
           <thead>
             <tr style={{ borderBottom: `1px solid ${C.border}` }}>
               {["Restaurante", "Cidade", "Volume", "ABC", "Temp.", "Setor", "Próximo toque", "Toques"].map((h) => (
-                <th key={h} style={{ padding: "6px 10px", textAlign: "left", fontSize: 9, letterSpacing: ".13em", textTransform: "uppercase", color: C.label, whiteSpace: "nowrap" }}>{h}</th>
+                <th key={h} style={{ padding: "8px 6px", textAlign: h === "Toques" ? "right" : "left", fontSize: 9, letterSpacing: ".1em", textTransform: "uppercase", color: C.label, fontFamily: theme.font.label, whiteSpace: "nowrap" }}>{h}</th>
               ))}
             </tr>
           </thead>
@@ -168,19 +168,19 @@ export function CadenciaBoard({ leads }: { leads: CadenciaLead[] }) {
                   onClick={() => router.push(`/dashboard/leads/${encodeURIComponent(lead.phone)}`)}
                   style={{ borderBottom: `1px solid ${i < filtered.length - 1 ? "#0f1826" : "transparent"}`, background: i % 2 === 0 ? "transparent" : "rgba(27,42,107,.04)", cursor: "pointer", borderLeft: lead.vencido ? `3px solid ${C.red}` : "3px solid transparent" }}
                 >
-                  <td style={{ padding: "8px 10px", color: C.text, fontSize: 11, maxWidth: 170, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  <td style={{ padding: "10px 6px", color: C.text, fontSize: 12, fontWeight: 700, fontFamily: theme.font.label, maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {lead.name || "—"}
-                    <span style={{ ...NUM, color: C.muted, fontSize: 10, marginLeft: 6 }}>{maskPhone(lead.phone)}</span>
+                    <span style={{ ...NUM, color: C.muted, fontSize: 10, fontWeight: 400, marginLeft: 6 }}>{maskPhone(lead.phone)}</span>
                   </td>
-                  <td style={{ padding: "8px 10px", color: C.muted, fontSize: 11, whiteSpace: "nowrap" }}>{lead.city ?? "—"}</td>
-                  <td style={{ ...NUM, padding: "8px 10px", color: C.muted, fontSize: 11, whiteSpace: "nowrap" }}>{lead.weekly_volume_kg ? `${lead.weekly_volume_kg} kg` : "—"}</td>
-                  <td style={{ padding: "8px 10px", fontSize: 11, fontWeight: 700, color: ABC_COLOR[a] }}>{a}</td>
-                  <td style={{ padding: "8px 10px", fontSize: 10, fontWeight: 700, color: TEMP_COLOR[temp] ?? C.muted, whiteSpace: "nowrap" }}>{temp}</td>
-                  <td style={{ padding: "8px 10px", color: C.muted, fontSize: 10, whiteSpace: "nowrap" }}>{(VENDOR_LABELS[lead.routing_team ?? ""] ?? lead.routing_team ?? "—").replace("SETOR_", "")}</td>
-                  <td style={{ ...NUM, padding: "8px 10px", fontSize: 11, fontWeight: 700, color: nt.color, whiteSpace: "nowrap" }}>
+                  <td style={{ padding: "10px 6px", color: C.muted, fontSize: 11, fontFamily: theme.font.label, whiteSpace: "nowrap" }}>{lead.city ?? "—"}</td>
+                  <td style={{ ...NUM, padding: "10px 6px", color: C.muted, fontSize: 11, whiteSpace: "nowrap" }}>{lead.weekly_volume_kg ? `${lead.weekly_volume_kg} kg` : "—"}</td>
+                  <td style={{ padding: "10px 6px", fontSize: 11, fontWeight: 700, fontFamily: theme.font.label, color: ABC_COLOR[a] }}>{a}</td>
+                  <td style={{ padding: "10px 6px", fontSize: 10, fontWeight: 700, fontFamily: theme.font.label, color: TEMP_COLOR[temp] ?? C.muted, whiteSpace: "nowrap" }}>{temp}</td>
+                  <td style={{ padding: "10px 6px", color: C.muted, fontSize: 10, fontFamily: theme.font.label, whiteSpace: "nowrap" }}>{(VENDOR_LABELS[lead.routing_team ?? ""] ?? lead.routing_team ?? "—").replace("SETOR_", "")}</td>
+                  <td style={{ ...NUM, padding: "10px 6px", fontSize: 11, fontWeight: 700, color: nt.color, whiteSpace: "nowrap" }}>
                     <Clock style={{ width: 10, height: 10, display: "inline", marginRight: 4, verticalAlign: "-1px" }} />{nt.label}
                   </td>
-                  <td style={{ ...NUM, padding: "8px 10px", color: C.muted, fontSize: 11 }}>{lead.followup_count ?? 0}</td>
+                  <td style={{ ...NUM, padding: "10px 6px", color: C.muted, fontSize: 11, textAlign: "right" }}>{lead.followup_count ?? 0}</td>
                 </tr>
               );
             })}
