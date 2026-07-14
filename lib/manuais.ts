@@ -107,7 +107,7 @@ export const MANUAIS: Record<string, ManualTela> = {
     oQueE: "Todos os leads do SDR em 4 abas: Ativos, Parados (precisam de atenção), Perdidos (últimos 180 dias) e Fora de Rota — com score, origem e etapa.",
     fontes: [
       "Ativos: leads reais (sem testes), até 500; busca é server-side (varre todos, não só os carregados); score/tier da view de score.",
-      "Parados: view v_leads_parados (RLS por vendedor) em 4 baldes — Qualif. estagnada (mudo >48h, escada <qs7), Travado no follow-up (desligado ou 3+ falhas), Órfão de handoff (na fila e não pego), Nurturing longo (cadência mensal/semestral).",
+      "Parados: view v_leads_parados (RLS por vendedor) em 4 baldes — Qualif. estagnada (mudo >48h, escada <qs7), Travado no follow-up (desligado ou 3+ falhas), Órfão de handoff (na fila e não pego), Nurturing longo (cadência mensal/semestral). Não lista fora-de-rota nem clientes já convertidos (exceto Nurturing, que nutre cliente de propósito).",
       "Perdidos: motivo de perda registrado; “pipeline perdido” = volume × R$/kg médio.",
       "Fora de rota: municípios fora da cobertura atual (contato salvo para expansão).",
     ],
