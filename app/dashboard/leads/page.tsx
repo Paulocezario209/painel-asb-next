@@ -5,6 +5,7 @@ import { PerdidosList, type LostLead } from "@/components/leads/perdidos-list";
 import { ForaDeRotaTable, type ForaRotaLead } from "@/components/leads/fora-de-rota-table";
 import { ParadosList, type ParadoLead } from "@/components/leads/parados-list";
 import { NAO_ATIVO_STAGES } from "@/lib/funnel/stages";
+import { CADENCIA_PHASES } from "@/lib/followup/cadencia";
 import { LeadsCards } from "@/components/leads/leads-cards";
 import { getLeadScoreMap } from "@/lib/get-lead-scores";
 import { computeLeadScore, tierOf } from "@/lib/lead-score";
@@ -74,7 +75,12 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
     // CONVERTIDO_STAGES ∪ lead_perdido. first_order_at cobre a marcação-painel de 1ª compra.
     leadsQuery = leadsQuery
       .is("first_order_at", null)
-      .not("funnel_stage", "in", `(${NAO_ATIVO_STAGES.join(",")})`);
+      .not("funnel_stage", "in", `(${NAO_ATIVO_STAGES.join(",")})`)
+      // DEBT-288: lead em cadência automática NÃO é "ativo do vendedor" — vive no board
+      // de Follow-up (v_leads_cadencia). Mantém em Ativos só quem NÃO tem toque agendado
+      // OU não está numa fase de cadência (novos sem toque, vendedor-assumiu). Single source
+      // com o board: CADENCIA_PHASES (lib/followup/cadencia).
+      .or(`next_followup_at.is.null,followup_phase.not.in.(${CADENCIA_PHASES.join(",")})`);
   }
 
   // Item 6: busca server-side aplicada ANTES do limit (superset garantido vs busca client)
@@ -148,7 +154,8 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
   const [cAtivos, cParados, cPerdidos, cFora] = await Promise.all([
     supabase.from("ai_sdr_leads").select("phone", { count: "exact", head: true })
       .eq("is_test", false).or("routing_team.is.null,routing_team.neq.fora_de_rota")
-      .is("first_order_at", null).not("funnel_stage", "in", naoAtivoInList),
+      .is("first_order_at", null).not("funnel_stage", "in", naoAtivoInList)
+      .or(`next_followup_at.is.null,followup_phase.not.in.(${CADENCIA_PHASES.join(",")})`),  // DEBT-288: cadência vive no Follow-up
     supabase.from("v_leads_parados").select("id", { count: "exact", head: true }),
     supabase.from("ai_sdr_leads").select("phone", { count: "exact", head: true })
       .eq("is_test", false).eq("funnel_stage", "lead_perdido").gte("lost_at", since180),
