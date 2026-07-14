@@ -107,7 +107,7 @@ export const MANUAIS: Record<string, ManualTela> = {
     oQueE: "Os leads do SDR numa linha do tempo por idade: Leads SDR (entraram HOJE — a caixa de entrada do dia), Parados (1–30 dias, precisam de atenção), Perdidos (últimos 180 dias) e Fora de Rota. Cards no topo mostram o total de cada aba. Convertidos NÃO aparecem aqui: viraram cliente e vivem na Carteira.",
     fontes: [
       "Leads SDR: leads que ENTRARAM HOJE (created_at no dia corrente, BRT). Virou o dia → caem em Parados. É a caixa de entrada do SDR — o vendedor sabe quem chegou hoje. Reais (sem testes), em rota, não convertidos, não perdidos, fora de cadência automática.",
-      "Parados: view v_leads_parados (RLS por vendedor). São leads que responderam e sumiram, ainda na qualificação e sem vendedor ter assumido — travados há 1 a 30 dias, em 3 faixas de IDADE: 1–7 dias (default, mais acionável), 8–14 dias e 15–30 dias. Não lista fora-de-rota nem convertidos. Follow-up/nurturing NÃO entram aqui — vivem na fila de Atendimento (Handoffs/Follow-ups). Acima de 30 dias vira trilha de Perdido.",
+      "Parados: view v_leads_parados (RLS por vendedor). Leads que ENTRARAM no SDR há 1 a 30 dias e ainda estão no funil — em 3 faixas de idade de entrada: 1–7 dias (default), 8–14 e 15–30. Inclui os já assumidos pelo vendedor (ele administra pelas mesmas janelas). Até o dia 30 o vendedor deve resolver: fechar ou marcar perdido (com motivo). Acima de 30 dias sai de Parados → cadência longa. Não lista fora-de-rota nem convertidos/perdidos.",
       "Perdidos: motivo de perda registrado; “pipeline perdido” = volume × R$/kg médio.",
       "Fora de rota: municípios fora da cobertura atual (contato salvo para expansão).",
     ],

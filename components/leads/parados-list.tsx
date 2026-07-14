@@ -5,10 +5,10 @@ import { useRouter } from "next/navigation";
 import { AlertTriangle, Search } from "lucide-react";
 import { stageLabel } from "@/lib/funnel/stages";
 
-// PARADOS v2 (DEBT-286) — aba "Parados" em /dashboard/leads. Travados RECENTES por IDADE.
-// Fonte: view v_leads_parados (security_invoker → vendor-scoped). Lead pré-"vendedor assumiu"
-// que respondeu e sumiu há 1–30 dias. Sem follow-up/nurturing (vivem em Atendimento).
-// 3 faixas: 1-7 (default) · 8-14 · 15-30 dias.
+// PARADOS v4 (DEBT-290) — aba "Parados" em /dashboard/leads. Idade de ENTRADA no SDR.
+// Fonte: view v_leads_parados (security_invoker → vendor-scoped). Lead que entrou há 1–30 dias
+// e ainda está no funil (inclui os já assumidos pelo vendedor — mesmas janelas). Até o dia 30
+// o vendedor deve resolver (fechar/perder). 3 faixas: 1-7 (default) · 8-14 · 15-30 dias.
 
 export type ParadoLead = {
   id: string;

@@ -181,7 +181,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
         <h1 className="text-2xl font-bold text-gray-900">Leads</h1>
         <p className="text-sm text-slate-200 mt-1">
           {view === "ativos" ? `${leads.length} leads que entraram hoje — a caixa de entrada do SDR (virou o dia → Parados)`
-            : view === "parados" ? "Travados recentes — não responderam, ainda no funil (1–30 dias)"
+            : view === "parados" ? "No funil há 1–30 dias — o vendedor deve resolver (fechar ou marcar perdido com motivo) até o dia 30"
             : view === "perdidos" ? "Fila de recuperação — perdidos nos últimos 180 dias"
             : "Fora de cobertura — registrados para expansão futura"}
         </p>
