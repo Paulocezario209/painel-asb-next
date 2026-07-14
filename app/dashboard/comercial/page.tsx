@@ -1,20 +1,19 @@
 import Link from "next/link";
+import { theme } from "@/lib/theme";
 import { createClient } from "@/lib/supabase/server";
 import { NAO_ATIVO_STAGES } from "@/lib/funnel/stages";
 import { CADENCIA_PHASES } from "@/lib/followup/cadencia";
 
 export const dynamic = "force-dynamic";
 
-// HUB COMERCIAL (DEBT-290) — uma porta só pra camada comercial. Cards clonam o KPI da tela
-// Clientes (bg #16161c · borderTop 3px colorido · glow · label 10px uppercase · número 3xl branco).
-// Cada card abre a função que JÁ existe (drill-down). Sem lógica nova — só navegação + contagem.
+// HUB COMERCIAL (DEBT-290) — a JORNADA de ponta a ponta como um FLUXO (cards conectados
+// por setas), claro pro vendedor: rótulo da etapa + título + subtítulo. Cada card abre a
+// tela que já existe. Abaixo, os números vivos (cards KPI clonados de Clientes).
 
-// mesma régua de "entrou hoje" da aba Leads SDR (BRT)
 function startTodayUtc(): string {
   const d = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
   return new Date(`${d}T00:00:00-03:00`).toISOString();
 }
-
 const PIPELINE_STAGES = ["handoff", "lead_em_andamento", "vendedor_assumiu", "negociacao", "proposta_enviada", "pedido_teste"];
 
 export default async function ComercialPage() {
@@ -24,13 +23,15 @@ export default async function ComercialPage() {
   const naoAtivo = `(${NAO_ATIVO_STAGES.join(",")})`;
   const cad = `next_followup_at.is.null,followup_phase.not.in.(${CADENCIA_PHASES.join(",")})`;
 
-  const [cLeadsHoje, cParados, cPerdidos, cPipeline, cClientes, cRecompra] = await Promise.all([
+  const [cLeadsHoje, cParados, cPerdidos, cHandoff, cPipeline, cClientes, cRecompra] = await Promise.all([
     supabase.from("ai_sdr_leads").select("phone", { count: "exact", head: true })
       .eq("is_test", false).or("routing_team.is.null,routing_team.neq.fora_de_rota")
       .is("first_order_at", null).not("funnel_stage", "in", naoAtivo).or(cad).gte("created_at", hoje),
     supabase.from("v_leads_parados").select("id", { count: "exact", head: true }),
     supabase.from("ai_sdr_leads").select("phone", { count: "exact", head: true })
       .eq("is_test", false).eq("funnel_stage", "lead_perdido").gte("lost_at", since180),
+    supabase.from("ai_sdr_leads").select("phone", { count: "exact", head: true })
+      .eq("is_test", false).not("handoff_at", "is", null).is("handoff_confirmed", false),
     supabase.from("ai_sdr_leads").select("phone", { count: "exact", head: true })
       .eq("is_test", false).or("routing_team.is.null,routing_team.neq.fora_de_rota")
       .is("first_order_at", null).in("funnel_stage", PIPELINE_STAGES),
@@ -39,51 +40,105 @@ export default async function ComercialPage() {
     supabase.from("v_carteira_360").select("ares_pessoa_id", { count: "exact", head: true })
       .in("customer_status", ["risco", "pre_churn"]),
   ]);
+  const n = {
+    leadsHoje: cLeadsHoje.count ?? 0, parados: cParados.count ?? 0, perdidos: cPerdidos.count ?? 0,
+    handoff: cHandoff.count ?? 0, pipeline: cPipeline.count ?? 0, clientes: cClientes.count ?? 0, recompra: cRecompra.count ?? 0,
+  };
 
-  const AQUISICAO = [
-    { label: "Leads SDR", n: cLeadsHoje.count ?? 0, desc: "entraram hoje", color: "#3f7bf5", href: "/dashboard/leads" },
-    { label: "Parados", n: cParados.count ?? 0, desc: "1–30 dias no funil", color: "#f59e0b", href: "/dashboard/leads?view=parados" },
-    { label: "Perdidos", n: cPerdidos.count ?? 0, desc: "últimos 180 dias", color: "#C8102E", href: "/dashboard/leads?view=perdidos" },
-    { label: "Pipeline", n: cPipeline.count ?? 0, desc: "em aberto com o vendedor", color: "#eab308", href: "/dashboard/pipeline" },
+  // O FLUXO — a jornada. Cada etapa: rótulo colorido + título + subtítulo + nº vivo + destino.
+  const FLUXO: FlowStep[] = [
+    { cat: "SDR",            cor: "#6390f5", titulo: "Lead → Qualificado", sub: "novo · atendido · qualif (qs7)", n: n.leadsHoje, nLabel: "hoje",       href: "/dashboard/leads" },
+    { cat: "SDR → VENDEDOR", cor: "#6390f5", titulo: "Handoff",            sub: "passa pro vendedor",             n: n.handoff,   nLabel: "pendentes",  href: "/dashboard/handoffs" },
+    { cat: "VENDEDOR",       cor: "#eab308", titulo: "Pipeline",           sub: "andamento · negociação · proposta", n: n.pipeline, nLabel: "em aberto", href: "/dashboard/pipeline" },
+    { cat: "FRONTEIRA",      cor: "#22c55e", titulo: "Convertido",         sub: "1º pedido · ARES",               n: null,        nLabel: "",           href: "/dashboard/clientes" },
+    { cat: "CLIENTE",        cor: "#14b8a6", titulo: "Ativo → Recorrente", sub: "carteira · recência",            n: n.clientes,  nLabel: "vivos",      href: "/dashboard/clientes" },
+    { cat: "SAÍDA",          cor: "#C8102E", titulo: "Risco → Churn",      sub: "sem comprar",                    n: n.recompra,  nLabel: "recompra",   href: "/dashboard/carteira-ativa" },
   ];
-  const CARTEIRA = [
-    { label: "Clientes", n: cClientes.count ?? 0, desc: "carteira viva (ativo + atenção)", color: "#22c55e", href: "/dashboard/clientes" },
-    { label: "Carteira Ativa", n: cRecompra.count ?? 0, desc: "recompra devida (risco + pré-churn)", color: "#f97316", href: "/dashboard/carteira-ativa" },
+
+  const AQUISICAO: Kpi[] = [
+    { label: "Leads SDR", n: n.leadsHoje, desc: "entraram hoje", color: "#3f7bf5", href: "/dashboard/leads" },
+    { label: "Parados",   n: n.parados,   desc: "1–30 dias no funil", color: "#f59e0b", href: "/dashboard/leads?view=parados" },
+    { label: "Perdidos",  n: n.perdidos,  desc: "últimos 180 dias", color: "#C8102E", href: "/dashboard/leads?view=perdidos" },
+    { label: "Pipeline",  n: n.pipeline,  desc: "em aberto com o vendedor", color: "#eab308", href: "/dashboard/pipeline" },
+  ];
+  const CARTEIRA: Kpi[] = [
+    { label: "Clientes",       n: n.clientes, desc: "carteira viva (ativo + atenção)", color: "#22c55e", href: "/dashboard/clientes" },
+    { label: "Carteira Ativa", n: n.recompra, desc: "recompra devida (risco + pré-churn)", color: "#f97316", href: "/dashboard/carteira-ativa" },
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-7">
       <div>
         <h1 className="text-2xl font-bold text-white">Comercial</h1>
-        <p className="text-sm text-slate-300 mt-1">A jornada de ponta a ponta — clique num card para abrir a tela.</p>
+        <p className="text-sm text-slate-300 mt-1">A jornada de ponta a ponta — clique numa etapa para abrir a tela.</p>
       </div>
 
-      <Secao titulo="Aquisição" sub="Lead → Handoff → Pipeline" cards={AQUISICAO} />
-      <Secao titulo="Carteira" sub="Cliente → Recorrente → Recompra" cards={CARTEIRA} />
+      {/* O FLUXO */}
+      <div className="space-y-3">
+        <span className="text-[11px] uppercase tracking-wider font-bold text-[#c0c8d8]">A jornada de ponta a ponta</span>
+        <div style={{ display: "flex", alignItems: "stretch", gap: 0, overflowX: "auto", paddingBottom: 4 }}>
+          {FLUXO.map((s, i) => (
+            <div key={s.cat} style={{ display: "flex", alignItems: "center", flexShrink: 0 }}>
+              <FlowCard step={s} />
+              {i < FLUXO.length - 1 && (
+                <span style={{ color: "#3a4a63", fontSize: 18, padding: "0 8px", flexShrink: 0, fontFamily: theme.font.num }}>→</span>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* NÚMEROS (KPI clonados de Clientes) */}
+      <Secao titulo="Aquisição" cards={AQUISICAO} />
+      <Secao titulo="Carteira" cards={CARTEIRA} />
     </div>
   );
 }
 
-type Card = { label: string; n: number; desc: string; color: string; href: string };
+type FlowStep = { cat: string; cor: string; titulo: string; sub: string; n: number | null; nLabel: string; href: string };
+type Kpi = { label: string; n: number; desc: string; color: string; href: string };
 
-function Secao({ titulo, sub, cards }: { titulo: string; sub: string; cards: Card[] }) {
+function FlowCard({ step: s }: { step: FlowStep }) {
+  return (
+    <Link
+      href={s.href}
+      style={{
+        display: "block", width: 190, minHeight: 118, textDecoration: "none",
+        background: "linear-gradient(180deg,#0f1826,#0b1220)",
+        border: "1px solid #1e2a3d", borderTop: `2px solid ${s.cor}`, borderRadius: 10,
+        padding: "12px 14px",
+      }}
+    >
+      <div style={{ fontFamily: theme.font.label, fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase", fontWeight: 700, color: s.cor }}>
+        {s.cat}
+      </div>
+      <div style={{ fontFamily: theme.font.label, fontSize: 14, fontWeight: 700, color: "#FFFFFF", marginTop: 7, lineHeight: 1.2 }}>
+        {s.titulo}
+      </div>
+      <div style={{ fontFamily: theme.font.num, fontSize: 10, color: "#7f8ea8", marginTop: 6, lineHeight: 1.4 }}>
+        {s.sub}
+      </div>
+      {s.n !== null && (
+        <div style={{ marginTop: 9, display: "flex", alignItems: "baseline", gap: 5 }}>
+          <span style={{ fontFamily: theme.font.num, fontSize: 20, fontWeight: 800, color: "#FFFFFF", fontVariantNumeric: "tabular-nums" }}>{s.n}</span>
+          <span style={{ fontFamily: theme.font.label, fontSize: 9, color: "#7f8ea8", textTransform: "uppercase", letterSpacing: ".08em" }}>{s.nLabel}</span>
+        </div>
+      )}
+    </Link>
+  );
+}
+
+function Secao({ titulo, cards }: { titulo: string; cards: Kpi[] }) {
   return (
     <div className="space-y-3">
-      <div className="flex items-baseline gap-3">
-        <span className="text-[11px] uppercase tracking-wider font-bold text-[#c0c8d8]">{titulo}</span>
-        <span className="text-[10px] text-slate-500">{sub}</span>
-      </div>
+      <span className="text-[11px] uppercase tracking-wider font-bold text-[#c0c8d8]">{titulo}</span>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {cards.map((c) => (
           <Link
             key={c.label}
             href={c.href}
             className="bg-[#16161c] border rounded-lg p-4 transition-all block w-full text-left"
-            style={{
-              borderColor: "#2a2a35",
-              borderTop: `3px solid ${c.color}`,
-              boxShadow: "0 0 24px -8px rgba(79,125,240,0.45)",
-            }}
+            style={{ borderColor: "#2a2a35", borderTop: `3px solid ${c.color}`, boxShadow: "0 0 24px -8px rgba(79,125,240,0.45)" }}
           >
             <div className="text-[10px] uppercase tracking-wider font-bold truncate" style={{ color: c.color }}>{c.label}</div>
             <div className="text-3xl font-bold text-white mt-2">{c.n}</div>
