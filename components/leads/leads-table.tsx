@@ -250,9 +250,6 @@ export function LeadsTable({ leads: initialLeads, userEmail, initialStatus = "al
     setLeads(prev => prev.map(l => l.phone === phone ? { ...l, first_order_at: data.first_order_at } : l));
   }
 
-  const TH: React.CSSProperties = { ...LABEL, padding: "10px 14px", textAlign: "left", borderBottom: `1px solid ${C.border}`, whiteSpace: "nowrap" };
-  const TD: React.CSSProperties = { padding: "10px 14px", color: C.text, fontSize: 11, fontFamily: "'Courier New', monospace", borderBottom: `1px solid ${C.border}`, whiteSpace: "nowrap" };
-
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       {/* Filters — horizontal scroll on mobile */}
@@ -314,104 +311,106 @@ export function LeadsTable({ leads: initialLeads, userEmail, initialStatus = "al
 
       <p style={{ ...LABEL, margin: 0 }}>{filtered.length} leads</p>
 
-      {/* ── Tabela rica (única representação; rola horizontal no mobile) ─────
-          Decisão Paulo 2026-07-14: Leads = tabela com todas as colunas.
-          O bloco de cards mobile foi removido (era formato redundante). */}
-      <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 4, overflowX: "auto" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr style={{ background: "#0f0f0f" }}>
-              {["Lead", "Score", "Cidade", "Segmento", "Volume", "ABC", "Temp.", "Status", "Origem", "Vendedor", "Etapa", "Na etapa", "Handoff", "Ações"].map(h => (
-                <th key={h} style={TH}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.length === 0 && (
-              <tr>
-                <td colSpan={14} style={{ ...TD, textAlign: "center", color: C.muted, padding: "32px 0" }}>
-                  nenhum lead encontrado
-                </td>
-              </tr>
-            )}
-            {filtered.map((lead, i) => {
-              const status = derivedStatus(lead);
-              const abc    = abcCurve(lead.weekly_volume_kg);
-              const showConfirm = !!lead.handoff_at && lead.handoff_confirmed === false;
-              const showConvert = (lead.qual_stage ?? 0) >= 7 && !lead.first_order_at;
-              const rowBg = i % 2 === 0 ? C.bg : "#0a0d1a";
-              const _now2 = new Date();
-              const alertLevel =
-                lead.scheduled_at && !lead.handoff_confirmed && new Date(lead.scheduled_at) < _now2 ? 'red' :
-                lead.handoff_at && !lead.handoff_confirmed && !lead.scheduled_at && (_now2.getTime() - new Date(lead.handoff_at).getTime()) > 4 * 3600000 ? 'amber' :
-                null;
+      {/* ── Camada de cima (cards de lead) — representação ÚNICA da aba Leads ─────
+          Reversão Paulo 2026-07-14: restaurado EXATAMENTE o bloco original de cards
+          (a "camada de cima": onde o vendedor confirma handoff, vê a qualificação por
+          etapas e age); removida a tabela densa de baixo. Só saiu o className
+          `asb-mobile-only` para o bloco valer também no desktop. */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {filtered.length === 0 && (
+          <div style={{ ...LABEL, textAlign: "center", padding: "32px 0", color: C.muted }}>
+            nenhum lead encontrado
+          </div>
+        )}
+        {filtered.map((lead) => {
+          const status = derivedStatus(lead);
+          const abc    = abcCurve(lead.weekly_volume_kg);
+          const showConfirm = !!lead.handoff_at && lead.handoff_confirmed === false;
+          const showConvert = (lead.qual_stage ?? 0) >= 7 && !lead.first_order_at;
+          const _now = new Date();
+          const alertLevel =
+            lead.scheduled_at && !lead.handoff_confirmed && new Date(lead.scheduled_at) < _now ? 'red' :
+            lead.handoff_at && !lead.handoff_confirmed && !lead.scheduled_at && (_now.getTime() - new Date(lead.handoff_at).getTime()) > 4 * 3600000 ? 'amber' :
+            null;
 
-              return (
-                <tr key={lead.phone} style={{ background: rowBg, borderLeft: alertLevel ? `3px solid ${alertLevel === 'red' ? C.red : C.amber}` : undefined }} onMouseEnter={e => (e.currentTarget.style.background = "#131a2e")} onMouseLeave={e => (e.currentTarget.style.background = rowBg)}>
-                  <td style={TD}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                      {alertLevel && (
-                        <AlertTriangle size={12} style={{ color: alertLevel === 'red' ? C.red : C.amber, flexShrink: 0 }} />
-                      )}
-                      <Link href={`/dashboard/leads/${encodeURIComponent(lead.phone)}`} style={{ color: "#FFFFFF", textDecoration: "none", fontWeight: 600 }}>
-                        {lead.name || "—"}
-                      </Link>
-                    </div>
-                    <br />
-                    <span style={{ color: C.muted, fontSize: 10 }}>{lead.phone}</span>
-                  </td>
-                  <td style={TD}>
-                    {lead.lead_score != null && lead.lead_tier
-                      ? <LeadScoreBadge score={lead.lead_score} tier={lead.lead_tier} size="sm" />
-                      : <span style={{ color: C.muted }}>—</span>}
-                  </td>
-                  <td style={TD}>{lead.city || "—"}</td>
-                  <td style={{ ...TD, textTransform: "capitalize" }}>{lead.segment || "—"}</td>
-                  <td style={TD}>{lead.weekly_volume_kg ? `${lead.weekly_volume_kg} kg` : "—"}</td>
-                  <td style={TD}><Badge cfg={ABC_CFG[abc]} /></td>
-                  <td style={TD}><Badge cfg={TEMP_CFG[lead.lead_temperature ?? ""] ?? TEMP_CFG.COLD} /></td>
-                  <td style={TD}><Badge cfg={STATUS_CFG[status] ?? STATUS_CFG.new} /></td>
-                  <td style={TD}><OrigemBadge lead={lead} /></td>
-                  <td style={TD}>{VENDOR_LABELS[lead.routing_team ?? ""] ?? lead.routing_team ?? "—"}</td>
-                  <td style={TD}>
-                    <span style={{ fontFamily: "'Courier New', monospace", color: C.muted, fontSize: 10 }}>
-                      {lead.qual_stage ?? 0}/9
-                    </span>
-                  </td>
-                  <td style={TD}>
-                    <StageTimeBadge ts={lead.updated_at} />
-                  </td>
-                  <td style={TD}>
-                    {lead.handoff_at
-                      ? lead.handoff_confirmed
-                        ? <span style={{ color: "#22c55e", fontSize: 10 }}>✓ confirmado</span>
-                        : <span style={{ color: C.amber, fontSize: 10 }}>{new Date(lead.handoff_at).toLocaleDateString("pt-BR")}</span>
-                      : <span style={{ color: C.muted }}>—</span>}
-                  </td>
-                  <td style={TD}>
-                    <div style={{ display: "flex", gap: 4 }}>
-                      <Link href={`/dashboard/leads/${encodeURIComponent(lead.phone)}`}>
-                        <button style={{ background: "transparent", border: "none", color: C.muted, cursor: "pointer", padding: 3 }} title="Ver conversa">
-                          <MessageCircle size={14} />
-                        </button>
-                      </Link>
-                      {showConfirm && (
-                        <button onClick={() => confirmHandoff(lead.phone)} style={{ background: "transparent", border: "none", color: C.amber, cursor: "pointer", padding: 3 }} title="Confirmar handoff">
-                          <CheckCircle size={14} />
-                        </button>
-                      )}
-                      {showConvert && (
-                        <button onClick={() => convertLead(lead.phone)} style={{ background: "transparent", border: "none", color: C.gold, cursor: "pointer", padding: 3 }} title="Marcar convertido">
-                          <TrendingUp size={14} />
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+          return (
+            <div
+              key={lead.phone}
+              style={{
+                background: C.bg,
+                border: `1px solid ${alertLevel === 'red' ? C.red : alertLevel === 'amber' ? C.amber : C.border2}`,
+                borderRadius: 6,
+                padding: "12px 14px",
+                display: "flex",
+                flexDirection: "column",
+                gap: 8,
+              }}
+            >
+              {/* Name + phone */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div>
+                  <Link
+                    href={`/dashboard/leads/${encodeURIComponent(lead.phone)}`}
+                    style={{ color: "#FFFFFF", textDecoration: "none", fontWeight: 600, fontSize: 12, fontFamily: "'Courier New', monospace" }}
+                  >
+                    {lead.name || "—"}
+                  </Link>
+                  <div style={{ color: C.muted, fontSize: 10, fontFamily: "'Courier New', monospace", marginTop: 1 }}>
+                    {lead.phone}
+                  </div>
+                </div>
+                {/* Action buttons */}
+                <div style={{ display: "flex", gap: 6 }}>
+                  <Link href={`/dashboard/leads/${encodeURIComponent(lead.phone)}`}>
+                    <button style={{ background: "transparent", border: "none", color: C.muted, cursor: "pointer", padding: 4 }} title="Ver conversa">
+                      <MessageCircle size={16} />
+                    </button>
+                  </Link>
+                  {showConfirm && (
+                    <button onClick={() => confirmHandoff(lead.phone)} style={{ background: "transparent", border: "none", color: C.amber, cursor: "pointer", padding: 4 }} title="Confirmar handoff">
+                      <CheckCircle size={16} />
+                    </button>
+                  )}
+                  {showConvert && (
+                    <button onClick={() => convertLead(lead.phone)} style={{ background: "transparent", border: "none", color: C.gold, cursor: "pointer", padding: 4 }} title="Marcar convertido">
+                      <TrendingUp size={16} />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Badges row */}
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+                {lead.lead_score != null && lead.lead_tier && (
+                  <LeadScoreBadge score={lead.lead_score} tier={lead.lead_tier} size="sm" />
+                )}
+                <Badge cfg={ABC_CFG[abc]} />
+                <Badge cfg={TEMP_CFG[lead.lead_temperature ?? ""] ?? TEMP_CFG.COLD} />
+                <Badge cfg={STATUS_CFG[status] ?? STATUS_CFG.new} />
+                <OrigemBadge lead={lead} />
+                {lead.city && (
+                  <span style={{ color: C.muted, fontSize: 9, fontFamily: "'Courier New', monospace" }}>
+                    {lead.city}
+                  </span>
+                )}
+              </div>
+
+              {/* Volume + vendor */}
+              <div style={{ display: "flex", gap: 16 }}>
+                <span style={{ color: C.muted, fontSize: 9, fontFamily: "'Courier New', monospace", letterSpacing: ".10em" }}>
+                  {lead.weekly_volume_kg ? `${lead.weekly_volume_kg} kg/sem` : "vol: —"}
+                </span>
+                <span style={{ color: C.muted, fontSize: 9, fontFamily: "'Courier New', monospace", letterSpacing: ".10em" }}>
+                  {VENDOR_LABELS[lead.routing_team ?? ""] ?? lead.routing_team ?? "—"}
+                </span>
+                <span style={{ color: C.muted, fontSize: 9, fontFamily: "'Courier New', monospace" }}>
+                  etapa {lead.qual_stage ?? 0}/9
+                </span>
+                <StageTimeBadge ts={lead.updated_at} />
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
