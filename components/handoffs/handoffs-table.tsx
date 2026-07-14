@@ -89,7 +89,8 @@ export function HandoffsTable({ initial, initialFilter }: { initial: Handoff[]; 
   const [rows, setRows]           = useState<Handoff[]>(initial);
   const [vendorFilter, setVendor] = useState<string>("todos");
   const [urgentOnly, setUrgent]   = useState(initialFilter === "criticos");
-  const [hojeOnly]                = useState(initialFilter === "hoje");
+  // Item 11: faixas de agendamento (chips). ?f=hoje (card "Agendados Hoje") abre em "hoje".
+  const [schedFilter, setSchedFilter] = useState<"todos" | "hoje" | "semana" | "quinzena" | "mes">(initialFilter === "hoje" ? "hoje" : "todos");
   const [loading, setLoading]     = useState<Record<string, boolean>>({});
   const [errors, setErrors]       = useState<Record<string, string>>({});
   const [live, setLive]           = useState(false);   // ETAPA7: canal Realtime conectado
@@ -137,23 +138,28 @@ export function HandoffsTable({ initial, initialFilter }: { initial: Handoff[]; 
   }, []);
 
   const filtered = useMemo(() => {
-    // Item 7/DEBT-275: janela do dia comercial BRT (UTC-3) em UTC — igual ao card, pra
-    // "hoje" da tabela bater com o "Agendados Hoje" (antes slice(0,10) usava dia UTC).
+    // Item 7/DEBT-275 + Item 11: janela do dia comercial BRT (UTC-3) em UTC + faixas de
+    // agendamento por dia-índice (d=0 hoje · 1-6 semana · 7-13 quinzenal · 14-29 mensal).
     const BRT_OFFSET_MS = 3 * 60 * 60 * 1000;
+    const DAY = 24 * 60 * 60 * 1000;
     const nowBrt = new Date(Date.now() - BRT_OFFSET_MS);
     const startBrt = Date.UTC(nowBrt.getUTCFullYear(), nowBrt.getUTCMonth(), nowBrt.getUTCDate(), 0, 0, 0) + BRT_OFFSET_MS;
-    const endBrt = startBrt + 24 * 60 * 60 * 1000;
     return rows.filter(r => {
       if (vendorFilter !== "todos" && r.routing_team !== vendorFilter) return false;
       if (urgentOnly && elapsedMinutes(r.handoff_at) < 240) return false;
-      if (hojeOnly) {
+      if (schedFilter !== "todos") {
         if (!r.scheduled_at) return false;
-        const t = new Date(r.scheduled_at).getTime();
-        if (!(t >= startBrt && t < endBrt)) return false;
+        const d = Math.floor((new Date(r.scheduled_at).getTime() - startBrt) / DAY);   // 0 = hoje
+        const inFaixa =
+          schedFilter === "hoje"     ? d === 0 :
+          schedFilter === "semana"   ? d >= 1 && d <= 6 :
+          schedFilter === "quinzena" ? d >= 7 && d <= 13 :
+          /* mes */                    d >= 14 && d <= 29;
+        if (!inFaixa) return false;
       }
       return true;
     });
-  }, [rows, vendorFilter, urgentOnly, hojeOnly]);
+  }, [rows, vendorFilter, urgentOnly, schedFilter]);
 
   async function handleConfirm(phone: string) {
     setLoading(p => ({ ...p, [phone]: true }));
@@ -198,6 +204,14 @@ export function HandoffsTable({ initial, initialFilter }: { initial: Handoff[]; 
         <button style={btnFilter(urgentOnly)} onClick={() => setUrgent(p => !p)}>
           ⚡ Só críticos (&gt; 4h)
         </button>
+        <div style={{ width: 1, height: 18, background: "#2a2a2a", margin: "0 4px" }} />
+        {/* Item 11: faixas de agendamento (scheduled_at, dia comercial BRT) */}
+        <span style={S.label}>Agendados:</span>
+        {([["todos", "Todos"], ["hoje", "Hoje"], ["semana", "Semana"], ["quinzena", "Quinzenal"], ["mes", "Mensal"]] as const).map(([k, lbl]) => (
+          <button key={k} style={btnFilter(schedFilter === k)} onClick={() => setSchedFilter(k)}>
+            {lbl}
+          </button>
+        ))}
 
         {/* ETAPA7: indicador de canal Realtime conectado */}
         {live && (
