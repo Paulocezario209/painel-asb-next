@@ -104,16 +104,17 @@ export const MANUAIS: Record<string, ManualTela> = {
   },
   "/dashboard/leads": {
     titulo: "Leads",
-    oQueE: "Todos os leads do SDR em 4 abas: Ativos, Parados (precisam de atenção), Perdidos (últimos 180 dias) e Fora de Rota — com score, origem e etapa.",
+    oQueE: "Todos os leads do SDR em 4 abas com cards de resumo no topo (total + % da sidebar): Ativos, Parados (precisam de atenção), Perdidos (últimos 180 dias) e Fora de Rota — com score, origem e etapa. Convertidos NÃO aparecem aqui: viraram cliente e vivem na Carteira.",
     fontes: [
-      "Ativos: leads reais (sem testes), até 500; busca é server-side (varre todos, não só os carregados); score/tier da view de score.",
-      "Parados: view v_leads_parados (RLS por vendedor) em 4 baldes — Qualif. estagnada (mudo >48h, escada <qs7), Travado no follow-up (desligado ou 3+ falhas), Órfão de handoff (na fila e não pego), Nurturing longo (cadência mensal/semestral). Não lista fora-de-rota nem clientes já convertidos (exceto Nurturing, que nutre cliente de propósito).",
+      "Ativos: leads reais (sem testes), até 500; busca é server-side (varre todos, não só os carregados); score/tier da view de score. Exclui convertidos (first_order_at OU funnel_stage de cliente) — esses saem para a Carteira.",
+      "Parados: view v_leads_parados (RLS por vendedor). São leads que responderam e sumiram, ainda na qualificação e sem vendedor ter assumido — travados há 1 a 30 dias, em 3 faixas de IDADE: 1–7 dias (default, mais acionável), 8–14 dias e 15–30 dias. Não lista fora-de-rota nem convertidos. Follow-up/nurturing NÃO entram aqui — vivem na fila de Atendimento (Handoffs/Follow-ups). Acima de 30 dias vira trilha de Perdido.",
       "Perdidos: motivo de perda registrado; “pipeline perdido” = volume × R$/kg médio.",
       "Fora de rota: municípios fora da cobertura atual (contato salvo para expansão).",
     ],
     comoUsar: [
+      "Cards no topo mostram o tamanho de cada aba e o % que representa; clique no card para trocar de aba.",
       "Clique no lead para abrir o detalhe completo (conversa, timeline, ações).",
-      "Aba Parados abre em “Qualif. estagnada” (o mais acionável); troque de balde pelos chips.",
+      "Aba Parados abre na faixa “1–7 dias” (a mais recente/acionável); troque de faixa de idade pelos chips.",
       "Ativos: filtros combinam (busca + status + vendedor + ABC + produto + origem); a busca busca no servidor.",
       "“Reabordar” nos perdidos abre o WhatsApp direto com o lead.",
     ],
