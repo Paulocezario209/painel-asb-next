@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
 
 // ETAPA9C: abas da tela de leads
 const VIEWS = [
-  { key: "ativos", label: "Ativos" },
+  { key: "ativos", label: "Leads SDR" },   // "entrou hoje" — caixa de entrada do dia (Paulo 2026-07-14)
   { key: "parados", label: "Parados" },
   { key: "perdidos", label: "Perdidos" },
   { key: "fora_de_rota", label: "Fora de Rota" },
@@ -49,6 +49,11 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
   const qRaw = (sp.q ?? "").trim().slice(0, 60);
   const qSafe = qRaw.replace(/[,()%*\\]/g, " ").trim();
 
+  // Régua "Leads SDR = entrou HOJE" (Paulo 2026-07-14): início do dia corrente em BRT (UTC-3),
+  // convertido p/ ISO/UTC — leads criados a partir daí = a caixa de entrada do dia. Virou o dia → Parados.
+  const _todayBRT = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+  const startTodayUtc = new Date(`${_todayBRT}T00:00:00-03:00`).toISOString();
+
   let leadsQuery = supabase
     .from("ai_sdr_leads")
     .select(
@@ -77,10 +82,10 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
       .is("first_order_at", null)
       .not("funnel_stage", "in", `(${NAO_ATIVO_STAGES.join(",")})`)
       // DEBT-288: lead em cadência automática NÃO é "ativo do vendedor" — vive no board
-      // de Follow-up (v_leads_cadencia). Mantém em Ativos só quem NÃO tem toque agendado
-      // OU não está numa fase de cadência (novos sem toque, vendedor-assumiu). Single source
-      // com o board: CADENCIA_PHASES (lib/followup/cadencia).
-      .or(`next_followup_at.is.null,followup_phase.not.in.(${CADENCIA_PHASES.join(",")})`);
+      // de Follow-up (v_leads_cadencia). Single source: CADENCIA_PHASES (lib/followup/cadencia).
+      .or(`next_followup_at.is.null,followup_phase.not.in.(${CADENCIA_PHASES.join(",")})`)
+      // DEBT-290 (Leads SDR): "entrou HOJE" — só o dia corrente. Virou o dia → Parados.
+      .gte("created_at", startTodayUtc);
   }
 
   // Item 6: busca server-side aplicada ANTES do limit (superset garantido vs busca client)
@@ -155,7 +160,8 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
     supabase.from("ai_sdr_leads").select("phone", { count: "exact", head: true })
       .eq("is_test", false).or("routing_team.is.null,routing_team.neq.fora_de_rota")
       .is("first_order_at", null).not("funnel_stage", "in", naoAtivoInList)
-      .or(`next_followup_at.is.null,followup_phase.not.in.(${CADENCIA_PHASES.join(",")})`),  // DEBT-288: cadência vive no Follow-up
+      .or(`next_followup_at.is.null,followup_phase.not.in.(${CADENCIA_PHASES.join(",")})`)  // DEBT-288: cadência vive no Follow-up
+      .gte("created_at", startTodayUtc),  // DEBT-290: Leads SDR = entrou hoje
     supabase.from("v_leads_parados").select("id", { count: "exact", head: true }),
     supabase.from("ai_sdr_leads").select("phone", { count: "exact", head: true })
       .eq("is_test", false).eq("funnel_stage", "lead_perdido").gte("lost_at", since180),
@@ -174,7 +180,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Leads</h1>
         <p className="text-sm text-slate-200 mt-1">
-          {view === "ativos" ? `${leads.length} leads encontrados`
+          {view === "ativos" ? `${leads.length} leads que entraram hoje — a caixa de entrada do SDR (virou o dia → Parados)`
             : view === "parados" ? "Travados recentes — não responderam, ainda no funil (1–30 dias)"
             : view === "perdidos" ? "Fila de recuperação — perdidos nos últimos 180 dias"
             : "Fora de cobertura — registrados para expansão futura"}

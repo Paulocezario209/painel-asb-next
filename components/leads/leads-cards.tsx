@@ -1,8 +1,8 @@
 import Link from "next/link";
 
-// Fase 1.2 (DEBT-286): cards de resumo das 4 abas de Leads (total + % · clicáveis → trocam aba).
-// % = fatia do universo de LEAD (Ativos + Perdidos + Fora de Rota; convertidos já viraram Cliente).
-// Parados é SUBCONJUNTO de Ativos (atenção), então mostra "% dos ativos", não entra na partição.
+// DEBT-286/290: cards de resumo das 4 abas de Leads (total + descritor · clicáveis → trocam aba).
+// Linha do tempo por idade no SDR (Paulo 2026-07-14): Leads SDR (entrou hoje) → Parados (1-30d)
+// → Perdidos. Sem cross-percentuais (quebravam com o volume diário pequeno de "hoje").
 
 type Counts = { ativos: number; parados: number; perdidos: number; fora_de_rota: number };
 
@@ -10,15 +10,11 @@ const C = { line: "#22304a", panel: "#0f1826", txt: "#fff", muted: "#c0d0e0", di
 const MONO: React.CSSProperties = { fontFamily: "'Courier New', monospace" };
 
 export function LeadsCards({ counts, active }: { counts: Counts; active: string }) {
-  const universo = counts.ativos + counts.perdidos + counts.fora_de_rota || 1;
-  const pct = (n: number) => `${Math.round((n / universo) * 100)}%`;
-  const pctAtivos = counts.ativos ? `${Math.round((counts.parados / counts.ativos) * 100)}%` : "—";
-
   const cards = [
-    { key: "ativos", label: "Ativos", n: counts.ativos, sub: `${pct(counts.ativos)} do funil`, edge: "#3f7bf5" },
-    { key: "parados", label: "Parados", n: counts.parados, sub: `${pctAtivos} dos ativos · atenção`, edge: "#f59e0b" },
-    { key: "perdidos", label: "Perdidos", n: counts.perdidos, sub: `${pct(counts.perdidos)} · 180d`, edge: "#C8102E" },
-    { key: "fora_de_rota", label: "Fora de Rota", n: counts.fora_de_rota, sub: `${pct(counts.fora_de_rota)} · sem cobertura`, edge: "#38bdf8" },
+    { key: "ativos", label: "Leads SDR", n: counts.ativos, sub: "entraram hoje", edge: "#3f7bf5" },
+    { key: "parados", label: "Parados", n: counts.parados, sub: "1–30 dias no funil", edge: "#f59e0b" },
+    { key: "perdidos", label: "Perdidos", n: counts.perdidos, sub: "últimos 180 dias", edge: "#C8102E" },
+    { key: "fora_de_rota", label: "Fora de Rota", n: counts.fora_de_rota, sub: "sem cobertura", edge: "#38bdf8" },
   ];
 
   return (

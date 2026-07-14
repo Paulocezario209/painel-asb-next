@@ -104,9 +104,9 @@ export const MANUAIS: Record<string, ManualTela> = {
   },
   "/dashboard/leads": {
     titulo: "Leads",
-    oQueE: "Todos os leads do SDR em 4 abas com cards de resumo no topo (total + % da sidebar): Ativos, Parados (precisam de atenção), Perdidos (últimos 180 dias) e Fora de Rota — com score, origem e etapa. Convertidos NÃO aparecem aqui: viraram cliente e vivem na Carteira.",
+    oQueE: "Os leads do SDR numa linha do tempo por idade: Leads SDR (entraram HOJE — a caixa de entrada do dia), Parados (1–30 dias, precisam de atenção), Perdidos (últimos 180 dias) e Fora de Rota. Cards no topo mostram o total de cada aba. Convertidos NÃO aparecem aqui: viraram cliente e vivem na Carteira.",
     fontes: [
-      "Ativos: leads reais (sem testes), até 500; busca é server-side (varre todos, não só os carregados); score/tier da view de score. Exclui convertidos (first_order_at OU funnel_stage de cliente) — esses saem para a Carteira.",
+      "Leads SDR: leads que ENTRARAM HOJE (created_at no dia corrente, BRT). Virou o dia → caem em Parados. É a caixa de entrada do SDR — o vendedor sabe quem chegou hoje. Reais (sem testes), em rota, não convertidos, não perdidos, fora de cadência automática.",
       "Parados: view v_leads_parados (RLS por vendedor). São leads que responderam e sumiram, ainda na qualificação e sem vendedor ter assumido — travados há 1 a 30 dias, em 3 faixas de IDADE: 1–7 dias (default, mais acionável), 8–14 dias e 15–30 dias. Não lista fora-de-rota nem convertidos. Follow-up/nurturing NÃO entram aqui — vivem na fila de Atendimento (Handoffs/Follow-ups). Acima de 30 dias vira trilha de Perdido.",
       "Perdidos: motivo de perda registrado; “pipeline perdido” = volume × R$/kg médio.",
       "Fora de rota: municípios fora da cobertura atual (contato salvo para expansão).",
@@ -115,7 +115,7 @@ export const MANUAIS: Record<string, ManualTela> = {
       "Cards no topo mostram o tamanho de cada aba e o % que representa; clique no card para trocar de aba.",
       "Clique no lead para abrir o detalhe completo (conversa, timeline, ações).",
       "Aba Parados abre na faixa “1–7 dias” (a mais recente/acionável); troque de faixa de idade pelos chips.",
-      "Ativos: filtros combinam (busca + status + vendedor + ABC + produto + origem); a busca busca no servidor.",
+      "Leads SDR: filtros combinam (busca + status + vendedor + ABC + produto + origem); a busca é no servidor.",
       "“Reabordar” nos perdidos abre o WhatsApp direto com o lead.",
     ],
   },
