@@ -258,7 +258,7 @@ export function CalendarDashboard({
             </div>
 
             <div style={{ ...lbl }}>
-              Compras: recebido <b style={{ color: "#2ea043" }}>{brl(selDia.compras_recebido)}</b> · a chegar <b style={{ color: "#d29922" }}>{brl(selDia.compras_a_chegar)}</b>
+              Entrada (NF+Recibo): <b style={{ color: "#2ea043" }}>{brl(selDia.compras_recebido)}</b>
               {selDia.atingimento_meta_pct != null ? ` · meta ${selDia.atingimento_meta_pct}%` : ""}
             </div>
 
@@ -283,7 +283,7 @@ export function CalendarDashboard({
             )}
 
             <div>
-              <div style={{ ...lbl, marginBottom: 6 }}>Fornecedores do dia ({selFornec.length}) · clique implícito: produtos abaixo de cada um</div>
+              <div style={{ ...lbl, marginBottom: 6 }}>Fornecedores do dia ({selFornec.length}) · detalhe por PEDIDO de compra (não por entrada) · produtos abaixo de cada um</div>
               {selFornec.length === 0 ? (
                 <div style={{ color: "#e4e9f0", fontSize: 11, fontFamily: theme.font.label }}>sem compras neste dia</div>
               ) : (

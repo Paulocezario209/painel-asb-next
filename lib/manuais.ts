@@ -263,11 +263,11 @@ export const MANUAIS: Record<string, ManualTela> = {
     titulo: "Compras · Resultados",
     oQueE: "Compras × Faturamento do mês: quanto entrou, quanto foi comprado, se o gasto cabe no teto de 54% — e a projeção de fechamento.",
     fontes: [
-      "Faturado MTD: faturado por EMISSÃO (data de faturamento) — base escolhida para comparar com compras, que são por data de emissão. Por isso pode diferir levemente do faturado das telas comerciais (base data_meta).",
-      "Compras MTD (headline e % do semáforo) = só pedidos ENTREGUES, menos devoluções. 'A chegar' (pendente+aprovado) aparece na sublinha, mas não entra no % — estado real é o que chegou.",
-      "Semáforo % Compras/Faturado: 🟢 ≤54% · 🟡 54–65% · 🔴 >65%.",
+      "Faturado MTD: faturado por EMISSÃO (data de faturamento). Compara com as compras pela ENTRADA de mercadoria (data de entrada) — bases próximas, não idênticas.",
+      "Compras MTD (headline e % do semáforo) = ENTRADA REAL de mercadoria (NF+Recibo que entrou no período, ARES compras_entradas), líquida de devolução. Substitui a régua antiga 'pedido entregue' (que subcontava o mês corrente — pedido pode receber sem virar 'entregue'). 'A chegar'/comprometido vive só na projeção, não no realizado.",
+      "Semáforo % Compras/Faturado: 🟢 ≤54% · 🟡 54–65% · 🔴 >65% (teto mantido; o painel fica mais amarelo porque a medição ficou correta — não é bug).",
       "PROJEÇÃO (regra 10/07): Faturado proj = ritmo dos dias úteis COMPLETOS (até ontem) × dias úteis do mês; Compras proj = 54% desse faturado (ORÇAMENTO). Pedidos realizados NÃO projetam nada — PCP lança o mês de uma vez e criaria falso ritmo. 'Disponível' = orçamento − comprometido.",
-      "Cards do ano: v_resultado_mensal (mês fechado também usa só entregue).",
+      "Cards do ano: v_resultado_mensal — mesma régua ÚNICA (entrada real por data de entrada, líquida de devolução); batem com o card do topo. Drilldown do dia (fornecedores/produtos) segue por PEDIDO de compra.",
     ],
     comoUsar: [
       "O 'Disponível p/ comprar' é a bússola do PCP: verde = ainda cabe; vermelho = comprometido já estourou o orçamento do ritmo atual.",
