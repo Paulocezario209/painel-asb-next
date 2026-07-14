@@ -45,14 +45,15 @@ export default async function ComercialPage() {
     handoff: cHandoff.count ?? 0, pipeline: cPipeline.count ?? 0, clientes: cClientes.count ?? 0, recompra: cRecompra.count ?? 0,
   };
 
-  // O FLUXO — a jornada. Cada etapa: rótulo colorido + título + subtítulo + nº vivo + destino.
+  // O FLUXO — a jornada (idêntico ao artifact): rótulo + título + subtítulo (etapas reais).
+  // Sem número no card do fluxo — os números vivem nos cards KPI abaixo.
   const FLUXO: FlowStep[] = [
-    { cat: "SDR",            cor: "#6390f5", titulo: "Lead → Qualificado", sub: "novo · atendido · qualif (qs7)", n: n.leadsHoje, nLabel: "hoje",       href: "/dashboard/leads" },
-    { cat: "SDR → VENDEDOR", cor: "#6390f5", titulo: "Handoff",            sub: "passa pro vendedor",             n: n.handoff,   nLabel: "pendentes",  href: "/dashboard/handoffs" },
-    { cat: "VENDEDOR",       cor: "#eab308", titulo: "Pipeline",           sub: "andamento · negociação · proposta", n: n.pipeline, nLabel: "em aberto", href: "/dashboard/pipeline" },
-    { cat: "FRONTEIRA",      cor: "#22c55e", titulo: "Convertido",         sub: "1º pedido · ARES",               n: null,        nLabel: "",           href: "/dashboard/clientes" },
-    { cat: "CLIENTE",        cor: "#14b8a6", titulo: "Ativo → Recorrente", sub: "carteira · recência",            n: n.clientes,  nLabel: "vivos",      href: "/dashboard/clientes" },
-    { cat: "SAÍDA",          cor: "#C8102E", titulo: "Risco → Churn",      sub: "sem comprar",                    n: n.recompra,  nLabel: "recompra",   href: "/dashboard/carteira-ativa" },
+    { cat: "SDR",       cor: "#6390f5", titulo: "Lead novo → Qualificado", sub: "lead_novo · atendido_sdr · qualif · lead_qualificado (qs7)", href: "/dashboard/leads" },
+    { cat: "SDR→VEND",  cor: "#6390f5", titulo: "Handoff",                 sub: "passa pro vendedor (handoff_at)", href: "/dashboard/handoffs" },
+    { cat: "VENDEDOR",  cor: "#e8b923", titulo: "Pipeline",                sub: "em_andamento · negociação · proposta · pedido_teste", href: "/dashboard/pipeline" },
+    { cat: "FRONTEIRA", cor: "#22c55e", titulo: "Convertido",              sub: "pedido_fechado · 1º pedido ARES (first_order_at)", href: "/dashboard/clientes" },
+    { cat: "CLIENTE",   cor: "#2dd4bf", titulo: "Ativo → Recorrente",      sub: "carteira real · recência + frequência", href: "/dashboard/clientes" },
+    { cat: "SAÍDA",     cor: "#C8102E", titulo: "Risco → Churn",           sub: "15→21→30→60 dias sem comprar", href: "/dashboard/carteira-ativa" },
   ];
 
   const AQUISICAO: Kpi[] = [
@@ -73,15 +74,17 @@ export default async function ComercialPage() {
         <p className="text-sm text-slate-300 mt-1">A jornada de ponta a ponta — clique numa etapa para abrir a tela.</p>
       </div>
 
-      {/* O FLUXO */}
+      {/* O FLUXO — idêntico ao artifact */}
       <div className="space-y-3">
-        <span className="text-[11px] uppercase tracking-wider font-bold text-[#c0c8d8]">A jornada de ponta a ponta</span>
+        <div style={{ fontFamily: theme.font.num, fontSize: 11, letterSpacing: ".2em", textTransform: "uppercase", color: "#8b9bb4" }}>
+          <span style={{ color: "#4f7df0", marginRight: 8 }}>▸</span>A jornada de ponta a ponta
+        </div>
         <div style={{ display: "flex", alignItems: "stretch", gap: 0, overflowX: "auto", paddingBottom: 4 }}>
           {FLUXO.map((s, i) => (
             <div key={s.cat} style={{ display: "flex", alignItems: "center", flexShrink: 0 }}>
               <FlowCard step={s} />
               {i < FLUXO.length - 1 && (
-                <span style={{ color: "#3a4a63", fontSize: 18, padding: "0 8px", flexShrink: 0, fontFamily: theme.font.num }}>→</span>
+                <span style={{ color: "#3a4a63", fontSize: 16, padding: "0 10px", flexShrink: 0, fontFamily: theme.font.num }}>→</span>
               )}
             </div>
           ))}
@@ -95,35 +98,30 @@ export default async function ComercialPage() {
   );
 }
 
-type FlowStep = { cat: string; cor: string; titulo: string; sub: string; n: number | null; nLabel: string; href: string };
+type FlowStep = { cat: string; cor: string; titulo: string; sub: string; href: string };
 type Kpi = { label: string; n: number; desc: string; color: string; href: string };
 
+// Card do fluxo idêntico ao artifact: fundo chapado escuro, borda sutil COMPLETA (sem faixa
+// no topo), rótulo mono colorido, título bold branco, subtítulo mono cinza (etapas reais).
 function FlowCard({ step: s }: { step: FlowStep }) {
   return (
     <Link
       href={s.href}
       style={{
-        display: "block", width: 190, minHeight: 118, textDecoration: "none",
-        background: "linear-gradient(180deg,#0f1826,#0b1220)",
-        border: "1px solid #1e2a3d", borderTop: `2px solid ${s.cor}`, borderRadius: 10,
-        padding: "12px 14px",
+        display: "block", width: 205, minHeight: 120, textDecoration: "none",
+        background: "#0b0f1a", border: "1px solid #1c2637", borderRadius: 12,
+        padding: "14px 16px",
       }}
     >
-      <div style={{ fontFamily: theme.font.label, fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase", fontWeight: 700, color: s.cor }}>
+      <div style={{ fontFamily: theme.font.num, fontSize: 10, letterSpacing: ".16em", textTransform: "uppercase", fontWeight: 700, color: s.cor }}>
         {s.cat}
       </div>
-      <div style={{ fontFamily: theme.font.label, fontSize: 14, fontWeight: 700, color: "#FFFFFF", marginTop: 7, lineHeight: 1.2 }}>
+      <div style={{ fontFamily: theme.font.label, fontSize: 15, fontWeight: 700, color: "#f2f5fa", marginTop: 9, lineHeight: 1.2 }}>
         {s.titulo}
       </div>
-      <div style={{ fontFamily: theme.font.num, fontSize: 10, color: "#7f8ea8", marginTop: 6, lineHeight: 1.4 }}>
+      <div style={{ fontFamily: theme.font.num, fontSize: 10.5, color: "#5f7089", marginTop: 9, lineHeight: 1.5 }}>
         {s.sub}
       </div>
-      {s.n !== null && (
-        <div style={{ marginTop: 9, display: "flex", alignItems: "baseline", gap: 5 }}>
-          <span style={{ fontFamily: theme.font.num, fontSize: 20, fontWeight: 800, color: "#FFFFFF", fontVariantNumeric: "tabular-nums" }}>{s.n}</span>
-          <span style={{ fontFamily: theme.font.label, fontSize: 9, color: "#7f8ea8", textTransform: "uppercase", letterSpacing: ".08em" }}>{s.nLabel}</span>
-        </div>
-      )}
     </Link>
   );
 }
@@ -131,7 +129,9 @@ function FlowCard({ step: s }: { step: FlowStep }) {
 function Secao({ titulo, cards }: { titulo: string; cards: Kpi[] }) {
   return (
     <div className="space-y-3">
-      <span className="text-[11px] uppercase tracking-wider font-bold text-[#c0c8d8]">{titulo}</span>
+      <div style={{ fontFamily: theme.font.num, fontSize: 11, letterSpacing: ".2em", textTransform: "uppercase", color: "#8b9bb4" }}>
+        <span style={{ color: "#4f7df0", marginRight: 8 }}>▸</span>{titulo}
+      </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {cards.map((c) => (
           <Link
