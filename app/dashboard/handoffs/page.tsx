@@ -20,7 +20,15 @@ export default async function HandoffsPage({ searchParams }: { searchParams?: Pr
   const filtroKpi = sp?.f === "criticos" || sp?.f === "hoje" ? sp.f : undefined;
   const supabase = await createClient();
 
-  const [{ data: raw, error }, scoreMap] = await Promise.all([
+  // Item 7/DEBT-275: janela do dia comercial BRT (UTC-3) convertida p/ UTC. Antes o card
+  // usava toISOString().slice(0,10) (dia UTC) → fronteira errada até 3h perto da meia-noite.
+  const nowMs = Date.now();
+  const BRT_OFFSET_MS = 3 * 60 * 60 * 1000;
+  const nowBrt = new Date(nowMs - BRT_OFFSET_MS);
+  const startBrtUtc = new Date(Date.UTC(nowBrt.getUTCFullYear(), nowBrt.getUTCMonth(), nowBrt.getUTCDate(), 0, 0, 0) + BRT_OFFSET_MS);
+  const endBrtUtc   = new Date(startBrtUtc.getTime() + 24 * 60 * 60 * 1000);
+
+  const [{ data: raw, error }, scoreMap, { count: agendadosHoje }] = await Promise.all([
     // DEBT-208: fila lê a definição CANÔNICA (v_handoff_pendentes, security_invoker
     // preserva RLS por vendedor). Resolver por qualquer via (confirmar / resposta do
     // vendedor / funnel_stage) remove daqui, do card e do detector do CP juntos.
@@ -32,12 +40,21 @@ export default async function HandoffsPage({ searchParams }: { searchParams?: Pr
       )
       .order("handoff_at", { ascending: true }),
     getLeadScoreMap(),  // ETAPA 4
+    // Item 7: "Agendados Hoje" conta sobre ai_sdr_leads (INDEPENDENTE da fila — agendados
+    // já assumidos saíam de v_handoff_pendentes e zeravam o card) na janela BRT. RLS
+    // (cookie do vendedor) mantém o número vendor-scoped, igual à fila.
+    supabase
+      .from("ai_sdr_leads")
+      .select("phone", { count: "exact", head: true })
+      .eq("is_test", false)
+      .gte("scheduled_at", startBrtUtc.toISOString())
+      .lt("scheduled_at", endBrtUtc.toISOString()),
   ]);
 
   if (error) throw new Error(error.message);
 
   // ── KPI computations (server-side) ────────────────────────────────────────────
-  const now      = Date.now();
+  const now      = nowMs;
   const fourHAgo = now - 4 * 60 * 60 * 1000;
 
   // ETAPA 4: enriquece score (view/fallback) + ordena críticos(>4h) primeiro, depois score DESC
@@ -58,17 +75,15 @@ export default async function HandoffsPage({ searchParams }: { searchParams?: Pr
   const totalPending  = handoffs.length;
   const criticalCount = handoffs.filter(h => new Date(h.handoff_at).getTime() < fourHAgo).length;
 
-  const todayStr  = new Date().toISOString().slice(0, 10);
-  const todayCount = handoffs.filter(h =>
-    h.scheduled_at && h.scheduled_at.slice(0, 10) === todayStr
-  ).length;
+  // Item 7: contagem vem da query independente da fila (janela BRT), não mais do slice UTC da fila.
+  const todayCount = agendadosHoje ?? 0;
 
   // Cards clicáveis fase 2 (pedido Paulo): KPI filtra a tabela via ?f= (o filtro
   // vive na própria tabela — sobrevive ao refetch do Realtime).
   const kpis = [
     { label: "Total Pendentes",    value: totalPending,  accent: "#f59e0b", sub: "aguardando confirmação · clique p/ ver todos", href: "/dashboard/handoffs" },
     { label: "Críticos (> 4h)",    value: criticalCount, accent: "#C8102E", sub: "sem confirmação há > 4h · clique p/ filtrar", href: "/dashboard/handoffs?f=criticos" },
-    { label: "Agendados Hoje",     value: todayCount,    accent: "#22c55e", sub: "com horário marcado p/ hoje · clique p/ filtrar", href: "/dashboard/handoffs?f=hoje" },
+    { label: "Agendados Hoje",     value: todayCount,    accent: "#22c55e", sub: "com horário p/ hoje (todos, não só a fila) · clique p/ ver os pendentes", href: "/dashboard/handoffs?f=hoje" },
   ];
 
   return (

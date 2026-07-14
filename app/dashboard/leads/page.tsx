@@ -38,6 +38,12 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
   const vendCoorte = sp.vendedor && /^SETOR_[A-Z_]+$/.test(sp.vendedor) ? sp.vendedor : null;
   const coorteAtiva = Boolean(mesCoorte && marcoCoorte && view === "ativos");
 
+  // Item 6 / DEBT-274: busca SERVER-SIDE (ilike sobre TODAS as linhas, antes do limit)
+  // — antes a lupa filtrava só os <=100 carregados (busca cega). qSafe neutraliza os
+  // metachars do filtro PostgREST (vírgula/parênteses/%/*) pra não quebrar o .or().
+  const qRaw = (sp.q ?? "").trim().slice(0, 60);
+  const qSafe = qRaw.replace(/[,()%*\\]/g, " ").trim();
+
   let leadsQuery = supabase
     .from("ai_sdr_leads")
     .select(
@@ -60,11 +66,16 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
     leadsQuery = leadsQuery.or("routing_team.is.null,routing_team.neq.fora_de_rota");   // DEBT-167 4: ATIVOS não lista fora_de_rota (NULL-safe)
   }
 
+  // Item 6: busca server-side aplicada ANTES do limit (superset garantido vs busca client)
+  if (qSafe) {
+    leadsQuery = leadsQuery.or(`name.ilike.%${qSafe}%,phone.ilike.%${qSafe}%,city.ilike.%${qSafe}%`);
+  }
+
   const [{ data: rawLeads }, scoreMap] = await Promise.all([
     leadsQuery
       .order("created_at", { ascending: false })
-      .limit(100)
-      .range(0, 99),
+      .limit(500)
+      .range(0, 499),
     getLeadScoreMap(),  // ETAPA 4: score por phone (v_lead_score via service role)
   ]);
 
@@ -164,9 +175,9 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
         <ForaDeRotaTable leads={foraRotaLeads} />
       ) : (
         <>
-          <LeadsTable leads={leads ?? []} userEmail={user?.email ?? ""} initialStatus={sp.status ?? "all"} />
+          <LeadsTable leads={leads ?? []} userEmail={user?.email ?? ""} initialStatus={sp.status ?? "all"} initialQ={sp.q ?? ""} />
           <p style={{ color: "#e4e9f0", fontSize: 10, fontFamily: theme.font.label, textAlign: "right" }}>
-            Exibindo até 100 leads — use os filtros para refinar.
+            Exibindo até 500 leads — a busca é server-side (varre todos); use os filtros para refinar.
           </p>
         </>
       )}

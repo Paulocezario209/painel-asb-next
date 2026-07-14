@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useTransition, useEffect, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { MessageCircle, CheckCircle, TrendingUp, AlertTriangle } from "lucide-react";
@@ -189,16 +189,38 @@ function Select({ value, onChange, children }: { value: string; onChange: (v: st
   );
 }
 
-export function LeadsTable({ leads: initialLeads, userEmail, initialStatus = "all" }: { leads: Lead[]; userEmail: string; initialStatus?: string }) {
+export function LeadsTable({ leads: initialLeads, userEmail, initialStatus = "all", initialQ = "" }: { leads: Lead[]; userEmail: string; initialStatus?: string; initialQ?: string }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [leads, setLeads] = useState<Lead[]>(initialLeads);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(initialQ);
   const [statusFilter, setStatusFilter] = useState(initialStatus);
   const [vendorFilter, setVendorFilter] = useState("all");
   const [abcFilter, setAbcFilter] = useState("all");
   const [productFilter, setProductFilter] = useState("all");
   const [origemFilter, setOrigemFilter] = useState("all");
   const [isPending, startTransition] = useTransition();
+
+  // Item 6/DEBT-274: quando a busca server-side devolve novo conjunto, adota-o
+  // (useState(initialLeads) não re-inicializa em prop nova por si só).
+  useEffect(() => { setLeads(initialLeads); }, [initialLeads]);
+
+  // Item 6/DEBT-274: sincroniza a busca com ?q= (server-side, varre TODAS as linhas).
+  // Debounced + guardado no mount pra não re-navegar com o valor inicial vindo da URL.
+  // O filtro client (matchSearch) fica como refino instantâneo sobre o que voltou.
+  const didMount = useRef(false);
+  useEffect(() => {
+    if (!didMount.current) { didMount.current = true; return; }
+    const t = setTimeout(() => {
+      const s = search.trim();
+      const currentQ = (searchParams.get("q") ?? "").trim();
+      if (s === currentQ) return;   // já em sync com a URL → não re-navega (evita loop de replace)
+      const params = new URLSearchParams(searchParams.toString());
+      if (s) params.set("q", s); else params.delete("q");
+      startTransition(() => router.replace(`/dashboard/leads?${params.toString()}`, { scroll: false }));
+    }, 350);
+    return () => clearTimeout(t);
+  }, [search, searchParams, router]);
 
   const filtered = leads.filter((l) => {
     const q = search.toLowerCase();

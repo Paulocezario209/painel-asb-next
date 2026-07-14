@@ -137,11 +137,20 @@ export function HandoffsTable({ initial, initialFilter }: { initial: Handoff[]; 
   }, []);
 
   const filtered = useMemo(() => {
-    const hojeStr = new Date().toISOString().slice(0, 10);
+    // Item 7/DEBT-275: janela do dia comercial BRT (UTC-3) em UTC — igual ao card, pra
+    // "hoje" da tabela bater com o "Agendados Hoje" (antes slice(0,10) usava dia UTC).
+    const BRT_OFFSET_MS = 3 * 60 * 60 * 1000;
+    const nowBrt = new Date(Date.now() - BRT_OFFSET_MS);
+    const startBrt = Date.UTC(nowBrt.getUTCFullYear(), nowBrt.getUTCMonth(), nowBrt.getUTCDate(), 0, 0, 0) + BRT_OFFSET_MS;
+    const endBrt = startBrt + 24 * 60 * 60 * 1000;
     return rows.filter(r => {
       if (vendorFilter !== "todos" && r.routing_team !== vendorFilter) return false;
       if (urgentOnly && elapsedMinutes(r.handoff_at) < 240) return false;
-      if (hojeOnly && (r.scheduled_at ?? "").slice(0, 10) !== hojeStr) return false;
+      if (hojeOnly) {
+        if (!r.scheduled_at) return false;
+        const t = new Date(r.scheduled_at).getTime();
+        if (!(t >= startBrt && t < endBrt)) return false;
+      }
       return true;
     });
   }, [rows, vendorFilter, urgentOnly, hojeOnly]);
