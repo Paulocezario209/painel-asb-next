@@ -23,6 +23,12 @@ const LEGACY_STAGES = [
 ] as const;
 const BOARD_ALIAS: Record<string, string> = {
   ...LEGACY_ALIAS,
+  // Item 5 / MODELO OPERACIONAL (Paulo 2026-07-13): lead 'vendedor_assumiu' aterrissa
+  // na coluna HANDOFF (não "Em Andamento"). Override board-specific — NÃO mexe no
+  // LEGACY_ALIAS global (funil/timeline seguem vendo vendedor_assumiu→lead_em_andamento).
+  // Daí o vendedor arrasta Handoff→Em Andamento (mark_lead_em_andamento, que aceita
+  // from='vendedor_assumiu' desde a migration 2026-07-14 / DEBT-272 1b). Destrava os 55.
+  vendedor_assumiu: "handoff",
   ...Object.fromEntries(CONVERTIDO_STAGES.filter(s => s !== "pedido_fechado").map(s => [s, "pedido_fechado"])),
 };
 const aliasStage = (s: string | null) => (s && BOARD_ALIAS[s]) || s || "handoff";
