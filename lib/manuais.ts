@@ -135,14 +135,16 @@ export const MANUAIS: Record<string, ManualTela> = {
   },
   "/dashboard/followups": {
     titulo: "Follow-ups",
-    oQueE: "Histórico e saúde da régua de follow-up automático do SDR: o que foi enviado, quem respondeu e o que está represado.",
+    oQueE: "A camada de nutrição automática do SDR. Em cima: o board de Cadência ativa (quem a automação está nutrindo agora, por fase). Embaixo: o histórico de disparos (o que foi enviado, quem respondeu).",
     fontes: [
-      "Tabela/KPIs: histórico de envios do motor (fase, ângulo, resposta, conversão).",
+      "Board “Cadência ativa”: view v_leads_cadencia (RLS por vendedor) — leads com próximo toque agendado, em 4 fases: Retomada (reengajamento recente), Pós-ativo, Mensal e Semestral (nutrição longa). É o MESMO conjunto que sai da aba Ativos (Leads) — a automação está cuidando, não é lead parado do vendedor.",
+      "KPIs/Histórico: envios do motor (fase, ângulo, resposta, conversão).",
       "“Vencidos”/“Sem data”: leads elegíveis com follow-up atrasado ou sem agendamento.",
     ],
     comoUsar: [
-      "Taxa de resposta por ângulo mostra qual abordagem funciona — o Ângulo Top é o campeão.",
-      "Clique nos KPIs para filtrar a lista.",
+      "Board abre na fase “Retomada” (a mais acionável); troque de fase pelos chips. O número vermelho no chip = toques vencidos (deviam ter disparado).",
+      "Cada linha é um lead na sua cadência — “Próximo toque” em vermelho = vencido. Clique para abrir a ficha.",
+      "Taxa de resposta por ângulo mostra qual abordagem funciona — o Ângulo Top é o campeão. Clique nos KPIs para filtrar o histórico.",
       "Os contadores seguem as mesmas regras do motor (sem leads em atendimento humano, sem fora de rota) — alerta aqui é atraso real.",
     ],
   },
