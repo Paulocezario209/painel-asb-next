@@ -134,7 +134,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
   if (view === "parados") {
     const { data } = await supabase
       .from("v_leads_parados")
-      .select("balde, id, phone, restaurant_name, city, routing_team, funnel_stage, qual_stage, last_reply_at, followup_phase, followup_fail_count")
+      .select("id, phone, restaurant_name, city, routing_team, funnel_stage, qual_stage, last_reply_at, dias_parado")
       .order("last_reply_at", { ascending: true, nullsFirst: true })
       .limit(1000);
     paradosLeads = (data ?? []) as ParadoLead[];
@@ -168,7 +168,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
         <h1 className="text-2xl font-bold text-gray-900">Leads</h1>
         <p className="text-sm text-slate-200 mt-1">
           {view === "ativos" ? `${leads.length} leads encontrados`
-            : view === "parados" ? "Leads que precisam de atenção — 4 baldes (v_leads_parados)"
+            : view === "parados" ? "Travados recentes — não responderam, ainda no funil (1–30 dias)"
             : view === "perdidos" ? "Fila de recuperação — perdidos nos últimos 180 dias"
             : "Fora de cobertura — registrados para expansão futura"}
         </p>

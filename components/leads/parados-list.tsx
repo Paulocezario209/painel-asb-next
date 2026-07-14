@@ -5,12 +5,12 @@ import { useRouter } from "next/navigation";
 import { AlertTriangle, Search } from "lucide-react";
 import { stageLabel } from "@/lib/funnel/stages";
 
-// PARADOS — aba "Parados" em /dashboard/leads (item 10 da frente do painel).
-// Fonte: view v_leads_parados (security_invoker → vendor-scoped por RLS). 4 baldes de
-// leads que precisam de atenção. Default = qualificacao_estagnada (o mais acionável).
+// PARADOS v2 (DEBT-286) — aba "Parados" em /dashboard/leads. Travados RECENTES por IDADE.
+// Fonte: view v_leads_parados (security_invoker → vendor-scoped). Lead pré-"vendedor assumiu"
+// que respondeu e sumiu há 1–30 dias. Sem follow-up/nurturing (vivem em Atendimento).
+// 3 faixas: 1-7 (default) · 8-14 · 15-30 dias.
 
 export type ParadoLead = {
-  balde: string;
   id: string;
   phone: string;
   restaurant_name: string | null;
@@ -19,33 +19,20 @@ export type ParadoLead = {
   funnel_stage: string | null;
   qual_stage: number | null;
   last_reply_at: string | null;
-  followup_phase: string | null;
-  followup_fail_count: number | null;
+  dias_parado: number | null;
 };
 
-const C = {
-  bg: "#080b14", border: "#2a2a2a",
-  text: "#FFFFFF", muted: "#c0d0e0", label: "#e4e9f0", red: "#C8102E", amber: "#f59e0b",
-};
+const C = { bg: "#080b14", border: "#2a2a2a", text: "#FFFFFF", muted: "#c0d0e0", label: "#e4e9f0" };
 const MONO: React.CSSProperties = { fontFamily: "'Courier New', monospace" };
 
-// ordem = default primeiro (qualificacao_estagnada, o mais acionável)
-const BALDES: { key: string; label: string; cor: string }[] = [
-  { key: "qualificacao_estagnada", label: "Qualif. estagnada", cor: "#f59e0b" },
-  { key: "travado_followup",       label: "Travado follow-up", cor: "#C8102E" },
-  { key: "orfao_handoff",          label: "Órfão handoff",     cor: "#eab308" },
-  { key: "nurturing_longo",        label: "Nurturing longo",   cor: "#6390f5" },
+// faixas de idade (default = a mais recente/acionável)
+const FAIXAS: { key: string; label: string; cor: string; lo: number; hi: number }[] = [
+  { key: "f1_7",   label: "1–7 dias",   cor: "#f59e0b", lo: 1,  hi: 7  },
+  { key: "f8_14",  label: "8–14 dias",  cor: "#fb923c", lo: 8,  hi: 14 },
+  { key: "f15_30", label: "15–30 dias", cor: "#C8102E", lo: 15, hi: 30 },
 ];
-const BALDE_LABEL: Record<string, string> = Object.fromEntries(BALDES.map(b => [b.key, b.label]));
+const FAIXA_LABEL: Record<string, string> = Object.fromEntries(FAIXAS.map(f => [f.key, f.label]));
 
-function relativeTime(iso: string | null): string {
-  if (!iso) return "—";
-  const m = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
-  if (m < 60) return `há ${m}m`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `há ${h}h`;
-  return `há ${Math.floor(h / 24)}d`;
-}
 function maskPhone(p: string): string {
   if (p.length >= 13) return `+${p.slice(0, 2)} (${p.slice(2, 4)}) ****-${p.slice(-4)}`;
   return p.slice(0, 6) + "****" + p.slice(-4);
@@ -53,49 +40,56 @@ function maskPhone(p: string): string {
 
 export function ParadosList({ leads }: { leads: ParadoLead[] }) {
   const router = useRouter();
-  const [balde, setBalde] = useState("qualificacao_estagnada");   // default (item 10)
+  const [faixa, setFaixa] = useState("f1_7");   // default: travados há 1–7 dias
   const [search, setSearch] = useState("");
 
-  const countByBalde = useMemo(() => {
+  const countByFaixa = useMemo(() => {
     const c: Record<string, number> = {};
-    for (const l of leads) c[l.balde] = (c[l.balde] ?? 0) + 1;
+    for (const f of FAIXAS) c[f.key] = 0;
+    for (const l of leads) {
+      const d = l.dias_parado ?? 0;
+      const hit = FAIXAS.find(f => d >= f.lo && d <= f.hi);
+      if (hit) c[hit.key]++;
+    }
     return c;
   }, [leads]);
 
+  const sel = FAIXAS.find(f => f.key === faixa)!;
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return leads.filter(l => {
-      if (l.balde !== balde) return false;
+      const d = l.dias_parado ?? 0;
+      if (!(d >= sel.lo && d <= sel.hi)) return false;
       if (!q) return true;
       return l.phone.includes(q)
         || (l.restaurant_name ?? "").toLowerCase().includes(q)
         || (l.city ?? "").toLowerCase().includes(q);
     });
-  }, [leads, balde, search]);
+  }, [leads, sel, search]);
 
   return (
     <div>
-      {/* Chips de balde (default = qualificacao_estagnada) */}
+      {/* Chips de faixa de idade (default = 1–7 dias) */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
         <span style={{ display: "inline-flex", alignItems: "center", gap: 6, color: C.label, fontSize: 10, letterSpacing: ".12em", textTransform: "uppercase", ...MONO }}>
-          <AlertTriangle style={{ width: 11, height: 11 }} /> Parados
+          <AlertTriangle style={{ width: 11, height: 11 }} /> Parado há
         </span>
-        {BALDES.map(b => {
-          const active = balde === b.key;
+        {FAIXAS.map(f => {
+          const active = faixa === f.key;
           return (
             <button
-              key={b.key}
-              onClick={() => setBalde(b.key)}
+              key={f.key}
+              onClick={() => setFaixa(f.key)}
               style={{
                 display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 12px", borderRadius: 3,
-                border: `1px solid ${active ? b.cor : C.border}`,
+                border: `1px solid ${active ? f.cor : C.border}`,
                 background: active ? "rgba(27,42,107,.35)" : "transparent",
                 color: active ? C.text : C.muted, cursor: "pointer",
                 fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", ...MONO,
               }}
             >
-              {b.label}
-              <span style={{ color: b.cor }}>{countByBalde[b.key] ?? 0}</span>
+              {f.label}
+              <span style={{ color: f.cor }}>{countByFaixa[f.key] ?? 0}</span>
             </button>
           );
         })}
@@ -118,7 +112,7 @@ export function ParadosList({ leads }: { leads: ParadoLead[] }) {
         <table style={{ width: "100%", borderCollapse: "collapse", ...MONO }}>
           <thead>
             <tr style={{ borderBottom: `1px solid ${C.border}` }}>
-              {["Phone", "Restaurante", "Cidade", "Setor", "Etapa", "QS", "Último reply"].map(h => (
+              {["Phone", "Restaurante", "Cidade", "Setor", "Etapa", "QS", "Parado há"].map(h => (
                 <th key={h} style={{ padding: "6px 10px", textAlign: "left", fontSize: 9, letterSpacing: ".13em", textTransform: "uppercase", color: C.label, whiteSpace: "nowrap" }}>
                   {h}
                 </th>
@@ -129,7 +123,7 @@ export function ParadosList({ leads }: { leads: ParadoLead[] }) {
             {filtered.length === 0 && (
               <tr>
                 <td colSpan={7} style={{ padding: "24px 10px", textAlign: "center", color: C.label, fontSize: 11 }}>
-                  Nenhum lead em “{BALDE_LABEL[balde] ?? balde}”.
+                  Nenhum lead parado há {FAIXA_LABEL[faixa] ?? faixa}.
                 </td>
               </tr>
             )}
@@ -149,7 +143,7 @@ export function ParadosList({ leads }: { leads: ParadoLead[] }) {
                 <td style={{ padding: "7px 10px", color: C.muted, fontSize: 9, whiteSpace: "nowrap" }}>{(lead.routing_team ?? "—").replace("SETOR_", "")}</td>
                 <td style={{ padding: "7px 10px", color: C.muted, fontSize: 10, whiteSpace: "nowrap" }}>{stageLabel(lead.funnel_stage)}</td>
                 <td style={{ padding: "7px 10px", color: C.muted, fontSize: 10, whiteSpace: "nowrap" }}>{lead.qual_stage ?? "—"}</td>
-                <td style={{ padding: "7px 10px", color: C.muted, fontSize: 10, whiteSpace: "nowrap" }}>{relativeTime(lead.last_reply_at)}</td>
+                <td style={{ padding: "7px 10px", color: sel.cor, fontSize: 10, fontWeight: 700, whiteSpace: "nowrap" }}>{lead.dias_parado ?? "—"}d</td>
               </tr>
             ))}
           </tbody>
@@ -157,7 +151,7 @@ export function ParadosList({ leads }: { leads: ParadoLead[] }) {
       </div>
 
       <p style={{ color: C.label, fontSize: 9, marginTop: 12, ...MONO, letterSpacing: ".08em" }}>
-        {filtered.length} em “{BALDE_LABEL[balde] ?? balde}” · {leads.length} parados no total · fonte: v_leads_parados (RLS por vendedor)
+        {filtered.length} parados há {FAIXA_LABEL[faixa] ?? faixa} · {leads.length} no total (1–30d) · fonte: v_leads_parados (RLS por vendedor)
       </p>
     </div>
   );
