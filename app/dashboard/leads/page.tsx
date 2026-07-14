@@ -4,7 +4,7 @@ import { LeadsTable } from "@/components/leads/leads-table";
 import { PerdidosList, type LostLead } from "@/components/leads/perdidos-list";
 import { ForaDeRotaTable, type ForaRotaLead } from "@/components/leads/fora-de-rota-table";
 import { ParadosList, type ParadoLead } from "@/components/leads/parados-list";
-import { CONVERTIDO_STAGES } from "@/lib/funnel/stages";
+import { NAO_ATIVO_STAGES } from "@/lib/funnel/stages";
 import { LeadsCards } from "@/components/leads/leads-cards";
 import { getLeadScoreMap } from "@/lib/get-lead-scores";
 import { computeLeadScore, tierOf } from "@/lib/lead-score";
@@ -68,13 +68,13 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
     if (marcoCoorte === "pedido_fechado") leadsQuery = leadsQuery.not("first_order_at", "is", null);
   } else {
     leadsQuery = leadsQuery.or("routing_team.is.null,routing_team.neq.fora_de_rota");   // DEBT-167 4: ATIVOS não lista fora_de_rota (NULL-safe)
-    // Fase 1 / DEBT-286: convertido NÃO é lead ativo. Sai de Leads → vive na Carteira
-    // (v_carteira_360). Espelha o PIPELINE_ATIVOS (que já exclui). Dupla condição:
-    // first_order_at (marcação painel) + funnel_stage convertido (writer/ARES). O
-    // lead continua na tabela; só deixa de aparecer como "lead ativo".
+    // Fase 1 / DEBT-286/287: convertido E perdido NÃO são lead ativo. Convertido vive
+    // na Carteira (v_carteira_360); perdido vive na aba Perdidos. Sem excluir os dois,
+    // contam em Ativos por presença dupla (perdido inflava 143→268). NAO_ATIVO_STAGES =
+    // CONVERTIDO_STAGES ∪ lead_perdido. first_order_at cobre a marcação-painel de 1ª compra.
     leadsQuery = leadsQuery
       .is("first_order_at", null)
-      .not("funnel_stage", "in", `(${CONVERTIDO_STAGES.join(",")})`);
+      .not("funnel_stage", "in", `(${NAO_ATIVO_STAGES.join(",")})`);
   }
 
   // Item 6: busca server-side aplicada ANTES do limit (superset garantido vs busca client)
@@ -144,11 +144,11 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
   // Ativos usa o MESMO filtro da lista (convertido já fora); Parados lê a MESMA fonte da aba
   // (v_leads_parados) → card e aba nunca divergem.
   const since180 = new Date(Date.now() - 180 * 86400000).toISOString();
-  const convInList = `(${CONVERTIDO_STAGES.join(",")})`;
+  const naoAtivoInList = `(${NAO_ATIVO_STAGES.join(",")})`;
   const [cAtivos, cParados, cPerdidos, cFora] = await Promise.all([
     supabase.from("ai_sdr_leads").select("phone", { count: "exact", head: true })
       .eq("is_test", false).or("routing_team.is.null,routing_team.neq.fora_de_rota")
-      .is("first_order_at", null).not("funnel_stage", "in", convInList),
+      .is("first_order_at", null).not("funnel_stage", "in", naoAtivoInList),
     supabase.from("v_leads_parados").select("id", { count: "exact", head: true }),
     supabase.from("ai_sdr_leads").select("phone", { count: "exact", head: true })
       .eq("is_test", false).eq("funnel_stage", "lead_perdido").gte("lost_at", since180),

@@ -57,6 +57,13 @@ export const CONVERTIDO_STAGES = [
 ] as const;
 export const CONVERTIDO_SET = new Set<string>(CONVERTIDO_STAGES);
 
+// ── Etapas TERMINAIS — NÃO são "lead ativo" (DEBT-287) ───────────────────────
+// A aba/card "Ativos" (tela Leads) = leads AINDA no funil. Exclui os dois destinos
+// terminais: CONVERTIDO (virou cliente → vive na Carteira, v_carteira_360) e
+// lead_perdido (→ aba Perdidos). Sem isso, perdido conta em Ativos E em Perdidos
+// (presença dupla — mesma classe do vazamento de convertido, DEBT-285/286 Fase 1.1).
+export const NAO_ATIVO_STAGES = [...CONVERTIDO_STAGES, "lead_perdido"] as const;
+
 // ── Rótulos de exibição (19 — canônicos + legados p/ timeline histórica) ─────
 export const STAGE_LABELS: Record<string, string> = {
   lead_novo:              "Lead Novo",
