@@ -14,7 +14,7 @@ const VENDEDORES = [
   ...VENDOR_ORDER.map(v => ({ v, label: VENDOR_LABELS[v] })),
 ];
 
-export function DashboardFilters({ showMonth = true, showVendedor = true, defaultMes, maxMonth }: { showMonth?: boolean; showVendedor?: boolean; defaultMes?: string; maxMonth?: string }) {
+export function DashboardFilters({ showMonth = true, showVendedor = true, showSearch = false, searchPlaceholder = "buscar nome, cidade ou telefone", defaultMes, maxMonth }: { showMonth?: boolean; showVendedor?: boolean; showSearch?: boolean; searchPlaceholder?: string; defaultMes?: string; maxMonth?: string }) {
   const router = useRouter();
   const sp = useSearchParams();
   const pathname = usePathname();
@@ -22,12 +22,30 @@ export function DashboardFilters({ showMonth = true, showVendedor = true, defaul
   // defaultMes (ex.: mês corrente) é exibido quando a URL não tem ?mes= — telas com default de mês.
   const mes = mesUrl || defaultMes || "";
   const vendedor = sp.get("vendedor") ?? "";
+  const qUrl = sp.get("q") ?? "";
 
   // BUGFIX: input month é controlado; router.push é assíncrono, então o input revertia a
   // seleção visual antes do searchParams atualizar. Estado local reflete a seleção na hora;
   // useEffect ressincroniza com a URL (reload/navegação externa/limpar).
   const [mesLocal, setMesLocal] = useState(mes);
   useEffect(() => { setMesLocal(mes); }, [mes]);
+
+  // Busca (lupa): estado local + debounce 350ms → escreve ?q= na URL (server relê e filtra).
+  // Ressincroniza com a URL em navegação externa / limpar.
+  const [qLocal, setQLocal] = useState(qUrl);
+  useEffect(() => { setQLocal(qUrl); }, [qUrl]);
+  useEffect(() => {
+    const val = qLocal.trim();
+    if (val === qUrl) return;
+    const t = setTimeout(() => {
+      const p = new URLSearchParams(sp.toString());
+      if (val) p.set("q", val); else p.delete("q");
+      const qs = p.toString();
+      router.push(qs ? `${pathname}?${qs}` : pathname);
+    }, 350);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [qLocal]);
 
   function update(key: string, val: string) {
     const p = new URLSearchParams(sp.toString());
@@ -39,6 +57,21 @@ export function DashboardFilters({ showMonth = true, showVendedor = true, defaul
 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+      {showSearch && (
+        <div style={{ display: "flex", alignItems: "center", gap: 6, background: "#0d1117", border: `1px solid ${qLocal ? GREEN : "#2a2a2a"}`, borderRadius: 5, padding: "4px 9px" }}>
+          <span style={{ color: qLocal ? GREEN : "#c0d0e0", fontSize: 12 }} aria-hidden>{"⌕"}</span>
+          <input
+            type="search"
+            value={qLocal}
+            onChange={(e) => setQLocal(e.target.value)}
+            placeholder={searchPlaceholder}
+            style={{ background: "transparent", border: "none", outline: "none", color: "#c8d8e8", fontSize: 11, fontFamily: mono, width: 220 }}
+          />
+          {qLocal && (
+            <button onClick={() => setQLocal("")} aria-label="limpar busca" style={{ background: "none", border: "none", color: "#c0d0e0", fontSize: 12, cursor: "pointer", lineHeight: 1 }}>×</button>
+          )}
+        </div>
+      )}
       {showMonth && (
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <span style={{ color: "#e4e9f0", fontSize: 9, fontFamily: mono, letterSpacing: ".12em", textTransform: "uppercase" }}>Mês</span>

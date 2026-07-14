@@ -56,6 +56,11 @@ export default async function PipelinePage({ searchParams }: { searchParams: Pro
   const spVend = sp?.vendedor && /^SETOR_[A-Z_]+$/.test(sp.vendedor) ? sp.vendedor : null;
   const vendFiltro = ctx.isVendedor ? ctx.routing_team : spVend;
 
+  // Busca (lupa): server-side ilike sobre nome/cidade/telefone, ANTES do limit 500
+  // (varre toda a base pós-handoff do filtro atual). qSafe neutraliza metachars do .or().
+  const qRaw = (sp?.q ?? "").trim().slice(0, 60);
+  const qSafe = qRaw.replace(/[,()%*\\]/g, " ").trim();
+
   // Filtro de mês por handoff_at (coorte de entrada no pipeline do vendedor)
   const mesParam = sp?.mes && /^\d{4}-(0[1-9]|1[0-2])$/.test(sp.mes) ? sp.mes : null;
   let mesIni: string | null = null, mesFimEx: string | null = null;
@@ -74,6 +79,7 @@ export default async function PipelinePage({ searchParams }: { searchParams: Pro
     .limit(500);
   if (vendFiltro) q = q.eq("routing_team", vendFiltro);
   if (mesIni && mesFimEx) q = q.gte("handoff_at", mesIni).lt("handoff_at", mesFimEx);
+  if (qSafe) q = q.or(`restaurant_name.ilike.%${qSafe}%,city.ilike.%${qSafe}%,phone.ilike.%${qSafe}%`);
 
   // Ponte lead→ARES (redesenho 2026-07-09): lead presente em v_carteira_360 já FATUROU →
   // conversão CONFIRMADA. Agrupa em "Convertido" mesmo sem o vendedor arrastar o card.
@@ -123,12 +129,18 @@ export default async function PipelinePage({ searchParams }: { searchParams: Pro
       {/* KPIs de topo (3 cards, clicáveis → lista no modal) */}
       <PipelineKpis kpis={kpis} />
 
-      {/* Filtro: mês (todos) + vendedor (só gestor — vendedor é travado no seu) */}
+      {/* Filtro: busca (lupa) + mês (todos) + vendedor (só gestor — vendedor é travado no seu) */}
       <div style={{ ...S.card, padding: "12px 16px" }}>
-        <DashboardFilters showMonth showVendedor={ctx.isGestor} />
+        <DashboardFilters showSearch showMonth showVendedor={ctx.isGestor} />
       </div>
 
-      <PipelineBoard byStage={byStage} stages={PIPELINE_STAGES as unknown as string[]} ctx={boardCtx} />
+      {/* key = assinatura do filtro: troca de vendedor/mês/busca REMONTA o board com os
+          dados filtrados do server (senão o useState(byStage) fica preso no "Todos").
+          Dentro do mesmo filtro o key não muda → drag otimista segue funcionando. */}
+      <PipelineBoard
+        key={`${vendFiltro ?? "todos"}|${mesParam ?? ""}|${qSafe}`}
+        byStage={byStage} stages={PIPELINE_STAGES as unknown as string[]} ctx={boardCtx}
+      />
     </div>
   );
 }
