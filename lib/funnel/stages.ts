@@ -146,3 +146,18 @@ export const FASES = [
   { key: "convertido",   label: "Convertido (1ª compra)", fill: "#22c55e",
     stages: [...CONVERTIDO_STAGES] },
 ] as const;
+
+// ── Alias reverso: etapa canônica → todos os funnel_stage CRUS que projetam nela ──
+// Usado no drill "por etapa" (Funil → Leads): o card do Funil conta por etapa aliased
+// (stageCounts), então a lista de Leads precisa filtrar pelos MESMOS stages crus p/ o
+// número do card bater com a lista. Ex.: lead_em_andamento inclui os legados
+// vendedor_assumiu/diagnostico_comercial. Deriva de LEGACY_ALIAS (fonte única).
+export const RAW_STAGES_FOR: Record<string, string[]> = (() => {
+  const m: Record<string, string[]> = {};
+  for (const s of STAGE_ORDER) m[s] = [s];
+  for (const [legacy, canon] of Object.entries(LEGACY_ALIAS)) {
+    (m[canon] ??= [canon]).push(legacy);
+  }
+  return m;
+})();
+export const rawStagesFor = (canonical: string): string[] => RAW_STAGES_FOR[canonical] ?? [canonical];

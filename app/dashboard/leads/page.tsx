@@ -4,7 +4,7 @@ import { LeadsTable } from "@/components/leads/leads-table";
 import { PerdidosList, type LostLead } from "@/components/leads/perdidos-list";
 import { ForaDeRotaTable, type ForaRotaLead } from "@/components/leads/fora-de-rota-table";
 import { ParadosList, type ParadoLead } from "@/components/leads/parados-list";
-import { NAO_ATIVO_STAGES } from "@/lib/funnel/stages";
+import { NAO_ATIVO_STAGES, STAGE_ORDER, STAGE_LABELS, CONVERTIDO_SET, rawStagesFor } from "@/lib/funnel/stages";
 import { CADENCIA_PHASES } from "@/lib/followup/cadencia";
 import { LeadsCards } from "@/components/leads/leads-cards";
 import { getLeadScoreMap } from "@/lib/get-lead-scores";
@@ -43,6 +43,12 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
   const vendCoorte = sp.vendedor && /^SETOR_[A-Z_]+$/.test(sp.vendedor) ? sp.vendedor : null;
   const coorteAtiva = Boolean(mesCoorte && marcoCoorte && view === "ativos");
 
+  // Modo COORTE POR ETAPA (link dos cards "Leads por Etapa" do /dashboard/funil):
+  // ?etapa=<funnel_stage canônico não-terminal> abre a lista dos leads NAQUELA etapa
+  // (posição atual, global sem fora-de-rota) — mesmo recorte do card do Funil.
+  const etapaCoorte = sp.etapa && STAGE_ORDER.includes(sp.etapa as (typeof STAGE_ORDER)[number]) && !CONVERTIDO_SET.has(sp.etapa) ? sp.etapa : null;
+  const coorteEtapaAtiva = Boolean(etapaCoorte && !coorteAtiva && view === "ativos");
+
   // Item 6 / DEBT-274: busca SERVER-SIDE (ilike sobre TODAS as linhas, antes do limit)
   // — antes a lupa filtrava só os <=100 carregados (busca cega). qSafe neutraliza os
   // metachars do filtro PostgREST (vírgula/parênteses/%/*) pra não quebrar o .or().
@@ -72,6 +78,12 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
     if (marcoCoorte === "handoff") leadsQuery = leadsQuery.not("handoff_at", "is", null);
     if (marcoCoorte === "vendedor_assumiu") leadsQuery = leadsQuery.not("seller_first_reply_at", "is", null);
     if (marcoCoorte === "pedido_fechado") leadsQuery = leadsQuery.not("first_order_at", "is", null);
+  } else if (coorteEtapaAtiva) {
+    // Drill por etapa (posição atual): mesmos filtros do card do Funil (sem fora-de-rota),
+    // filtrando pelos stages CRUS que projetam na etapa canônica (rawStagesFor) p/ o número bater.
+    leadsQuery = leadsQuery
+      .or("routing_team.is.null,routing_team.neq.fora_de_rota")
+      .in("funnel_stage", rawStagesFor(etapaCoorte!));
   } else {
     leadsQuery = leadsQuery.or("routing_team.is.null,routing_team.neq.fora_de_rota");   // DEBT-167 4: ATIVOS não lista fora_de_rota (NULL-safe)
     // Fase 1 / DEBT-286/287: convertido E perdido NÃO são lead ativo. Convertido vive
@@ -180,15 +192,18 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Leads</h1>
         <p className="text-sm text-slate-200 mt-1">
-          {view === "ativos" ? `${leads.length} leads que entraram hoje — a caixa de entrada do SDR (virou o dia → Parados)`
+          {coorteEtapaAtiva ? `${leads.length} leads na etapa ${STAGE_LABELS[etapaCoorte!] ?? etapaCoorte} — posição atual no funil`
+            : view === "ativos" ? `${leads.length} leads que entraram hoje — a caixa de entrada do SDR (virou o dia → Parados)`
             : view === "parados" ? "No funil há 1–30 dias — o vendedor deve resolver (fechar ou marcar perdido com motivo) até o dia 30"
             : view === "perdidos" ? "Fila de recuperação — perdidos nos últimos 180 dias"
             : "Fora de cobertura — registrados para expansão futura"}
         </p>
-        {coorteAtiva && (
+        {(coorteAtiva || coorteEtapaAtiva) && (
           <div style={{ display: "inline-flex", alignItems: "center", gap: 10, marginTop: 8, background: "rgba(46,160,67,.12)", border: "1px solid #2ea043", borderRadius: 4, padding: "6px 12px" }}>
             <span style={{ color: "#2ea043", fontSize: 11, fontFamily: theme.font.label, fontWeight: 700, letterSpacing: ".06em" }}>
-              COORTE {mesCoorte} · {MARCOS_COORTE[marcoCoorte!]}{vendCoorte ? ` · ${vendCoorte.replace("SETOR_", "")}` : ""}
+              {coorteEtapaAtiva
+                ? `ETAPA · ${STAGE_LABELS[etapaCoorte!] ?? etapaCoorte}`
+                : `COORTE ${mesCoorte} · ${MARCOS_COORTE[marcoCoorte!]}${vendCoorte ? ` · ${vendCoorte.replace("SETOR_", "")}` : ""}`}
             </span>
             <Link href="/dashboard/leads" style={{ color: "#c0d0e0", fontSize: 10, fontFamily: theme.font.label, textDecoration: "underline" }}>
               limpar filtro

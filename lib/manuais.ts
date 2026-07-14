@@ -26,7 +26,7 @@ export const MANUAIS: Record<string, ManualTela> = {
     ],
     comoUsar: [
       "Clique numa linha da Conversão da Coorte para abrir SÓ os leads daquele marco (mesmo mês/vendedor do filtro) — a tela de Leads mostra a tarja verde COORTE com o recorte ativo e o link 'limpar filtro'.",
-      "“Leads Parados por Etapa” lista os 10 mais antigos de cada etapa não-terminal — bom ponto de partida do dia.",
+      "“Leads por Etapa”: um card por etapa não-terminal (posição atual) — clique para abrir a lista completa daquela etapa na tela de Leads (tarja ETAPA + 'limpar filtro'). O número do card bate com a lista.",
       "A contagem global tem cache de 5 minutos — pode atrasar levemente vs a tela de Leads.",
     ],
   },

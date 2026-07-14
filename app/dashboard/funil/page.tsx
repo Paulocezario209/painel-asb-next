@@ -6,7 +6,7 @@ import Link from "next/link";
 
 import { redirect } from "next/navigation";
 import { getUserContext, canAccess } from "@/lib/auth/get-user-role";
-import { STAGE_ORDER, STAGE_LABELS, FASES, LEGACY_ALIAS, CONVERTIDO_SET } from "@/lib/funnel/stages";
+import { STAGE_ORDER, STAGE_LABELS, STAGE_COLORS, FASES, LEGACY_ALIAS, CONVERTIDO_SET } from "@/lib/funnel/stages";
 // ETAPA6 (DEBT-137): cache real da contagem global por etapa (sem auth — dado global).
 import { unstable_cache } from "next/cache";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
@@ -120,19 +120,6 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
     .limit(20);
   const events = (rawEvents ?? []) as unknown as FunnelEvent[];
 
-  // Query C (FIX-ETAPA2) — leads individuais p/ bloco "Leads parados por etapa"
-  const { data: rawLeadRows } = await supabase
-    .from("ai_sdr_leads")
-    .select("phone, restaurant_name, city, qual_stage, created_at, funnel_stage")
-    .eq("is_test", false)
-    .or("routing_team.is.null,routing_team.neq.fora_de_rota")   // FASE A item 7: parados sem fora_de_rota
-    .order("created_at", { ascending: false })
-    .limit(1000);
-  const leadRows = (rawLeadRows ?? []) as unknown as {
-    phone: string | null; restaurant_name: string | null; city: string | null;
-    qual_stage: number | null; created_at: string; funnel_stage: string | null;
-  }[];
-
   // P5/P2 — funil de marcos confiáveis. Sem filtro: view v_funil_marcos (simples).
   // Com filtro (mês/vendedor): RPC get_funil_marcos (agregação parametrizada — asb-supabase-ops §7).
   const sp = await searchParams;
@@ -207,16 +194,10 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
     { key: "perdido",    label: "Perdido",              count: clienteCounts.perdido,    cor: "#6b7280", href: "/dashboard/clientes?tab=churn",    sub: "inativo ≥60d" },
   ];
 
-  // ── Leads parados por etapa (FIX-ETAPA2) — top 10 por etapa, etapas não-terminais ──
-  const TERMINAIS = CONVERTIDO_SET;  // convertidos não são "parados" (pedido_fechado incluso)
-  const leadsPorEtapa: Record<string, typeof leadRows> = {};
-  for (const r of leadRows) {
-    const s = aliasStage(r.funnel_stage ?? "lead_novo");
-    if (TERMINAIS.has(s) || s === "lead_perdido") continue;  // lateral, não "parado"
-    (leadsPorEtapa[s] ??= []);
-    if (leadsPorEtapa[s].length < 10) leadsPorEtapa[s].push(r);
-  }
-  const etapasComLeads = STAGE_ORDER.filter(s => (leadsPorEtapa[s]?.length ?? 0) > 0);
+  // ── Leads por etapa (posição atual) — etapas não-terminais com leads, na ordem da jornada ──
+  // Card clicável por etapa (drill → /dashboard/leads?etapa=<stage>); count = stageCounts
+  // (aliased, global sem fora-de-rota) — a lista de Leads usa rawStagesFor p/ bater o número.
+  const etapasDrill = STAGE_ORDER.filter(s => !CONVERTIDO_SET.has(s) && (stageCounts[s] ?? 0) > 0);
 
   // FASE A: bloco "Drop-off entre Etapas" removido (snapshot adjacente não é conversão — sem significado).
 
@@ -368,42 +349,29 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
         </div>
       )}
 
-      {/* Leads parados por etapa (FIX-ETAPA2) — clicáveis */}
+      {/* Leads por etapa — cards clicáveis (drill direto p/ a lista da etapa · posição atual) */}
       <div style={{ ...S.card, padding: "20px 24px" }}>
         <p style={S.section}>
           <span style={{ color: "#185FA5", marginRight: 6 }}>{"◉"}</span>
-          Leads Parados por Etapa <span style={{ color: "#e4e9f0", textTransform: "none", letterSpacing: 0 }}>· tempo = dias na BASE (created_at), não na etapa</span>
+          Leads por Etapa <span style={{ color: "#e4e9f0", textTransform: "none", letterSpacing: 0 }}>· posição atual · clique para abrir a lista da etapa</span>
         </p>
-        {etapasComLeads.length > 0 ? (
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            {etapasComLeads.map(s => (
-              <div key={s}>
-                <p style={{ ...S.muted, fontSize: 10, marginBottom: 6 }}>
-                  {STAGE_LABELS[s] ?? s} <span style={{ color: "#e4e9f0" }}>· {stageCounts[s] ?? 0} no total{(stageCounts[s] ?? 0) > 10 ? " (top 10)" : ""}</span>
-                </p>
-                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                  {leadsPorEtapa[s].map((r, i) => {
-                    const nome = r.restaurant_name || r.city || (r.phone ? `...${r.phone.slice(-4)}` : "?");
-                    const dias = Math.floor((Date.now() - new Date(r.created_at).getTime()) / 86400000);
-                    const row = (
-                      <>
-                        <span style={{ color: "#c8d8e8", fontSize: 11, fontFamily: theme.font.label, minWidth: 160 }}>{nome}</span>
-                        <span style={{ color: "#e4e9f0", fontSize: 10, fontFamily: theme.font.label }}>{r.city ?? "—"}</span>
-                        <span style={{ marginLeft: "auto", color: dias >= 7 ? "#C8102E" : dias >= 3 ? "#f59e0b" : "#c0d0e0", fontSize: 10, fontWeight: 700, fontFamily: theme.font.label }}>{dias}d na base</span>
-                      </>
-                    );
-                    return r.phone ? (
-                      <Link key={r.phone + i} href={`/dashboard/leads/${encodeURIComponent(r.phone)}`} style={{ display: "flex", alignItems: "center", gap: 10, padding: "3px 0", textDecoration: "none", borderTop: i > 0 ? "1px solid rgba(27,42,107,.2)" : "none" }}>{row}</Link>
-                    ) : (
-                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "3px 0", borderTop: i > 0 ? "1px solid rgba(27,42,107,.2)" : "none" }}>{row}</div>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
+        {etapasDrill.length > 0 ? (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 10 }}>
+            {etapasDrill.map(s => {
+              const cor = STAGE_COLORS[s] ?? "#185FA5";
+              return (
+                <Link key={s} href={`/dashboard/leads?etapa=${s}`} style={{ textDecoration: "none" }}>
+                  <div style={{ background: "#0d1117", border: "1px solid #2a2a2a", borderTop: `2px solid ${cor}`, borderRadius: 6, padding: "14px 12px", height: "100%" }}>
+                    <p style={{ ...S.label, color: cor }}>{STAGE_LABELS[s] ?? s}</p>
+                    <p style={{ ...S.value, fontSize: 24, marginTop: 10 }}>{stageCounts[s] ?? 0}</p>
+                    <p style={{ ...S.muted, fontSize: 9, marginTop: 6 }}>leads na etapa</p>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         ) : (
-          <p style={S.muted}>Nenhum lead parado em etapas ativas.</p>
+          <p style={S.muted}>Nenhum lead em etapas ativas.</p>
         )}
       </div>
 
