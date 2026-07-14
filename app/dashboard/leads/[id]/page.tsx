@@ -9,6 +9,7 @@ import { ProductGroupSelector } from "@/components/leads/product-group-selector"
 import { OrigemSelector } from "@/components/leads/origem-selector";
 import { ConversationWithFeedback } from "@/components/leads/conversation-with-feedback";
 import { FunnelStageBadge } from "@/components/leads/funnel-stage-badge";
+import { VoltarEtapaButton } from "@/components/leads/voltar-etapa-button";
 import { LeadTimeline } from "@/components/leads/lead-timeline";
 import { VendorConversation } from "@/components/leads/vendor-conversation";
 import { LeadNotes } from "@/components/leads/lead-notes";
@@ -159,6 +160,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           <FunnelStageBadge stage={lead.funnel_stage} />
+          {isGestor && <VoltarEtapaButton leadId={lead.id} currentStage={lead.funnel_stage} />}
           <SmallBadge {...tempCfg} />
           <SmallBadge {...stsCfg} />
           <a href={`https://wa.me/${lead.phone}`} target="_blank" rel="noopener noreferrer">
