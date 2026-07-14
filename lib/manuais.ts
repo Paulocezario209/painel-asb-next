@@ -102,6 +102,18 @@ export const MANUAIS: Record<string, ManualTela> = {
       "“Regras” abre a política completa de remuneração.",
     ],
   },
+  "/dashboard/comercial": {
+    titulo: "Comercial",
+    oQueE: "Uma porta só para a camada comercial — a jornada de ponta a ponta em cards. Aquisição (Leads SDR · Parados · Perdidos · Pipeline) e Carteira (Clientes · Carteira Ativa). Cada card mostra o total vivo e abre a tela que já existe.",
+    fontes: [
+      "Leads SDR: entraram hoje (ai_sdr_leads created_at BRT). Parados: v_leads_parados (1–30d). Perdidos: lead_perdido nos últimos 180d. Pipeline: leads em aberto com o vendedor (handoff→pedido_teste).",
+      "Clientes: v_carteira_360 viva (ativo + atenção). Carteira Ativa: recompra devida (risco + pré-churn).",
+    ],
+    comoUsar: [
+      "Clique num card para abrir a tela completa daquela camada — o card é só o atalho com o número do momento.",
+      "É o mesmo dado das telas Leads / Pipeline / Clientes / Carteira Ativa — aqui reunido em um lugar.",
+    ],
+  },
   "/dashboard/leads": {
     titulo: "Leads",
     oQueE: "Os leads do SDR numa linha do tempo por idade: Leads SDR (entraram HOJE — a caixa de entrada do dia), Parados (1–30 dias, precisam de atenção), Perdidos (últimos 180 dias) e Fora de Rota. Cards no topo mostram o total de cada aba. Convertidos NÃO aparecem aqui: viraram cliente e vivem na Carteira.",
