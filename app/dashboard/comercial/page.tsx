@@ -79,12 +79,12 @@ export default async function ComercialPage() {
         <div style={{ fontFamily: theme.font.num, fontSize: 11, letterSpacing: ".2em", textTransform: "uppercase", color: "#8b9bb4" }}>
           <span style={{ color: "#4f7df0", marginRight: 8 }}>▸</span>A jornada de ponta a ponta
         </div>
-        <div style={{ display: "flex", alignItems: "stretch", gap: 0, overflowX: "auto", paddingBottom: 4 }}>
+        <div style={{ display: "flex", alignItems: "stretch", width: "100%" }}>
           {FLUXO.map((s, i) => (
-            <div key={s.cat} style={{ display: "flex", alignItems: "center", flexShrink: 0 }}>
+            <div key={s.cat} style={{ display: "flex", alignItems: "center", flex: 1, minWidth: 0 }}>
               <FlowCard step={s} />
               {i < FLUXO.length - 1 && (
-                <span style={{ color: "#3a4a63", fontSize: 16, padding: "0 10px", flexShrink: 0, fontFamily: theme.font.num }}>→</span>
+                <span style={{ color: "#3a4a63", fontSize: 15, padding: "0 6px", flexShrink: 0, fontFamily: theme.font.num }}>→</span>
               )}
             </div>
           ))}
@@ -108,7 +108,7 @@ function FlowCard({ step: s }: { step: FlowStep }) {
     <Link
       href={s.href}
       style={{
-        display: "block", width: 205, minHeight: 120, textDecoration: "none",
+        display: "block", flex: 1, minWidth: 0, minHeight: 128, textDecoration: "none",
         background: "#0b0f1a", border: "1px solid #1c2637", borderRadius: 12,
         padding: "14px 16px",
       }}
