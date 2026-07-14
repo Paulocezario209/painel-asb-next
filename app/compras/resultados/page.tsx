@@ -58,7 +58,7 @@ export default async function ResultadosPage({
   const fimJanela = isMesCorrente ? hoje : fimMes;
   const iso = (d: Date) => d.toISOString().slice(0, 10);
 
-  const [fatRes, compRes, metaRes, calRes, itensRes, fatTipoRes, mensalRes, devolRes] = await Promise.all([
+  const [fatRes, compRes, metaRes, calRes, itensRes, fatTipoRes, mensalRes, devolRes, entradaRes] = await Promise.all([
     supabase
       .from("v_faturado_emissao_diario")  // faturado por EMISSÃO (data_faturamento), não data_meta/entrega
       .select("dia, faturado_brl")
@@ -108,6 +108,12 @@ export default async function ResultadosPage({
       .gte("data_devolucao", iso(inicioMes))
       .lte("data_devolucao", iso(fimJanela))
       .in("id_pessoa_emitente", EMITENTES_ASB),
+    // PEÇA 3 — Compras MTD = ENTRADA REAL (NF+Recibo) via v_compras_entradas_mtd (linha do mês selecionado)
+    supabase
+      .from("v_compras_entradas_mtd")
+      .select("recebido_brl, comprometido_brl, a_chegar_brl")
+      .eq("mes_num", mesSel + 1)
+      .maybeSingle(),
   ]);
   const fatRows = (fatRes.data ?? []) as { dia: string; faturado_brl: number }[];
   const compRows = (compRes.data ?? []) as CompraRow[];
@@ -124,17 +130,14 @@ export default async function ResultadosPage({
   // DEBT-171 F2: compras LÍQUIDAS = bruto − devolução de compra (fornecedor)
   const comprasBrutoMtd = compRows.reduce((s, r) => s + Number(r.valor_total_brl || 0), 0);
   const comprasMtd = comprasBrutoMtd - devolucaoMtd;
-  // split: recebido (entregue/NF) menos devolução vs a chegar (pendente+aprovado)
-  const recebidoMtd = compRows
-    .filter((r) => r.status_compra === "entregue")
-    .reduce((s, r) => s + Number(r.valor_total_brl || 0), 0) - devolucaoMtd;
-  const aChegarMtd = comprasMtd - recebidoMtd;
-
-  // Compras REAIS para o box % e headline — regra Paulo 2026-07-08: ESTADO REAL = status entregue
-  // SEMPRE (corrente inclusive). recebidoMtd = entregue − devolução (espelha v_resultado_mensal, que
-  // passou a usar entregue em todos os meses). pendente/aprovado (a-chegar) ficam SÓ na projeção
-  // (comprasMtd, abaixo, INTOCADO); cancelado fora. Split Recebido/A chegar (sublinha) segue informativo.
-  const comprasParaPct = recebidoMtd;
+  // Compras MTD / % — regra Paulo 2026-07-14: ESTADO REAL = ENTRADA DE MERCADORIA (NF+Recibo,
+  // v_compras_entradas_mtd), líquida de devolução — substitui a régua "pedido entregue" (subcontava
+  // o mês corrente). "A chegar" = comprometido − recebido, exibido SÓ no mês corrente.
+  // A projeção (comprasMtd = comprometido, abaixo) e as demais superfícies ficam INTOCADAS.
+  const entradaRow = (entradaRes.data ?? null) as { recebido_brl: number; a_chegar_brl: number } | null;
+  const recebidoEntrada = Number(entradaRow?.recebido_brl ?? 0);
+  const aChegarEntrada = Number(entradaRow?.a_chegar_brl ?? 0);
+  const comprasParaPct = recebidoEntrada;
   const pct = faturadoMtd > 0 ? Math.round((comprasParaPct / faturadoMtd) * 1000) / 10 : 0;
   const sem = semaforoPct(pct);
 
@@ -319,10 +322,11 @@ export default async function ResultadosPage({
             <div style={{ ...labelS, marginTop: 10, textTransform: "none", letterSpacing: 0 }}>Sem dados de compras neste período</div>
           ) : (
             <>
-              {/* Headline = compras REAIS (entregue − devolução; mesmo comprasParaPct do box %). */}
+              {/* Headline = ENTRADA REAL (NF+Recibo − devolução; mesmo comprasParaPct do box %). */}
               <div style={{ fontSize: 26, fontWeight: 700, color: "#FFFFFF", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", marginTop: 6 }}>{brl(comprasParaPct)}</div>
               <div style={{ ...labelS, marginTop: 8, color: "#c0d0e0", textTransform: "none", letterSpacing: 0 }}>
-                Recebido (NF): <b style={{ color: "#2ea043" }}>{brl(recebidoMtd)}</b> · A chegar: <b style={{ color: "#d29922" }}>{brl(aChegarMtd)}</b>
+                Entrada (NF+Recibo): <b style={{ color: "#2ea043" }}>{brl(recebidoEntrada)}</b>
+                {isMesCorrente ? <> · A chegar: <b style={{ color: "#d29922" }}>{brl(aChegarEntrada)}</b></> : null}
               </div>
               {devolucaoMtd > 0 && (
                 <div style={{ ...labelS, marginTop: 4, color: "#c0d0e0", textTransform: "none", letterSpacing: 0 }}>
