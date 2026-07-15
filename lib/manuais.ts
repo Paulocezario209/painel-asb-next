@@ -39,7 +39,7 @@ export const MANUAIS: Record<string, ManualTela> = {
       "01 Mapa — “pergunta que quebra”: qual_stage dos leads em qualificação interrompida. Longa por TEMPO: buckets de degrau (D+30/60/90/180/360 + recorrência) de v_cadencia_lead. Longa por MOTIVO: v_motivos_perda.",
       "02 Fila — silêncio, degrau, cadência (CURTA/LONGA) por lead: v_cadencia_lead. Coluna “Próxima ação” = proxima_acao REAL do motor F3 (v_lead_proxima_acao). Chips filtram (atrasado/hoje/precisa humano/negociação).",
       "03 Dossiê — cabeçalho + timeline (conversas_sdr + vendor_messages + funnel_stage_events) do lead selecionado. “Próxima melhor ação” = proxima_acao + proximo_angulo + “não repetir: {angulos_usados}” (v_lead_proxima_acao).",
-      "03 Dossiê — “Contexto extraído” (objeção/gramagem/produto-alvo/último sinal) é FASE 2: placeholder até o motor de extração escrever esses campos.",
+      "03 Dossiê — “Contexto extraído”: análise da IA lida de v_orquestracao_leads (contexto_resumo + chips objeção/produto/gramatura/recompra + data da análise). Enquanto a IA não analisou o lead (contexto_extraido_em nulo), mostra “Ainda não analisado pela IA”.",
     ],
     comoUsar: [
       "Saúde verde = cadência saudável. Se “sem cadência” subir de 0, há vazamento — vá à Fila e investigue.",

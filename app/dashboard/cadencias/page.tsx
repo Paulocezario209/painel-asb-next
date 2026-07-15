@@ -99,7 +99,18 @@ type FilaRow = {
   silencio_horas: number | null; atrasado: boolean; eh_hoje: boolean;
 };
 type AcaoRow = { phone: string | null; proxima_acao: string | null; proximo_angulo: string | null; angulos_usados: string[] | null };
+type CtxRow = { contexto_resumo: string | null; contexto_objecao: string | null; contexto_produto: string | null; contexto_gramatura: string | null; contexto_recompra_dias: number | null; contexto_extraido_em: string | null };
 type TLItem = { at: string; kind: "lead" | "bot" | "vendor" | "stage"; text: string };
+
+// Data BR fixa -03:00 (São Paulo, sem DST desde 2019) — evita dependência de ICU/locale.
+function fmtBR(iso: string | null): string {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "—";
+  const sp = new Date(d.getTime() - 3 * 3600 * 1000);
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${p(sp.getUTCDate())}/${p(sp.getUTCMonth() + 1)}/${sp.getUTCFullYear()} ${p(sp.getUTCHours())}:${p(sp.getUTCMinutes())}`;
+}
 
 // ── Caches (padrão do funil) ─────────────────────────────────────────────────
 const getMapa = unstable_cache(
@@ -170,6 +181,35 @@ function StateCard({ e, row, active }: { e: Estado; row: MapaRow | undefined; ac
   );
 }
 
+// Contexto extraído pela IA (v_orquestracao_leads) — real quando contexto_extraido_em ≠ null.
+function CtxChip({ label, value, color }: { label: string; value: string; color: string }) {
+  return <span style={{ ...mono(9, { letterSpacing: ".1em" }), color, border: `1px solid ${color}55`, background: `${color}14`, borderRadius: 4, padding: "2px 7px" }}>{label}: {value}</span>;
+}
+function ContextoExtraido({ ctx }: { ctx: CtxRow | null }) {
+  const analisado = !!ctx?.contexto_extraido_em;
+  const chips: React.ReactNode[] = [];
+  if (analisado && ctx) {
+    if (ctx.contexto_objecao) chips.push(<CtxChip key="o" label="objeção" value={ctx.contexto_objecao} color={TOK.atrasado} />);
+    if (ctx.contexto_produto) chips.push(<CtxChip key="p" label="produto" value={ctx.contexto_produto} color={TOK.negocia} />);
+    if (ctx.contexto_gramatura) chips.push(<CtxChip key="g" label="gramatura" value={ctx.contexto_gramatura} color={TOK.respondeu} />);
+    if (ctx.contexto_recompra_dias != null) chips.push(<CtxChip key="r" label="recompra" value={`${ctx.contexto_recompra_dias}d`} color={TOK.f2} />);
+  }
+  return (
+    <div style={{ ...cardStyle(analisado ? TOK.f3 : undefined) }}>
+      <p style={{ ...mono(9, { letterSpacing: ".15em" }), color: analisado ? TOK.f3 : TOK.fgDim, marginBottom: 8 }}>▸ Contexto extraído</p>
+      {!analisado ? (
+        <p style={{ fontFamily: SANS, fontSize: 11.5, color: TOK.fgDim, lineHeight: 1.6 }}>Ainda não analisado pela IA.</p>
+      ) : (
+        <>
+          {ctx!.contexto_resumo && <p style={{ fontFamily: SANS, fontSize: 12, color: TOK.fgMuted, lineHeight: 1.6 }}>{ctx!.contexto_resumo}</p>}
+          {chips.length > 0 && <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: ctx!.contexto_resumo ? 10 : 0 }}>{chips}</div>}
+          <p style={{ fontFamily: SANS, fontSize: 10, color: TOK.fgDim, marginTop: 10 }}>analisado por IA em {fmtBR(ctx!.contexto_extraido_em)}</p>
+        </>
+      )}
+    </div>
+  );
+}
+
 // ── Página ───────────────────────────────────────────────────────────────────
 export default async function CadenciasPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const ctx = await getUserContext();
@@ -236,6 +276,7 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
   const leadSel = sp?.lead || fila[0]?.phone || null;
   let dossie: (FilaRow & AcaoRow) | null = null;
   let timeline: TLItem[] = [];
+  let leadCtx: CtxRow | null = null;
   if (leadSel) {
     const { data: dRow } = await svc().from("v_lead_proxima_acao")
       .select("id,phone,restaurant_name,city,routing_team,journey_state,cadencia,degrau,silencio_horas,proxima_acao,proximo_angulo,angulos_usados")
@@ -244,11 +285,13 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
       const d = dRow as Record<string, unknown>;
       dossie = { ...(d as unknown as FilaRow & AcaoRow), atrasado: false, eh_hoje: false };
       const leadId = (d.id as string) ?? null;
-      const [conv, vmsg, evt] = await Promise.all([
+      const [conv, vmsg, evt, cx] = await Promise.all([
         svc().from("conversas_sdr").select("message_text,response,created_at").eq("phone", leadSel).order("created_at", { ascending: false }).limit(5),
         svc().from("vendor_messages").select("content,direction,created_at").eq("lead_phone", leadSel).order("created_at", { ascending: false }).limit(5),
         leadId ? svc().from("funnel_stage_events").select("from_stage,to_stage,created_at").eq("lead_id", leadId).order("created_at", { ascending: false }).limit(5) : Promise.resolve({ data: [] }),
+        svc().from("v_orquestracao_leads").select("contexto_resumo,contexto_objecao,contexto_produto,contexto_gramatura,contexto_recompra_dias,contexto_extraido_em").eq("phone", leadSel).maybeSingle(),
       ]);
+      leadCtx = ((cx as { data: CtxRow | null }).data ?? null);
       for (const c of (conv.data ?? []) as { message_text: string | null; response: string | null; created_at: string }[]) {
         if (c.message_text) timeline.push({ at: c.created_at, kind: "lead", text: c.message_text });
         if (c.response) timeline.push({ at: c.created_at, kind: "bot", text: c.response });
@@ -446,10 +489,7 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
                 )}
               </div>
 
-              <div style={{ ...cardStyle() }}>
-                <p style={{ ...mono(9, { letterSpacing: ".15em" }), color: TOK.fgDim, marginBottom: 8 }}>▸ Contexto extraído <FaseBadge f="F2" /></p>
-                <p style={{ fontFamily: SANS, fontSize: 11, color: TOK.fgDim, lineHeight: 1.6 }}>objeção · gramagem de interesse · produto-alvo · último sinal do lead — <span style={{ color: TOK.f2 }}>FASE 2</span> (schema ainda não escreve esses campos).</p>
-              </div>
+              <ContextoExtraido ctx={leadCtx} />
             </div>
 
             {/* Timeline */}
