@@ -1,8 +1,8 @@
-// app/dashboard/cadencias/page.tsx — Central de Orquestração de Cadências (Fase 1).
-// Visão Mapa (cards por estado da jornada) + Fila inline (ao clicar num estado) +
-// "pergunta que quebra" (qs) + Cadência Longa por MOTIVO de perda.
-// Fonte ÚNICA: view v_orquestracao_leads (derivada, read-only) + v_orquestracao_mapa
-// (agregada) + v_motivos_perda. Zero tabela/coluna nova. Escopo F1: gestor/manager.
+// app/dashboard/cadencias/page.tsx — Central de Orquestração de Cadências (réplica da spec serigrafia).
+// 5 seções (00 três visões · 01 Mapa · 02 Fila · 03 Dossiê · 04 Contrato · 05 Plano) com DADOS REAIS.
+// Fontes (todas read-only, já em produção): v_orquestracao_mapa · v_orquestracao_leads ·
+// v_cadencia_saude · v_cadencia_lead · v_lead_proxima_acao · v_motivos_perda. Service-role + cache 60s.
+// Zero tabela/coluna nova; a tela só CONSOME. Serigrafia = tokens centralizados no objeto TOK (sem hex solto).
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { theme } from "@/lib/theme";
@@ -13,400 +13,508 @@ import { createClient as createServiceClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic";
 
-// Contagem global (sem RLS por vendedor) — mesmo padrão do /dashboard/funil.
 const svc = () => createServiceClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
   { auth: { persistSession: false } },
 );
 
-const getMapa = unstable_cache(
-  async () => (await svc().from("v_orquestracao_mapa").select("journey_state,total,atrasados,hoje,no_prazo")).data ?? [],
-  ["orq-mapa"], { revalidate: 60, tags: ["orq-mapa"] },
-);
-const getMotivos = unstable_cache(
-  async () => (await svc().from("v_motivos_perda").select("motivo,total,total_30d").order("total", { ascending: false })).data ?? [],
-  ["orq-motivos"], { revalidate: 120, tags: ["orq-motivos"] },
-);
-// Saúde da cadência (banner) — v_cadencia_saude, linha única agregada. F3 observabilidade.
-const getSaude = unstable_cache(
-  async () => (await svc().from("v_cadencia_saude").select("*").maybeSingle()).data,
-  ["orq-saude"], { revalidate: 60, tags: ["orq-saude"] },
-);
+// ── SERIGRAFIA (tokens centralizados — fonte única, zero hex solto no JSX) ───
+const TOK = {
+  bg: "#0a0a0a", card: "#0d0f14", cardAlt: "#0b0e13", border: "#1b2130", borderSoft: "#141a27",
+  // situação operacional (borda-topo do card / ponto de status)
+  noPrazo: "#34d399", hoje: "#fbbf24", atrasado: "#f6707a", respondeu: "#60a5fa",
+  humano: "#a78bfa", negocia: "#2dd4bf", pausado: "#8b93a7",
+  // texto
+  fg: "#e8ecf3", fgMuted: "#9aa6bd", fgDim: "#6b7488",
+  // fases
+  f1: "#34d399", f2: "#fbbf24", f3: "#a78bfa",
+  // barras
+  barFrom: "#3b82f6", barTo: "#a855f7",
+} as const;
+const GRAD = `linear-gradient(90deg,${TOK.barFrom},${TOK.barTo})`;
+const MONO = theme.font.num;    // JetBrains/Geist Mono do design system
+const SANS = theme.font.label;
 
-// ── Metadados de exibição dos estados (ordem + cor + faixa) ──────────────────
-type Estado = { key: string; label: string; cor: string; band: "curta" | "ganho" | "longa" };
+const mono = (size: number, extra?: React.CSSProperties): React.CSSProperties =>
+  ({ fontFamily: MONO, fontSize: size, letterSpacing: ".14em", textTransform: "uppercase", ...extra });
+const cardStyle = (top?: string): React.CSSProperties => ({
+  background: TOK.card, border: `1px solid ${TOK.border}`, borderRadius: 10,
+  borderTop: top ? `3px solid ${top}` : `1px solid ${TOK.border}`, padding: "14px 16px",
+});
+
+// ── Situação operacional (não estágio) ───────────────────────────────────────
+type Situ = "noPrazo" | "hoje" | "atrasado" | "respondeu" | "humano" | "negocia" | "pausado";
+const SITU_COR: Record<Situ, string> = {
+  noPrazo: TOK.noPrazo, hoje: TOK.hoje, atrasado: TOK.atrasado, respondeu: TOK.respondeu,
+  humano: TOK.humano, negocia: TOK.negocia, pausado: TOK.pausado,
+};
+const SITU_LABEL: Record<Situ, string> = {
+  noPrazo: "no prazo", hoje: "hoje", atrasado: "atrasado", respondeu: "respondeu",
+  humano: "precisa humano", negocia: "negociação", pausado: "pausado",
+};
+const HUMANO_ST = ["HANDOFF_SEM_CONTATO", "QUALIFICADO_AGUARDANDO_VENDEDOR"];
+const NEGOCIA_ST = ["NEGOCIACAO", "PROPOSTA", "PEDIDO_TESTE"];
+function situacaoEstado(state: string, atrasados: number, hoje: number): Situ {
+  if (NEGOCIA_ST.includes(state)) return "negocia";
+  if (HUMANO_ST.includes(state)) return "humano";
+  if (state === "PERDIDO_NURTURE") return "pausado";
+  if (state === "GANHO") return "noPrazo";
+  return atrasados > 0 ? "atrasado" : hoje > 0 ? "hoje" : "noPrazo";
+}
+function situacaoLead(l: { journey_state: string; atrasado: boolean; eh_hoje: boolean }): Situ {
+  if (NEGOCIA_ST.includes(l.journey_state)) return "negocia";
+  if (HUMANO_ST.includes(l.journey_state)) return "humano";
+  if (l.journey_state === "PERDIDO_NURTURE") return "pausado";
+  if (l.atrasado) return "atrasado";
+  if (l.eh_hoje) return "hoje";
+  return "noPrazo";
+}
+
+// ── Metadados de estado (ordem + label + faixa) ──────────────────────────────
+type Estado = { key: string; label: string; band: "curta" | "ganho" | "longa" };
 const ESTADOS: Estado[] = [
-  { key: "INBOUND_SEM_RESPOSTA",             label: "Entrada (Inbound)",             cor: "#185FA5", band: "curta" },
-  { key: "QUALIFICACAO_INTERROMPIDA",        label: "Qualificação interrompida",     cor: "#6390f5", band: "curta" },
-  { key: "QUALIFICADO_AGUARDANDO_VENDEDOR",  label: "Qualificado · aguard. vendedor", cor: "#f59e0b", band: "curta" },
-  { key: "HANDOFF_SEM_CONTATO",              label: "Handoff sem contato",           cor: "#eab308", band: "curta" },
-  { key: "EM_ANDAMENTO",                     label: "Em andamento",                  cor: "#a855f7", band: "curta" },
-  { key: "NEGOCIACAO",                       label: "Negociação",                    cor: "#a855f7", band: "curta" },
-  { key: "PROPOSTA",                         label: "Proposta enviada",              cor: "#8b5cf6", band: "curta" },
-  { key: "PEDIDO_TESTE",                     label: "Pedido teste",                  cor: "#3b82f6", band: "curta" },
-  { key: "GANHO",                            label: "Ganho (convertido)",            cor: "#22c55e", band: "ganho" },
-  { key: "PERDIDO_NURTURE",                  label: "Perdido · nutrição",            cor: "#C8102E", band: "longa" },
+  { key: "INBOUND_SEM_RESPOSTA", label: "Entrada (Inbound)", band: "curta" },
+  { key: "QUALIFICACAO_INTERROMPIDA", label: "Qualificação interrompida", band: "curta" },
+  { key: "QUALIFICADO_AGUARDANDO_VENDEDOR", label: "Qualificado · aguard. vendedor", band: "curta" },
+  { key: "HANDOFF_SEM_CONTATO", label: "Handoff sem contato", band: "curta" },
+  { key: "EM_ANDAMENTO", label: "Em andamento", band: "curta" },
+  { key: "NEGOCIACAO", label: "Negociação", band: "curta" },
+  { key: "PROPOSTA", label: "Proposta enviada", band: "curta" },
+  { key: "PEDIDO_TESTE", label: "Pedido teste", band: "curta" },
+  { key: "GANHO", label: "Ganho (convertido)", band: "ganho" },
+  { key: "PERDIDO_NURTURE", label: "Perdido · nutrição", band: "longa" },
 ];
 const LABEL: Record<string, string> = Object.fromEntries(ESTADOS.map(e => [e.key, e.label]));
 
-const S = {
-  card:  { background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8 } as React.CSSProperties,
-  label: { fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase" as const, color: "#e4e9f0", fontFamily: theme.font.label },
-  value: { fontSize: 26, fontWeight: 700, color: "#fff", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", lineHeight: 1 },
-  muted: { color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label } as React.CSSProperties,
-  section: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#c0c8d8", fontFamily: theme.font.label, marginBottom: 12 } as React.CSSProperties,
-};
+const QS_LABEL: Record<number, string> = { 1: "Nome/empresa", 2: "Cidade", 3: "Operação", 4: "Segmento", 5: "Volume", 6: "Volume/tempo" };
+const TEMPO_BUCKETS = ["D+30", "D+60", "D+90", "D+180", "D+360"];
 
+// ── Tipos ────────────────────────────────────────────────────────────────────
 type MapaRow = { journey_state: string; total: number; atrasados: number; hoje: number; no_prazo: number };
+type SaudeRow = { em_jornada: number; em_curta: number; em_longa: number; sem_cadencia: number; em_revisao: number; toques_prox_24h: number; atrasados: number; graduados: number };
 type FilaRow = {
-  phone: string | null; name: string | null; restaurant_name: string | null; city: string | null;
-  routing_team: string | null; funnel_stage: string | null; qual_stage: number | null;
-  lead_temperature: string | null; journey_state: string; atrasado: boolean; eh_hoje: boolean; silencio_horas: number | null;
+  id: string | null; phone: string | null; restaurant_name: string | null; city: string | null;
+  routing_team: string | null; journey_state: string; cadencia: string | null; degrau: string | null;
+  silencio_horas: number | null; atrasado: boolean; eh_hoje: boolean;
 };
+type AcaoRow = { phone: string | null; proxima_acao: string | null; proximo_angulo: string | null; angulos_usados: string[] | null };
+type TLItem = { at: string; kind: "lead" | "bot" | "vendor" | "stage"; text: string };
 
-// ── F3: sinalizador de cadência (banner saúde + aba Revisão + degrau) ────────
-type SaudeRow = {
-  em_jornada: number; em_curta: number; em_longa: number; sem_cadencia: number;
-  em_revisao: number; toques_prox_24h: number; atrasados: number; graduados: number;
-};
-type RevisaoRow = {
-  phone: string | null; restaurant_name: string | null; journey_state: string;
-  followup_fail_count: number | null; leak_retry_count: number | null; routing_team: string | null;
-};
-type CadInfo = { cadencia: string; degrau: string | null };
+// ── Caches (padrão do funil) ─────────────────────────────────────────────────
+const getMapa = unstable_cache(
+  async () => (await svc().from("v_orquestracao_mapa").select("journey_state,total,atrasados,hoje,no_prazo")).data ?? [],
+  ["orq-mapa"], { revalidate: 60, tags: ["orq-mapa"] });
+const getMotivos = unstable_cache(
+  async () => (await svc().from("v_motivos_perda").select("motivo,total,total_30d").order("total", { ascending: false })).data ?? [],
+  ["orq-motivos"], { revalidate: 120, tags: ["orq-motivos"] });
+const getSaude = unstable_cache(
+  async () => (await svc().from("v_cadencia_saude").select("*").maybeSingle()).data,
+  ["orq-saude"], { revalidate: 60, tags: ["orq-saude"] });
+const getTempoBuckets = unstable_cache(
+  async () => (await svc().from("v_cadencia_lead").select("degrau").eq("cadencia", "LONGA").limit(2000)).data ?? [],
+  ["orq-tempo"], { revalidate: 120, tags: ["orq-tempo"] });
 
-// Banner de saúde: verde enquanto sem_cadencia = 0 (invariante CADÊNCIA SEM EXCEÇÃO).
-function HealthBanner({ s }: { s: SaudeRow | null }) {
-  if (!s) return null;
-  const vaza = Number(s.sem_cadencia) > 0;
-  const rev = Number(s.em_revisao) > 0;
-  const tone = vaza ? theme.colors.critical : rev ? theme.colors.warning : theme.colors.success;
-  const label = vaza ? "Vazamento detectado" : rev ? "Revisão pendente" : "Cadência saudável";
-  const Tile = ({ l, v, accent }: { l: string; v: number; accent?: string }) => (
-    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-      <span style={{ ...S.label, color: theme.colors.textPrimary }}>{l}</span>
-      <span style={{ ...S.value, fontSize: 22, color: accent ?? "#fff" }}>{v ?? 0}</span>
-    </div>
-  );
-  return (
-    <div style={{
-      ...S.card, background: theme.colors.bgElevated, border: `1px solid ${theme.colors.borderSubtle}`,
-      padding: "16px 20px", display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(118px,1fr))", gap: 18, alignItems: "center",
-    }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <span style={{ width: 10, height: 10, borderRadius: 5, background: tone, flexShrink: 0 }} aria-hidden />
-        <span style={{ color: "#fff", fontSize: 13, fontWeight: 600, fontFamily: theme.font.label }}>{label}</span>
-      </div>
-      <Tile l="Em cadência" v={s.em_jornada} />
-      <Tile l="Curta" v={s.em_curta} />
-      <Tile l="Longa" v={s.em_longa} />
-      <Tile l="Sem cadência" v={s.sem_cadencia} accent={vaza ? theme.colors.critical : undefined} />
-      <Tile l="Em revisão" v={s.em_revisao} accent={rev ? theme.colors.warning : undefined} />
-      <Tile l="Toques 24h" v={s.toques_prox_24h} />
-      <Tile l="Atrasados" v={s.atrasados} accent={Number(s.atrasados) > 0 ? theme.colors.warning : undefined} />
-    </div>
-  );
+// ── Componentes ──────────────────────────────────────────────────────────────
+function FaseBadge({ f }: { f: "F1" | "F2" | "F3" }) {
+  const c = f === "F1" ? TOK.f1 : f === "F2" ? TOK.f2 : TOK.f3;
+  return <span style={{ ...mono(9, { letterSpacing: ".18em" }), color: c, border: `1px solid ${c}55`, background: `${c}14`, borderRadius: 4, padding: "1px 6px" }}>{f}</span>;
 }
-
-// Segmento Mapa · Revisão (pill).
-function SegLink({ active, href, label, tone }: { active: boolean; href: string; label: string; tone?: string }) {
-  return (
-    <Link href={href} style={{
-      textDecoration: "none", fontFamily: theme.font.label, fontSize: 11, letterSpacing: ".08em", textTransform: "uppercase",
-      padding: "6px 14px", borderRadius: 6, whiteSpace: "nowrap",
-      color: active ? "#fff" : theme.colors.textPrimary,
-      background: active ? theme.colors.bgElevated : "transparent",
-      border: `1px solid ${active ? (tone ?? theme.colors.accentBlue) : theme.colors.borderDefault}`,
-    }}>{label}</Link>
-  );
-}
-
-// Badge de cadência (CURTA = accent / LONGA = neutral) — sem emoji (Lucide/text pill).
-function CadenciaBadge({ cadencia }: { cadencia: string }) {
+function CadBadge({ cadencia }: { cadencia: string }) {
   const curta = cadencia === "CURTA";
+  const c = curta ? TOK.respondeu : TOK.pausado;
+  return <span style={{ ...mono(9, { letterSpacing: ".16em" }), color: c, border: `1px solid ${c}55`, background: `${c}14`, borderRadius: 4, padding: "1px 6px", flexShrink: 0 }}>{cadencia}</span>;
+}
+function SituDot({ s, title }: { s: Situ; title?: string }) {
+  return <span style={{ width: 8, height: 8, borderRadius: 4, background: SITU_COR[s], flexShrink: 0 }} title={title ?? SITU_LABEL[s]} aria-hidden />;
+}
+function Section({ n, title, sub, id, children }: { n: string; title: string; sub?: string; id?: string; children: React.ReactNode }) {
   return (
-    <span style={{
-      fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".08em", padding: "1px 6px", borderRadius: 4, flexShrink: 0,
-      color: curta ? theme.colors.accentBlue : theme.colors.textPrimary,
-      background: curta ? "rgba(24,95,165,.16)" : "rgba(228,233,240,.06)",
-      border: `1px solid ${curta ? "rgba(24,95,165,.40)" : theme.colors.borderDefault}`,
-    }}>{cadencia}</span>
+    <section id={id} style={{ display: "flex", flexDirection: "column", gap: 14, scrollMarginTop: 16 }}>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
+        <span style={{ ...mono(11, { letterSpacing: ".22em" }), color: TOK.fgDim }}>{n}</span>
+        <h2 style={{ ...mono(13, { letterSpacing: ".16em" }), color: TOK.fg, margin: 0 }}>{title}</h2>
+        {sub && <span style={{ fontFamily: SANS, fontSize: 11, color: TOK.fgMuted }}>{sub}</span>}
+      </div>
+      {children}
+    </section>
   );
 }
-
-// Aba Revisão: única exceção honesta — leads com dado quebrado (não silenciosos).
-function RevisaoView({ rows }: { rows: RevisaoRow[] }) {
-  const motivo = (r: RevisaoRow) =>
-    Number(r.followup_fail_count) >= 3 ? "número quebrado"
-      : Number(r.leak_retry_count) >= 3 ? "mensagem defeituosa" : "revisar dado";
+function Bar({ frac, w = 34, value }: { frac: number; w?: number; value: number | string }) {
   return (
-    <div style={{ ...S.card, background: theme.colors.bgElevated, border: `1px solid ${theme.colors.borderSubtle}`, padding: "16px 18px" }}>
-      <p style={{ ...S.section, color: theme.colors.warning }}>▸ Revisão — leads com dado a corrigir (não silenciados)</p>
-      {rows.length === 0 ? (
-        <p style={S.muted}>Nenhum lead em revisão — cadência sem exceção.</p>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          <div style={{ display: "flex", gap: 10, padding: "6px 0", ...S.label, color: "#6f8299" }}>
-            <span style={{ flex: 1, minWidth: 0 }}>Empresa</span>
-            <span style={{ width: 150, flexShrink: 0 }}>Estado</span>
-            <span style={{ width: 150, flexShrink: 0 }}>Motivo</span>
-            <span style={{ width: 90, flexShrink: 0 }}>Vendedor</span>
-          </div>
-          {rows.map((r, i) => {
-            const nome = r.restaurant_name || (r.phone ? `...${r.phone.slice(-4)}` : "?");
-            const inner = (
-              <>
-                <span style={{ flex: 1, minWidth: 0, color: "#c8d8e8", fontFamily: theme.font.label, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{nome}</span>
-                <span style={{ width: 150, flexShrink: 0, color: theme.colors.textPrimary, fontFamily: theme.font.label, fontSize: 11 }}>{LABEL[r.journey_state] ?? r.journey_state}</span>
-                <span style={{ width: 150, flexShrink: 0 }}>
-                  <span style={{ fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".06em", padding: "1px 6px", borderRadius: 4, color: theme.colors.warning, background: "rgba(212,160,23,.12)", border: "1px solid rgba(212,160,23,.35)" }}>{motivo(r)}</span>
-                </span>
-                <span style={{ width: 90, flexShrink: 0, color: "#6f8299", fontFamily: theme.font.label, fontSize: 11 }}>{VENDOR_LABELS[r.routing_team ?? ""] ?? "—"}</span>
-              </>
-            );
-            const st: React.CSSProperties = { display: "flex", alignItems: "center", gap: 10, padding: "8px 0", fontSize: 12.5, borderTop: i > 0 ? "1px solid rgba(27,42,107,.25)" : "none", textDecoration: "none" };
-            return r.phone
-              ? <Link key={r.phone + i} href={`/dashboard/leads/${encodeURIComponent(r.phone)}`} style={st}>{inner}</Link>
-              : <div key={i} style={st}>{inner}</div>;
-          })}
-          <p style={{ ...S.muted, fontSize: 9, marginTop: 8 }}>fonte: v_cadencia_lead · precisa_revisao = true · número = 3+ falhas de entrega · mensagem = 3+ retries de vazamento</p>
-        </div>
-      )}
-    </div>
+    <>
+      <div style={{ flex: 1, height: 8, background: TOK.borderSoft, borderRadius: 4, overflow: "hidden" }}>
+        <div style={{ width: `${Math.min(100, frac * 100)}%`, height: "100%", background: GRAD, borderRadius: 4 }} />
+      </div>
+      <span style={{ width: w, textAlign: "right", color: TOK.fgMuted, fontFamily: MONO, fontSize: 11 }}>{value}</span>
+    </>
   );
 }
 
 function StateCard({ e, row, active }: { e: Estado; row: MapaRow | undefined; active: boolean }) {
-  const total = row?.total ?? 0;
-  const atr = row?.atrasados ?? 0;
-  const hoje = row?.hoje ?? 0;
+  const total = row?.total ?? 0, atr = row?.atrasados ?? 0, hj = row?.hoje ?? 0;
+  const situ = situacaoEstado(e.key, atr, hj);
+  const cor = SITU_COR[situ];
   return (
-    <Link href={`/dashboard/cadencias?estado=${e.key}`} style={{ textDecoration: "none", flex: "1 1 150px", minWidth: 150 }}>
-      <div style={{
-        background: active ? "#12233b" : "#0d1117", border: `1px solid ${active ? e.cor : "#2a2a2a"}`,
-        borderTop: `3px solid ${e.cor}`, borderRadius: 8, padding: "13px 14px", height: "100%",
-        boxShadow: active ? `0 0 0 1px ${e.cor}` : "none",
-      }}>
-        <p style={{ ...S.label, color: e.cor, minHeight: "2.2em", lineHeight: 1.2 }}>{e.label}</p>
-        <p style={{ ...S.value, marginTop: 8 }}>{total}</p>
+    <Link href={`/dashboard/cadencias?estado=${e.key}#fila`} style={{ textDecoration: "none", flex: "1 1 150px", minWidth: 150 }}>
+      <div style={{ ...cardStyle(cor), background: active ? TOK.card : TOK.cardAlt, borderColor: active ? cor : TOK.border, boxShadow: active ? `0 0 0 1px ${cor}` : "none", height: "100%" }}>
+        <p style={{ ...mono(9, { letterSpacing: ".12em" }), color: cor, minHeight: "2.2em", lineHeight: 1.25 }}>{e.label}</p>
+        <p style={{ fontFamily: MONO, fontSize: 26, fontWeight: 700, color: TOK.fg, lineHeight: 1, marginTop: 8, fontVariantNumeric: "tabular-nums" }}>{total}</p>
         <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
-          {atr > 0 && <span style={{ fontFamily: theme.font.num, fontSize: 10, color: "#e0435c", background: "rgba(224,67,92,.14)", borderRadius: 4, padding: "1px 6px" }}>{atr} atras.</span>}
-          {hoje > 0 && <span style={{ fontFamily: theme.font.num, fontSize: 10, color: "#e0a92a", background: "rgba(224,169,42,.14)", borderRadius: 4, padding: "1px 6px" }}>{hoje} hoje</span>}
-          {atr === 0 && hoje === 0 && total > 0 && <span style={{ fontFamily: theme.font.num, fontSize: 10, color: "#2fbf6b", background: "rgba(47,191,107,.12)", borderRadius: 4, padding: "1px 6px" }}>no prazo</span>}
+          {atr > 0 && <span style={{ ...mono(9), color: TOK.atrasado, background: `${TOK.atrasado}22`, borderRadius: 4, padding: "1px 6px" }}>{atr} atras.</span>}
+          {hj > 0 && <span style={{ ...mono(9), color: TOK.hoje, background: `${TOK.hoje}22`, borderRadius: 4, padding: "1px 6px" }}>{hj} hoje</span>}
+          {atr === 0 && hj === 0 && total > 0 && <span style={{ ...mono(9), color: TOK.noPrazo, background: `${TOK.noPrazo}1e`, borderRadius: 4, padding: "1px 6px" }}>{SITU_LABEL[situ]}</span>}
         </div>
       </div>
     </Link>
   );
 }
 
+// ── Página ───────────────────────────────────────────────────────────────────
 export default async function CadenciasPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const ctx = await getUserContext();
   if (!ctx || !canAccess(ctx.role, "/dashboard/cadencias")) redirect("/dashboard");
 
   const sp = await searchParams;
   const estadoSel = sp?.estado && LABEL[sp.estado] ? sp.estado : null;
-  const viewSel: "mapa" | "revisao" = sp?.view === "revisao" ? "revisao" : "mapa";
+  const FILTROS = ["todos", "atrasado", "hoje", "humano", "negociacao"] as const;
+  const filtroSel = (FILTROS as readonly string[]).includes(sp?.filtro ?? "") ? (sp!.filtro as string) : "todos";
 
-  const [mapaRaw, motivos, saudeRaw] = await Promise.all([getMapa(), getMotivos(), getSaude()]);
-  const saude = (saudeRaw ?? null) as SaudeRow | null;
-  const revCount = Number(saude?.em_revisao ?? 0);
+  const [mapaRaw, motivos, saudeRaw, tempoRaw] = await Promise.all([getMapa(), getMotivos(), getSaude(), getTempoBuckets()]);
   const mapa = mapaRaw as MapaRow[];
   const byState = new Map(mapa.map(r => [r.journey_state, r]));
+  const saude = (saudeRaw ?? null) as SaudeRow | null;
 
-  // KPIs de topo (curta = faixa curta; longa = PERDIDO; exclui GANHO da "em cadência")
-  const sum = (pred: (e: Estado) => boolean, f: (r: MapaRow) => number) =>
-    ESTADOS.filter(pred).reduce((a, e) => a + (byState.get(e.key) ? f(byState.get(e.key)!) : 0), 0);
-  const curtaTot = sum(e => e.band === "curta", r => r.total);
-  const longaTot = sum(e => e.band === "longa", r => r.total);
-  const atrasTot = sum(e => e.band !== "ganho", r => r.atrasados);
-  const hojeTot  = sum(e => e.band !== "ganho", r => r.hoje);
-  const ganho    = byState.get("GANHO")?.total ?? 0;
+  // KPIs de faixa (curta/longa/atrasados/hoje/ganho)
+  const sumBand = (b: (e: Estado) => boolean, f: (r: MapaRow) => number) =>
+    ESTADOS.filter(b).reduce((a, e) => a + (byState.get(e.key) ? f(byState.get(e.key)!) : 0), 0);
+  const curtaTot = sumBand(e => e.band === "curta", r => r.total);
+  const longaTot = sumBand(e => e.band === "longa", r => r.total);
+  const ganho = byState.get("GANHO")?.total ?? 0;
 
-  // "Pergunta que quebra" — só quando existe QUALIFICACAO_INTERROMPIDA (bounded, ~dezenas)
-  const { data: quebraRows } = await svc()
-    .from("v_orquestracao_leads").select("qual_stage")
-    .eq("journey_state", "QUALIFICACAO_INTERROMPIDA").limit(1000);
-  const QS_LABEL: Record<number, string> = { 1: "Nome/empresa", 2: "Cidade", 3: "Operação", 4: "Segmento", 5: "Volume", 6: "Volume/tempo" };
+  // Longa por TEMPO (buckets de degrau)
+  const tempoCount: Record<string, number> = {};
+  for (const r of tempoRaw as { degrau: string | null }[]) {
+    const d = (r.degrau ?? "").trim();
+    if (TEMPO_BUCKETS.includes(d)) tempoCount[d] = (tempoCount[d] ?? 0) + 1;
+    else if (d) tempoCount["recorrência"] = (tempoCount["recorrência"] ?? 0) + 1;
+  }
+  const tempoMax = Math.max(1, ...Object.values(tempoCount));
+
+  // "Pergunta que quebra" (qual_stage dos QUALIFICACAO_INTERROMPIDA)
+  const { data: quebraRows } = await svc().from("v_orquestracao_leads").select("qual_stage").eq("journey_state", "QUALIFICACAO_INTERROMPIDA").limit(1000);
   const quebra: Record<number, number> = {};
   for (const r of (quebraRows ?? []) as { qual_stage: number | null }[]) {
     const q = r.qual_stage ?? 0; if (q >= 1 && q <= 6) quebra[q] = (quebra[q] ?? 0) + 1;
   }
   const quebraMax = Math.max(1, ...Object.values(quebra));
+  const motMax = Math.max(1, ...motivos.map((m: { total: number }) => m.total));
 
-  // Fila inline (ao selecionar um estado)
-  let fila: FilaRow[] = [];
-  if (estadoSel) {
-    const { data } = await svc()
-      .from("v_orquestracao_leads")
-      .select("phone,name,restaurant_name,city,routing_team,funnel_stage,qual_stage,lead_temperature,journey_state,atrasado,eh_hoje,silencio_horas")
-      .eq("journey_state", estadoSel)
-      .order("atrasado", { ascending: false })
-      .order("next_followup_at", { ascending: true, nullsFirst: false })
-      .limit(200);
-    fila = (data ?? []) as FilaRow[];
+  // ── FILA (v_cadencia_lead + próxima ação de v_lead_proxima_acao) ──
+  let filaQ = svc().from("v_cadencia_lead")
+    .select("id,phone,restaurant_name,city,routing_team,journey_state,cadencia,degrau,silencio_horas,atrasado,eh_hoje,next_followup_at")
+    .order("atrasado", { ascending: false })
+    .order("next_followup_at", { ascending: true, nullsFirst: false })
+    .limit(200);
+  if (estadoSel) filaQ = filaQ.eq("journey_state", estadoSel);
+  if (filtroSel === "atrasado") filaQ = filaQ.eq("atrasado", true);
+  else if (filtroSel === "hoje") filaQ = filaQ.eq("eh_hoje", true);
+  else if (filtroSel === "humano") filaQ = filaQ.in("journey_state", HUMANO_ST);
+  else if (filtroSel === "negociacao") filaQ = filaQ.in("journey_state", NEGOCIA_ST);
+  const { data: filaData } = await filaQ;
+  const fila = (filaData ?? []) as FilaRow[];
+
+  const phones = fila.map(f => f.phone).filter(Boolean) as string[];
+  const acaoMap = new Map<string, AcaoRow>();
+  if (phones.length) {
+    const { data: acoes } = await svc().from("v_lead_proxima_acao")
+      .select("phone,proxima_acao,proximo_angulo,angulos_usados").in("phone", phones);
+    for (const a of (acoes ?? []) as AcaoRow[]) if (a.phone) acaoMap.set(a.phone, a);
   }
 
-  // Degrau/cadência por lead (badge + posição na cascata) — join por phone com v_cadencia_lead.
-  const cadMap = new Map<string, CadInfo>();
-  if (estadoSel) {
-    const { data: cad } = await svc()
-      .from("v_cadencia_lead").select("phone,cadencia,degrau")
-      .eq("journey_state", estadoSel).limit(400);
-    for (const r of (cad ?? []) as { phone: string | null; cadencia: string | null; degrau: string | null }[]) {
-      if (r.phone) cadMap.set(r.phone, { cadencia: r.cadencia ?? "", degrau: r.degrau });
+  // ── DOSSIÊ (lead selecionado — default = topo da fila) ──
+  const leadSel = sp?.lead || fila[0]?.phone || null;
+  let dossie: (FilaRow & AcaoRow) | null = null;
+  let timeline: TLItem[] = [];
+  if (leadSel) {
+    const { data: dRow } = await svc().from("v_lead_proxima_acao")
+      .select("id,phone,restaurant_name,city,routing_team,journey_state,cadencia,degrau,silencio_horas,proxima_acao,proximo_angulo,angulos_usados")
+      .eq("phone", leadSel).maybeSingle();
+    if (dRow) {
+      const d = dRow as Record<string, unknown>;
+      dossie = { ...(d as unknown as FilaRow & AcaoRow), atrasado: false, eh_hoje: false };
+      const leadId = (d.id as string) ?? null;
+      const [conv, vmsg, evt] = await Promise.all([
+        svc().from("conversas_sdr").select("message_text,response,created_at").eq("phone", leadSel).order("created_at", { ascending: false }).limit(5),
+        svc().from("vendor_messages").select("content,direction,created_at").eq("lead_phone", leadSel).order("created_at", { ascending: false }).limit(5),
+        leadId ? svc().from("funnel_stage_events").select("from_stage,to_stage,created_at").eq("lead_id", leadId).order("created_at", { ascending: false }).limit(5) : Promise.resolve({ data: [] }),
+      ]);
+      for (const c of (conv.data ?? []) as { message_text: string | null; response: string | null; created_at: string }[]) {
+        if (c.message_text) timeline.push({ at: c.created_at, kind: "lead", text: c.message_text });
+        if (c.response) timeline.push({ at: c.created_at, kind: "bot", text: c.response });
+      }
+      for (const v of (vmsg.data ?? []) as { content: string | null; direction: string | null; created_at: string }[])
+        if (v.content) timeline.push({ at: v.created_at, kind: "vendor", text: `${v.direction === "outbound" ? "→" : "←"} ${v.content}` });
+      for (const s of (evt.data ?? []) as { from_stage: string | null; to_stage: string | null; created_at: string }[])
+        timeline.push({ at: s.created_at, kind: "stage", text: `${s.from_stage ?? "—"} → ${s.to_stage ?? "—"}` });
+      timeline = timeline.filter(t => t.at).sort((a, b) => (a.at < b.at ? 1 : -1)).slice(0, 8);
     }
   }
 
-  // Aba Revisão — leads com dado quebrado (precisa_revisao). Bounded: em_revisao costuma ser 0.
-  let revisao: RevisaoRow[] = [];
-  if (viewSel === "revisao") {
-    const { data } = await svc()
-      .from("v_cadencia_lead")
-      .select("phone,restaurant_name,journey_state,followup_fail_count,leak_retry_count,routing_team")
-      .eq("precisa_revisao", true)
-      .order("routing_team", { ascending: true, nullsFirst: false })
-      .limit(300);
-    revisao = (data ?? []) as RevisaoRow[];
-  }
-
-  const motLabel: Record<string, string> = {};
-  const motMax = Math.max(1, ...motivos.map((m: { total: number }) => m.total));
-
-  const band = (b: Estado["band"]) => ESTADOS.filter(e => e.band === b);
+  const sil = (h: number | null) => h == null ? "—" : h >= 24 ? `${Math.floor(h / 24)}d` : `${h}h`;
+  const TL_META: Record<TLItem["kind"], { c: string; l: string }> = {
+    lead: { c: TOK.respondeu, l: "lead" }, bot: { c: TOK.noPrazo, l: "sdr" },
+    vendor: { c: TOK.negocia, l: "vendedor" }, stage: { c: TOK.humano, l: "etapa" },
+  };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-      {/* Header */}
+    <div style={{ display: "flex", flexDirection: "column", gap: 26 }}>
+      {/* Cabeçalho + linha de saúde */}
       <div>
-        <h1 style={{ color: "#fff", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
-          Mapa de Orquestração de Follow-ups
-        </h1>
-        <p style={S.muted}>Onde está cada lead na cadência agora · clique num estado para ver a fila · Fase 1 (dados reais; próxima ação/ângulo chegam nas próximas fases)</p>
+        <h1 style={{ ...mono(15, { letterSpacing: ".18em" }), color: TOK.fg, marginBottom: 6 }}>Central de Orquestração de Cadências</h1>
+        <p style={{ fontFamily: SANS, fontSize: 11.5, color: TOK.fgMuted }}>Onde cada lead está na cadência agora · CURTA (até 30d) e LONGA (perdidos/nutrição) · o motor F3 já calcula a próxima ação</p>
       </div>
-
-      {/* Banner de saúde da cadência (F3) */}
-      <HealthBanner s={saude} />
-
-      {/* Segmento Mapa · Revisão */}
-      <div style={{ display: "flex", gap: 8 }}>
-        <SegLink active={viewSel === "mapa"} href="/dashboard/cadencias" label="Mapa · Fila" />
-        <SegLink active={viewSel === "revisao"} href="/dashboard/cadencias?view=revisao"
-          label={`Revisão${revCount > 0 ? ` · ${revCount}` : ""}`} tone={revCount > 0 ? theme.colors.warning : undefined} />
-      </div>
-
-      {viewSel === "revisao" ? <RevisaoView rows={revisao} /> : (
-      <>
-      {/* KPI strip */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 10 }}>
-        {[
-          { l: "Leads em cadência", v: curtaTot + longaTot, c: "#185FA5", s: "curta + longa" },
-          { l: "Cadência curta", v: curtaTot, c: "#2fbf6b", s: "até 30 dias" },
-          { l: "Cadência longa", v: longaTot, c: "#2bb8c4", s: "acima de 30 dias" },
-          { l: "Atrasados", v: atrasTot, c: atrasTot > 0 ? "#e0435c" : "#e4e9f0", s: "follow-up vencido" },
-          { l: "Ação hoje", v: hojeTot, c: "#e0a92a", s: "agendadas p/ hoje" },
-          { l: "Convertidos", v: ganho, c: "#22c55e", s: "ganho (mês vivo)" },
-        ].map(k => (
-          <div key={k.l} style={{ ...S.card, padding: "16px 16px", borderTop: `2px solid ${k.c}` }}>
-            <p style={{ ...S.label, color: k.c }}>{k.l}</p>
-            <p style={{ ...S.value, marginTop: 10 }}>{k.v}</p>
-            <p style={{ ...S.muted, marginTop: 5, fontSize: 10 }}>{k.s}</p>
+      {saude && (
+        <div style={{ ...cardStyle(), display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 16, alignItems: "center" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <SituDot s={Number(saude.sem_cadencia) > 0 ? "atrasado" : Number(saude.em_revisao) > 0 ? "hoje" : "noPrazo"} title="saúde" />
+            <span style={{ fontFamily: SANS, fontSize: 12.5, fontWeight: 600, color: TOK.fg }}>{Number(saude.sem_cadencia) > 0 ? "Vazamento detectado" : "Cadência saudável"}</span>
           </div>
-        ))}
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: estadoSel ? "1.5fr 1fr" : "1fr", gap: 16, alignItems: "start" }}>
-        {/* MAPA */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <div style={{ ...S.card, padding: "18px 20px" }}>
-            <p style={{ ...S.section, color: "#3d8bdc" }}>▸ Cadência Curta — até 30 dias</p>
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              {band("curta").map(e => <StateCard key={e.key} e={e} row={byState.get(e.key)} active={estadoSel === e.key} />)}
-              {band("ganho").map(e => <StateCard key={e.key} e={e} row={byState.get(e.key)} active={estadoSel === e.key} />)}
+          {[
+            { l: "Em cadência", v: saude.em_jornada, c: TOK.fg },
+            { l: "Curta", v: saude.em_curta, c: TOK.respondeu },
+            { l: "Longa", v: saude.em_longa, c: TOK.pausado },
+            { l: "Sem cadência", v: saude.sem_cadencia, c: Number(saude.sem_cadencia) > 0 ? TOK.atrasado : TOK.fg },
+            { l: "Em revisão", v: saude.em_revisao, c: Number(saude.em_revisao) > 0 ? TOK.hoje : TOK.fg },
+            { l: "Toques 24h", v: saude.toques_prox_24h, c: TOK.fg },
+            { l: "Atrasados", v: saude.atrasados, c: Number(saude.atrasados) > 0 ? TOK.hoje : TOK.fg },
+          ].map(k => (
+            <div key={k.l} style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+              <span style={{ ...mono(9), color: TOK.fgDim }}>{k.l}</span>
+              <span style={{ fontFamily: MONO, fontSize: 20, color: k.c, fontVariantNumeric: "tabular-nums" }}>{k.v ?? 0}</span>
             </div>
+          ))}
+        </div>
+      )}
 
-            {/* pergunta que quebra */}
-            {Object.keys(quebra).length > 0 && (
-              <div style={{ marginTop: 16, background: "#0d1117", border: "1px dashed #2a2a2a", borderRadius: 8, padding: "12px 14px" }}>
-                <p style={{ ...S.label, color: "#6f8299", marginBottom: 10 }}>▾ em qual pergunta a qualificação quebra</p>
-                <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-                  {[1, 2, 3, 4, 5, 6].filter(q => quebra[q]).map(q => (
-                    <div key={q} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 12 }}>
-                      <span style={{ width: 130, color: "#6390f5", fontFamily: theme.font.num, flexShrink: 0 }}>{q} · {QS_LABEL[q]}</span>
-                      <div style={{ flex: 1, height: 8, background: "#161b22", borderRadius: 4, overflow: "hidden" }}>
-                        <div style={{ width: `${(quebra[q] / quebraMax) * 100}%`, height: "100%", background: "linear-gradient(90deg,#185FA5,#a855f7)", borderRadius: 4 }} />
-                      </div>
-                      <span style={{ width: 26, textAlign: "right", color: "#c0d0e0", fontFamily: theme.font.num }}>{quebra[q]}</span>
-                    </div>
-                  ))}
+      {/* 00 — AS TRÊS VISÕES */}
+      <Section n="00" title="As três visões" sub="uma tela, três lentes sobre a mesma cadência">
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 12 }}>
+          {[
+            { a: "#mapa", t: "Mapa", f: "F1" as const, d: "onde cada lead está — por estado da jornada, com atrasados e ação de hoje." },
+            { a: "#fila", t: "Fila", f: "F3" as const, d: "a lista priorizada — silêncio, degrau e a PRÓXIMA AÇÃO real do motor." },
+            { a: "#dossie", t: "Dossiê", f: "F3" as const, d: "o lead por dentro — timeline + próxima melhor ação e ângulo, sem repetir." },
+          ].map(c => (
+            <a key={c.t} href={c.a} style={{ textDecoration: "none" }}>
+              <div style={{ ...cardStyle(), height: "100%" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                  <span style={{ ...mono(12, { letterSpacing: ".16em" }), color: TOK.fg }}>{c.t}</span>
+                  <FaseBadge f={c.f} />
                 </div>
+                <p style={{ fontFamily: SANS, fontSize: 11.5, color: TOK.fgMuted, marginTop: 8, lineHeight: 1.5 }}>{c.d}</p>
               </div>
-            )}
-          </div>
+            </a>
+          ))}
+        </div>
+      </Section>
 
-          <div style={{ ...S.card, padding: "18px 20px", borderTop: "2px solid #C8102E" }}>
-            <p style={{ ...S.section, color: "#2bb8c4" }}>▸ Cadência Longa — perdidos / nutrição · por MOTIVO</p>
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: motivos.length ? 16 : 0 }}>
-              {band("longa").map(e => <StateCard key={e.key} e={e} row={byState.get(e.key)} active={estadoSel === e.key} />)}
-            </div>
-            {motivos.length > 0 && (
+      {/* 01 — MAPA */}
+      <Section n="01" title="Mapa" id="mapa" sub={`curta ${curtaTot} · longa ${longaTot} · ganho ${ganho} · borda-topo = situação operacional`}>
+        <div style={{ ...cardStyle() }}>
+          <p style={{ ...mono(9, { letterSpacing: ".15em" }), color: TOK.respondeu, marginBottom: 10 }}>▸ Cadência Curta — até 30 dias</p>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            {ESTADOS.filter(e => e.band === "curta" || e.band === "ganho").map(e => <StateCard key={e.key} e={e} row={byState.get(e.key)} active={estadoSel === e.key} />)}
+          </div>
+          {Object.keys(quebra).length > 0 && (
+            <div style={{ marginTop: 16, background: TOK.cardAlt, border: `1px dashed ${TOK.border}`, borderRadius: 8, padding: "12px 14px" }}>
+              <p style={{ ...mono(9), color: TOK.fgDim, marginBottom: 10 }}>▾ em qual pergunta a qualificação quebra</p>
               <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-                {motivos.map((m: { motivo: string; total: number; total_30d: number }) => (
-                  <div key={m.motivo} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 12 }}>
-                    <span style={{ width: 150, color: "#c8d8e8", fontFamily: theme.font.label, flexShrink: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={m.motivo}>{motLabel[m.motivo] ?? m.motivo}</span>
-                    <div style={{ flex: 1, height: 8, background: "#161b22", borderRadius: 4, overflow: "hidden" }}>
-                      <div style={{ width: `${(m.total / motMax) * 100}%`, height: "100%", background: "linear-gradient(90deg,#C8102E,#e0a92a)", borderRadius: 4 }} />
-                    </div>
-                    <span style={{ width: 34, textAlign: "right", color: "#c0d0e0", fontFamily: theme.font.num }}>{m.total}</span>
+                {[1, 2, 3, 4, 5, 6].filter(q => quebra[q]).map(q => (
+                  <div key={q} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 12 }}>
+                    <span style={{ width: 130, color: TOK.fgMuted, fontFamily: MONO, fontSize: 11, flexShrink: 0 }}>{q} · {QS_LABEL[q]}</span>
+                    <Bar frac={quebra[q] / quebraMax} w={26} value={quebra[q]} />
                   </div>
                 ))}
-                <p style={{ ...S.muted, fontSize: 9, marginTop: 6 }}>fonte: v_motivos_perda · total histórico</p>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
-        {/* FILA inline */}
-        {estadoSel && (
-          <div style={{ ...S.card, padding: "16px 18px", position: "sticky", top: 12 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 4 }}>
-              <p style={{ ...S.label, color: "#fff", fontSize: 11 }}>{LABEL[estadoSel]}</p>
-              <Link href="/dashboard/cadencias" style={{ color: "#c0d0e0", fontSize: 16, textDecoration: "none", lineHeight: 1 }}>×</Link>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <div style={{ ...cardStyle(TOK.pausado) }}>
+            <p style={{ ...mono(9, { letterSpacing: ".15em" }), color: TOK.pausado, marginBottom: 12 }}>▸ Longa — por TEMPO (cascata de nutrição)</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+              {[...TEMPO_BUCKETS, "recorrência"].filter(b => tempoCount[b]).map(b => (
+                <div key={b} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 12 }}>
+                  <span style={{ width: 96, color: TOK.fgMuted, fontFamily: MONO, fontSize: 11, flexShrink: 0 }}>{b}</span>
+                  <Bar frac={tempoCount[b] / tempoMax} value={tempoCount[b]} />
+                </div>
+              ))}
+              {Object.keys(tempoCount).length === 0 && <p style={{ fontFamily: SANS, fontSize: 11, color: TOK.fgDim }}>Sem leads em cadência longa.</p>}
             </div>
-            <p style={{ ...S.muted, marginBottom: 12 }}>{fila.length} lead(s){fila.length >= 200 ? " (200 mais urgentes)" : ""} · clique p/ abrir o lead</p>
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              {fila.length === 0 && <p style={S.muted}>Nenhum lead neste estado.</p>}
-              {fila.map((l, i) => {
-                const nome = l.restaurant_name || l.name || (l.phone ? `...${l.phone.slice(-4)}` : "?");
-                const sil = l.silencio_horas == null ? "—" : l.silencio_horas >= 24 ? `${Math.floor(l.silencio_horas / 24)}d` : `${l.silencio_horas}h`;
-                const cor = l.atrasado ? "#e0435c" : l.eh_hoje ? "#e0a92a" : "#2fbf6b";
-                const cad = l.phone ? cadMap.get(l.phone) : undefined;
-                const row = (
-                  <>
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
-                        {cad?.cadencia && <CadenciaBadge cadencia={cad.cadencia} />}
-                        <span style={{ color: "#c8d8e8", fontSize: 12.5, fontFamily: theme.font.label, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{nome}</span>
+          </div>
+          <div style={{ ...cardStyle(TOK.atrasado) }}>
+            <p style={{ ...mono(9, { letterSpacing: ".15em" }), color: TOK.atrasado, marginBottom: 12 }}>▸ Longa — por MOTIVO de perda</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+              {motivos.slice(0, 8).map((m: { motivo: string; total: number }) => (
+                <div key={m.motivo} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 12 }}>
+                  <span style={{ width: 150, color: TOK.fgMuted, fontFamily: SANS, fontSize: 11, flexShrink: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={m.motivo}>{m.motivo}</span>
+                  <Bar frac={m.total / motMax} value={m.total} />
+                </div>
+              ))}
+              {motivos.length === 0 && <p style={{ fontFamily: SANS, fontSize: 11, color: TOK.fgDim }}>Sem motivos registrados.</p>}
+            </div>
+          </div>
+        </div>
+      </Section>
+
+      {/* 02 — FILA */}
+      <Section n="02" title="Fila" id="fila" sub={`${fila.length} lead(s)${fila.length >= 200 ? " (200 mais urgentes)" : ""}${estadoSel ? ` · ${LABEL[estadoSel]}` : ""} · Próxima ação = motor F3`}>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+          {FILTROS.map(f => {
+            const on = filtroSel === f;
+            const href = `/dashboard/cadencias?${new URLSearchParams({ ...(estadoSel ? { estado: estadoSel } : {}), ...(f !== "todos" ? { filtro: f } : {}) }).toString()}#fila`;
+            return <Link key={f} href={href} style={{ ...mono(9, { letterSpacing: ".12em" }), textDecoration: "none", padding: "5px 11px", borderRadius: 6, color: on ? TOK.fg : TOK.fgMuted, background: on ? TOK.card : "transparent", border: `1px solid ${on ? TOK.humano : TOK.border}` }}>{f === "negociacao" ? "negociação" : f}</Link>;
+          })}
+          {estadoSel && <Link href="/dashboard/cadencias#fila" style={{ ...mono(9), textDecoration: "none", color: TOK.fgDim, marginLeft: 4 }}>× limpar estado</Link>}
+        </div>
+
+        <div style={{ ...cardStyle(), padding: 0, overflow: "hidden" }}>
+          <div style={{ display: "flex", gap: 10, padding: "10px 16px", borderBottom: `1px solid ${TOK.border}`, ...mono(8.5), color: TOK.fgDim }}>
+            <span style={{ flex: 1, minWidth: 0 }}>Empresa</span>
+            <span style={{ width: 120, flexShrink: 0 }}>Estado</span>
+            <span style={{ width: 132, flexShrink: 0 }}>Degrau</span>
+            <span style={{ width: 46, flexShrink: 0, textAlign: "right" }}>Silêncio</span>
+            <span style={{ flex: 1.2, minWidth: 0 }}>Próxima ação</span>
+            <span style={{ width: 10, flexShrink: 0 }} />
+          </div>
+          {fila.length === 0 && <p style={{ fontFamily: SANS, fontSize: 12, color: TOK.fgDim, padding: "16px" }}>Nenhum lead nesse recorte.</p>}
+          {fila.map((l, i) => {
+            const situ = situacaoLead(l);
+            const acao = l.phone ? acaoMap.get(l.phone) : undefined;
+            const sel = l.phone === leadSel;
+            const href = `/dashboard/cadencias?${new URLSearchParams({ ...(estadoSel ? { estado: estadoSel } : {}), ...(filtroSel !== "todos" ? { filtro: filtroSel } : {}), ...(l.phone ? { lead: l.phone } : {}) }).toString()}#dossie`;
+            return (
+              <Link key={(l.phone ?? "x") + i} href={href} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 16px", textDecoration: "none", borderTop: i > 0 ? `1px solid ${TOK.borderSoft}` : "none", background: sel ? `${TOK.humano}12` : "transparent" }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
+                    {l.cadencia && <CadBadge cadencia={l.cadencia} />}
+                    <span style={{ color: TOK.fg, fontSize: 12.5, fontFamily: SANS, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{l.restaurant_name || (l.phone ? `...${l.phone.slice(-4)}` : "?")}</span>
+                  </div>
+                  <div style={{ color: TOK.fgDim, fontSize: 10, fontFamily: SANS }}>{l.city || "—"} · {VENDOR_LABELS[l.routing_team ?? ""] ?? "—"}</div>
+                </div>
+                <span style={{ width: 120, flexShrink: 0, color: TOK.fgMuted, fontFamily: SANS, fontSize: 10.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{LABEL[l.journey_state] ?? l.journey_state}</span>
+                <span style={{ width: 132, flexShrink: 0, color: TOK.fgMuted, fontFamily: MONO, fontSize: 11 }}>{l.degrau ?? "—"}</span>
+                <span style={{ width: 46, flexShrink: 0, textAlign: "right", color: TOK.fgMuted, fontFamily: MONO, fontSize: 11 }}>{sil(l.silencio_horas)}</span>
+                <span style={{ flex: 1.2, minWidth: 0, color: TOK.fgMuted, fontFamily: SANS, fontSize: 11, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={acao?.proxima_acao ?? ""}>{acao?.proxima_acao ?? "—"}</span>
+                <SituDot s={situ} />
+              </Link>
+            );
+          })}
+        </div>
+      </Section>
+
+      {/* 03 — DOSSIÊ */}
+      <Section n="03" title="Dossiê" id="dossie" sub={dossie ? "próxima melhor ação + timeline (clique num lead da fila para trocar)" : "selecione um lead na Fila"}>
+        {!dossie ? (
+          <div style={{ ...cardStyle() }}><p style={{ fontFamily: SANS, fontSize: 12, color: TOK.fgDim }}>Sem lead selecionado.</p></div>
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, alignItems: "start" }}>
+            {/* Cabeçalho + próxima melhor ação + contexto extraído (F2) */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div style={{ ...cardStyle(SITU_COR[situacaoLead({ journey_state: dossie.journey_state, atrasado: false, eh_hoje: false })]) }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                  {dossie.cadencia && <CadBadge cadencia={dossie.cadencia} />}
+                  <span style={{ fontFamily: SANS, fontSize: 15, fontWeight: 700, color: TOK.fg }}>{dossie.restaurant_name || (dossie.phone ? `...${dossie.phone.slice(-4)}` : "?")}</span>
+                </div>
+                <p style={{ fontFamily: SANS, fontSize: 11.5, color: TOK.fgMuted, marginTop: 6 }}>{dossie.city || "—"} · {VENDOR_LABELS[dossie.routing_team ?? ""] ?? "sem rota"} · {LABEL[dossie.journey_state] ?? dossie.journey_state}</p>
+                <div style={{ display: "flex", gap: 16, marginTop: 10 }}>
+                  <div><span style={{ ...mono(8.5), color: TOK.fgDim }}>Degrau</span><p style={{ fontFamily: MONO, fontSize: 13, color: TOK.fg, marginTop: 2 }}>{dossie.degrau ?? "—"}</p></div>
+                  <div><span style={{ ...mono(8.5), color: TOK.fgDim }}>Silêncio</span><p style={{ fontFamily: MONO, fontSize: 13, color: TOK.fg, marginTop: 2 }}>{sil(dossie.silencio_horas)}</p></div>
+                </div>
+                {dossie.phone && <Link href={`/dashboard/leads/${encodeURIComponent(dossie.phone)}`} style={{ ...mono(9), color: TOK.respondeu, textDecoration: "none", display: "inline-block", marginTop: 12 }}>abrir dossiê completo →</Link>}
+              </div>
+
+              <div style={{ ...cardStyle(TOK.f3) }}>
+                <p style={{ ...mono(9, { letterSpacing: ".15em" }), color: TOK.f3, marginBottom: 10 }}>▸ Próxima melhor ação <FaseBadge f="F3" /></p>
+                <p style={{ fontFamily: SANS, fontSize: 14, color: TOK.fg, fontWeight: 600 }}>{dossie.proxima_acao ?? "—"}</p>
+                <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 8, flexWrap: "wrap" }}>
+                  {dossie.proximo_angulo && <span style={{ ...mono(9), color: TOK.negocia, border: `1px solid ${TOK.negocia}55`, background: `${TOK.negocia}14`, borderRadius: 4, padding: "1px 6px" }}>ângulo: {dossie.proximo_angulo}</span>}
+                </div>
+                {dossie.angulos_usados && dossie.angulos_usados.length > 0 && (
+                  <p style={{ fontFamily: SANS, fontSize: 10.5, color: TOK.fgDim, marginTop: 10 }}>não repetir: {dossie.angulos_usados.join(" · ")}</p>
+                )}
+              </div>
+
+              <div style={{ ...cardStyle() }}>
+                <p style={{ ...mono(9, { letterSpacing: ".15em" }), color: TOK.fgDim, marginBottom: 8 }}>▸ Contexto extraído <FaseBadge f="F2" /></p>
+                <p style={{ fontFamily: SANS, fontSize: 11, color: TOK.fgDim, lineHeight: 1.6 }}>objeção · gramagem de interesse · produto-alvo · último sinal do lead — <span style={{ color: TOK.f2 }}>FASE 2</span> (schema ainda não escreve esses campos).</p>
+              </div>
+            </div>
+
+            {/* Timeline */}
+            <div style={{ ...cardStyle() }}>
+              <p style={{ ...mono(9, { letterSpacing: ".15em" }), color: TOK.fgMuted, marginBottom: 12 }}>▸ Timeline <FaseBadge f="F1" /></p>
+              {timeline.length === 0 ? (
+                <p style={{ fontFamily: SANS, fontSize: 11, color: TOK.fgDim }}>Sem toques registrados.</p>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {timeline.map((t, i) => {
+                    const m = TL_META[t.kind];
+                    return (
+                      <div key={i} style={{ display: "flex", gap: 10 }}>
+                        <span style={{ width: 7, height: 7, borderRadius: 4, background: m.c, flexShrink: 0, marginTop: 5 }} aria-hidden />
+                        <div style={{ minWidth: 0, flex: 1 }}>
+                          <span style={{ ...mono(8), color: m.c }}>{m.l}</span>
+                          <p style={{ fontFamily: SANS, fontSize: 11.5, color: TOK.fgMuted, lineHeight: 1.5, marginTop: 2, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical" }}>{t.text}</p>
+                        </div>
                       </div>
-                      <div style={{ color: "#6f8299", fontSize: 10, fontFamily: theme.font.label }}>
-                        {l.city || "—"} · {VENDOR_LABELS[l.routing_team ?? ""] ?? "—"}
-                        {cad?.degrau ? <span style={{ fontFamily: theme.font.num }}> · {cad.degrau}</span> : null}
-                      </div>
-                    </div>
-                    <span style={{ fontFamily: theme.font.num, fontSize: 11, color: "#c0d0e0", width: 40, textAlign: "right", flexShrink: 0 }}>{sil}</span>
-                    <span style={{ width: 8, height: 8, borderRadius: 4, background: cor, flexShrink: 0 }} title={l.atrasado ? "atrasado" : l.eh_hoje ? "hoje" : "no prazo"} />
-                  </>
-                );
-                return l.phone
-                  ? <Link key={l.phone + i} href={`/dashboard/leads/${encodeURIComponent(l.phone)}`} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", textDecoration: "none", borderTop: i > 0 ? "1px solid rgba(27,42,107,.25)" : "none" }}>{row}</Link>
-                  : <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderTop: i > 0 ? "1px solid rgba(27,42,107,.25)" : "none" }}>{row}</div>;
-              })}
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
         )}
-      </div>
-      </>
-      )}
+      </Section>
+
+      {/* 04 — CONTRATO DE DADOS */}
+      <Section n="04" title="Contrato de dados" sub="verde = já existe (reusa) · roxo = novo (Fase 2)">
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <div style={{ ...cardStyle(TOK.f1) }}>
+            <p style={{ ...mono(9, { letterSpacing: ".15em" }), color: TOK.f1, marginBottom: 10 }}>▸ Real hoje — F1/F3 ✓</p>
+            <ul style={{ margin: 0, paddingLeft: 16, display: "flex", flexDirection: "column", gap: 5 }}>
+              {["Mapa por estado (v_orquestracao_mapa)", "Pergunta que quebra (qual_stage)", "Longa por motivo (v_motivos_perda)", "Fila: silêncio + degrau (v_cadencia_lead)", "PRÓXIMA AÇÃO + ângulo (v_lead_proxima_acao)", "Não-repetição (angulos_usados)", "Dossiê: cabeçalho + timeline"].map(x =>
+                <li key={x} style={{ fontFamily: SANS, fontSize: 11.5, color: TOK.fgMuted, lineHeight: 1.5 }}>{x}</li>)}
+            </ul>
+          </div>
+          <div style={{ ...cardStyle(TOK.f2) }}>
+            <p style={{ ...mono(9, { letterSpacing: ".15em" }), color: TOK.f2, marginBottom: 10 }}>▸ Fase 2 — placeholder (sem dado)</p>
+            <ul style={{ margin: 0, paddingLeft: 16, display: "flex", flexDirection: "column", gap: 5 }}>
+              {["Contexto extraído: objeção", "Contexto extraído: gramagem de interesse", "Contexto extraído: produto-alvo", "last_lead_signal_at (último sinal)"].map(x =>
+                <li key={x} style={{ fontFamily: SANS, fontSize: 11.5, color: TOK.fgDim, lineHeight: 1.5 }}>{x}</li>)}
+            </ul>
+            <p style={{ fontFamily: SANS, fontSize: 10, color: TOK.fgDim, marginTop: 12 }}>views consumidas: v_orquestracao_mapa · v_orquestracao_leads · v_cadencia_saude · v_cadencia_lead · v_lead_proxima_acao · v_motivos_perda</p>
+          </div>
+        </div>
+      </Section>
+
+      {/* 05 — PLANO POR FASES */}
+      <Section n="05" title="Plano por fases">
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 12 }}>
+          {[
+            { f: "F1" as const, t: "Mapa & Fila no ar", d: "estados, atrasados, silêncio, degrau, motivo de perda — tudo lendo as views de orquestração." },
+            { f: "F2" as const, t: "Contexto extraído (schema)", d: "objeção, gramagem, produto-alvo e último sinal — campos a serem escritos pelo motor de extração." },
+            { f: "F3" as const, t: "Motor de cadência no ar", d: "próxima ação, próximo ângulo e não-repetição já calculados por lead (v_lead_proxima_acao)." },
+          ].map(p => (
+            <div key={p.f} style={{ ...cardStyle(p.f === "F1" ? TOK.f1 : p.f === "F2" ? TOK.f2 : TOK.f3) }}>
+              <FaseBadge f={p.f} />
+              <p style={{ fontFamily: SANS, fontSize: 13, fontWeight: 600, color: TOK.fg, marginTop: 8 }}>{p.t}</p>
+              <p style={{ fontFamily: SANS, fontSize: 11, color: TOK.fgMuted, marginTop: 6, lineHeight: 1.55 }}>{p.d}</p>
+            </div>
+          ))}
+        </div>
+      </Section>
     </div>
   );
 }
