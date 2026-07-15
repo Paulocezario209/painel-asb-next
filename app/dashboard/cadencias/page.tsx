@@ -257,7 +257,30 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
     mapa = [...agg.entries()].map(([journey_state, a]) => ({ journey_state, total: a.total, atrasados: a.atrasados, hoje: a.hoje, no_prazo: a.total - a.atrasados - a.hoje }));
   }
   const byState = new Map(mapa.map(r => [r.journey_state, r]));
-  const saude = (saudeRaw ?? null) as SaudeRow | null;
+
+  // Banner de saúde: sem escopo (gestor Todos) → v_cadencia_saude global (cache). COM escopo de setor
+  // → deriva TODOS os contadores de v_cadencia_lead FILTRADO (mesma população do Mapa), pois a agregada
+  // global não tem routing_team e vazaria contadores de outros setores. Zero view nova.
+  let saude: SaudeRow | null;
+  if (isSetor || isNone || isNada) {
+    let sq = svc().from("v_cadencia_lead").select("cadencia,sem_cadencia,precisa_revisao,atrasado,next_followup_at").limit(5000);
+    if (isSetor) sq = sq.eq("routing_team", effVend);
+    else if (isNone) sq = sq.or("routing_team.is.null,routing_team.eq.");
+    else sq = sq.eq("routing_team", "__no_match__");
+    const srows = ((await sq).data ?? []) as { cadencia: string | null; sem_cadencia: boolean; precisa_revisao: boolean; atrasado: boolean; next_followup_at: string | null }[];
+    const now = Date.now(), h24 = now + 24 * 3600 * 1000;
+    let curta = 0, longa = 0, semc = 0, rev = 0, atr = 0, toques = 0;
+    for (const r of srows) {
+      if (r.cadencia === "CURTA") curta++; else if (r.cadencia === "LONGA") longa++;
+      if (r.sem_cadencia) semc++;
+      if (r.precisa_revisao) rev++;
+      if (r.atrasado) atr++;
+      if (r.next_followup_at) { const t = Date.parse(r.next_followup_at); if (t >= now && t <= h24) toques++; }
+    }
+    saude = { em_jornada: curta + longa, em_curta: curta, em_longa: longa, sem_cadencia: semc, em_revisao: rev, toques_prox_24h: toques, atrasados: atr, graduados: 0 };
+  } else {
+    saude = (saudeRaw ?? null) as SaudeRow | null;
+  }
 
   // KPIs de faixa (curta/longa/atrasados/hoje/ganho)
   const sumBand = (b: (e: Estado) => boolean, f: (r: MapaRow) => number) =>
