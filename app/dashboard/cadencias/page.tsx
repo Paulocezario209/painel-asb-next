@@ -222,12 +222,19 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
   const FILTROS = ["todos", "atrasado", "hoje", "humano", "negociacao"] as const;
   const filtroSel = (FILTROS as readonly string[]).includes(sp?.filtro ?? "") ? (sp!.filtro as string) : "todos";
 
-  // Filtro por setor (?vendedor=SETOR_* | none) — vale pro Mapa E pra Fila.
+  // Escopo por SETOR — SEGURANÇA (crítico): as views são lidas via SERVICE-ROLE (bypassa RLS), então
+  // o filtro do vendedor é aplicado AQUI, no servidor, a partir do usuário autenticado. O vendedor é
+  // TRAVADO no seu routing_team (`ctx.routing_team`) e a página NUNCA confia no ?vendedor= (senão ele
+  // trocaria o param e veria outro setor). Gestor/manager/financeiro escolhem via ?vendedor=.
+  const canPickSector = !ctx.isVendedor;
   const rawVend = sp?.vendedor ?? "";
-  const isSetor = /^SETOR_[A-Z_]+$/.test(rawVend);
-  const isNone = rawVend === "none";
-  const vendedorSel = isSetor ? rawVend : isNone ? "none" : "";
-  const carry: Record<string, string> = vendedorSel ? { vendedor: vendedorSel } : {};
+  const effVend = ctx.isVendedor
+    ? (ctx.routing_team && /^SETOR_[A-Z_]+$/.test(ctx.routing_team) ? ctx.routing_team : "__nada__")
+    : (/^SETOR_[A-Z_]+$/.test(rawVend) ? rawVend : rawVend === "none" ? "none" : "");
+  const isSetor = /^SETOR_[A-Z_]+$/.test(effVend);
+  const isNone = effVend === "none";
+  const isNada = effVend === "__nada__";  // vendedor sem setor válido → fail-closed (não vê nada)
+  const carry: Record<string, string> = canPickSector && (isSetor || isNone) ? { vendedor: effVend } : {};
   // Busca (lupa): qSafe neutraliza metachars do .or() (mesmo padrão do Pipeline).
   const qSafe = (sp?.q ?? "").trim().slice(0, 60).replace(/[,()%*\\]/g, " ").trim();
 
@@ -236,10 +243,11 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
   // Mapa: sem filtro → agregada (cache). Com filtro de setor → deriva os contadores de
   // v_orquestracao_leads já filtrado (a agregada não tem breakdown por time) — SEM view nova.
   let mapa = mapaRaw as MapaRow[];
-  if (isSetor || isNone) {
+  if (isSetor || isNone || isNada) {
     let mq = svc().from("v_orquestracao_leads").select("journey_state,atrasado,eh_hoje").limit(5000);
-    if (isNone) mq = mq.or("routing_team.is.null,routing_team.eq.");
-    else mq = mq.eq("routing_team", vendedorSel);
+    if (isSetor) mq = mq.eq("routing_team", effVend);
+    else if (isNone) mq = mq.or("routing_team.is.null,routing_team.eq.");
+    else mq = mq.eq("routing_team", "__no_match__");  // isNada → 0 linhas
     const agg = new Map<string, { total: number; atrasados: number; hoje: number }>();
     for (const r of ((await mq).data ?? []) as { journey_state: string; atrasado: boolean; eh_hoje: boolean }[]) {
       const a = agg.get(r.journey_state) ?? { total: 0, atrasados: 0, hoje: 0 };
@@ -267,8 +275,12 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
   }
   const tempoMax = Math.max(1, ...Object.values(tempoCount));
 
-  // "Pergunta que quebra" (qual_stage dos QUALIFICACAO_INTERROMPIDA)
-  const { data: quebraRows } = await svc().from("v_orquestracao_leads").select("qual_stage").eq("journey_state", "QUALIFICACAO_INTERROMPIDA").limit(1000);
+  // "Pergunta que quebra" (qual_stage dos QUALIFICACAO_INTERROMPIDA) — scoped ao setor
+  let quebraQ = svc().from("v_orquestracao_leads").select("qual_stage").eq("journey_state", "QUALIFICACAO_INTERROMPIDA").limit(1000);
+  if (isSetor) quebraQ = quebraQ.eq("routing_team", effVend);
+  else if (isNone) quebraQ = quebraQ.or("routing_team.is.null,routing_team.eq.");
+  else if (isNada) quebraQ = quebraQ.eq("routing_team", "__no_match__");
+  const { data: quebraRows } = await quebraQ;
   const quebra: Record<number, number> = {};
   for (const r of (quebraRows ?? []) as { qual_stage: number | null }[]) {
     const q = r.qual_stage ?? 0; if (q >= 1 && q <= 6) quebra[q] = (quebra[q] ?? 0) + 1;
@@ -287,8 +299,9 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
   else if (filtroSel === "hoje") filaQ = filaQ.eq("eh_hoje", true);
   else if (filtroSel === "humano") filaQ = filaQ.in("journey_state", HUMANO_ST);
   else if (filtroSel === "negociacao") filaQ = filaQ.in("journey_state", NEGOCIA_ST);
-  if (isNone) filaQ = filaQ.or("routing_team.is.null,routing_team.eq.");
-  else if (isSetor) filaQ = filaQ.eq("routing_team", vendedorSel);
+  if (isSetor) filaQ = filaQ.eq("routing_team", effVend);
+  else if (isNone) filaQ = filaQ.or("routing_team.is.null,routing_team.eq.");
+  else if (isNada) filaQ = filaQ.eq("routing_team", "__no_match__");
   const { data: filaData } = await filaQ;
   const fila = (filaData ?? []) as FilaRow[];
 
@@ -308,7 +321,8 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
       .select("phone,restaurant_name,name,city,routing_team,journey_state")
       .or(`restaurant_name.ilike.%${qSafe}%,name.ilike.%${qSafe}%,city.ilike.%${qSafe}%,phone.ilike.%${qSafe}%`)
       .limit(30);
-    if (isSetor) bq = bq.eq("routing_team", vendedorSel);
+    if (isSetor) bq = bq.eq("routing_team", effVend);
+    else if (isNada) bq = bq.eq("routing_team", "__no_match__");
     let rows = ((await bq).data ?? []) as SearchRow[];
     if (isNone) rows = rows.filter(r => !r.routing_team);
     busca = rows;
@@ -320,9 +334,15 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
   let timeline: TLItem[] = [];
   let leadCtx: CtxRow | null = null;
   if (leadSel) {
-    const { data: dRow } = await svc().from("v_lead_proxima_acao")
+    // SEGURANÇA: o Dossiê é filtrado pelo MESMO escopo de setor. Um lead fora do setor do vendedor
+    // não é encontrado (dRow = null → "não encontrado"), mesmo que ele injete ?lead= na URL.
+    let dq = svc().from("v_lead_proxima_acao")
       .select("id,phone,restaurant_name,city,routing_team,journey_state,cadencia,degrau,silencio_horas,proxima_acao,proximo_angulo,angulos_usados")
-      .eq("phone", leadSel).maybeSingle();
+      .eq("phone", leadSel);
+    if (isSetor) dq = dq.eq("routing_team", effVend);
+    else if (isNone) dq = dq.or("routing_team.is.null,routing_team.eq.");
+    else if (isNada) dq = dq.eq("routing_team", "__no_match__");
+    const { data: dRow } = await dq.maybeSingle();
     if (dRow) {
       const d = dRow as Record<string, unknown>;
       dossie = { ...(d as unknown as FilaRow & AcaoRow), atrasado: false, eh_hoje: false };
@@ -360,8 +380,16 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
         <p style={{ fontFamily: SANS, fontSize: 11.5, color: TOK.fgMuted }}>Onde cada lead está na cadência agora · CURTA (até 30d) e LONGA (perdidos/nutrição) · o motor F3 já calcula a próxima ação</p>
       </div>
 
-      {/* Busca (lupa) + filtro por setor — reusa DashboardFilters (padrão das outras telas) */}
-      <DashboardFilters showSearch showMonth={false} showVendedor={ctx.isGestor} showSemTime={ctx.isGestor} searchPlaceholder="buscar empresa, cidade ou telefone" />
+      {/* Busca (lupa) + filtro por setor — reusa DashboardFilters (padrão das outras telas).
+          Seletor de setor só p/ quem pode escolher (gestor/manager/financeiro); vendedor fica travado. */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+        <DashboardFilters showSearch showMonth={false} showVendedor={canPickSector} showSemTime={canPickSector} searchPlaceholder="buscar empresa, cidade ou telefone" />
+        {ctx.isVendedor && (
+          <span style={{ ...mono(9, { letterSpacing: ".12em" }), color: TOK.fgMuted, border: `1px solid ${TOK.border}`, borderRadius: 6, padding: "5px 11px" }}>
+            seu setor: {VENDOR_LABELS[effVend] ?? (isNada ? "sem setor" : effVend)}
+          </span>
+        )}
+      </div>
 
       {/* Resultados da busca — clicar abre o Dossiê direto */}
       {qSafe && (

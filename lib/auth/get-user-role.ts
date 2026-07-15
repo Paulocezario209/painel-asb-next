@@ -19,7 +19,8 @@ export interface UserContext {
 const VENDOR_BLOCKED: string[] = [
   // /dashboard/funil LIBERADO ao vendedor (Paulo 2026-07-14): usa o Funil p/ navegar
   // até seus leads (cards de etapa clicáveis) — inclui achar os que já assumiu.
-  "/dashboard/cadencias",   // F1: Central de Orquestração só gestor/manager (escopo por vendedor = fase futura)
+  // /dashboard/cadencias LIBERADO ao vendedor (2026-07-15) com ESCOPO POR SETOR travado no
+  // servidor (ctx.routing_team) — o vendedor vê só o próprio setor; a página nunca confia no ?vendedor=.
   "/dashboard/vendedores",
   "/dashboard/insights",
   "/dashboard/simulator",
