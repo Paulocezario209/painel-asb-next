@@ -593,14 +593,14 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
           <div style={{ ...cardStyle(TOK.f1) }}>
             <p style={{ ...mono(9, { letterSpacing: ".15em" }), color: TOK.f1, marginBottom: 10 }}>▸ Real hoje — F1/F3 ✓</p>
             <ul style={{ margin: 0, paddingLeft: 16, display: "flex", flexDirection: "column", gap: 5 }}>
-              {["Mapa por estado (v_orquestracao_mapa)", "Pergunta que quebra (qual_stage)", "Longa por motivo (v_motivos_perda)", "Fila: silêncio + degrau (v_cadencia_lead)", "PRÓXIMA AÇÃO + ângulo (v_lead_proxima_acao)", "Não-repetição (angulos_usados)", "Dossiê: cabeçalho + timeline"].map(x =>
+              {["Mapa por estado (v_orquestracao_mapa)", "Pergunta que quebra (qual_stage)", "Longa por motivo (v_motivos_perda)", "Fila: silêncio + degrau (v_cadencia_lead)", "PRÓXIMA AÇÃO + ângulo (v_lead_proxima_acao)", "Não-repetição (angulos_usados)", "Dossiê: cabeçalho + timeline", "Contexto extraído: objeção (v_orquestracao_leads)", "Contexto extraído: gramatura (v_orquestracao_leads)", "Contexto extraído: produto (v_orquestracao_leads)"].map(x =>
                 <li key={x} style={{ fontFamily: SANS, fontSize: 11.5, color: TOK.fgMuted, lineHeight: 1.5 }}>{x}</li>)}
             </ul>
           </div>
           <div style={{ ...cardStyle(TOK.f2) }}>
             <p style={{ ...mono(9, { letterSpacing: ".15em" }), color: TOK.f2, marginBottom: 10 }}>▸ Fase 2 — placeholder (sem dado)</p>
             <ul style={{ margin: 0, paddingLeft: 16, display: "flex", flexDirection: "column", gap: 5 }}>
-              {["Contexto extraído: objeção", "Contexto extraído: gramagem de interesse", "Contexto extraído: produto-alvo", "last_lead_signal_at (último sinal)"].map(x =>
+              {["last_lead_signal_at (último sinal) — DEBT-291, ainda não existe"].map(x =>
                 <li key={x} style={{ fontFamily: SANS, fontSize: 11.5, color: TOK.fgDim, lineHeight: 1.5 }}>{x}</li>)}
             </ul>
             <p style={{ fontFamily: SANS, fontSize: 10, color: TOK.fgDim, marginTop: 12 }}>views consumidas: v_orquestracao_mapa · v_orquestracao_leads · v_cadencia_saude · v_cadencia_lead · v_lead_proxima_acao · v_motivos_perda</p>
