@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, Bell, BarChart2, PhoneCall, FlaskConical, Upload, Flame, Filter, UserCheck, DollarSign, Target, Briefcase, Columns3, Wallet, Banknote, Coins, LayoutGrid } from "lucide-react";
+import { LayoutDashboard, Users, Bell, BarChart2, PhoneCall, FlaskConical, Upload, Flame, Filter, UserCheck, DollarSign, Target, Briefcase, Columns3, Wallet, Banknote, Coins, LayoutGrid, Network } from "lucide-react";
 
 const navItems = [
   { href: "/dashboard",            label: "Dashboard",   icon: LayoutDashboard },
@@ -19,6 +19,7 @@ const navItems = [
   { href: "/dashboard/carteira-ativa", label: "Carteira Ativa", icon: Wallet },
   { href: "/dashboard/handoffs",   label: "Handoffs",    icon: PhoneCall },
   { href: "/dashboard/followups",  label: "Follow-ups",  icon: Bell },
+  { href: "/dashboard/cadencias",  label: "Cadências",   icon: Network },
   { href: "/dashboard/insights",   label: "Inteligência", icon: BarChart2 },
   { href: "/dashboard/simulator",  label: "Simulador",   icon: FlaskConical },
   { href: "/dashboard/uploads",    label: "Uploads",     icon: Upload },
@@ -26,7 +27,7 @@ const navItems = [
 ];
 
 // /dashboard/funil LIBERADO ao vendedor (Paulo 2026-07-14) — item aparece na sidebar.
-const VENDOR_BLOCKED = new Set(["/dashboard/vendedores", "/dashboard/gerente", "/dashboard/insights", "/dashboard/simulator", "/dashboard/uploads", "/dashboard/churn", "/dashboard/up-sell", "/dashboard/remuneracao"]);
+const VENDOR_BLOCKED = new Set(["/dashboard/vendedores", "/dashboard/gerente", "/dashboard/insights", "/dashboard/simulator", "/dashboard/uploads", "/dashboard/churn", "/dashboard/up-sell", "/dashboard/remuneracao", "/dashboard/cadencias"]);
 // manager (Fernando): ganha Remuneracao (tela do time); perde Minha Comissao (redireciona p/ Remuneracao).
 const MANAGER_BLOCKED = new Set(["/dashboard/gerente", "/dashboard/simulator", "/dashboard/uploads", "/dashboard/minha-comissao"]);
 

@@ -30,6 +30,22 @@ export const MANUAIS: Record<string, ManualTela> = {
       "A contagem global tem cache de 5 minutos — pode atrasar levemente vs a tela de Leads.",
     ],
   },
+  "/dashboard/cadencias": {
+    titulo: "Mapa de Orquestração de Follow-ups",
+    oQueE: "O centro de comando das cadências: onde está cada lead na jornada AGORA, quantos estão atrasados e por qual etapa/motivo. Uma visão executiva (Mapa) sobre os mesmos dados do funil e do follow-up.",
+    fontes: [
+      "Cards por estado: view v_orquestracao_leads (deriva o journey_state do funnel_stage + sinais reais: handoff, resposta do vendedor, órfão) → agregada em v_orquestracao_mapa. Não lista testes nem fora-de-rota.",
+      "Atrasado / hoje: pelo relógio atual (next_followup_at). Nas próximas fases o motor passa a escrever a próxima ação e o relógio fica exato.",
+      "“Pergunta que quebra”: distribuição por qual_stage dos leads em qualificação interrompida — mostra em qual pergunta a escada mais perde.",
+      "Cadência Longa por motivo: v_motivos_perda (lost_reason) — mais acionável que “X perdidos”.",
+      "Silêncio na fila: horas desde a última resposta do lead (last_reply_at).",
+    ],
+    comoUsar: [
+      "Clique num card de estado para abrir a fila daquele estado à direita; clique num lead para abrir o cadastro dele.",
+      "Cor do ponto na fila: 🔴 atrasado · 🟡 hoje · 🟢 no prazo.",
+      "Fase 1 (atual): dados reais e navegação. Próxima melhor ação, objetivo psicológico e ângulo chegam nas fases seguintes (motor).",
+    ],
+  },
   "/dashboard/pipeline": {
     titulo: "Pipeline",
     oQueE: "O quadro Kanban do vendedor pós-handoff: arraste o lead pelas colunas conforme a negociação avança. Termina na conversão (1ª compra).",
