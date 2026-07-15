@@ -42,6 +42,7 @@ export const MANUAIS: Record<string, ManualTela> = {
       "03 Dossiê — “Contexto extraído”: análise da IA lida de v_orquestracao_leads (contexto_resumo + chips objeção/produto/gramatura/recompra + data da análise). Enquanto a IA não analisou o lead (contexto_extraido_em nulo), mostra “Ainda não analisado pela IA”.",
     ],
     comoUsar: [
+      "Filtro por setor no topo (Todos · Ana Paula/Sorocaba-SP · Alan/Campinas-Jundiaí · CUIT · Sem time) vale pro Mapa E pra Fila ao mesmo tempo. A lupa busca por empresa, nome, cidade ou telefone — clicar num resultado abre o Dossiê do lead direto, sem passar pelo Mapa.",
       "Saúde verde = cadência saudável. Se “sem cadência” subir de 0, há vazamento — vá à Fila e investigue.",
       "Clique num card de estado (01) para filtrar a Fila (02) por aquele estado; clique num lead da Fila para carregar o Dossiê (03) com a próxima melhor ação. “abrir dossiê completo” leva ao cadastro do lead.",
       "Cor do ponto/da borda = situação operacional (verde no prazo · âmbar hoje · vermelho atrasado · roxo precisa humano · teal negociação · cinza pausado).",

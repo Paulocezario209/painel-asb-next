@@ -8,6 +8,7 @@ import Link from "next/link";
 import { theme } from "@/lib/theme";
 import { VENDOR_LABELS } from "@/lib/vendor-labels";
 import { getUserContext, canAccess } from "@/lib/auth/get-user-role";
+import { DashboardFilters } from "@/components/dashboard/dashboard-filters";
 import { unstable_cache } from "next/cache";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 
@@ -162,12 +163,13 @@ function Bar({ frac, w = 34, value }: { frac: number; w?: number; value: number 
   );
 }
 
-function StateCard({ e, row, active }: { e: Estado; row: MapaRow | undefined; active: boolean }) {
+function StateCard({ e, row, active, carry }: { e: Estado; row: MapaRow | undefined; active: boolean; carry: Record<string, string> }) {
   const total = row?.total ?? 0, atr = row?.atrasados ?? 0, hj = row?.hoje ?? 0;
   const situ = situacaoEstado(e.key, atr, hj);
   const cor = SITU_COR[situ];
+  const href = `/dashboard/cadencias?${new URLSearchParams({ ...carry, estado: e.key }).toString()}#fila`;
   return (
-    <Link href={`/dashboard/cadencias?estado=${e.key}#fila`} style={{ textDecoration: "none", flex: "1 1 150px", minWidth: 150 }}>
+    <Link href={href} style={{ textDecoration: "none", flex: "1 1 150px", minWidth: 150 }}>
       <div style={{ ...cardStyle(cor), background: active ? TOK.card : TOK.cardAlt, borderColor: active ? cor : TOK.border, boxShadow: active ? `0 0 0 1px ${cor}` : "none", height: "100%" }}>
         <p style={{ ...mono(9, { letterSpacing: ".12em" }), color: cor, minHeight: "2.2em", lineHeight: 1.25 }}>{e.label}</p>
         <p style={{ fontFamily: MONO, fontSize: 26, fontWeight: 700, color: TOK.fg, lineHeight: 1, marginTop: 8, fontVariantNumeric: "tabular-nums" }}>{total}</p>
@@ -220,8 +222,32 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
   const FILTROS = ["todos", "atrasado", "hoje", "humano", "negociacao"] as const;
   const filtroSel = (FILTROS as readonly string[]).includes(sp?.filtro ?? "") ? (sp!.filtro as string) : "todos";
 
+  // Filtro por setor (?vendedor=SETOR_* | none) — vale pro Mapa E pra Fila.
+  const rawVend = sp?.vendedor ?? "";
+  const isSetor = /^SETOR_[A-Z_]+$/.test(rawVend);
+  const isNone = rawVend === "none";
+  const vendedorSel = isSetor ? rawVend : isNone ? "none" : "";
+  const carry: Record<string, string> = vendedorSel ? { vendedor: vendedorSel } : {};
+  // Busca (lupa): qSafe neutraliza metachars do .or() (mesmo padrão do Pipeline).
+  const qSafe = (sp?.q ?? "").trim().slice(0, 60).replace(/[,()%*\\]/g, " ").trim();
+
   const [mapaRaw, motivos, saudeRaw, tempoRaw] = await Promise.all([getMapa(), getMotivos(), getSaude(), getTempoBuckets()]);
-  const mapa = mapaRaw as MapaRow[];
+
+  // Mapa: sem filtro → agregada (cache). Com filtro de setor → deriva os contadores de
+  // v_orquestracao_leads já filtrado (a agregada não tem breakdown por time) — SEM view nova.
+  let mapa = mapaRaw as MapaRow[];
+  if (isSetor || isNone) {
+    let mq = svc().from("v_orquestracao_leads").select("journey_state,atrasado,eh_hoje").limit(5000);
+    if (isNone) mq = mq.or("routing_team.is.null,routing_team.eq.");
+    else mq = mq.eq("routing_team", vendedorSel);
+    const agg = new Map<string, { total: number; atrasados: number; hoje: number }>();
+    for (const r of ((await mq).data ?? []) as { journey_state: string; atrasado: boolean; eh_hoje: boolean }[]) {
+      const a = agg.get(r.journey_state) ?? { total: 0, atrasados: 0, hoje: 0 };
+      a.total++; if (r.atrasado) a.atrasados++; if (r.eh_hoje) a.hoje++;
+      agg.set(r.journey_state, a);
+    }
+    mapa = [...agg.entries()].map(([journey_state, a]) => ({ journey_state, total: a.total, atrasados: a.atrasados, hoje: a.hoje, no_prazo: a.total - a.atrasados - a.hoje }));
+  }
   const byState = new Map(mapa.map(r => [r.journey_state, r]));
   const saude = (saudeRaw ?? null) as SaudeRow | null;
 
@@ -261,6 +287,8 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
   else if (filtroSel === "hoje") filaQ = filaQ.eq("eh_hoje", true);
   else if (filtroSel === "humano") filaQ = filaQ.in("journey_state", HUMANO_ST);
   else if (filtroSel === "negociacao") filaQ = filaQ.in("journey_state", NEGOCIA_ST);
+  if (isNone) filaQ = filaQ.or("routing_team.is.null,routing_team.eq.");
+  else if (isSetor) filaQ = filaQ.eq("routing_team", vendedorSel);
   const { data: filaData } = await filaQ;
   const fila = (filaData ?? []) as FilaRow[];
 
@@ -270,6 +298,20 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
     const { data: acoes } = await svc().from("v_lead_proxima_acao")
       .select("phone,proxima_acao,proximo_angulo,angulos_usados").in("phone", phones);
     for (const a of (acoes ?? []) as AcaoRow[]) if (a.phone) acaoMap.set(a.phone, a);
+  }
+
+  // Busca (lupa) — ilike em empresa/nome/cidade/telefone; clicar abre o Dossiê direto.
+  type SearchRow = { phone: string | null; restaurant_name: string | null; name: string | null; city: string | null; routing_team: string | null; journey_state: string };
+  let busca: SearchRow[] = [];
+  if (qSafe) {
+    let bq = svc().from("v_orquestracao_leads")
+      .select("phone,restaurant_name,name,city,routing_team,journey_state")
+      .or(`restaurant_name.ilike.%${qSafe}%,name.ilike.%${qSafe}%,city.ilike.%${qSafe}%,phone.ilike.%${qSafe}%`)
+      .limit(30);
+    if (isSetor) bq = bq.eq("routing_team", vendedorSel);
+    let rows = ((await bq).data ?? []) as SearchRow[];
+    if (isNone) rows = rows.filter(r => !r.routing_team);
+    busca = rows;
   }
 
   // ── DOSSIÊ (lead selecionado — default = topo da fila) ──
@@ -317,6 +359,33 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
         <h1 style={{ ...mono(15, { letterSpacing: ".18em" }), color: TOK.fg, marginBottom: 6 }}>Central de Orquestração de Cadências</h1>
         <p style={{ fontFamily: SANS, fontSize: 11.5, color: TOK.fgMuted }}>Onde cada lead está na cadência agora · CURTA (até 30d) e LONGA (perdidos/nutrição) · o motor F3 já calcula a próxima ação</p>
       </div>
+
+      {/* Busca (lupa) + filtro por setor — reusa DashboardFilters (padrão das outras telas) */}
+      <DashboardFilters showSearch showMonth={false} showVendedor={ctx.isGestor} showSemTime={ctx.isGestor} searchPlaceholder="buscar empresa, cidade ou telefone" />
+
+      {/* Resultados da busca — clicar abre o Dossiê direto */}
+      {qSafe && (
+        <div style={{ ...cardStyle(TOK.respondeu) }}>
+          <p style={{ ...mono(9, { letterSpacing: ".15em" }), color: TOK.respondeu, marginBottom: 10 }}>▸ Busca — {busca.length} resultado(s){busca.length >= 30 ? " (30 primeiros)" : ""}</p>
+          {busca.length === 0 ? (
+            <p style={{ fontFamily: SANS, fontSize: 12, color: TOK.fgDim }}>Nenhum lead encontrado.</p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              {busca.map((b, i) => (
+                b.phone ? (
+                  <Link key={b.phone + i} href={`/dashboard/cadencias?${new URLSearchParams({ ...carry, lead: b.phone }).toString()}#dossie`} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", textDecoration: "none", borderTop: i > 0 ? `1px solid ${TOK.borderSoft}` : "none" }}>
+                    <span style={{ flex: 1, minWidth: 0, color: TOK.fg, fontSize: 12.5, fontFamily: SANS, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{b.restaurant_name || b.name || `...${b.phone.slice(-4)}`}</span>
+                    <span style={{ width: 130, flexShrink: 0, color: TOK.fgMuted, fontFamily: SANS, fontSize: 11, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{b.city || "—"}</span>
+                    <span style={{ width: 90, flexShrink: 0, color: TOK.fgDim, fontFamily: SANS, fontSize: 10.5 }}>{VENDOR_LABELS[b.routing_team ?? ""] ?? "sem time"}</span>
+                    <span style={{ width: 120, flexShrink: 0, color: TOK.fgMuted, fontFamily: SANS, fontSize: 10.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{LABEL[b.journey_state] ?? b.journey_state}</span>
+                  </Link>
+                ) : null
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {saude && (
         <div style={{ ...cardStyle(), display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 16, alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -366,7 +435,7 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
         <div style={{ ...cardStyle() }}>
           <p style={{ ...mono(9, { letterSpacing: ".15em" }), color: TOK.respondeu, marginBottom: 10 }}>▸ Cadência Curta — até 30 dias</p>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            {ESTADOS.filter(e => e.band === "curta" || e.band === "ganho").map(e => <StateCard key={e.key} e={e} row={byState.get(e.key)} active={estadoSel === e.key} />)}
+            {ESTADOS.filter(e => e.band === "curta" || e.band === "ganho").map(e => <StateCard key={e.key} e={e} row={byState.get(e.key)} active={estadoSel === e.key} carry={carry} />)}
           </div>
           {Object.keys(quebra).length > 0 && (
             <div style={{ marginTop: 16, background: TOK.cardAlt, border: `1px dashed ${TOK.border}`, borderRadius: 8, padding: "12px 14px" }}>
@@ -416,10 +485,10 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
           {FILTROS.map(f => {
             const on = filtroSel === f;
-            const href = `/dashboard/cadencias?${new URLSearchParams({ ...(estadoSel ? { estado: estadoSel } : {}), ...(f !== "todos" ? { filtro: f } : {}) }).toString()}#fila`;
+            const href = `/dashboard/cadencias?${new URLSearchParams({ ...carry, ...(estadoSel ? { estado: estadoSel } : {}), ...(f !== "todos" ? { filtro: f } : {}) }).toString()}#fila`;
             return <Link key={f} href={href} style={{ ...mono(9, { letterSpacing: ".12em" }), textDecoration: "none", padding: "5px 11px", borderRadius: 6, color: on ? TOK.fg : TOK.fgMuted, background: on ? TOK.card : "transparent", border: `1px solid ${on ? TOK.humano : TOK.border}` }}>{f === "negociacao" ? "negociação" : f}</Link>;
           })}
-          {estadoSel && <Link href="/dashboard/cadencias#fila" style={{ ...mono(9), textDecoration: "none", color: TOK.fgDim, marginLeft: 4 }}>× limpar estado</Link>}
+          {estadoSel && <Link href={`/dashboard/cadencias?${new URLSearchParams({ ...carry }).toString()}#fila`} style={{ ...mono(9), textDecoration: "none", color: TOK.fgDim, marginLeft: 4 }}>× limpar estado</Link>}
         </div>
 
         <div style={{ ...cardStyle(), padding: 0, overflow: "hidden" }}>
@@ -436,7 +505,7 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
             const situ = situacaoLead(l);
             const acao = l.phone ? acaoMap.get(l.phone) : undefined;
             const sel = l.phone === leadSel;
-            const href = `/dashboard/cadencias?${new URLSearchParams({ ...(estadoSel ? { estado: estadoSel } : {}), ...(filtroSel !== "todos" ? { filtro: filtroSel } : {}), ...(l.phone ? { lead: l.phone } : {}) }).toString()}#dossie`;
+            const href = `/dashboard/cadencias?${new URLSearchParams({ ...carry, ...(estadoSel ? { estado: estadoSel } : {}), ...(filtroSel !== "todos" ? { filtro: filtroSel } : {}), ...(l.phone ? { lead: l.phone } : {}) }).toString()}#dossie`;
             return (
               <Link key={(l.phone ?? "x") + i} href={href} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 16px", textDecoration: "none", borderTop: i > 0 ? `1px solid ${TOK.borderSoft}` : "none", background: sel ? `${TOK.humano}12` : "transparent" }}>
                 <div style={{ flex: 1, minWidth: 0 }}>

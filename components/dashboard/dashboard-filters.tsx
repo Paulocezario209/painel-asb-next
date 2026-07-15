@@ -9,12 +9,14 @@ import { VENDOR_LABELS, VENDOR_ORDER } from "@/lib/vendor-labels";
 const mono = "'Courier New', monospace";
 const GREEN = "#2ea043";
 
-const VENDEDORES = [
-  { v: "", label: "Todos" },
-  ...VENDOR_ORDER.map(v => ({ v, label: VENDOR_LABELS[v] })),
-];
-
-export function DashboardFilters({ showMonth = true, showVendedor = true, showSearch = false, searchPlaceholder = "buscar nome, cidade ou telefone", defaultMes, maxMonth }: { showMonth?: boolean; showVendedor?: boolean; showSearch?: boolean; searchPlaceholder?: string; defaultMes?: string; maxMonth?: string }) {
+// showSemTime (opt-in, default off): acrescenta "Sem time" (?vendedor=none → routing_team null/'').
+// Só a Central de Cadências usa hoje; demais telas seguem com Todos + setores.
+export function DashboardFilters({ showMonth = true, showVendedor = true, showSearch = false, showSemTime = false, searchPlaceholder = "buscar nome, cidade ou telefone", defaultMes, maxMonth }: { showMonth?: boolean; showVendedor?: boolean; showSearch?: boolean; showSemTime?: boolean; searchPlaceholder?: string; defaultMes?: string; maxMonth?: string }) {
+  const VENDEDORES = [
+    { v: "", label: "Todos" },
+    ...VENDOR_ORDER.map(v => ({ v, label: VENDOR_LABELS[v] })),
+    ...(showSemTime ? [{ v: "none", label: "Sem time" }] : []),
+  ];
   const router = useRouter();
   const sp = useSearchParams();
   const pathname = usePathname();
