@@ -130,6 +130,14 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
     .eq("phone", phone)
     .order("sent_at", { ascending: true });
 
+  // Orquestração (Central de Cadências F1): estado da jornada + relógio — mesma
+  // fonte dos cards do Mapa (v_orquestracao_leads). Leitura leve, 1 linha.
+  const { data: orqRow } = await svc
+    .from("v_orquestracao_leads")
+    .select("journey_state, atrasado, eh_hoje, silencio_horas, next_followup_at")
+    .eq("phone", phone)
+    .maybeSingle();
+
   const events = (eventsById ?? []) as { id: string; event_type: string; payload: Record<string, unknown>; created_at: string }[];
   const transitions = (fseById ?? []) as { id: string; from_stage: string | null; to_stage: string; actor: string; metadata: Record<string, unknown>; created_at: string }[];
   const vendorMsgs = (vmRows ?? []) as { direction: string; content: string | null; media_type: string | null; sent_at: string }[];
@@ -176,6 +184,43 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
           </a>
         </div>
       </div>
+
+      {/* Orquestração — posição na cadência (Central de Cadências F1) */}
+      {orqRow && (() => {
+        const OLBL: Record<string, string> = {
+          INBOUND_SEM_RESPOSTA: "Entrada (Inbound)", QUALIFICACAO_INTERROMPIDA: "Qualificação interrompida",
+          QUALIFICADO_AGUARDANDO_VENDEDOR: "Qualificado · aguard. vendedor", HANDOFF_SEM_CONTATO: "Handoff sem contato",
+          EM_ANDAMENTO: "Em andamento", NEGOCIACAO: "Negociação", PROPOSTA: "Proposta enviada",
+          PEDIDO_TESTE: "Pedido teste", GANHO: "Ganho (convertido)", PERDIDO_NURTURE: "Perdido · nutrição",
+        };
+        const longa = orqRow.journey_state === "PERDIDO_NURTURE";
+        const sh = orqRow.silencio_horas;
+        const sil = sh == null ? "—" : sh >= 24 ? `${Math.floor(sh / 24)}d` : `${sh}h`;
+        const sitCor = orqRow.atrasado ? "#e0435c" : orqRow.eh_hoje ? "#e0a92a" : "#2fbf6b";
+        const sitTxt = orqRow.atrasado ? "Atrasado" : orqRow.eh_hoje ? "Ação hoje" : "No prazo";
+        let prox = "—";
+        if (orqRow.next_followup_at) {
+          const d = new Date(orqRow.next_followup_at);
+          prox = `${String(d.getUTCDate()).padStart(2, "0")}/${String(d.getUTCMonth() + 1).padStart(2, "0")} ${String((d.getUTCHours() + 21) % 24).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`;
+        }
+        const cell = (k: string, v: string, cor?: string) => (
+          <div style={{ minWidth: 0 }}>
+            <p style={{ fontSize: 9, letterSpacing: ".12em", textTransform: "uppercase", color: "#8b949e", fontFamily: theme.font.label }}>{k}</p>
+            <p style={{ fontSize: 13, color: cor ?? C.text2, fontFamily: theme.font.label, marginTop: 3, whiteSpace: "nowrap" }}>{v}</p>
+          </div>
+        );
+        return (
+          <div style={{ ...CARD, padding: "13px 18px", borderLeft: `3px solid ${sitCor}`, display: "flex", flexWrap: "wrap", gap: "10px 26px", alignItems: "center" }}>
+            <p style={{ fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase", color: "#8b949e", fontFamily: theme.font.label, marginRight: 4 }}>Orquestração</p>
+            {cell("Estado", OLBL[orqRow.journey_state] ?? orqRow.journey_state, "#c8d8e8")}
+            {cell("Cadência", longa ? "Longa (nutrição)" : "Curta")}
+            {cell("Silêncio", sil)}
+            {cell("Situação", sitTxt, sitCor)}
+            {cell("Próximo follow-up", prox)}
+            <Link href={`/dashboard/cadencias?estado=${orqRow.journey_state}`} style={{ marginLeft: "auto", color: C.muted, fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: theme.font.label, textDecoration: "underline" }}>ver no mapa</Link>
+          </div>
+        );
+      })()}
 
       {/* Main grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
