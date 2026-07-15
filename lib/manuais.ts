@@ -32,8 +32,11 @@ export const MANUAIS: Record<string, ManualTela> = {
   },
   "/dashboard/cadencias": {
     titulo: "Mapa de Orquestração de Follow-ups",
-    oQueE: "O centro de comando das cadências: onde está cada lead na jornada AGORA, quantos estão atrasados e por qual etapa/motivo. Uma visão executiva (Mapa) sobre os mesmos dados do funil e do follow-up.",
+    oQueE: "O centro de comando das cadências: onde está cada lead na jornada AGORA, em qual degrau da cadência (CURTA/LONGA), quantos estão atrasados e por qual etapa/motivo. O banner de saúde no topo mostra a régua inteira em tempo real; a aba Revisão isola as exceções (dado quebrado) sem poluir as etapas.",
     fontes: [
+      "Banner de saúde: view v_cadencia_saude (linha única agregada) — em cadência, curta, longa, sem cadência, em revisão, toques nas próximas 24h e atrasados. Verde enquanto “sem cadência” = 0 (invariante CADÊNCIA SEM EXCEÇÃO).",
+      "Degrau/cadência por lead: view v_cadencia_lead — deriva de v_orquestracao_leads + fn_next_cadence_step (cascatas CURTA 30min…30d / LONGA 30/60/90/180/360→+90). O degrau (ex. “D+30”, “silêncio→17/07 12:00”) e o badge CURTA/LONGA aparecem em cada lead da fila.",
+      "Aba Revisão: v_cadencia_lead onde precisa_revisao = true — número quebrado (3+ falhas de entrega) ou mensagem defeituosa (3+ retries de vazamento).",
       "Cards por estado: view v_orquestracao_leads (deriva o journey_state do funnel_stage + sinais reais: handoff, resposta do vendedor, órfão) → agregada em v_orquestracao_mapa. Não lista testes nem fora-de-rota.",
       "Atrasado / hoje: pelo relógio atual (next_followup_at). Nas próximas fases o motor passa a escrever a próxima ação e o relógio fica exato.",
       "“Pergunta que quebra”: distribuição por qual_stage dos leads em qualificação interrompida — mostra em qual pergunta a escada mais perde.",
@@ -41,8 +44,10 @@ export const MANUAIS: Record<string, ManualTela> = {
       "Silêncio na fila: horas desde a última resposta do lead (last_reply_at).",
     ],
     comoUsar: [
-      "Clique num card de estado para abrir a fila daquele estado à direita; clique num lead para abrir o cadastro dele.",
-      "Cor do ponto na fila: 🔴 atrasado · 🟡 hoje · 🟢 no prazo.",
+      "Banner verde = cadência saudável. Se “sem cadência” subir de 0, há vazamento — abra a Fila e investigue; se “em revisão” subir, vá à aba Revisão.",
+      "Aba Revisão = corrigir dado (número/mensagem), não silenciar o lead: é a única exceção honesta à régua.",
+      "Clique num card de estado para abrir a fila daquele estado à direita; cada lead mostra o badge CURTA/LONGA e o degrau atual. Clique num lead para abrir o cadastro dele.",
+      "Cor do ponto na fila: vermelho atrasado · amarelo hoje · verde no prazo.",
       "Fase 1 (atual): dados reais e navegação. Próxima melhor ação, objetivo psicológico e ângulo chegam nas fases seguintes (motor).",
     ],
   },
