@@ -258,36 +258,36 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
   }
   const byState = new Map(mapa.map(r => [r.journey_state, r]));
 
-  // Banner de saúde: sem escopo (gestor Todos) → v_cadencia_saude global (cache). COM escopo de setor
-  // → deriva TODOS os contadores de v_cadencia_lead FILTRADO (mesma população do Mapa), pois a agregada
-  // global não tem routing_team e vazaria contadores de outros setores. Zero view nova.
-  let saude: SaudeRow | null;
-  if (isSetor || isNone || isNada) {
-    let sq = svc().from("v_cadencia_lead").select("cadencia,sem_cadencia,precisa_revisao,atrasado,next_followup_at").limit(5000);
-    if (isSetor) sq = sq.eq("routing_team", effVend);
-    else if (isNone) sq = sq.or("routing_team.is.null,routing_team.eq.");
-    else sq = sq.eq("routing_team", "__no_match__");
-    const srows = ((await sq).data ?? []) as { cadencia: string | null; sem_cadencia: boolean; precisa_revisao: boolean; atrasado: boolean; next_followup_at: string | null }[];
-    const now = Date.now(), h24 = now + 24 * 3600 * 1000;
-    let curta = 0, longa = 0, semc = 0, rev = 0, atr = 0, toques = 0;
-    for (const r of srows) {
-      if (r.cadencia === "CURTA") curta++; else if (r.cadencia === "LONGA") longa++;
-      if (r.sem_cadencia) semc++;
-      if (r.precisa_revisao) rev++;
-      if (r.atrasado) atr++;
-      if (r.next_followup_at) { const t = Date.parse(r.next_followup_at); if (t >= now && t <= h24) toques++; }
-    }
-    saude = { em_jornada: curta + longa, em_curta: curta, em_longa: longa, sem_cadencia: semc, em_revisao: rev, toques_prox_24h: toques, atrasados: atr, graduados: 0 };
-  } else {
-    saude = (saudeRaw ?? null) as SaudeRow | null;
-  }
-
-  // KPIs de faixa (curta/longa/atrasados/hoje/ganho)
+  // KPIs de faixa sobre o Mapa (scoped): curta = journey_state ativo · longa = PERDIDO_NURTURE · ganho = GANHO.
   const sumBand = (b: (e: Estado) => boolean, f: (r: MapaRow) => number) =>
     ESTADOS.filter(b).reduce((a, e) => a + (byState.get(e.key) ? f(byState.get(e.key)!) : 0), 0);
   const curtaTot = sumBand(e => e.band === "curta", r => r.total);
   const longaTot = sumBand(e => e.band === "longa", r => r.total);
   const ganho = byState.get("GANHO")?.total ?? 0;
+
+  // Banner de saúde: sem escopo (gestor Todos) → v_cadencia_saude global (já exclui graduados). COM escopo
+  // de setor → curta/longa/em-cadência seguem a MESMA régua do Mapa (journey_state, EXCLUINDO GANHO) p/ bater
+  // exato; sem_cadência/em_revisão/toques/atrasados vêm de v_cadencia_lead filtrado (o setor). Zero view nova.
+  let saude: SaudeRow | null;
+  if (isSetor || isNone || isNada) {
+    let sq = svc().from("v_cadencia_lead").select("sem_cadencia,precisa_revisao,atrasado,next_followup_at").limit(5000);
+    if (isSetor) sq = sq.eq("routing_team", effVend);
+    else if (isNone) sq = sq.or("routing_team.is.null,routing_team.eq.");
+    else sq = sq.eq("routing_team", "__no_match__");
+    const srows = ((await sq).data ?? []) as { sem_cadencia: boolean; precisa_revisao: boolean; atrasado: boolean; next_followup_at: string | null }[];
+    const now = Date.now(), h24 = now + 24 * 3600 * 1000;
+    let semc = 0, rev = 0, atr = 0, toques = 0;
+    for (const r of srows) {
+      if (r.sem_cadencia) semc++;
+      if (r.precisa_revisao) rev++;
+      if (r.atrasado) atr++;
+      if (r.next_followup_at) { const t = Date.parse(r.next_followup_at); if (t >= now && t <= h24) toques++; }
+    }
+    // curta/longa/em-cadência = régua do Mapa (journey_state), EXCLUINDO GANHO → bate exato com o Mapa.
+    saude = { em_jornada: curtaTot + longaTot, em_curta: curtaTot, em_longa: longaTot, sem_cadencia: semc, em_revisao: rev, toques_prox_24h: toques, atrasados: atr, graduados: ganho };
+  } else {
+    saude = (saudeRaw ?? null) as SaudeRow | null;
+  }
 
   // Longa por TEMPO (buckets de degrau)
   const tempoCount: Record<string, number> = {};
