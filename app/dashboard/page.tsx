@@ -12,6 +12,7 @@ import { DashboardFilters } from "@/components/dashboard/dashboard-filters";
 import { theme } from "@/lib/theme";
 import { VENDOR_LABELS } from "@/lib/vendor-labels";
 import { S } from "./lib/dashboard-tokens";
+import { Users, BadgeCheck, PhoneCall, Trophy } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -177,10 +178,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const convertidos = leads.filter(l => l.first_order_at).length;
 
   const kpis = [
-    { label: "Total Leads",        value: totalLeads ?? 0,    accent: "#FFFFFF", href: "/dashboard/leads" },
-    { label: "Qualificados",       value: qualifiedLeads ?? 0, accent: "#C8102E", href: "/dashboard/hot-leads" },
-    { label: "Handoffs Pendentes", value: handoffPending ?? 0, accent: "#f59e0b", href: "/dashboard/handoffs" },
-    { label: "Convertidos",        value: convertidos,          accent: "#22c55e", href: "/dashboard/leads?status=converted" },
+    { label: "Total Leads",        value: totalLeads ?? 0,    accent: "#8bb4ff", Icon: Users,      href: "/dashboard/leads" },
+    { label: "Qualificados",       value: qualifiedLeads ?? 0, accent: "#C8102E", Icon: BadgeCheck, href: "/dashboard/hot-leads" },
+    { label: "Handoffs Pendentes", value: handoffPending ?? 0, accent: "#f59e0b", Icon: PhoneCall,  href: "/dashboard/handoffs" },
+    { label: "Convertidos",        value: convertidos,          accent: "#22c55e", Icon: Trophy,     href: "/dashboard/leads?status=converted" },
   ];
 
   return (
@@ -308,11 +309,18 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
       {/* KPI cards */}
       <div className="asb-grid-kpi">
-        {kpis.map(({ label, value, accent, href }) => (
+        {kpis.map(({ label, value, accent, Icon, href }) => (
           <Link key={label} href={href} style={{ textDecoration: "none" }}>
-            <div style={{ ...S.card, padding: "20px 20px", borderTop: `2px solid ${accent}`, cursor: "pointer", transition: "opacity .15s" }} className="asb-kpi-hover">
-              <p style={{ ...S.label, color: accent }} translate="no">{label}</p>
-              <p style={{ ...S.value, marginTop: 12 }}>{value}</p>
+            <div style={{ ...S.card, padding: 18, borderTop: `3px solid ${accent}`, cursor: "pointer" }} className="asb-kpi-hover">
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+                <span style={{ width: 34, height: 34, borderRadius: 10, display: "grid", placeItems: "center", background: accent + "22", color: accent, flexShrink: 0 }}>
+                  <Icon size={18} />
+                </span>
+                <span style={{ fontSize: 12.5, fontWeight: 650, color: "#c8d2e6", fontFamily: theme.font.label }} translate="no">{label}</span>
+              </div>
+              <div style={{ fontSize: 34, fontWeight: 850, letterSpacing: "-.03em", lineHeight: 1, color: accent, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" }}>
+                {value}
+              </div>
             </div>
           </Link>
         ))}
