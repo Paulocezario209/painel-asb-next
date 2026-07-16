@@ -83,7 +83,7 @@ export function Sidebar({
                 background: isActive ? "var(--asb-card)" : "transparent",
                 color: isActive ? "#FFFFFF" : "#565A6B",
                 fontSize: 10, letterSpacing: ".14em", textTransform: "uppercase",
-                fontFamily: "'Courier New', monospace", fontWeight: 600,
+                fontFamily: "var(--font-geist-sans), system-ui, sans-serif", fontWeight: 600,
                 boxShadow: isActive ? "0 6px 16px -8px rgba(20,22,40,.4)" : "none",
                 transition: "all .15s", textDecoration: "none",
               }}
@@ -111,7 +111,7 @@ export function Sidebar({
       <div className="px-4 py-3" style={{ borderTop: "1px solid var(--asb-shell-border)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#22c55e", boxShadow: "0 0 6px #22c55e" }} />
-          <p style={{ color: "#8B90A3", fontSize: 9, letterSpacing: ".12em", textTransform: "uppercase", fontFamily: "'Courier New', monospace" }}>
+          <p style={{ color: "#8B90A3", fontSize: 9, letterSpacing: ".12em", textTransform: "uppercase", fontFamily: "var(--font-geist-sans), system-ui, sans-serif" }}>
             v1.0 · SDR System
           </p>
         </div>
