@@ -12,7 +12,7 @@ import { DashboardFilters } from "@/components/dashboard/dashboard-filters";
 import { theme } from "@/lib/theme";
 import { VENDOR_LABELS } from "@/lib/vendor-labels";
 import { S } from "./lib/dashboard-tokens";
-import { Users, BadgeCheck, PhoneCall, Trophy } from "lucide-react";
+import { Users, BadgeCheck, PhoneCall, Trophy, XCircle, Target, Filter as FilterIcon, TrendingUp, BarChart3 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -64,6 +64,21 @@ function Sparkline({ data, color }: { data: number[]; color: string }) {
     <svg viewBox="0 0 120 30" preserveAspectRatio="none" style={{ width: "100%", height: 30, display: "block", marginTop: 14 }}>
       <polyline fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" points={pts} />
     </svg>
+  );
+}
+
+// Cabeçalho de seção limpo (ícone chip + título sans + descrição)
+function SectionHead({ Icon, color, title, desc }: { Icon: React.ComponentType<{ size?: number }>; color: string; title: string; desc?: string }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 18 }}>
+      <span style={{ width: 34, height: 34, borderRadius: 10, display: "grid", placeItems: "center", background: color + "22", color, flexShrink: 0 }}>
+        <Icon size={17} />
+      </span>
+      <div>
+        <div style={{ fontSize: 15.5, fontWeight: 750, color: "#fff", fontFamily: theme.font.label, letterSpacing: "-.01em" }}>{title}</div>
+        {desc ? <div style={{ fontSize: 12.5, color: "#aeb7cc", fontFamily: theme.font.label, marginTop: 1 }}>{desc}</div> : null}
+      </div>
+    </div>
   );
 }
 
@@ -390,40 +405,28 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       <CardReconciliarAres />
 
       {/* P3 — Motivos de perda (view v_motivos_perda) */}
-      <div style={{ ...S.card, padding: "20px 24px" }}>
-        <p style={{ ...S.section }}>
-          <span style={{ color: "#C8102E", marginRight: 6 }}>✕</span>
-          Motivos de Perda
-        </p>
+      <div className="asb-card" style={{ padding: "20px 24px" }}>
+        <SectionHead Icon={XCircle} color="#FF3B57" title="Motivos de perda" desc="Por que os leads não avançaram" />
         <MotivosPerdaChart data={motivos} />
       </div>
 
       {/* Onde Focar Agora */}
-      <div style={{ ...S.card, padding: "20px 24px" }}>
-        <p style={{ ...S.section }}>
-          <span style={{ color: "#C8102E", marginRight: 6 }}>▲</span>
-          Onde Focar Agora
-        </p>
+      <div className="asb-card" style={{ padding: "20px 24px" }}>
+        <SectionHead Icon={Target} color="#FF3B57" title="Onde focar agora" desc="Prioridades da carteira por volume e cidade" />
 
         {/* ABC */}
-        <p style={{ ...S.label, marginBottom: 8 }}>curva abc</p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 16 }}>
+        <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", color: "#83879a", fontFamily: theme.font.label, marginBottom: 10 }}>Curva ABC</p>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 20 }}>
           {([
-            { tier: "A", count: abcCount.A, color: "#C8102E", bg: "rgba(200,16,46,.08)", border: "rgba(200,16,46,.3)", tag: "urgente", desc: "≥ 300 kg/sem" },
-            { tier: "B", count: abcCount.B, color: "#f59e0b", bg: "rgba(245,158,11,.08)", border: "rgba(245,158,11,.3)", tag: "médio", desc: "100–299 kg/sem" },
-            { tier: "C", count: abcCount.C, color: "#c0d0e0", bg: "rgba(136,153,170,.06)", border: "rgba(136,153,170,.2)", tag: "longo prazo", desc: "< 100 kg/sem" },
+            { tier: "A", count: abcCount.A, color: "#FF3B57", bg: "rgba(255,59,87,.08)",  border: "rgba(255,59,87,.28)",  tag: "urgente", desc: "≥ 300 kg/sem" },
+            { tier: "B", count: abcCount.B, color: "#f59e0b", bg: "rgba(245,158,11,.08)", border: "rgba(245,158,11,.28)", tag: "médio", desc: "100–299 kg/sem" },
+            { tier: "C", count: abcCount.C, color: "#8bb4ff", bg: "rgba(139,180,255,.07)", border: "rgba(139,180,255,.22)", tag: "longo prazo", desc: "< 100 kg/sem" },
           ] as const).map(({ tier, count, color, bg, border, tag, desc }) => (
-            <div key={tier} style={{ background: bg, border: `1px solid ${border}`, borderRadius: 5, padding: "14px 16px", textAlign: "center" }}>
-              <p style={{ color, fontSize: 26, fontWeight: 700, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>{count}</p>
-              <p style={{ color, fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase", marginTop: 4, fontFamily: theme.font.label, fontWeight: 700 }}>
-                Tier {tier}
-              </p>
-              <p style={{ color: "#8b949e", fontSize: 9, fontFamily: theme.font.label, marginTop: 2 }}>{desc}</p>
-              <span style={{
-                display: "inline-block", marginTop: 8, padding: "2px 6px",
-                border: `1px solid ${border}`, borderRadius: 3, color, fontSize: 9,
-                letterSpacing: ".10em", textTransform: "uppercase", fontFamily: theme.font.label,
-              }}>{tag}</span>
+            <div key={tier} style={{ background: bg, border: `1px solid ${border}`, borderRadius: 12, padding: "18px 16px", textAlign: "center" }}>
+              <p style={{ color, fontSize: 34, fontWeight: 850, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", lineHeight: 1, letterSpacing: "-.02em" }}>{count}</p>
+              <p style={{ color, fontSize: 11, letterSpacing: ".08em", textTransform: "uppercase", marginTop: 6, fontFamily: theme.font.label, fontWeight: 750 }}>Tier {tier}</p>
+              <p style={{ color: "#aeb7cc", fontSize: 11, fontFamily: theme.font.label, marginTop: 3 }}>{desc}</p>
+              <span style={{ display: "inline-block", marginTop: 10, padding: "3px 10px", background: color + "22", borderRadius: 999, color, fontSize: 10.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em", fontFamily: theme.font.label }}>{tag}</span>
             </div>
           ))}
         </div>
@@ -468,85 +471,72 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           </div>
         )}
 
-        {/* Top cidades */}
-        {topCities.length > 0 && (
-          <div style={{ marginBottom: 16 }}>
-            <p style={{ ...S.label, marginBottom: 8 }}>top cidades — leads qualificados</p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {topCities.map(([city, count], i) => (
-                <div key={city} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <span style={{ color: "#e0e0e0", fontSize: 11, fontFamily: theme.font.label }}>
-                    <span style={{ color: "#7a9a7a", marginRight: 6 }}>#{i + 1}</span>{city}
-                  </span>
-                  <span style={{
-                    background: "rgba(200,16,46,.08)", border: "1px solid rgba(200,16,46,.25)",
-                    color: "#C8102E", fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase",
-                    padding: "2px 7px", borderRadius: 2, fontFamily: theme.font.label,
-                  }}>{count} leads</span>
-                </div>
-              ))}
+        {/* Cidades + Grupos lado a lado */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }} className="asb-grid-charts">
+          {topCities.length > 0 && (
+            <div>
+              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", color: "#83879a", fontFamily: theme.font.label, marginBottom: 10 }}>Top cidades · qualificados</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+                {topCities.map(([city, count], i) => (
+                  <div key={city} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span style={{ color: "#e6ebf5", fontSize: 13, fontFamily: theme.font.label, display: "inline-flex", alignItems: "center", gap: 9 }}>
+                      <span style={{ width: 20, height: 20, borderRadius: 6, background: "var(--asb-card-hi)", color: "#83879a", fontSize: 11, fontWeight: 700, display: "grid", placeItems: "center", fontFamily: theme.font.num }}>{i + 1}</span>{city}
+                    </span>
+                    <span style={{ background: "rgba(255,59,87,.14)", color: "#FF3B57", fontSize: 11.5, fontWeight: 700, padding: "3px 10px", borderRadius: 999, fontFamily: theme.font.label }}>{count} leads</span>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
-
-        {/* Grupos de produto */}
-        {topGroups.length > 0 && (
-          <div>
-            <p style={{ ...S.label, marginBottom: 8 }}>grupos de produto</p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {topGroups.map(([group, count]) => (
-                <div key={group} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <span style={{ color: "#e0e0e0", fontSize: 11, fontFamily: theme.font.label }}>
-                    {PRODUCT_LABELS[group] ?? group}
-                  </span>
-                  <span style={{
-                    border: "1px solid #2a2a2a", color: "#c0d0e0", fontSize: 9,
-                    padding: "2px 7px", borderRadius: 2, fontFamily: theme.font.label,
-                  }}>{count}</span>
-                </div>
-              ))}
+          )}
+          {topGroups.length > 0 && (
+            <div>
+              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", color: "#83879a", fontFamily: theme.font.label, marginBottom: 10 }}>Grupos de produto</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+                {topGroups.map(([group, count]) => (
+                  <div key={group} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span style={{ color: "#e6ebf5", fontSize: 13, fontFamily: theme.font.label }}>{PRODUCT_LABELS[group] ?? group}</span>
+                    <span style={{ background: "var(--asb-card-hi)", color: "#c8d2e6", fontSize: 11.5, fontWeight: 700, padding: "3px 10px", borderRadius: 999, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" }}>{count}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Charts row */}
       <div className="asb-grid-charts">
-        <div style={{ ...S.card, padding: "20px 24px" }}>
-          <p style={S.section}>Funil de Qualificação</p>
-          <QualificationFunnel data={funnelData} />
+        <div className="asb-card" style={{ padding: "20px 24px" }}>
+          <SectionHead Icon={FilterIcon} color="#8bb4ff" title="Funil de qualificação" desc="Leads por etapa" />
+          <div style={{ height: 220 }}><QualificationFunnel data={funnelData} /></div>
         </div>
-        <div style={{ ...S.card, padding: "20px 24px" }}>
-          <p style={S.section}>Conversões por Semana</p>
+        <div className="asb-card" style={{ padding: "20px 24px" }}>
+          <SectionHead Icon={TrendingUp} color="#22c55e" title="Conversões por semana" desc="Primeiros pedidos" />
           <WeeklyConversions data={weeklyData} />
         </div>
       </div>
 
       {/* Vendor */}
-      <div style={{ ...S.card, padding: "20px 24px" }}>
-        <p style={S.section}>Performance por Vendedor</p>
+      <div className="asb-card" style={{ padding: "20px 24px" }}>
+        <SectionHead Icon={BarChart3} color="#f59e0b" title="Performance por vendedor" desc="Handoffs · confirmados · convertidos" />
         <VendorPerformance data={vendorData} />
       </div>
 
       {/* Status */}
-      <div style={{ ...S.card, padding: "16px 24px", display: "flex", alignItems: "center", gap: 12 }}>
-        <p style={{ ...S.label, margin: 0 }}>status</p>
+      <div className="asb-card" style={{ padding: "14px 22px", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", color: "#83879a", fontFamily: theme.font.label }}>Status do sistema</span>
         {[
           { label: "SDR Ativo",        color: "#22c55e" },
           { label: "RAG Online",       color: "#22c55e" },
           { label: "Follow-up Engine", color: "#f59e0b" },
         ].map(({ label, color }) => (
           <span key={label} style={{
-            border: `1px solid ${color}30`,
-            background: `${color}10`,
-            color,
-            fontSize: 9,
-            letterSpacing: ".10em",
-            textTransform: "uppercase",
-            padding: "3px 8px",
-            borderRadius: 3,
-            fontFamily: theme.font.label,
-          }} translate="no">● {label}</span>
+            display: "inline-flex", alignItems: "center", gap: 6,
+            background: color + "18", color, fontSize: 12, fontWeight: 650,
+            padding: "4px 11px", borderRadius: 999, fontFamily: theme.font.label,
+          }} translate="no">
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: color }} />{label}
+          </span>
         ))}
       </div>
     </div>

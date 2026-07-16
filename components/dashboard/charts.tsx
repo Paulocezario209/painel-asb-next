@@ -9,24 +9,25 @@ type StageBucket = { label: string; count: number };
 type WeekPoint   = { week: string; count: number };
 type VendorRow   = { label: string; handoffs: number; confirmed: number; converted: number };
 
-const GRID  = "rgba(27,42,107,.35)";
-const TEXT  = "#e4e9f0";
-const RED   = "#C8102E";
+const SANS  = "var(--font-geist-sans), system-ui, sans-serif";
+const GRID  = "rgba(255,255,255,.08)";
+const TEXT  = "#aeb7cc";
+const RED   = "#FF3B57";
 const BLUE  = "#2a2a2a";
 const BLUE2 = "#2A3F8F";
 const AMBER = "#f59e0b";
 
 const tooltipStyle = {
   contentStyle: {
-    background: "#1a1a1a", border: "1px solid #C8102E", borderRadius: 3,
-    fontSize: 11, fontFamily: "'Courier New', monospace", color: "#c8d8e8",
-    boxShadow: "0 4px 20px rgba(200,16,46,.15)",
+    background: "#17181d", border: "1px solid rgba(255,255,255,.14)", borderRadius: 10,
+    fontSize: 12, fontFamily: SANS, color: "#f4f4f8",
+    boxShadow: "0 20px 44px -18px rgba(0,0,0,.6)",
   },
-  itemStyle:  { color: "#c8d8e8" },
-  labelStyle: { color: "#e4e9f0", fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase" as const },
+  itemStyle:  { color: "#c8d2e6" },
+  labelStyle: { color: "#aeb7cc", fontSize: 11, fontWeight: 650 },
 };
 
-const axisStyle = { fontSize: 10, fontFamily: "'Courier New', monospace", fill: TEXT };
+const axisStyle = { fontSize: 11, fontFamily: SANS, fill: TEXT };
 
 export function QualificationFunnel({ data }: { data: StageBucket[] }) {
   return (
@@ -88,7 +89,7 @@ export function VendorPerformance({ data }: { data: VendorRow[] }) {
         <XAxis dataKey="label" tick={axisStyle} axisLine={{ stroke: GRID }} tickLine={false} />
         <YAxis tick={axisStyle} axisLine={false} tickLine={false} />
         <Tooltip {...tooltipStyle} />
-        <Legend wrapperStyle={{ fontSize: 9, fontFamily: "'Courier New', monospace", color: TEXT, letterSpacing: ".10em", textTransform: "uppercase" }} />
+        <Legend wrapperStyle={{ fontSize: 11.5, fontFamily: SANS, color: TEXT, fontWeight: 600 }} />
         <Bar dataKey="handoffs"  name="Handoffs"    fill="url(#amberVert)"  radius={[3, 3, 0, 0]} />
         <Bar dataKey="confirmed" name="Confirmados"  fill="url(#blueVert)"   radius={[3, 3, 0, 0]} />
         <Bar dataKey="converted" name="Convertidos"  fill="url(#redVert)"    radius={[3, 3, 0, 0]} />
