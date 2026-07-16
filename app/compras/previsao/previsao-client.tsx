@@ -5,6 +5,7 @@ import { Search, X } from "lucide-react";
 import { norm } from "@/lib/normalize";
 
 import { theme } from "@/lib/theme";
+import { S } from "@/app/dashboard/lib/dashboard-tokens";
 
 export type PrevRow = {
   id_produto: string | number; descricao: string | null; grupo_nome: string | null;
@@ -19,9 +20,12 @@ const n3 = (n: number | null) => (n == null ? "—" : n.toLocaleString("pt-BR", 
 export default function PrevisaoClient({ rows }: { rows: PrevRow[] }) {
   const [q, setQ] = useState("");
 
-  const th: React.CSSProperties = { fontSize: 9, color: "#e4e9f0", fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", padding: "8px 10px", textAlign: "right", borderBottom: "1px solid #1B2A6B" };
-  const td: React.CSSProperties = { padding: "7px 10px", color: "#c8d8e8", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", fontSize: 12, textAlign: "right" };
-  const card: React.CSSProperties = { background: "#0f1428", border: "1px solid #1B2A6B", borderRadius: 6, overflowX: "auto" };
+  // cabeçalho de COLUNA → UPPERCASE SANS pequeno (S.label)
+  const th: React.CSSProperties = { ...S.label, fontSize: 10, padding: "10px 10px", textAlign: "right", borderBottom: "1px solid var(--asb-border)" };
+  // célula de NÚMERO → mono/tabular
+  const td: React.CSSProperties = { padding: "8px 10px", color: "#c8d2e6", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", fontSize: 12.5, textAlign: "right" };
+  // célula de TEXTO → sans
+  const tdText: React.CSSProperties = { ...td, fontFamily: theme.font.label, textAlign: "left" };
 
   // filtro acento-insensitive: descricao OU id_produto OU skus
   const qn = norm(q.trim());
@@ -34,41 +38,43 @@ export default function PrevisaoClient({ rows }: { rows: PrevRow[] }) {
   const ok = filtered.filter((r) => !r.repor_agora);
 
   const linha = (r: PrevRow) => (
-    <tr key={String(r.id_produto)} style={{ borderBottom: "1px solid #0b0f1d" }}>
-      <td style={{ ...td, textAlign: "left", color: "#FFFFFF", maxWidth: 280, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+    <tr key={String(r.id_produto)} style={{ borderBottom: "1px solid var(--asb-border)" }}>
+      <td style={{ ...tdText, color: "#FFFFFF", maxWidth: 280, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
         {r.descricao || `#${r.id_produto}`}
-        {r.__isPool && r.skus ? <span style={{ color: "#e4e9f0", fontSize: 9 }}> · pool {r.skus}</span> : null}
+        {r.__isPool && r.skus ? <span style={{ color: "#83879a", fontSize: 10.5 }}> · pool {r.skus}</span> : null}
       </td>
       <td style={td}>{n3(r.cmd)}</td>
-      <td style={{ ...td, color: r.saldo_confiavel ? "#c8d8e8" : "#e4e9f0" }}>{r.saldo_confiavel ? n3(r.saldo_atual) : "s/ âncora"}</td>
+      <td style={{ ...td, color: r.saldo_confiavel ? "#c8d2e6" : "#83879a", fontFamily: r.saldo_confiavel ? theme.font.num : theme.font.label }}>{r.saldo_confiavel ? n3(r.saldo_atual) : "s/ âncora"}</td>
       <td style={td}>{n3(r.em_pedido)}</td>
-      <td style={{ ...td, color: r.a_comprar > 0 ? "#f0a04b" : "#e4e9f0", fontWeight: 700 }}>{n3(r.a_comprar)}</td>
-      <td style={{ ...td, textAlign: "left", color: "#c0d0e0" }}>{r.fornecedor_provavel || "—"}{r.lead_time_dias ? ` (${r.lead_time_dias}d)` : ""}</td>
+      <td style={{ ...td, color: r.a_comprar > 0 ? "#f59e0b" : "#83879a", fontWeight: 700 }}>{n3(r.a_comprar)}</td>
+      <td style={{ ...tdText, color: "#aeb7cc" }}>{r.fornecedor_provavel || "—"}{r.lead_time_dias ? ` (${r.lead_time_dias}d)` : ""}</td>
     </tr>
   );
 
   return (
-    <div style={card}>
+    <div style={{ ...S.card, overflowX: "auto" }}>
       {/* Barra de busca (lupa), sticky no topo do card */}
-      <div style={{ position: "sticky", top: 0, zIndex: 1, background: "#0f1428", borderBottom: "1px solid #1B2A6B", padding: "8px 10px" }}>
+      <div style={{ position: "sticky", top: 0, zIndex: 1, background: "var(--asb-card)", borderBottom: "1px solid var(--asb-border)", padding: "10px 12px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <Search size={14} color="#556677" style={{ flexShrink: 0 }} />
+          <Search size={14} color="#83879a" style={{ flexShrink: 0 }} />
           <input
             autoFocus
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Buscar insumo por nome ou código…"
-            style={{ flex: 1, background: "transparent", border: "none", outline: "none", color: "#c8d8e8", fontFamily: theme.font.label, fontSize: 12 }}
+            style={{ flex: 1, background: "transparent", border: "none", outline: "none", color: "#e6ebf5", fontFamily: theme.font.label, fontSize: 12.5 }}
           />
           {q ? (
             <>
-              <span style={{ color: "#e4e9f0", fontFamily: theme.font.label, fontSize: 10, whiteSpace: "nowrap" }}>{filtered.length} de {rows.length}</span>
+              <span style={{ color: "#aeb7cc", fontFamily: theme.font.label, fontSize: 11, whiteSpace: "nowrap" }}>
+                <b style={{ fontFamily: theme.font.num }}>{filtered.length}</b> de <b style={{ fontFamily: theme.font.num }}>{rows.length}</b>
+              </span>
               <button
                 onClick={() => setQ("")}
                 aria-label="Limpar busca"
                 style={{ background: "transparent", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "center" }}
               >
-                <X size={14} color="#556677" />
+                <X size={14} color="#83879a" />
               </button>
             </>
           ) : null}
@@ -82,14 +88,14 @@ export default function PrevisaoClient({ rows }: { rows: PrevRow[] }) {
         </tr></thead>
         <tbody>
           {rows.length === 0 ? (
-            <tr><td colSpan={6} style={{ ...td, textAlign: "center", color: "#e4e9f0", padding: 20 }}>aguardando dados (aplicar migrations)</td></tr>
+            <tr><td colSpan={6} style={{ ...td, textAlign: "center", color: "#83879a", fontFamily: theme.font.label, padding: 20 }}>aguardando dados (aplicar migrations)</td></tr>
           ) : filtered.length === 0 ? (
-            <tr><td colSpan={6} style={{ ...td, textAlign: "center", color: "#e4e9f0", padding: 20 }}>Nenhum insumo encontrado para &quot;{q}&quot;</td></tr>
+            <tr><td colSpan={6} style={{ ...td, textAlign: "center", color: "#83879a", fontFamily: theme.font.label, padding: 20 }}>Nenhum insumo encontrado para &quot;{q}&quot;</td></tr>
           ) : (
             <>
-              {repor.length > 0 && <tr><td colSpan={6} style={{ ...td, textAlign: "left", color: "#f85149", fontWeight: 700, background: "#0b0f1d" }}>🔴 REPOR AGORA</td></tr>}
+              {repor.length > 0 && <tr><td colSpan={6} style={{ ...tdText, ...S.label, fontSize: 10.5, color: "#ff5a72", background: "var(--asb-card-hi)" }}>🔴 Repor Agora</td></tr>}
               {repor.map(linha)}
-              {ok.length > 0 && <tr><td colSpan={6} style={{ ...td, textAlign: "left", color: "#2ea043", fontWeight: 700, background: "#0b0f1d" }}>✓ cobertura ok</td></tr>}
+              {ok.length > 0 && <tr><td colSpan={6} style={{ ...tdText, ...S.label, fontSize: 10.5, color: "#22c55e", background: "var(--asb-card-hi)" }}>✓ Cobertura Ok</td></tr>}
               {ok.map(linha)}
             </>
           )}

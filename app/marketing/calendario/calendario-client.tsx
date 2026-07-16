@@ -3,6 +3,9 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { theme } from "@/lib/theme";
+import { CalendarDays } from "lucide-react";
+import { S } from "@/app/dashboard/lib/dashboard-tokens";
+import { SectionHead } from "@/app/dashboard/lib/ui";
 
 export type DiaRow = {
   data: string;            // YYYY-MM-DD
@@ -82,7 +85,7 @@ export function CalendarioClient({ ano, rows }: { ano: number; rows: DiaRow[] })
 
       {/* Comparativo automático */}
       {comp && (
-        <div style={{ background: "rgba(200,16,46,.06)", border: "1px solid rgba(200,16,46,.3)", borderRadius: 6, padding: "10px 14px", display: "flex", gap: 18, flexWrap: "wrap", alignItems: "center" }}>
+        <div style={{ ...S.card, padding: "10px 14px", display: "flex", gap: 18, flexWrap: "wrap", alignItems: "center" }}>
           <span style={{ color: "#fff", fontSize: 11, fontFamily: theme.font.label, fontWeight: 700 }}>
             {MESES_ABR[comp.cur]} vs {MESES_ABR[comp.prev]}
           </span>
@@ -102,13 +105,14 @@ export function CalendarioClient({ ano, rows }: { ano: number; rows: DiaRow[] })
           const temDado = !!mm && mm.gasto > 0;
           return (
             <button key={m} onClick={() => { setMesAberto(ativo ? null : m); setDiaSel(null); }} style={{
-              textAlign: "left", cursor: "pointer", background: ativo ? "rgba(200,16,46,.12)" : "#1a1a1a",
-              border: `1px solid ${ativo ? RED : "#2a2a2a"}`, borderRadius: 8, padding: "10px 12px", transition: "all .15s",
+              ...S.card, textAlign: "left", cursor: "pointer",
+              background: ativo ? "rgba(200,16,46,.12)" : "var(--asb-card)",
+              border: `1px solid ${ativo ? RED : "var(--asb-border)"}`, padding: "10px 12px", transition: "all .15s",
               opacity: temDado ? 1 : 0.5,
             }}>
-              <div style={{ color: ativo ? "#fff" : "#c8d8e8", fontSize: 11, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".06em", textTransform: "uppercase" }}>{nome}</div>
-              <div style={{ color: YELLOW, fontSize: 13, fontFamily: theme.font.num, fontWeight: 700, marginTop: 4 }}>{mm ? fmtBRL(mm.gasto) : "—"}</div>
-              <div style={{ color: MUT, fontSize: 9, fontFamily: theme.font.label, marginTop: 2 }}>{mm ? (mm.leads > 0 ? `${mm.leads} leads` : "sem atribuição") : "sem gasto"}</div>
+              <div style={{ color: ativo ? "#fff" : "#c8d8e8", fontSize: 12.5, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: "-.01em" }}>{nome}</div>
+              <div style={{ color: YELLOW, fontSize: 15, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", fontWeight: 800, letterSpacing: "-.02em", marginTop: 5 }}>{mm ? fmtBRL(mm.gasto) : "—"}</div>
+              <div style={{ color: MUT, fontSize: 10, fontFamily: theme.font.label, marginTop: 2 }}>{mm ? (mm.leads > 0 ? `${mm.leads} leads` : "sem atribuição") : "sem gasto"}</div>
             </button>
           );
         })}
@@ -116,14 +120,12 @@ export function CalendarioClient({ ano, rows }: { ano: number; rows: DiaRow[] })
 
       {/* Mês expandido: heatmap diário + detalhe */}
       {mesAberto != null && (
-        <div style={{ background: "#1a1a1a", border: `1px solid ${RED}`, borderRadius: 8, padding: 16 }}>
-          <p style={{ color: "#fff", fontSize: 12, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".06em", textTransform: "uppercase", marginBottom: 12 }}>
-            {MESES_FULL[mesAberto]} {ano} — gasto diário
-          </p>
+        <div style={{ ...S.card, padding: "20px 24px" }}>
+          <SectionHead Icon={CalendarDays} color="#C8102E" title={`${MESES_FULL[mesAberto]} ${ano}`} desc="Gasto diário — clique num dia para o detalhe" />
           <MonthGrid ano={ano} mes={mesAberto} byDia={byDia} maxGastoDia={maxGastoDia} diaSel={diaSel} onSel={setDiaSel} />
 
           {/* Detalhe do dia selecionado */}
-          <div style={{ marginTop: 14, borderTop: "1px solid #2a2a2a", paddingTop: 12 }}>
+          <div style={{ marginTop: 14, borderTop: "1px solid var(--asb-border)", paddingTop: 12 }}>
             {detalheDia ? (
               <div style={{ display: "flex", gap: 22, flexWrap: "wrap", alignItems: "baseline" }}>
                 <span style={{ color: "#fff", fontSize: 12, fontFamily: theme.font.num, fontWeight: 700 }}>{fmtDiaBR(diaSel!)}</span>
@@ -169,13 +171,13 @@ function MonthGrid({ ano, mes, byDia, maxGastoDia, diaSel, onSel }: {
           const agg = byDia.get(key);
           const intensidade = agg ? agg.gasto / maxGastoDia : 0;
           const sel = diaSel === key;
-          const bg = agg ? `rgba(200,16,46,${(0.12 + 0.75 * intensidade).toFixed(3)})` : "#0d1117";
+          const bg = agg ? `rgba(200,16,46,${(0.12 + 0.75 * intensidade).toFixed(3)})` : "var(--asb-card-hi)";
           return (
             <button key={i} onClick={() => onSel(key)}
               title={agg ? `${pad2(d)}/${pad2(mes + 1)} · gasto ${fmtBRLc(agg.gasto)} · ${agg.leads} leads · CPL ${agg.leads > 0 ? fmtBRLc(agg.gasto / agg.leads) : "—"}${agg.bestName ? ` · melhor: ${agg.bestName}` : ""}` : `${pad2(d)}/${pad2(mes + 1)} · sem gasto`}
               style={{
                 aspectRatio: "1", borderRadius: 3, cursor: agg ? "pointer" : "default",
-                background: bg, border: sel ? `2px solid ${YELLOW}` : "1px solid #2a2a2a",
+                background: bg, border: sel ? `2px solid ${YELLOW}` : "1px solid var(--asb-border)",
                 color: intensidade > 0.45 ? "#fff" : "#c0d0e0", fontSize: 9, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums",
                 display: "flex", alignItems: "center", justifyContent: "center",
               }}>{d}</button>
@@ -206,6 +208,6 @@ function fmtDiaBR(iso: string) {
 }
 
 const navBtn: React.CSSProperties = {
-  padding: "5px 12px", fontSize: 10, fontFamily: theme.font.label, fontWeight: 700, letterSpacing: ".06em",
-  color: "#c0c8d8", background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 3, textDecoration: "none",
+  padding: "6px 13px", fontSize: 11, fontFamily: theme.font.label, fontWeight: 700, letterSpacing: ".02em",
+  color: "#c0c8d8", background: "var(--asb-card-hi)", border: "1px solid var(--asb-border)", borderRadius: 8, textDecoration: "none",
 };

@@ -1,5 +1,7 @@
 import { theme } from "@/lib/theme";
 import { createClient } from "@/lib/supabase/server";
+import { PageHead } from "@/app/dashboard/lib/ui";
+import { S } from "@/app/dashboard/lib/dashboard-tokens";
 import { VerbaClient, type VerbaRow } from "./verba-client";
 
 export const dynamic = "force-dynamic";
@@ -19,17 +21,13 @@ export default async function VerbaPage() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <div>
-        <h1 style={{ color: "var(--asb-page-ink)", fontSize: 20, fontWeight: 800, fontFamily: theme.font.label, letterSpacing: "-.01em", textTransform: "none", marginBottom: 4 }}>
-          Verba &amp; Gasto
-        </h1>
-        <p style={{ color: "var(--asb-page-ink2)", fontSize: 11, fontFamily: theme.font.label }}>
-          Verba definida × gasto real por mês/canal · saldo · aporte a pedir no mês seguinte
-        </p>
-      </div>
+      <PageHead
+        title="Verba & Gasto"
+        desc="Verba definida × gasto real por mês/canal · saldo · aporte a pedir no mês seguinte"
+      />
 
       {error && (
-        <div style={{ background: "#1a1a1a", border: "1px solid #C8102E", borderRadius: 6, padding: 16, color: "#C8102E", fontSize: 11, fontFamily: theme.font.label }}>
+        <div style={{ ...S.card, borderColor: "#C8102E", padding: 16, color: "#C8102E", fontSize: 11, fontFamily: theme.font.label }}>
           View <code>v_verba_x_gasto_mensal</code> indisponível (migration aplicada?). {error.message}
         </div>
       )}

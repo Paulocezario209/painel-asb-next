@@ -1,12 +1,13 @@
 // app/compras/mercado/mercado-client.tsx — ASB Intelligence Hub (Camada 4: Mercado).
 // Responde 1 pergunta: "devo comprar proteína agora, ou esperar?".
-// Estilo do workspace compras (inline + Courier New + dark) + cores semânticas (skill elite).
+// Linguagem visual grafite (kit do painel: PageHead/SectionHead/StatTile) + cores semânticas.
 "use client";
 
 import { useMemo } from "react";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from "recharts";
+import { Beef, LineChart as LineChartIcon, Sparkles, Newspaper } from "lucide-react";
 import MercadoChat from "./mercado-chat";
 
 export type Cotacao = {
@@ -29,6 +30,8 @@ export type Noticia = {
 };
 
 import { theme } from "@/lib/theme";
+import { S } from "@/app/dashboard/lib/dashboard-tokens";
+import { PageHead, SectionHead, StatTile } from "@/app/dashboard/lib/ui";
 
 // Cores semânticas (skill elite) — ÓTICA DO COMPRADOR.
 const C_CRIT = "#C8102E";   // alta de preço / EVITAR — ruim p/ comprar
@@ -36,12 +39,13 @@ const C_WARN = "#D4A017";   // AGUARDAR
 const C_OK = "#22c55e";     // queda de preço / COMPRAR — bom p/ comprar
 const C_MUTED = "#c0d0e0";
 
-// Cores por proteína (linhas do gráfico)
+// Cores por proteína (linhas do gráfico — paleta de gráfico, não mexer)
 const COR_PROT: Record<string, string> = {
   bovino: "#185FA5", frango: "#D4A017", suino: "#D85A30",
 };
-const LABEL_PROT: Record<string, string> = {
-  bovino: "BOI", frango: "FRANGO", suino: "SUÍNO", ovino: "OVINO", geral: "GERAL",
+// Rótulo Title Case (label de número/bloco = sans Title Case)
+const TITLE_PROT: Record<string, string> = {
+  bovino: "Boi", frango: "Frango", suino: "Suíno", ovino: "Ovino", geral: "Geral",
 };
 const ORDEM = ["bovino", "frango", "suino"];
 
@@ -54,8 +58,8 @@ function corVar(v: number | null): string {
   return v > 0 ? C_CRIT : C_OK; // preço subindo = ruim p/ comprar
 }
 function setaVar(v: number | null): string {
-  if (v == null || v === 0) return "–";
-  return v > 0 ? "▲" : "▼";
+  if (v == null || v === 0) return "→";
+  return v > 0 ? "↗" : "↘";
 }
 function corSinal(s: string | null): string {
   if (s === "COMPRAR") return C_OK;
@@ -72,6 +76,18 @@ function corSinalNoticia(s: string | null): { cor: string; label: string } {
 function fmtData(iso: string): string {
   const m = iso?.match(/(\d{4})-(\d{2})-(\d{2})/);
   return m ? `${m[3]}/${m[2]}` : iso;
+}
+
+// Chip de sinal/variação — mesma linguagem dos chips do Dashboard (pill sans).
+function Chip({ color, children }: { color: string; children: React.ReactNode }) {
+  return (
+    <span style={{
+      display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 750,
+      padding: "3px 9px", borderRadius: 999, background: color + "22", color, fontFamily: theme.font.label,
+    }}>
+      {children}
+    </span>
+  );
 }
 
 export default function MercadoClient({
@@ -111,78 +127,63 @@ export default function MercadoClient({
   const analiseGeral = sinalPorProt["geral"];
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 8 }}>
-        <div>
-          <h1 style={{ color: "var(--asb-page-ink)", fontSize: 20, fontWeight: 800, fontFamily: theme.font.label, letterSpacing: "-.01em", textTransform: "none", marginBottom: 4 }}>
-            Inteligência de Mercado
-          </h1>
-          <p style={{ color: "var(--asb-page-ink2)", fontSize: 11, fontFamily: theme.font.label }}>
-            Cotações de proteínas (indicador CEPEA) + notícias + análise IA · timing de compra.
-          </p>
-        </div>
-        <span style={{ color: C_MUTED, fontSize: 10, fontFamily: theme.font.label, letterSpacing: ".08em" }}>
-          ATUALIZADO {dataAtualizacao}
-        </span>
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      {/* Header de página */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 8 }}>
+        <PageHead
+          title="Inteligência de Mercado"
+          desc="Cotações de proteínas (indicador CEPEA) + notícias + análise IA · timing de compra."
+        />
+        <span style={{ ...S.label, marginBottom: 0, whiteSpace: "nowrap" }}>Atualizado {dataAtualizacao}</span>
       </div>
 
-      {/* Cards de cotação + sinal */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
-        {ORDEM.map((prot) => {
-          const c = cotacaoPorProt[prot];
-          const s = sinalPorProt[prot];
-          if (!c) {
+      {/* Cotações + sinal (StatTile canônico) */}
+      <div>
+        <SectionHead Icon={Beef} color="#185FA5" title="Cotações de Proteínas" desc="Preço atual · sinal de compra por proteína" />
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
+          {ORDEM.map((prot) => {
+            const c = cotacaoPorProt[prot];
+            const s = sinalPorProt[prot];
+            if (!c) {
+              return (
+                <StatTile key={prot} label={TITLE_PROT[prot]} value="—" accent={COR_PROT[prot]} sub="sem cotação" />
+              );
+            }
+            const conf = s?.confianca != null
+              ? `${"●".repeat(s.confianca)}${"○".repeat(Math.max(0, 5 - s.confianca))}`
+              : null;
             return (
-              <div key={prot} style={cardStyle}>
-                <span style={{ color: C_MUTED, fontSize: 11, fontFamily: theme.font.label }}>{LABEL_PROT[prot]} — sem cotação</span>
-              </div>
+              <StatTile
+                key={prot}
+                label={TITLE_PROT[prot]}
+                value={`R$ ${fmtBRL(c.valor)}`}
+                accent={COR_PROT[prot]}
+                sub={`${c.unidade}${conf ? ` · confiança ${conf}` : ""}`}
+                badges={
+                  <>
+                    {s?.sinal && <Chip color={corSinal(s.sinal)}>{s.sinal}</Chip>}
+                    {c.variacao_pct != null && (
+                      <Chip color={corVar(c.variacao_pct)}>
+                        {setaVar(c.variacao_pct)} {c.variacao_pct > 0 ? "+" : ""}{fmtBRL(c.variacao_pct)}%
+                      </Chip>
+                    )}
+                  </>
+                }
+              />
             );
-          }
-          return (
-            <div key={prot} style={cardStyle}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                <span style={{ color: COR_PROT[prot], fontSize: 11, fontFamily: theme.font.label, fontWeight: 700, letterSpacing: ".12em" }}>
-                  {LABEL_PROT[prot]}
-                </span>
-                {s?.sinal && (
-                  <span style={{
-                    color: corSinal(s.sinal), fontSize: 10, fontFamily: theme.font.label, fontWeight: 700,
-                    border: `1px solid ${corSinal(s.sinal)}`, borderRadius: 3, padding: "2px 6px",
-                    letterSpacing: ".1em",
-                  }}>
-                    {s.sinal}
-                  </span>
-                )}
-              </div>
-              <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-                <span style={{ color: "#FFFFFF", fontSize: 24, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", fontWeight: 700 }}>
-                  R$ {fmtBRL(c.valor)}
-                </span>
-                <span style={{ color: C_MUTED, fontSize: 11, fontFamily: theme.font.label }}>{c.unidade}</span>
-              </div>
-              <div style={{ marginTop: 4, color: corVar(c.variacao_pct), fontSize: 12, fontFamily: theme.font.num }}>
-                {setaVar(c.variacao_pct)} {c.variacao_pct == null ? "—" : `${c.variacao_pct > 0 ? "+" : ""}${fmtBRL(c.variacao_pct)}%`}
-              </div>
-              {s?.confianca != null && (
-                <div style={{ marginTop: 6, color: C_MUTED, fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".1em" }}>
-                  CONFIANÇA {"●".repeat(s.confianca)}{"○".repeat(Math.max(0, 5 - s.confianca))}
-                </div>
-              )}
-            </div>
-          );
-        })}
+          })}
+        </div>
       </div>
 
       {/* Gráfico histórico 90d (eixo duplo: boi R$/@ esq, frango/suíno R$/kg dir) */}
       <div style={cardStyle}>
-        <span style={titleStyle}>Histórico 90 dias</span>
+        <SectionHead Icon={LineChartIcon} color="#8bb4ff" title="Histórico 90 Dias" desc="Boi R$/@ (esq) · frango/suíno R$/kg (dir)" />
         {chartData.length < 2 ? (
-          <p style={{ color: C_MUTED, fontSize: 11, fontFamily: theme.font.label, marginTop: 10 }}>
+          <p style={{ color: C_MUTED, fontSize: 12.5, fontFamily: theme.font.label }}>
             Histórico em construção — {chartData.length} dia(s) coletado(s). A série aparece conforme o cron diário acumula pontos.
           </p>
         ) : (
-          <div style={{ marginTop: 10, width: "100%", height: 280 }}>
+          <div style={{ width: "100%", height: 280 }}>
             <ResponsiveContainer>
               <LineChart data={chartData} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1e2a35" />
@@ -206,25 +207,25 @@ export default function MercadoClient({
       </div>
 
       {/* Análise IA + Notícias */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 12 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 20 }}>
         {/* Análise IA */}
         <div style={cardStyle}>
-          <span style={titleStyle}>Análise IA do dia</span>
-          <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 10 }}>
+          <SectionHead Icon={Sparkles} color="#a78bfa" title="Análise IA do Dia" desc="Sinal e projeção por proteína" />
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {ORDEM.map((prot) => {
               const s = sinalPorProt[prot];
               if (!s) return null;
               return (
                 <div key={prot} style={{ borderLeft: `3px solid ${corSinal(s.sinal)}`, paddingLeft: 10 }}>
                   <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 3 }}>
-                    <span style={{ color: COR_PROT[prot], fontSize: 11, fontFamily: theme.font.label, fontWeight: 700 }}>{LABEL_PROT[prot]}</span>
-                    <span style={{ color: corSinal(s.sinal), fontSize: 10, fontFamily: theme.font.label, fontWeight: 700 }}>{s.sinal}</span>
+                    <span style={{ color: COR_PROT[prot], fontSize: 12.5, fontFamily: theme.font.label, fontWeight: 700 }}>{TITLE_PROT[prot]}</span>
+                    <span style={{ color: corSinal(s.sinal), fontSize: 11, fontFamily: theme.font.label, fontWeight: 700 }}>{s.sinal}</span>
                   </div>
                   {s.justificativa && (
-                    <p style={{ color: "#c0c8d8", fontSize: 11, fontFamily: theme.font.label, lineHeight: 1.45 }}>{s.justificativa}</p>
+                    <p style={{ color: "#c0c8d8", fontSize: 12, fontFamily: theme.font.label, lineHeight: 1.45 }}>{s.justificativa}</p>
                   )}
                   {(s.projecao_7d || s.projecao_30d) && (
-                    <p style={{ color: C_MUTED, fontSize: 10, fontFamily: theme.font.label, marginTop: 3 }}>
+                    <p style={{ color: C_MUTED, fontSize: 11, fontFamily: theme.font.label, marginTop: 3 }}>
                       {s.projecao_7d ? `7d: ${s.projecao_7d}` : ""}{s.projecao_7d && s.projecao_30d ? " · " : ""}{s.projecao_30d ? `30d: ${s.projecao_30d}` : ""}
                     </p>
                   )}
@@ -232,44 +233,44 @@ export default function MercadoClient({
               );
             })}
             {analiseGeral?.justificativa && (
-              <div style={{ borderTop: "1px solid #1e2a35", paddingTop: 8, marginTop: 2 }}>
-                <span style={{ color: C_MUTED, fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".1em" }}>GERAL</span>
-                <p style={{ color: "#c0c8d8", fontSize: 11, fontFamily: theme.font.label, lineHeight: 1.45, marginTop: 2 }}>{analiseGeral.justificativa}</p>
+              <div style={{ borderTop: "1px solid var(--asb-border)", paddingTop: 8, marginTop: 2 }}>
+                <span style={{ ...S.label, marginBottom: 0 }}>Geral</span>
+                <p style={{ color: "#c0c8d8", fontSize: 12, fontFamily: theme.font.label, lineHeight: 1.45, marginTop: 4 }}>{analiseGeral.justificativa}</p>
               </div>
             )}
             {sinais.length === 0 && (
-              <p style={{ color: C_MUTED, fontSize: 11, fontFamily: theme.font.label }}>Sem análise disponível ainda.</p>
+              <p style={{ color: C_MUTED, fontSize: 12.5, fontFamily: theme.font.label }}>Sem análise disponível ainda.</p>
             )}
           </div>
         </div>
 
         {/* Notícias */}
         <div style={cardStyle}>
-          <span style={titleStyle}>Notícias do setor</span>
-          <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 8 }}>
+          <SectionHead Icon={Newspaper} color="#f59e0b" title="Notícias do Setor" desc="Manchetes classificadas por IA" />
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {noticias.length === 0 && (
-              <p style={{ color: C_MUTED, fontSize: 11, fontFamily: theme.font.label }}>Sem notícias recentes.</p>
+              <p style={{ color: C_MUTED, fontSize: 12.5, fontFamily: theme.font.label }}>Sem notícias recentes.</p>
             )}
             {noticias.map((n) => {
               const sig = corSinalNoticia(n.sinal_ia);
               return (
-                <div key={n.id} style={{ display: "flex", gap: 8, alignItems: "flex-start", paddingBottom: 8, borderBottom: "1px solid #161e28" }}>
+                <div key={n.id} style={{ display: "flex", gap: 8, alignItems: "flex-start", paddingBottom: 8, borderBottom: "1px solid var(--asb-border)" }}>
                   <span style={{
-                    color: sig.cor, fontSize: 8, fontFamily: theme.font.label, fontWeight: 700, whiteSpace: "nowrap",
-                    border: `1px solid ${sig.cor}`, borderRadius: 3, padding: "2px 4px", marginTop: 2, letterSpacing: ".05em",
+                    color: sig.cor, fontSize: 9, fontFamily: theme.font.label, fontWeight: 700, whiteSpace: "nowrap",
+                    border: `1px solid ${sig.cor}`, borderRadius: 3, padding: "2px 5px", marginTop: 2, letterSpacing: ".05em",
                   }}>
                     {sig.label}
                   </span>
                   <div style={{ minWidth: 0 }}>
                     {n.url ? (
                       <a href={n.url} target="_blank" rel="noopener noreferrer"
-                        style={{ color: "#dfe6f0", fontSize: 11, fontFamily: theme.font.label, lineHeight: 1.4, textDecoration: "none" }}>
+                        style={{ color: "#dfe6f0", fontSize: 12, fontFamily: theme.font.label, lineHeight: 1.4, textDecoration: "none" }}>
                         {n.titulo}
                       </a>
                     ) : (
-                      <span style={{ color: "#dfe6f0", fontSize: 11, fontFamily: theme.font.label, lineHeight: 1.4 }}>{n.titulo}</span>
+                      <span style={{ color: "#dfe6f0", fontSize: 12, fontFamily: theme.font.label, lineHeight: 1.4 }}>{n.titulo}</span>
                     )}
-                    <div style={{ color: C_MUTED, fontSize: 9, fontFamily: theme.font.label, marginTop: 2 }}>{n.fonte}</div>
+                    <div style={{ color: C_MUTED, fontSize: 10, fontFamily: theme.font.label, marginTop: 2 }}>{n.fonte}</div>
                   </div>
                 </div>
               );
@@ -278,7 +279,7 @@ export default function MercadoClient({
         </div>
       </div>
 
-      <p style={{ color: "#e4e9f0", fontSize: 9, fontFamily: theme.font.label }}>
+      <p style={{ color: "#83879a", fontSize: 10.5, fontFamily: theme.font.label }}>
         Fonte cotações: indicador CEPEA via Notícias Agrícolas (boi R$/@, frango/suíno R$/kg · suíno = média das praças).
         Notícias: Google News classificadas por IA. Análise: gpt-4o-mini. Atualização diária 06h BRT (workflow ASB_MERCADO_INTELIGENCIA).
       </p>
@@ -289,13 +290,4 @@ export default function MercadoClient({
   );
 }
 
-const cardStyle: React.CSSProperties = {
-  background: "#0d1117",
-  border: "1px solid #1e2a35",
-  borderRadius: 6,
-  padding: 16,
-};
-const titleStyle: React.CSSProperties = {
-  color: "#FFFFFF", fontSize: 12, fontWeight: 700, fontFamily: theme.font.label,
-  letterSpacing: ".1em", textTransform: "uppercase",
-};
+const cardStyle: React.CSSProperties = { ...S.card, padding: "20px 24px" };

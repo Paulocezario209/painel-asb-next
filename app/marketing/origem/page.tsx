@@ -1,5 +1,7 @@
 import { theme } from "@/lib/theme";
 import { createClient } from "@/lib/supabase/server";
+import { PageHead } from "@/app/dashboard/lib/ui";
+import { S } from "@/app/dashboard/lib/dashboard-tokens";
 import { OrigemClient, type CanalConsolidado, type CacMensalRow } from "./origem-client";
 
 export const dynamic = "force-dynamic";
@@ -28,17 +30,13 @@ export default async function OrigemPage() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <div>
-        <h1 style={{ color: "var(--asb-page-ink)", fontSize: 20, fontWeight: 800, fontFamily: theme.font.label, letterSpacing: "-.01em", textTransform: "none", marginBottom: 4 }}>
-          Origem dos Leads
-        </h1>
-        <p style={{ color: "var(--asb-page-ink2)", fontSize: 11, fontFamily: theme.font.label }}>
-          Gasto · leads · CAC · ROAS por canal de aquisição + evolução mensal
-        </p>
-      </div>
+      <PageHead
+        title="Origem dos Leads"
+        desc="Gasto · leads · CAC · ROAS por canal de aquisição + evolução mensal"
+      />
 
       {erro && (
-        <div style={{ background: "#1a1a1a", border: "1px solid #C8102E", borderRadius: 6, padding: 16, color: "#C8102E", fontSize: 11, fontFamily: theme.font.label }}>
+        <div style={{ ...S.card, border: "1px solid #C8102E", padding: 16, color: "#C8102E", fontSize: 13, fontFamily: theme.font.label }}>
           View <code>v_cac_por_canal</code>/<code>v_cac_mensal_canal</code> indisponível. {erro}
         </div>
       )}

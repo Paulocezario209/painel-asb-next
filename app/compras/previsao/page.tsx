@@ -2,10 +2,12 @@
 // Fonte: v_previsao_compra + compras_config (read-only no M1). saldo_confiavel só p/ produtos ancorados.
 import { createClient } from "@/lib/supabase/server";
 import PrevisaoClient, { type PrevRow } from "./previsao-client";
+import { theme } from "@/lib/theme";
+import { S } from "@/app/dashboard/lib/dashboard-tokens";
+import { PageHead, StatTile } from "@/app/dashboard/lib/ui";
 
 export const dynamic = "force-dynamic";
 
-import { theme } from "@/lib/theme";
 type PoolRow = {
   pool_key: string; pool_nome: string; skus: string | null;
   cmd: number; demanda_horizonte: number; saldo_atual: number | null; saldo_confiavel: boolean;
@@ -55,35 +57,48 @@ export default async function PrevisaoPage() {
 
   // banner conta o TOTAL (não filtrado) — a busca acontece no client
   const reporTotal = merged.filter((r) => r.repor_agora).length;
-
-  const th: React.CSSProperties = { fontSize: 9, color: "#e4e9f0", fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", padding: "8px 10px", textAlign: "right", borderBottom: "1px solid #1B2A6B" };
+  const alerta = reporTotal > 0;
+  const sinal = alerta ? "#C8102E" : "#22c55e";
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div>
-        <h1 style={{ color: "var(--asb-page-ink)", fontSize: 20, fontWeight: 800, fontFamily: theme.font.label, letterSpacing: "-.01em", textTransform: "none", marginBottom: 4 }}>Previsão de Compras</h1>
-        <p style={{ color: "var(--asb-page-ink2)", fontSize: 11, fontFamily: theme.font.label }}>
-          O que comprar e quanto: CMD (venda+produção) × horizonte − saldo − carteira aberta, por fornecedor.
-        </p>
-      </div>
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <PageHead
+        title="Previsão de Compras"
+        desc="O que comprar e quanto: CMD (venda + produção) × horizonte − saldo − carteira aberta, por fornecedor."
+      />
 
       {cfg && (
-        <div style={{ ...th, textAlign: "left", border: "none", paddingLeft: 0, color: "#c0d0e0" }}>
-          ⚙ config: horizonte {cfg.horizonte_dias}d · segurança {cfg.dias_seguranca}d · ciclo {cfg.ciclo_revisao_dias}d · lead default {cfg.lead_time_default}d
-          <span style={{ color: "#e4e9f0" }}> (editável via SQL no M1)</span>
+        <div style={{ ...S.card, padding: "12px 16px" }}>
+          <p style={{ color: "#c8d2e6", fontSize: 12.5, fontFamily: theme.font.label }}>
+            <span style={{ color: "#83879a" }}>Config ativa · </span>
+            horizonte <b style={{ fontFamily: theme.font.num }}>{cfg.horizonte_dias}d</b> · segurança{" "}
+            <b style={{ fontFamily: theme.font.num }}>{cfg.dias_seguranca}d</b> · ciclo{" "}
+            <b style={{ fontFamily: theme.font.num }}>{cfg.ciclo_revisao_dias}d</b> · lead default{" "}
+            <b style={{ fontFamily: theme.font.num }}>{cfg.lead_time_default}d</b>
+            <span style={{ color: "#83879a" }}> (editável via SQL no M1)</span>
+          </p>
         </div>
       )}
 
-      <div style={{ border: "1px solid #f85149", background: "rgba(248,81,73,.07)", borderRadius: 6, padding: "10px 14px" }}>
-        <p style={{ color: "#f85149", fontSize: 11, fontFamily: theme.font.label }}>
-          🔴 REPOR AGORA: {reporTotal} insumo(s) abaixo do ponto de reposição.
-          <span style={{ color: "#e4e9f0" }}> &quot;s/ âncora&quot; = sem saldo calculado (sem movimentação capturada no espelho — assume 0; confira antes de comprar).</span>
-        </p>
+      {/* Semáforo de reposição — sinal (🔴 repor agora / 🟢 cobertura ok) preservado */}
+      <div className="asb-grid-kpi">
+        <StatTile
+          label="Repor Agora"
+          value={reporTotal}
+          accent={sinal}
+          num={sinal}
+          sub={alerta ? "insumos abaixo do ponto de reposição" : "nenhum insumo abaixo do ponto de reposição"}
+        />
       </div>
+
+      <p style={{ color: "#aeb7cc", fontSize: 12, fontFamily: theme.font.label }}>
+        <b style={{ color: "#c8d2e6" }}>&quot;s/ âncora&quot;</b> = sem saldo calculado (sem movimentação
+        capturada no espelho — assume 0; confira antes de comprar).
+      </p>
 
       <PrevisaoClient rows={merged} />
 
-      <p style={{ color: "#e4e9f0", fontSize: 9, fontFamily: theme.font.label }}>
+      <p style={{ color: "#83879a", fontSize: 11.5, fontFamily: theme.font.label, lineHeight: 1.5 }}>
         Comprável = produto com histórico de compra. CMD-90 = tipos 1+4, 90 dias corridos — janela longa p/
         planejamento (o Estoque usa CMD-30, ruptura). Fornecedor = mais frequente no histórico.
         Edição de config + sort interativo = ciclo 2. CMD de MP transformada: DEBT-069.

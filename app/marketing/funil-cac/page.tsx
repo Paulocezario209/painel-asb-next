@@ -1,5 +1,7 @@
 import { theme } from "@/lib/theme";
 import { createClient } from "@/lib/supabase/server";
+import { PageHead } from "@/app/dashboard/lib/ui";
+import { S } from "@/app/dashboard/lib/dashboard-tokens";
 import { FunilCacClient, type FunilRow, type ConvMensalRow, type CacCanalRow } from "./funil-cac-client";
 
 export const dynamic = "force-dynamic";
@@ -34,17 +36,13 @@ export default async function FunilCacPage() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <div>
-        <h1 style={{ color: "var(--asb-page-ink)", fontSize: 20, fontWeight: 800, fontFamily: theme.font.label, letterSpacing: "-.01em", textTransform: "none", marginBottom: 4 }}>
-          Funil CAC
-        </h1>
-        <p style={{ color: "var(--asb-page-ink2)", fontSize: 11, fontFamily: theme.font.label }}>
-          Lead → qualificado → handoff → pedido, por canal + evolução da conversão
-        </p>
-      </div>
+      <PageHead
+        title="Funil CAC"
+        desc="Lead → qualificado → handoff → pedido, por canal + evolução da conversão"
+      />
 
       {erro && (
-        <div style={{ background: "#1a1a1a", border: "1px solid #C8102E", borderRadius: 6, padding: 16, color: "#C8102E", fontSize: 11, fontFamily: theme.font.label }}>
+        <div style={{ ...S.card, border: "1px solid #C8102E", padding: 16, color: "#C8102E", fontSize: 12, fontFamily: theme.font.label }}>
           View <code>v_funil_por_canal</code> indisponível. {erro}
         </div>
       )}

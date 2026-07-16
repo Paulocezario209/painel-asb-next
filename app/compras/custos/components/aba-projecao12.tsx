@@ -13,6 +13,7 @@ export function AbaProjecao12({ ano = 2026 }: { ano?: number }) {
   useEffect(() => { fetch(`/api/compras/custos/projecao-12-meses?ano=${ano}`).then((r) => r.json()).then((j) => j.error ? setErr(j.error) : setD(j)).catch((e) => setErr(String(e))); }, [ano]);
   const th: React.CSSProperties = { ...sLabel, padding: "8px 10px", textAlign: "right", borderBottom: `1px solid ${C.borda}` };
   const td: React.CSSProperties = { padding: "6px 10px", color: C.texto, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", fontSize: 12, textAlign: "right" };
+  const tdText: React.CSSProperties = { ...td, fontFamily: theme.font.label, fontVariantNumeric: "normal" }; // texto = sans
   if (err) return <p style={{ color: C.vermelho, fontFamily: theme.font.label, fontSize: 12 }}>{err}</p>;
   if (!d) return <p style={{ color: C.mut, fontFamily: theme.font.label, fontSize: 12 }}>carregando...</p>;
   return (
@@ -21,8 +22,8 @@ export function AbaProjecao12({ ano = 2026 }: { ano?: number }) {
         <thead><tr><th style={{ ...th, textAlign: "left" }}>Mês {d.ano}</th><th style={{ ...th, textAlign: "center" }}>Status</th><th style={th}>Kg</th><th style={th}>Custo/Kg</th><th style={th}>Valor</th><th style={{ ...th, textAlign: "center" }}>Alerta</th></tr></thead>
         <tbody>
           {d.linhas.map((l) => (
-            <tr key={l.mes} style={{ borderBottom: "1px solid #0b0f1d", opacity: l.status === "projecao" ? 0.7 : 1 }}>
-              <td style={{ ...td, textAlign: "left", color: C.branco }}>{l.nome}</td>
+            <tr key={l.mes} style={{ borderBottom: `1px solid ${C.borda}`, opacity: l.status === "projecao" ? 0.7 : 1 }}>
+              <td style={{ ...tdText, textAlign: "left", color: C.branco }}>{l.nome}</td>
               <td style={{ ...td, textAlign: "center" }}><span style={{ fontSize: 9, fontWeight: 700, fontFamily: theme.font.label, color: l.status === "realizado" ? C.verde2 : C.mut2, border: `1px solid ${l.status === "realizado" ? C.verde2 : C.mut2}`, borderRadius: 3, padding: "2px 6px" }}>{l.status === "realizado" ? "REALIZADO" : "PROJEÇÃO"}</span></td>
               <td style={td}>{num(l.kg, 0)}</td>
               <td style={{ ...td, color: l.cor, fontWeight: 700 }}>{brl(l.custo_kg)}</td>
@@ -31,7 +32,7 @@ export function AbaProjecao12({ ano = 2026 }: { ano?: number }) {
             </tr>
           ))}
           <tr style={{ borderTop: `2px solid ${C.borda}` }}>
-            <td style={{ ...td, textAlign: "left", color: C.branco, fontWeight: 700 }}>TOTAL {d.ano}</td><td />
+            <td style={{ ...tdText, textAlign: "left", color: C.branco, fontWeight: 700 }}>TOTAL {d.ano}</td><td />
             <td style={{ ...td, fontWeight: 700, color: C.branco }}>{num(d.total.kg, 0)}</td>
             <td style={{ ...td, fontWeight: 700, color: C.branco }}>{brl(d.total.custo_kg)}</td>
             <td style={{ ...td, fontWeight: 700, color: C.branco }}>{brl(d.total.valor)}</td><td />

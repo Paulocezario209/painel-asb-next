@@ -1,7 +1,8 @@
 "use client";
 import { ResponsiveContainer, ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, BarChart, Cell } from "recharts";
-import { AlertTriangle, TrendingUp, TrendingDown, CheckCircle2 } from "lucide-react";
+import { AlertTriangle, TrendingUp, TrendingDown, CheckCircle2, ClipboardCheck } from "lucide-react";
 import { C, sCard } from "../lib/ui";
+import { SectionHead } from "@/app/dashboard/lib/ui";
 import { theme } from "@/lib/theme";
 import { brl } from "../lib/formatadores";
 import type { Thresholds } from "../lib/classificar";
@@ -127,9 +128,7 @@ export function AbaGerencial({ meses, registros, thresholds, insumosMensal = [] 
       )}
 
       <div style={{ ...sCard, padding: 16 }}>
-        <p style={{ color: C.branco, fontSize: 12, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 12 }}>
-          Apontamentos Fora do Padrão — Melhoria Contínua
-        </p>
+        <SectionHead Icon={ClipboardCheck} color={C.amarelo} title="Apontamentos fora do padrão" desc="Melhoria contínua — desvios detectados nos dados" />
         {apont.length === 0 ? (
           <div style={{ display: "flex", gap: 8, alignItems: "center", color: C.verde2, fontFamily: theme.font.label, fontSize: 12 }}>
             <CheckCircle2 size={18} /> Nenhum desvio detectado nos dados atuais.

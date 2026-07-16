@@ -3,8 +3,11 @@
 import type React from "react";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Wallet, History } from "lucide-react";
 import { theme } from "@/lib/theme";
 import { RED, GREEN, MUT, fmtBRLc, fmtMes, th, td } from "@/lib/marketing/ui";
+import { SectionHead, StatTile } from "@/app/dashboard/lib/ui";
+import { S } from "@/app/dashboard/lib/dashboard-tokens";
 
 export type VerbaRow = {
   mes: string;            // YYYY-MM-DD (dia 1º)
@@ -18,10 +21,6 @@ export type VerbaRow = {
 
 const CANAIS_VERBA = ["meta", "google"] as const;
 const CANAL_LABEL: Record<string, string> = { meta: "Meta Ads", google: "Google Ads" };
-
-const cardBox: React.CSSProperties = { background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8, padding: 16, flex: 1, minWidth: 170 };
-const cardLabel: React.CSSProperties = { color: MUT, fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".12em", textTransform: "uppercase", marginBottom: 6 };
-const cardValue: React.CSSProperties = { fontSize: 22, fontWeight: 700, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" };
 
 function mesISO(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
@@ -158,7 +157,7 @@ export function VerbaClient({ rows }: { rows: VerbaRow[] }) {
   const chip = (ativo: boolean): React.CSSProperties => ({
     background: ativo ? RED : "transparent",
     color: ativo ? "#FFFFFF" : "#c0d0e0",
-    border: `1px solid ${ativo ? RED : "#2a2a2a"}`,
+    border: `1px solid ${ativo ? RED : "var(--asb-border)"}`,
     borderRadius: 4, padding: "6px 12px", fontSize: 10, fontWeight: 700,
     fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase",
     cursor: "pointer",
@@ -173,7 +172,7 @@ export function VerbaClient({ rows }: { rows: VerbaRow[] }) {
             {ano}
           </button>
         ))}
-        <span style={{ width: 1, height: 20, background: "#2a2a2a", margin: "0 4px" }} />
+        <span style={{ width: 1, height: 20, background: "var(--asb-border)", margin: "0 4px" }} />
         {MESES_FULL.map((nome, i) => {
           const iso = `${selAno}-${String(i + 1).padStart(2, "0")}-01`;
           const temDado = mesesComDado.has(iso);
@@ -197,32 +196,47 @@ export function VerbaClient({ rows }: { rows: VerbaRow[] }) {
 
       {/* Cards do mês selecionado */}
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-        <div style={cardBox}>
-          <p style={cardLabel}>Verba do mês ({fmtMes(selMes)}/{selAno})</p>
-          <p style={{ ...cardValue, color: "#FFFFFF" }}>{fmtBRLc(atual.verba)}</p>
+        <div style={{ flex: 1, minWidth: 190 }}>
+          <StatTile
+            label="Verba do Mês"
+            value={fmtBRLc(atual.verba)}
+            sub={`${fmtMes(selMes)}/${selAno}`}
+          />
         </div>
-        <div style={cardBox}>
-          <p style={cardLabel}>{isMesCorrente ? "Gasto até hoje (MTD)" : "Gasto do mês (fechado)"}</p>
-          <p style={{ ...cardValue, color: "#c8d8e8" }}>{fmtBRLc(atual.gasto)}</p>
+        <div style={{ flex: 1, minWidth: 190 }}>
+          <StatTile
+            label={isMesCorrente ? "Gasto Até Hoje (MTD)" : "Gasto do Mês (Fechado)"}
+            value={fmtBRLc(atual.gasto)}
+            num="#c8d8e8"
+          />
         </div>
-        <div style={cardBox}>
-          <p style={cardLabel}>Saldo do mês</p>
-          <p style={{ ...cardValue, color: atual.saldo >= 0 ? GREEN : RED }}>{fmtBRLc(atual.saldo)}</p>
+        <div style={{ flex: 1, minWidth: 190 }}>
+          <StatTile
+            label="Saldo do Mês"
+            value={fmtBRLc(atual.saldo)}
+            accent={atual.saldo >= 0 ? GREEN : RED}
+            num={atual.saldo >= 0 ? GREEN : RED}
+          />
         </div>
-        <div style={{ ...cardBox, border: `1px solid ${proximo.definida ? "#2a2a2a" : RED}` }}>
-          <p style={cardLabel}>Aporte p/ {fmtMes(proxMes)} {proximo.definida ? "" : "(sugestão — verba não definida)"}</p>
-          <p style={{ ...cardValue, color: YELLOWISH }}>{fmtBRLc(proximo.aporte)}</p>
-          <p style={{ color: MUT, fontSize: 9, fontFamily: theme.font.label, marginTop: 4 }}>
-            verba {fmtBRLc(proximo.ref)} − saldo herdado {fmtBRLc(Math.max(atual.saldo, 0))}
-          </p>
+        <div style={{ flex: 1, minWidth: 190 }}>
+          <StatTile
+            label={`Aporte p/ ${fmtMes(proxMes)}`}
+            value={fmtBRLc(proximo.aporte)}
+            num={YELLOWISH}
+            accent={proximo.definida ? undefined : RED}
+            badges={proximo.definida ? undefined : (
+              <span style={{ background: `${RED}18`, border: `1px solid ${RED}50`, color: RED, fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 999, fontFamily: theme.font.label }}>
+                sugestão — verba não definida
+              </span>
+            )}
+            sub={`verba ${fmtBRLc(proximo.ref)} − saldo herdado ${fmtBRLc(Math.max(atual.saldo, 0))}`}
+          />
         </div>
       </div>
 
       {/* Form: definir verba do mês */}
-      <div style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8, padding: 16 }}>
-        <p style={{ color: "#FFFFFF", fontSize: 11, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 12 }}>
-          Definir verba do mês
-        </p>
+      <div style={{ ...S.card, padding: "20px 24px" }}>
+        <SectionHead Icon={Wallet} color="#8bb4ff" title="Definir Verba do Mês" desc="Registra a verba (pote único) do mês por canal" />
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-end" }}>
           <label style={fieldLabel}>
             Mês
@@ -263,15 +277,13 @@ export function VerbaClient({ rows }: { rows: VerbaRow[] }) {
       </div>
 
       {/* Histórico mês a mês (ano selecionado) */}
-      <div style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8, padding: 16, overflowX: "auto" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-          <p style={{ color: "#FFFFFF", fontSize: 11, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".08em", textTransform: "uppercase" }}>
-            Histórico verba × gasto — {selAno}
-          </p>
+      <div style={{ ...S.card, padding: "20px 24px", overflowX: "auto" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 12 }}>
+          <SectionHead Icon={History} color="#f59e0b" title={`Histórico Verba × Gasto — ${selAno}`} desc="Pote único por mês (TOTAL) com detalhamento por canal" />
           <button
             onClick={exportarCSV}
             style={{
-              background: "transparent", color: "#c0d0e0", border: "1px solid #2a2a2a", borderRadius: 4,
+              flexShrink: 0, background: "transparent", color: "#c0d0e0", border: "1px solid var(--asb-border)", borderRadius: 4,
               padding: "6px 14px", fontSize: 9, fontWeight: 700, fontFamily: theme.font.label,
               letterSpacing: ".12em", textTransform: "uppercase", cursor: "pointer",
             }}
@@ -281,7 +293,7 @@ export function VerbaClient({ rows }: { rows: VerbaRow[] }) {
         </div>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
-            <tr style={{ borderBottom: "1px solid #2a2a2a" }}>
+            <tr style={{ borderBottom: "1px solid var(--asb-border)" }}>
               <th style={{ ...th, textAlign: "left" }}>Mês</th>
               <th style={{ ...th, textAlign: "left" }}>Canal</th>
               <th style={{ ...th, textAlign: "right" }}>Verba</th>
@@ -293,7 +305,7 @@ export function VerbaClient({ rows }: { rows: VerbaRow[] }) {
           </thead>
           <tbody>
             {rows.filter((r) => r.mes.slice(0, 4) === selAno).length === 0 && (
-              <tr><td colSpan={7} style={{ ...td, textAlign: "center", color: MUT, padding: 24 }}>Sem dados em {selAno} — defina a primeira verba no formulário acima.</td></tr>
+              <tr><td colSpan={7} style={{ ...td, fontFamily: theme.font.label, textAlign: "center", color: MUT, padding: 24 }}>Sem dados em {selAno} — defina a primeira verba no formulário acima.</td></tr>
             )}
             {Array.from(new Set(rows.filter((r) => r.mes.slice(0, 4) === selAno).map((r) => r.mes)))
               .sort((a, b) => b.localeCompare(a))
@@ -303,28 +315,28 @@ export function VerbaClient({ rows }: { rows: VerbaRow[] }) {
                 const isMTD = mes === mesAtual;
                 const multiCanal = doMes.length > 1;
                 return [
-                  <tr key={`${mes}-total`} style={{ borderBottom: multiCanal ? "none" : "1px solid #222", background: mes === selMes ? "rgba(200,16,46,.07)" : "transparent" }}>
-                    <td style={{ ...td, textTransform: "capitalize", color: "#FFFFFF", fontWeight: 700 }}>
+                  <tr key={`${mes}-total`} style={{ borderBottom: multiCanal ? "none" : "1px solid var(--asb-border)", background: mes === selMes ? "rgba(200,16,46,.07)" : "transparent" }}>
+                    <td style={{ ...td, fontFamily: theme.font.label, textTransform: "capitalize", color: "#FFFFFF", fontWeight: 700 }}>
                       {fmtMes(mes)}/{mes.slice(0, 4)}
                       {isMTD && <span style={{ marginLeft: 6, fontSize: 8, color: "#e8b923", letterSpacing: ".1em" }}>MTD</span>}
                     </td>
-                    <td style={{ ...td, color: "#FFFFFF", fontWeight: 700 }}>{multiCanal ? "TOTAL" : (CANAL_LABEL[doMes[0].canal] ?? doMes[0].canal)}</td>
+                    <td style={{ ...td, fontFamily: theme.font.label, color: "#FFFFFF", fontWeight: 700 }}>{multiCanal ? "TOTAL" : (CANAL_LABEL[doMes[0].canal] ?? doMes[0].canal)}</td>
                     <td style={{ ...td, textAlign: "right", color: "#FFFFFF", fontWeight: 700 }}>{fmtBRLc(t.verba)}</td>
                     <td style={{ ...td, textAlign: "right", color: "#FFFFFF", fontWeight: 700 }}>{fmtBRLc(t.gasto)}</td>
                     <td style={{ ...td, textAlign: "right", color: t.saldo >= 0 ? GREEN : RED, fontWeight: 700 }}>{fmtBRLc(t.saldo)}</td>
                     <td style={{ ...td, textAlign: "right", color: "#FFFFFF", fontWeight: 700 }}>{fmtBRLc(aporteDoMes.get(mes) ?? 0)}</td>
-                    <td style={{ ...td, color: MUT, fontSize: 10 }}>{multiCanal ? (doMes.find((r) => r.nota)?.nota ?? "—") : (doMes[0].nota ?? "—")}</td>
+                    <td style={{ ...td, fontFamily: theme.font.label, color: MUT, fontSize: 10 }}>{multiCanal ? (doMes.find((r) => r.nota)?.nota ?? "—") : (doMes[0].nota ?? "—")}</td>
                   </tr>,
                   ...(multiCanal
                     ? doMes.map((r) => (
-                        <tr key={`${mes}-${r.canal}`} style={{ borderBottom: r === doMes[doMes.length - 1] ? "1px solid #222" : "none", background: mes === selMes ? "rgba(200,16,46,.04)" : "transparent" }}>
+                        <tr key={`${mes}-${r.canal}`} style={{ borderBottom: r === doMes[doMes.length - 1] ? "1px solid var(--asb-border)" : "none", background: mes === selMes ? "rgba(200,16,46,.04)" : "transparent" }}>
                           <td style={td} />
-                          <td style={{ ...td, color: MUT, fontSize: 10, paddingLeft: 22 }}>↳ {CANAL_LABEL[r.canal] ?? r.canal}</td>
+                          <td style={{ ...td, fontFamily: theme.font.label, color: MUT, fontSize: 10, paddingLeft: 22 }}>↳ {CANAL_LABEL[r.canal] ?? r.canal}</td>
                           <td style={{ ...td, textAlign: "right", color: MUT, fontSize: 10 }}>{fmtBRLc(Number(r.verba_brl))}</td>
                           <td style={{ ...td, textAlign: "right", color: MUT, fontSize: 10 }}>{fmtBRLc(Number(r.gasto_brl))}</td>
                           <td style={{ ...td, textAlign: "right", color: MUT, fontSize: 10 }}>{fmtBRLc(Number(r.saldo_brl))}</td>
                           <td style={{ ...td, textAlign: "right", color: MUT, fontSize: 10 }}>—</td>
-                          <td style={{ ...td, color: MUT, fontSize: 10 }}>{r.nota ?? ""}</td>
+                          <td style={{ ...td, fontFamily: theme.font.label, color: MUT, fontSize: 10 }}>{r.nota ?? ""}</td>
                         </tr>
                       ))
                     : []),
@@ -342,4 +354,4 @@ export function VerbaClient({ rows }: { rows: VerbaRow[] }) {
 
 const YELLOWISH = "#e8b923";
 const fieldLabel: React.CSSProperties = { display: "flex", flexDirection: "column", gap: 4, color: MUT, fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase" };
-const inputStyle: React.CSSProperties = { background: "#0e1118", border: "1px solid #2a2a2a", borderRadius: 4, color: "#e4e9f0", padding: "8px 10px", fontSize: 12, fontFamily: theme.font.num };
+const inputStyle: React.CSSProperties = { background: "var(--asb-card-hi)", border: "1px solid var(--asb-border)", borderRadius: 8, color: "#e6ebf5", padding: "8px 11px", fontSize: 12, fontFamily: theme.font.label };

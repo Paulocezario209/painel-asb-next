@@ -11,6 +11,9 @@ import {
   RED, GREEN, YELLOW, MUT, GRID, CANAL_COR,
   fmtBRLc, fmtMes, tooltipStyle, axisStyle, type CacMensalRow,
 } from "@/lib/marketing/ui";
+import { KpiCard, SectionHead } from "@/app/dashboard/lib/ui";
+import { S } from "@/app/dashboard/lib/dashboard-tokens";
+import { DollarSign, Target, TrendingUp, Users, AlertTriangle, BarChart3, Trophy } from "lucide-react";
 
 export type { CacMensalRow };
 export type RankRow = {
@@ -87,7 +90,7 @@ export function OverviewClient({ cac, rank, alertas }: { cac: CacMensalRow[]; ra
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
       {/* Seletor de período */}
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-        <span style={{ color: MUT, fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase" }}>Período (KPIs):</span>
+        <span style={{ ...S.label, marginBottom: 0 }}>Período (KPIs):</span>
         {PERIODOS.map(p => {
           const active = periodo === p.k;
           return (
@@ -95,22 +98,22 @@ export function OverviewClient({ cac, rank, alertas }: { cac: CacMensalRow[]; ra
               padding: "5px 12px", fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase",
               fontFamily: theme.font.label, fontWeight: 700, cursor: "pointer", borderRadius: 3,
               background: active ? RED : "transparent", color: active ? "#fff" : "#c0c8d8",
-              border: `1px solid ${active ? RED : "#2a2a2a"}`, transition: "all .15s",
+              border: `1px solid ${active ? RED : "var(--asb-border)"}`, transition: "all .15s",
             }}>{p.label}</button>
           );
         })}
       </div>
 
       {/* KPIs */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12 }}>
-        <Kpi label="Total Investido" value={fmtBRLc(kpis.gasto)} cor={YELLOW} />
-        <Kpi label="CAC Médio" value={kpis.cac != null ? fmtBRLc(kpis.cac) : "—"} cor="#FFFFFF" />
-        <Kpi label="ROAS Médio" value={kpis.roas != null ? `${kpis.roas.toFixed(2)}×` : "—"} cor={kpis.roas != null && kpis.roas >= 1 ? GREEN : "#FFFFFF"} />
-        <Kpi label="Leads" value={String(kpis.leads)} cor={theme.colors.chartNavyLight} />
+      <div className="asb-grid-kpi">
+        <KpiCard label="Total Investido" value={fmtBRLc(kpis.gasto)} Icon={DollarSign} accent={YELLOW} num={YELLOW} />
+        <KpiCard label="CAC Médio" value={kpis.cac != null ? fmtBRLc(kpis.cac) : "—"} Icon={Target} accent="#8bb4ff" />
+        <KpiCard label="ROAS Médio" value={kpis.roas != null ? `${kpis.roas.toFixed(2)}×` : "—"} Icon={TrendingUp} accent={kpis.roas != null && kpis.roas >= 1 ? GREEN : "#8bb4ff"} num={kpis.roas != null && kpis.roas >= 1 ? GREEN : undefined} />
+        <KpiCard label="Leads" value={String(kpis.leads)} Icon={Users} accent={theme.colors.chartNavyLight} num={theme.colors.chartNavyLight} />
       </div>
 
       {/* Alertas e insights (v_marketing_alertas) */}
-      <Card titulo="Alertas e Insights">
+      <Card Icon={AlertTriangle} color="#f59e0b" titulo="Alertas e Insights" desc="Sinais de mídia — ROAS, CPL e gasto">
         {alertas.length === 0 ? (
           <p style={{ color: GREEN, fontSize: 11, fontFamily: theme.font.label, padding: 6 }}>✅ Sem alertas — mídia saudável.</p>
         ) : (
@@ -121,7 +124,7 @@ export function OverviewClient({ cac, rank, alertas }: { cac: CacMensalRow[]; ra
               return (
                 <div key={`${a.flag}-${a.ad_id ?? a.canal ?? i}`} style={{
                   display: "flex", gap: 10, alignItems: "baseline", padding: "8px 12px",
-                  background: "#0d1117", borderLeft: `3px solid ${corBorda}`, borderRadius: 4,
+                  background: "var(--asb-card-hi)", borderLeft: `3px solid ${corBorda}`, borderRadius: 4,
                 }}>
                   <span style={{ fontSize: 13 }}>{icone}</span>
                   <span style={{ color: "#c8d8e8", fontSize: 11, fontFamily: theme.font.label, lineHeight: 1.5, flex: 1 }}>{a.descricao}</span>
@@ -138,7 +141,7 @@ export function OverviewClient({ cac, rank, alertas }: { cac: CacMensalRow[]; ra
       </Card>
 
       {/* Gráfico 1: gasto (barras) × CAC blendado (linha) por mês — eixo duplo */}
-      <Card titulo="Gasto × CAC por mês">
+      <Card Icon={BarChart3} color="#8bb4ff" titulo="Gasto × CAC por Mês" desc="Barras = gasto por canal · linha = CAC blendado">
         {gastoCacData.length === 0 ? (
           <Vazio texto="Sem gasto mensal ainda." />
         ) : (
@@ -162,8 +165,7 @@ export function OverviewClient({ cac, rank, alertas }: { cac: CacMensalRow[]; ra
       {/* FIX1 dedup: funil por canal vive só em /marketing/funil-cac — aqui só o link */}
       <Link href="/marketing/funil-cac" style={{ textDecoration: "none" }}>
         <div style={{
-          background: "#1a1a1a", border: `1px solid ${theme.colors.borderDefault}`,
-          borderLeft: `3px solid ${theme.colors.brandAsb}`, borderRadius: 8,
+          ...S.card, borderLeft: `3px solid ${theme.colors.brandAsb}`,
           padding: "14px 16px", display: "flex", alignItems: "center",
           justifyContent: "space-between", gap: 12, cursor: "pointer",
         }}>
@@ -177,7 +179,7 @@ export function OverviewClient({ cac, rank, alertas }: { cac: CacMensalRow[]; ra
       </Link>
 
       {/* Gráfico 3: top 5 criativos por CPL */}
-      <Card titulo="Top 5 criativos por CPL (30d)">
+      <Card Icon={Trophy} color="#22c55e" titulo="Top 5 Criativos por CPL (30d)" desc="Menor custo por lead primeiro">
         {top5.length === 0 ? (
           <Vazio texto="Sem CPL atribuível ainda (leads por anúncio só desde 02/06)." />
         ) : (
@@ -200,18 +202,18 @@ export function OverviewClient({ cac, rank, alertas }: { cac: CacMensalRow[]; ra
   );
 }
 
-function Kpi({ label, value, cor }: { label: string; value: string; cor: string }) {
+function Card({
+  Icon, color, titulo, desc, children,
+}: {
+  Icon: React.ComponentType<{ size?: number }>;
+  color: string;
+  titulo: string;
+  desc?: string;
+  children: React.ReactNode;
+}) {
   return (
-    <div style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8, padding: "14px 16px" }}>
-      <p style={{ color: MUT, fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".12em", textTransform: "uppercase", marginBottom: 6 }}>{label}</p>
-      <p style={{ color: cor, fontSize: 20, fontWeight: 700, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" }}>{value}</p>
-    </div>
-  );
-}
-function Card({ titulo, children }: { titulo: string; children: React.ReactNode }) {
-  return (
-    <div style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8, padding: 16 }}>
-      <p style={{ color: "#FFFFFF", fontSize: 11, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 12 }}>{titulo}</p>
+    <div style={{ ...S.card, padding: "20px 24px" }}>
+      <SectionHead Icon={Icon} color={color} title={titulo} desc={desc} />
       {children}
     </div>
   );

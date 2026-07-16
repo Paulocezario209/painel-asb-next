@@ -3,6 +3,9 @@
 import { useState, useMemo } from "react";
 import { theme } from "@/lib/theme";
 import { RED, GREEN, YELLOW, MUT, fmtBRLc, th, td, PERIODOS_RANKING } from "@/lib/marketing/ui";
+import { S } from "@/app/dashboard/lib/dashboard-tokens";
+import { SectionHead } from "@/app/dashboard/lib/ui";
+import { BarChart3 } from "lucide-react";
 
 export type RankRow = {
   ad_id: string;
@@ -117,14 +120,14 @@ export function AnunciosClient({ rank, spark }: { rank: RankRow[]; spark: SparkR
                 padding: "5px 12px", fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase",
                 fontFamily: theme.font.label, fontWeight: 700, cursor: "pointer", borderRadius: 3,
                 background: active ? RED : "transparent", color: active ? "#fff" : "#c0c8d8",
-                border: `1px solid ${active ? RED : "#2a2a2a"}`,
+                border: `1px solid ${active ? RED : "var(--asb-border)"}`,
               }}>{p}</button>
             );
           })}
         </div>
         <select value={campanha} onChange={e => setCampanha(e.target.value)} style={{
-          padding: "5px 10px", fontSize: 11, fontFamily: theme.font.label, background: "#1a1a1a",
-          color: "#c8d8e8", border: "1px solid #2a2a2a", borderRadius: 3,
+          padding: "5px 10px", fontSize: 11, fontFamily: theme.font.label, background: "var(--asb-card-hi)",
+          color: "#c8d8e8", border: "1px solid var(--asb-border)", borderRadius: 3,
         }}>
           <option value="todas">Todas as campanhas</option>
           {campanhas.map(c => <option key={c} value={c}>{c}</option>)}
@@ -135,16 +138,16 @@ export function AnunciosClient({ rank, spark }: { rank: RankRow[]; spark: SparkR
             padding: "4px 9px", fontSize: 9, letterSpacing: ".08em", textTransform: "uppercase",
             fontFamily: theme.font.label, fontWeight: 600, cursor: "pointer", borderRadius: 3,
             background: sortKey === k ? "rgba(200,16,46,.14)" : "transparent",
-            color: sortKey === k ? "#fff" : "#c0d0e0", border: "1px solid #2a2a2a",
+            color: sortKey === k ? "#fff" : "#c0d0e0", border: "1px solid var(--asb-border)",
           }}>{k}{seta(k)}</button>
         ))}
       </div>
 
       {/* Gasto sem retorno atribuído (DEBT-119) — destacado no topo */}
       {semRetorno.length > 0 && (
-        <div style={{ background: "rgba(200,16,46,.10)", border: `1px solid ${RED}`, borderRadius: 8, padding: 16 }}>
-          <p style={{ color: RED, fontSize: 11, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 6 }}>
-            Gasto sem retorno atribuído — DEBT-119
+        <div style={{ ...S.card, background: "rgba(200,16,46,.10)", borderLeft: `3px solid ${RED}`, padding: "16px 20px" }}>
+          <p style={{ color: RED, fontSize: 13.5, fontWeight: 750, fontFamily: theme.font.label, letterSpacing: "-.01em", marginBottom: 6 }}>
+            Gasto Sem Retorno Atribuído — DEBT-119
           </p>
           <div style={{ display: "flex", gap: 24, alignItems: "baseline", flexWrap: "wrap" }}>
             <span style={{ color: YELLOW, fontSize: 20, fontWeight: 700, fontFamily: theme.font.num }}>{fmtBRLc(semRetornoTot)}</span>
@@ -157,7 +160,9 @@ export function AnunciosClient({ rank, spark }: { rank: RankRow[]; spark: SparkR
       )}
 
       {/* Tabela */}
-      <div style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8, padding: 16, overflowX: "auto" }}>
+      <div style={{ ...S.card, padding: "20px 24px" }}>
+        <SectionHead Icon={BarChart3} color="#8bb4ff" title="Ranking de Criativos" desc="Gasto · leads · CPL · ROAS por anúncio" />
+        <div style={{ overflowX: "auto" }}>
         {comRetorno.length === 0 ? (
           <p style={{ color: MUT, fontSize: 11, fontFamily: theme.font.label, textAlign: "center", padding: 20 }}>
             Sem anúncios com lead atribuído neste período/campanha.
@@ -165,7 +170,7 @@ export function AnunciosClient({ rank, spark }: { rank: RankRow[]; spark: SparkR
         ) : (
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12, fontFamily: theme.font.num }}>
             <thead>
-              <tr style={{ borderBottom: "1px solid #2a2a2a" }}>
+              <tr style={{ borderBottom: "1px solid var(--asb-border)" }}>
                 <th style={{ ...th, textAlign: "left" }}>Campanha</th>
                 <th style={{ ...th, textAlign: "left" }}>Anúncio</th>
                 <th style={{ ...th, textAlign: "center" }}>Status</th>
@@ -182,7 +187,7 @@ export function AnunciosClient({ rank, spark }: { rank: RankRow[]; spark: SparkR
                 const roas = r.roas != null ? Number(r.roas) : null;
                 const semLead = Number(r.spend ?? 0) > 0 && Number(r.leads ?? 0) === 0;
                 return (
-                  <tr key={r.ad_id} style={{ borderTop: "1px solid #2a2a2a", background: semLead ? "rgba(200,16,46,.12)" : "transparent" }}
+                  <tr key={r.ad_id} style={{ borderTop: "1px solid var(--asb-border)", background: semLead ? "rgba(200,16,46,.12)" : "transparent" }}
                     title={semLead ? "Gasto sem nenhum lead atribuído — considere revisar/pausar" : undefined}>
                     <td style={{ ...td, color: "#c8d8e8" }}>{r.campaign_name ?? "—"}</td>
                     <td style={{ ...td, color: "#FFFFFF" }} title={`ad_id ${r.ad_id}`}>
@@ -198,7 +203,7 @@ export function AnunciosClient({ rank, spark }: { rank: RankRow[]; spark: SparkR
                   </tr>
                 );
               })}
-              <tr style={{ borderTop: "2px solid #2a2a2a" }}>
+              <tr style={{ borderTop: "2px solid var(--asb-border2)" }}>
                 <td style={{ ...td, color: "#FFFFFF", fontWeight: 700 }} colSpan={3}>TOTAL com retorno ({comRetorno.length}) — CPL exclui o bloco DEBT-119</td>
                 <td style={{ ...td, textAlign: "right", color: YELLOW, fontWeight: 700 }}>{fmtBRLc(tot.spend)}</td>
                 <td style={{ ...td, textAlign: "center", fontWeight: 700 }}>{tot.leads}</td>
@@ -208,6 +213,7 @@ export function AnunciosClient({ rank, spark }: { rank: RankRow[]; spark: SparkR
             </tbody>
           </table>
         )}
+        </div>
       </div>
       <p style={{ color: MUT, fontSize: 9, fontFamily: theme.font.label }}>
         Fonte: v_ranking_criativo (CPL/ROAS por ad_id, janela {periodo}) + v_performance_diaria (sparkline gasto 7d). CPL = gasto ÷ leads · ROAS = receita ÷ gasto. Anúncios sem leads atribuíveis (site/[LEAD]-SP — DEBT-119) estão destacados no bloco acima.

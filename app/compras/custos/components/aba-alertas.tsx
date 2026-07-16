@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { AlertTriangle } from "lucide-react";
-import { C, sCard, sLabel } from "../lib/ui";
+import { C, sCard } from "../lib/ui";
+import { StatTile, SectionHead } from "@/app/dashboard/lib/ui";
 import { theme } from "@/lib/theme";
 import { brl } from "../lib/formatadores";
 
@@ -21,15 +22,11 @@ export function AbaAlertas() {
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(160px,1fr))", gap: 10 }}>
         {cards.map((c) => (
-          <div key={c.nivel} style={{ ...sCard, padding: "12px 14px", borderColor: c.cor }}>
-            <p style={{ ...sLabel, marginBottom: 4 }}>{ICONE[c.nivel]} {NOME[c.nivel]}</p>
-            <p style={{ fontSize: 26, color: c.cor, fontWeight: 700, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" }}>{c.count}</p>
-            <p style={{ fontSize: 9, color: C.mut2, fontFamily: theme.font.label }}>{c.faixa}</p>
-          </div>
+          <StatTile key={c.nivel} label={`${ICONE[c.nivel]} ${NOME[c.nivel]}`} value={c.count} num={c.cor} accent={c.cor} sub={c.faixa} />
         ))}
       </div>
       <div style={{ ...sCard, padding: 16 }}>
-        <p style={{ color: C.branco, fontSize: 12, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 12 }}>Alertas Ativos</p>
+        <SectionHead Icon={AlertTriangle} color={C.laranja} title="Alertas ativos" desc="Meses acima do alvo de custo/kg" />
         {ativos.length === 0 ? <p style={{ color: C.verde2, fontSize: 12, fontFamily: theme.font.label }}>Nenhum mês acima do alvo.</p> :
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {ativos.map((a) => (
