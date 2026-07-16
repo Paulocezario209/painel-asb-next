@@ -51,7 +51,7 @@ export async function proxy(request: NextRequest) {
   }
 
   if (user && isAuthRoute) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    return NextResponse.redirect(new URL("/inicio", request.url));
   }
 
   // Bloqueio de ESCRITA p/ role 'financeiro' (consultor DRE = SOMENTE LEITURA).

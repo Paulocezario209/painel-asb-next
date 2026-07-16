@@ -18,13 +18,13 @@ export default function LoginPage() {
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) { setError(error.message); setLoading(false); return; }
-    router.push("/dashboard");
+    router.push("/inicio");
     router.refresh();
   }
 
   const inputStyle: React.CSSProperties = {
-    width: "100%", background: "#0a0d1a", border: "1px solid #1B2A6B", borderRadius: 3,
-    color: "#FFFFFF", fontSize: 12, padding: "9px 12px",
+    width: "100%", background: "var(--asb-card-hi)", border: "1px solid rgba(255,255,255,.12)", borderRadius: 9,
+    color: "#FFFFFF", fontSize: 12, padding: "10px 12px",
     fontFamily: "'Courier New', monospace", outline: "none", boxSizing: "border-box", transition: "border-color .15s",
   };
 
@@ -34,29 +34,20 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: "#0a0d1a" }}>
-      {/* Blue glow */}
+    <div className="min-h-screen flex items-center justify-center" style={{
+      background:
+        "radial-gradient(760px 460px at 84% 6%, rgba(200,16,46,.06), transparent 62%)," +
+        "radial-gradient(720px 500px at 8% 90%, rgba(27,42,107,.08), transparent 60%)," +
+        "linear-gradient(160deg, var(--asb-page-1), var(--asb-page-2))",
+    }}>
       <div style={{
-        position: "fixed", top: "40%", left: "50%", transform: "translate(-50%, -50%)",
-        width: 500, height: 500,
-        background: "radial-gradient(circle, rgba(27,42,107,.18) 0%, transparent 70%)",
-        pointerEvents: "none",
-      }} />
-      {/* Red glow subtle */}
-      <div style={{
-        position: "fixed", top: "60%", left: "50%", transform: "translate(-50%, -50%)",
-        width: 300, height: 300,
-        background: "radial-gradient(circle, rgba(200,16,46,.06) 0%, transparent 70%)",
-        pointerEvents: "none",
-      }} />
-
-      <div style={{
-        background: "#0f1428", border: "1px solid #1B2A6B", borderRadius: 6,
+        background: "var(--asb-card)", border: "1px solid rgba(255,255,255,.09)", borderRadius: 18,
         padding: "36px 32px", width: "100%", maxWidth: 380,
         position: "relative", zIndex: 1,
+        boxShadow: "0 2px 6px rgba(20,22,40,.08), 0 30px 60px -24px rgba(20,22,40,.4)",
       }}>
         {/* Top red accent line */}
-        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: "#C8102E", borderRadius: "6px 6px 0 0" }} />
+        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: "linear-gradient(90deg, #C8102E, #1B2A6B)", borderRadius: "18px 18px 0 0" }} />
 
         <div className="text-center mb-8">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -66,7 +57,7 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <div style={{ borderTop: "1px solid #1B2A6B", marginBottom: 24 }} />
+        <div style={{ borderTop: "1px solid rgba(255,255,255,.1)", marginBottom: 24 }} />
 
         <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <div>
@@ -74,14 +65,14 @@ export default function LoginPage() {
             <input id="email" type="email" placeholder="seu@email.com" value={email}
               onChange={(e) => setEmail(e.target.value)} required style={inputStyle}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#C8102E")}
-              onBlur={(e) => (e.currentTarget.style.borderColor = "#1B2A6B")} />
+              onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,.12)")} />
           </div>
           <div>
             <label htmlFor="password" style={labelStyle}>senha</label>
             <input id="password" type="password" placeholder="••••••••" value={password}
               onChange={(e) => setPassword(e.target.value)} required style={inputStyle}
               onFocus={(e) => (e.currentTarget.style.borderColor = "#C8102E")}
-              onBlur={(e) => (e.currentTarget.style.borderColor = "#1B2A6B")} />
+              onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,.12)")} />
           </div>
 
           {error && (
@@ -97,7 +88,7 @@ export default function LoginPage() {
             style={{
               background: loading ? "#1B2A6B" : "#C8102E",
               border: `1px solid ${loading ? "#2A3F8F" : "#C8102E"}`,
-              borderRadius: 3, color: "#FFFFFF",
+              borderRadius: 9, color: "#FFFFFF",
               fontSize: 10, letterSpacing: ".15em", textTransform: "uppercase",
               padding: "11px 0", cursor: loading ? "not-allowed" : "pointer",
               fontFamily: "'Courier New', monospace", fontWeight: 700, marginTop: 4, transition: "all .15s",

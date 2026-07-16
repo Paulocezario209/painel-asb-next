@@ -21,10 +21,10 @@ export default async function EstoquePage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <div>
-        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
+        <h1 style={{ color: "var(--asb-page-ink)", fontSize: 20, fontWeight: 800, fontFamily: theme.font.label, letterSpacing: "-.01em", textTransform: "none", marginBottom: 4 }}>
           Estoque Atual
         </h1>
-        <p style={{ color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label }}>
+        <p style={{ color: "var(--asb-page-ink2)", fontSize: 11, fontFamily: theme.font.label }}>
           Saldo por produto (Σ movimentação ARES espelhada — OPT-B) · cobertura em dias (saldo ÷ consumo/dia) · semáforo de ruptura.
         </p>
       </div>

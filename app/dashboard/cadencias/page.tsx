@@ -400,7 +400,7 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
       {/* Cabeçalho + linha de saúde */}
       <div>
         <h1 style={{ ...mono(15, { letterSpacing: ".18em" }), color: TOK.fg, marginBottom: 6 }}>Central de Orquestração de Cadências</h1>
-        <p style={{ fontFamily: SANS, fontSize: 11.5, color: TOK.fgMuted }}>Onde cada lead está na cadência agora · CURTA (até 30d) e LONGA (perdidos/nutrição) · o motor F3 já calcula a próxima ação</p>
+        <p style={{ color: "var(--asb-page-ink2)", fontFamily: SANS, fontSize: 11.5}}>Onde cada lead está na cadência agora · CURTA (até 30d) e LONGA (perdidos/nutrição) · o motor F3 já calcula a próxima ação</p>
       </div>
 
       {/* Busca (lupa) + filtro por setor — reusa DashboardFilters (padrão das outras telas).

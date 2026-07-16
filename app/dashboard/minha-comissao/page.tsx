@@ -101,10 +101,10 @@ export default async function MinhaComissaoPage({
       {/* Header + seletor de mes */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 12 }}>
         <div>
-          <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
+          <h1 style={{ color: "var(--asb-page-ink)", fontSize: 20, fontWeight: 800, fontFamily: theme.font.label, letterSpacing: "-.01em", textTransform: "none", marginBottom: 4 }}>
             Minha Comissao
           </h1>
-          <p style={S.muted}>{nome} &middot; base FATURADO &middot; so voce ve estes numeros</p>
+          <p style={{ ...S.muted, color: "var(--asb-page-ink2)" }}>{nome} &middot; base FATURADO &middot; so voce ve estes numeros</p>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <RegrasComissaoModal perfil="vendedor" />

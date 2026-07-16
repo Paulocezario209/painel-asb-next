@@ -48,13 +48,18 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* ASB Design System — identidade oficial American Steak Brasil */
+/* ASB Design System — "grafite sobre claro" (v2, 2026-07-16)
+   Frame claro (página/sidebar/header) · cards grafite escuros (texto branco) · cor só como sinal.
+   Regra: cards e conteúdo permanecem grafite → texto branco existente continua legível.
+   Só o FRAME (fundo de página, sidebar, header) e os TÍTULOS de nível de página ficam claros. */
 :root {
-  --asb-bg:         #0a0d1a;
-  --asb-surface:    #1a1a1a;
-  --asb-card:       #1a1a1a;
-  --asb-border:     #2a2a2a;
-  --asb-border2:    #3a3a3a;
+  /* superfície grafite dos cards (inalterada em espírito — conteúdo branco continua funcionando) */
+  --asb-bg:         #0f1117;   /* legado dark (usado por gráficos internos) */
+  --asb-surface:    #17181d;
+  --asb-card:        #17181d;   /* grafite do card */
+  --asb-card-hi:     #202127;
+  --asb-border:     rgba(255,255,255,.09);
+  --asb-border2:    rgba(255,255,255,.16);
   --asb-text:       #FFFFFF;
   --asb-text2:      #c8d8e8;
   --asb-muted:      #c0d0e0;
@@ -66,32 +71,43 @@
   --asb-success:    #22c55e;
   --asb-danger:     #C8102E;
 
-  --background:   #0a0d1a;
-  --foreground:   #FFFFFF;
-  --card:         #1a1a1a;
+  /* FRAME CLARO — página e superfícies do shell */
+  --asb-page-1:     #FCFCFD;
+  --asb-page-2:     #EEF0F6;
+  --asb-page-ink:   #12131A;   /* texto de nível de página (títulos) */
+  --asb-page-ink2:  #565A6B;   /* subtítulo/legenda de página */
+  --asb-page-ink3:  #8B90A3;
+  --asb-shell:      #FFFFFF;   /* sidebar/header */
+  --asb-shell-2:    #F4F5F9;
+  --asb-shell-border: #E7E9F1;
+
+  /* shadcn tokens */
+  --background:   #F4F5F9;
+  --foreground:   #12131A;
+  --card:         #17181d;   /* grafite */
   --card-foreground: #FFFFFF;
-  --popover:      #1a1a1a;
+  --popover:      #17181d;
   --popover-foreground: #FFFFFF;
   --primary:      #C8102E;
   --primary-foreground: #FFFFFF;
-  --secondary:    #1B2A6B;
-  --secondary-foreground: #FFFFFF;
-  --muted:        #1B2A6B;
-  --muted-foreground: #c0d0e0;
-  --accent:       #1B2A6B;
-  --accent-foreground: #FFFFFF;
+  --secondary:    #EEF0F6;
+  --secondary-foreground: #12131A;
+  --muted:        #EEF0F6;
+  --muted-foreground: #565A6B;
+  --accent:       #EEF0F6;
+  --accent-foreground: #12131A;
   --destructive:  #C8102E;
-  --border:       #1B2A6B;
-  --input:        #1B2A6B;
+  --border:       #E7E9F1;
+  --input:        #E1E4EE;
   --ring:         #C8102E;
-  --radius:       0.375rem;
-  --sidebar:      #080b14;
-  --sidebar-foreground: #FFFFFF;
+  --radius:       0.75rem;
+  --sidebar:      #FFFFFF;
+  --sidebar-foreground: #2b2f3d;
   --sidebar-primary: #C8102E;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #1B2A6B;
+  --sidebar-accent: #17181d;
   --sidebar-accent-foreground: #FFFFFF;
-  --sidebar-border: #1B2A6B;
+  --sidebar-border: #E7E9F1;
   --sidebar-ring: #C8102E;
 
   --chart-1: #C8102E;
@@ -106,8 +122,12 @@
     @apply border-border outline-ring/50;
   }
   body {
-    background-color: #0a0d1a;
-    color: #FFFFFF;
+    background:
+      radial-gradient(760px 460px at 88% -6%, rgba(200,16,46,.05), transparent 62%),
+      radial-gradient(720px 500px at 4% 2%, rgba(27,42,107,.06), transparent 60%),
+      linear-gradient(160deg, var(--asb-page-1), var(--asb-page-2));
+    background-attachment: fixed;
+    color: var(--asb-page-ink);
     font-family: var(--font-geist-sans), system-ui, sans-serif;
     font-size: 13px;
   }
@@ -136,14 +156,21 @@
 }
 
 .asb-card {
-  background: #1a1a1a;
-  border: 1px solid #2a2a2a;
-  border-radius: 8px;
-  transition: border-color .2s, box-shadow .2s;
+  background: var(--asb-card);
+  border: 1px solid var(--asb-border);
+  border-radius: 14px;
+  box-shadow: 0 2px 6px rgba(20,22,40,.06), 0 20px 40px -22px rgba(20,22,40,.28);
+  transition: border-color .2s, box-shadow .2s, transform .2s;
 }
 .asb-card:hover {
-  border-color: #3a3a3a;
-  box-shadow: 0 0 0 1px rgba(42,42,42,.3), 0 4px 20px rgba(0,0,0,.20);
+  border-color: var(--asb-border2);
+  box-shadow: 0 4px 10px rgba(20,22,40,.08), 0 26px 50px -24px rgba(20,22,40,.4);
+}
+
+.asb-hub-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255,255,255,.26) !important;
+  box-shadow: 0 30px 60px -22px rgba(0,0,0,.8) !important;
 }
 
 .asb-badge {

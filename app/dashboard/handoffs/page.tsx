@@ -94,10 +94,10 @@ export default async function HandoffsPage({ searchParams }: { searchParams?: Pr
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {/* Header */}
       <div>
-        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
+        <h1 style={{ color: "var(--asb-page-ink)", fontSize: 20, fontWeight: 800, fontFamily: theme.font.label, letterSpacing: "-.01em", textTransform: "none", marginBottom: 4 }}>
           Fila de Handoff
         </h1>
-        <p style={S.muted}>Leads aguardando confirmação do vendedor</p>
+        <p style={{ ...S.muted, color: "var(--asb-page-ink2)" }}>Leads aguardando confirmação do vendedor</p>
       </div>
 
       {/* KPIs */}

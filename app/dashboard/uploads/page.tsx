@@ -23,7 +23,7 @@ export default async function UploadsPage() {
         >
           Upload de Metas (XLSX)
         </h1>
-        <p style={{ color: "#e4e9f0", fontSize: 11, fontFamily: theme.font.label, letterSpacing: ".1em" }}>
+        <p style={{ color: "var(--asb-page-ink2)", fontSize: 11, fontFamily: theme.font.label, letterSpacing: ".1em" }}>
           Metas mensais por vendedor · Preview antes de aplicar · UPSERT por vendedor+mês
         </p>
       </div>
@@ -65,7 +65,7 @@ export default async function UploadsPage() {
         <h1 style={{ color: "#FFFFFF", fontSize: 18, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".08em", marginBottom: 6 }}>
           Upload de Vendas CNB (XLSX)
         </h1>
-        <p style={{ color: "#e4e9f0", fontSize: 11, fontFamily: theme.font.label, letterSpacing: ".1em" }}>
+        <p style={{ color: "var(--asb-page-ink2)", fontSize: 11, fontFamily: theme.font.label, letterSpacing: ".1em" }}>
           Vendas Carnes Nobres Boutique · Preview antes de aplicar · UPSERT por número+data+documento
         </p>
       </div>

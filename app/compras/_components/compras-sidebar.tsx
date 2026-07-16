@@ -29,19 +29,19 @@ export function ComprasSidebar({
   return (
     <aside
       className={`w-52 flex flex-col shrink-0 asb-sidebar-drawer ${isOpen ? "open" : ""}`}
-      style={{ background: "#080b14", borderRight: `1px solid ${GREEN}` }}
+      style={{ background: "var(--asb-shell)", borderRight: "1px solid var(--asb-shell-border)" }}
     >
-      {/* Logo — verde para leitura instantânea de contexto */}
-      <div style={{ textAlign: "center", padding: "20px 12px 16px", borderBottom: `1px solid ${GREEN}` }}>
+      {/* Logo — verde para contexto; clique volta à frente institucional */}
+      <Link href="/inicio" title="Voltar à frente institucional" style={{ display: "block", textDecoration: "none", textAlign: "center", padding: "20px 12px 16px", borderBottom: "1px solid var(--asb-shell-border)" }}>
         <div style={{ display: "inline-flex", alignItems: "center", gap: 0 }}>
           <span style={{ fontFamily: "Georgia, serif", fontSize: 42, fontWeight: 900, color: "#1B2A6B", lineHeight: 1 }}>A</span>
           <span style={{ fontFamily: "Georgia, serif", fontSize: 42, fontWeight: 900, color: GREEN, lineHeight: 1 }}>S</span>
-          <span style={{ fontFamily: "Georgia, serif", fontSize: 42, fontWeight: 900, color: "#FFFFFF", lineHeight: 1 }}>B</span>
+          <span style={{ fontFamily: "Georgia, serif", fontSize: 42, fontWeight: 900, color: "#12131A", lineHeight: 1 }}>B</span>
         </div>
         <div style={{ color: GREEN, fontSize: 9, letterSpacing: "3px", marginTop: 6, fontFamily: theme.font.label, textTransform: "uppercase" }}>
           Compras & Estoque
         </div>
-      </div>
+      </Link>
 
       {/* Nav */}
       <nav className="flex-1 px-2 py-3 space-y-0.5">
@@ -54,24 +54,26 @@ export function ComprasSidebar({
               onClick={onClose}
               style={{
                 display: "flex", alignItems: "center", gap: 10,
-                padding: "7px 10px", borderRadius: 3,
+                padding: "8px 11px",
                 borderLeft: isActive ? `3px solid ${GREEN}` : "3px solid transparent",
-                background: isActive ? "rgba(46,160,67,.14)" : "transparent",
-                color: isActive ? "#FFFFFF" : "#c0d0e0",
+                background: isActive ? "var(--asb-card)" : "transparent",
+                color: isActive ? "#FFFFFF" : "#565A6B",
                 fontSize: 10, letterSpacing: ".14em", textTransform: "uppercase",
                 fontFamily: theme.font.label, fontWeight: 600,
+                boxShadow: isActive ? "0 6px 16px -8px rgba(20,22,40,.4)" : "none",
+                borderRadius: 9,
                 transition: "all .15s", textDecoration: "none",
               }}
               onMouseEnter={(e) => {
                 if (!isActive) {
-                  (e.currentTarget as HTMLAnchorElement).style.background = "rgba(46,160,67,.10)";
-                  (e.currentTarget as HTMLAnchorElement).style.color = "#c0c8d8";
+                  (e.currentTarget as HTMLAnchorElement).style.background = "var(--asb-shell-2)";
+                  (e.currentTarget as HTMLAnchorElement).style.color = "#12131A";
                 }
               }}
               onMouseLeave={(e) => {
                 if (!isActive) {
                   (e.currentTarget as HTMLAnchorElement).style.background = "transparent";
-                  (e.currentTarget as HTMLAnchorElement).style.color = "#c0d0e0";
+                  (e.currentTarget as HTMLAnchorElement).style.color = "#565A6B";
                 }
               }}
             >
@@ -83,10 +85,10 @@ export function ComprasSidebar({
       </nav>
 
       {/* Footer */}
-      <div className="px-4 py-3" style={{ borderTop: `1px solid ${GREEN}` }}>
+      <div className="px-4 py-3" style={{ borderTop: "1px solid var(--asb-shell-border)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <div style={{ width: 6, height: 6, borderRadius: "50%", background: GREEN, boxShadow: `0 0 6px ${GREEN}` }} />
-          <p style={{ color: "#e4e9f0", fontSize: 9, letterSpacing: ".12em", textTransform: "uppercase", fontFamily: theme.font.label }}>
+          <p style={{ color: "#8B90A3", fontSize: 9, letterSpacing: ".12em", textTransform: "uppercase", fontFamily: theme.font.label }}>
             Compras · Fase 0
           </p>
         </div>

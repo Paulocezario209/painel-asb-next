@@ -119,11 +119,11 @@ export default async function PipelinePage({ searchParams }: { searchParams: Pro
     <div style={{ display: "flex", flexDirection: "column", gap: 16, height: "100%" }}>
       {/* Header */}
       <div>
-        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
+        <h1 style={{ color: "var(--asb-page-ink)", fontSize: 20, fontWeight: 800, fontFamily: theme.font.label, letterSpacing: "-.01em", textTransform: "none", marginBottom: 4 }}>
           Pipeline {ctx.isVendedor && ctx.routing_team ? `· ${VENDOR_LABELS[ctx.routing_team] ?? ctx.routing_team}` : ""}
           {mesParam ? ` · ${mesParam}` : ""}
         </h1>
-        <p style={S.muted}>{leads.length} lead(s) no pipeline · clique no card para abrir · arraste para mover · clique no topo da coluna para a lista</p>
+        <p style={{ ...S.muted, color: "var(--asb-page-ink2)" }}>{leads.length} lead(s) no pipeline · clique no card para abrir · arraste para mover · clique no topo da coluna para a lista</p>
       </div>
 
       {/* KPIs de topo (3 cards, clicáveis → lista no modal) */}
