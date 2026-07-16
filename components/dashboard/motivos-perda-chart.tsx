@@ -6,7 +6,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recha
 
 export type MotivoPerda = { motivo: string; total: number; total_30d: number };
 
-const mono = "'Courier New', monospace";
+const mono = "var(--font-geist-sans), system-ui, sans-serif";
 
 // Cores semânticas por motivo (ótica do gestor) — fallback por índice.
 const COR_MOTIVO: Record<string, string> = {
@@ -56,7 +56,7 @@ export function MotivosPerdaChart({ data }: { data: MotivoPerda[] }) {
               ))}
             </Pie>
             <Tooltip
-              contentStyle={{ background: "#0d1117", border: "1px solid #2a3a45", borderRadius: 4, fontFamily: mono, fontSize: 11 }}
+              contentStyle={{ background: "#17181d", border: "1px solid rgba(255,255,255,.14)", borderRadius: 10, fontFamily: mono, fontSize: 12, color: "#f4f4f8" }}
               labelStyle={{ color: "#fff" }}
               formatter={(value, name) => {
                 const v = Number(value);
@@ -91,9 +91,9 @@ export function MotivosPerdaChart({ data }: { data: MotivoPerda[] }) {
             </div>
           );
         })}
-        <div style={{ borderTop: "1px solid #2a2a2a", marginTop: 4, paddingTop: 6, display: "flex", justifyContent: "space-between" }}>
-          <span style={{ color: "#c0d0e0", fontSize: 10, fontFamily: mono, letterSpacing: ".1em", textTransform: "uppercase" }}>Total perdidos</span>
-          <span style={{ color: "#fff", fontSize: 12, fontFamily: mono, fontWeight: 700 }}>{total}</span>
+        <div style={{ borderTop: "1px solid var(--asb-border)", marginTop: 4, paddingTop: 8, display: "flex", justifyContent: "space-between" }}>
+          <span style={{ color: "#aeb7cc", fontSize: 11, fontFamily: mono, fontWeight: 650 }}>Total perdidos</span>
+          <span style={{ color: "#fff", fontSize: 14, fontFamily: mono, fontWeight: 750 }}>{total}</span>
         </div>
       </div>
     </div>
