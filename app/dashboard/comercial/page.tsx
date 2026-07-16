@@ -4,12 +4,14 @@ import { createClient } from "@/lib/supabase/server";
 import { NAO_ATIVO_STAGES } from "@/lib/funnel/stages";
 import { CADENCIA_PHASES } from "@/lib/followup/cadencia";
 import { S } from "@/app/dashboard/lib/dashboard-tokens";
+import { PageHead, SectionHead, StatTile } from "@/app/dashboard/lib/ui";
+import { Workflow, UserPlus, Wallet } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 // HUB COMERCIAL (DEBT-290) — a JORNADA de ponta a ponta como um FLUXO (cards conectados
 // por setas), claro pro vendedor: rótulo da etapa + título + subtítulo. Cada card abre a
-// tela que já existe. Abaixo, os números vivos (cards KPI clonados de Clientes).
+// tela que já existe. Abaixo, os números vivos (StatTiles clonados de Clientes).
 
 function startTodayUtc(): string {
   const d = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
@@ -46,8 +48,8 @@ export default async function ComercialPage() {
     handoff: cHandoff.count ?? 0, pipeline: cPipeline.count ?? 0, clientes: cClientes.count ?? 0, recompra: cRecompra.count ?? 0,
   };
 
-  // O FLUXO — a jornada (idêntico ao artifact): rótulo + título + subtítulo (etapas reais).
-  // Sem número no card do fluxo — os números vivem nos cards KPI abaixo.
+  // O FLUXO — a jornada de ponta a ponta: rótulo de etapa + título + subtítulo (etapas reais).
+  // Sem número no card do fluxo — os números vivem nos StatTiles abaixo.
   const FLUXO: FlowStep[] = [
     { cat: "SDR",       cor: "#6390f5", titulo: "Lead novo → Qualificado", sub: "lead_novo · atendido_sdr · qualif · lead_qualificado (qs7)", href: "/dashboard/leads" },
     { cat: "SDR→VEND",  cor: "#6390f5", titulo: "Handoff",                 sub: "passa pro vendedor (handoff_at)", href: "/dashboard/handoffs" },
@@ -69,32 +71,27 @@ export default async function ComercialPage() {
   ];
 
   return (
-    <div className="space-y-7">
-      <div>
-        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
-          Comercial
-        </h1>
-        <p style={S.muted}>A jornada de ponta a ponta — clique numa etapa para abrir a tela.</p>
-      </div>
+    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      <PageHead title="Comercial" desc="A jornada de ponta a ponta — clique numa etapa para abrir a tela." />
 
-      {/* O FLUXO — idêntico ao artifact */}
-      <div className="space-y-3">
-        <p style={S.section}>A jornada de ponta a ponta</p>
+      {/* O FLUXO — a jornada como cards conectados por setas */}
+      <div>
+        <SectionHead Icon={Workflow} color="#8bb4ff" title="A jornada de ponta a ponta" desc="Do lead novo ao cliente recorrente" />
         <div style={{ display: "flex", alignItems: "stretch", width: "100%" }}>
           {FLUXO.map((s, i) => (
             <div key={s.cat} style={{ display: "flex", alignItems: "center", flex: 1, minWidth: 0 }}>
               <FlowCard step={s} />
               {i < FLUXO.length - 1 && (
-                <span style={{ color: "#3a4a63", fontSize: 15, padding: "0 6px", flexShrink: 0, fontFamily: theme.font.num }}>→</span>
+                <span style={{ color: "#3a4a63", fontSize: 15, padding: "0 6px", flexShrink: 0, fontFamily: theme.font.label }}>→</span>
               )}
             </div>
           ))}
         </div>
       </div>
 
-      {/* NÚMEROS (KPI clonados de Clientes) */}
-      <Secao titulo="Aquisição" cards={AQUISICAO} />
-      <Secao titulo="Carteira" cards={CARTEIRA} />
+      {/* NÚMEROS (StatTiles) */}
+      <Secao titulo="Aquisição" desc="Entrada de leads e pipeline em aberto" Icon={UserPlus} cor="#6390f5" cards={AQUISICAO} />
+      <Secao titulo="Carteira" desc="Clientes vivos e recompra devida" Icon={Wallet} cor="#22c55e" cards={CARTEIRA} />
     </div>
   );
 }
@@ -102,8 +99,8 @@ export default async function ComercialPage() {
 type FlowStep = { cat: string; cor: string; titulo: string; sub: string; href: string };
 type Kpi = { label: string; n: number; desc: string; color: string; href: string };
 
-// Card do fluxo idêntico ao artifact: fundo chapado escuro, borda sutil COMPLETA (sem faixa
-// no topo), rótulo mono colorido, título bold branco, subtítulo mono cinza (etapas reais).
+// Card do fluxo: fundo grafite, borda sutil completa. Rótulo de etapa (eyebrow sans colorido),
+// título bold branco, subtítulo sans cinza (etapas reais). Zero mono em texto.
 function FlowCard({ step: s }: { step: FlowStep }) {
   return (
     <Link
@@ -114,31 +111,27 @@ function FlowCard({ step: s }: { step: FlowStep }) {
         padding: "14px 16px",
       }}
     >
-      <div style={{ fontFamily: theme.font.num, fontSize: 10, letterSpacing: ".16em", textTransform: "uppercase", fontWeight: 700, color: s.cor }}>
+      <div style={{ fontFamily: theme.font.label, fontSize: 10.5, letterSpacing: ".12em", textTransform: "uppercase", fontWeight: 750, color: s.cor }}>
         {s.cat}
       </div>
       <div style={{ fontFamily: theme.font.label, fontSize: 15, fontWeight: 700, color: "#f2f5fa", marginTop: 9, lineHeight: 1.2 }}>
         {s.titulo}
       </div>
-      <div style={{ fontFamily: theme.font.num, fontSize: 10.5, color: "#5f7089", marginTop: 9, lineHeight: 1.5 }}>
+      <div style={{ fontFamily: theme.font.label, fontSize: 11.5, color: "#83879a", marginTop: 9, lineHeight: 1.5 }}>
         {s.sub}
       </div>
     </Link>
   );
 }
 
-function Secao({ titulo, cards }: { titulo: string; cards: Kpi[] }) {
+function Secao({ titulo, desc, Icon, cor, cards }: { titulo: string; desc: string; Icon: React.ComponentType<{ size?: number }>; cor: string; cards: Kpi[] }) {
   return (
-    <div className="space-y-3">
-      <p style={S.section}>{titulo}</p>
+    <div>
+      <SectionHead Icon={Icon} color={cor} title={titulo} desc={desc} />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {cards.map((c) => (
-          <Link key={c.label} href={c.href} style={{ textDecoration: "none" }}>
-            <div style={{ ...S.card, padding: "20px 20px", borderTop: `2px solid ${c.color}`, cursor: "pointer", transition: "opacity .15s" }} className="asb-kpi-hover">
-              <p style={{ ...S.label, color: c.color }} translate="no">{c.label}</p>
-              <p style={{ ...S.value, marginTop: 12 }}>{c.n}</p>
-              <p style={{ ...S.muted, marginTop: 8 }}>{c.desc}</p>
-            </div>
+          <Link key={c.label} href={c.href} style={{ textDecoration: "none" }} className="asb-kpi-hover">
+            <StatTile label={c.label} value={c.n} accent={c.color} sub={c.desc} />
           </Link>
         ))}
       </div>

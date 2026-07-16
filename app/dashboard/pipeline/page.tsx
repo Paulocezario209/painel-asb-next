@@ -4,7 +4,6 @@
 // Fonte: query direta (LISTA de leads pós-handoff, não agregação numérica — cada lead 1x, limit explícito).
 import { redirect } from "next/navigation";
 import { PRECO_KG } from "@/lib/pricing";
-import { theme } from "@/lib/theme";
 import { getUserContext, canAccess } from "@/lib/auth/get-user-role";
 import { PIPELINE_STAGES, PIPELINE_ATIVOS, LEGACY_ALIAS, CONVERTIDO_STAGES } from "@/lib/funnel/stages";
 import { VENDOR_LABELS } from "@/lib/vendor-labels";
@@ -12,6 +11,7 @@ import { createClient } from "@/lib/supabase/server";
 import { DashboardFilters } from "@/components/dashboard/dashboard-filters";
 import { PipelineBoard, PipelineKpis, type PipelineLead, type PipelineCtx } from "./pipeline-board";
 import { S } from "@/app/dashboard/lib/dashboard-tokens";
+import { PageHead } from "@/app/dashboard/lib/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -112,13 +112,10 @@ export default async function PipelinePage({ searchParams }: { searchParams: Pro
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16, height: "100%" }}>
       {/* Header */}
-      <div>
-        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
-          Pipeline {ctx.isVendedor && ctx.routing_team ? `· ${VENDOR_LABELS[ctx.routing_team] ?? ctx.routing_team}` : ""}
-          {mesParam ? ` · ${mesParam}` : ""}
-        </h1>
-        <p style={S.muted}>{leads.length} lead(s) no pipeline · clique no card para abrir · arraste para mover · clique no topo da coluna para a lista</p>
-      </div>
+      <PageHead
+        title={`Pipeline${ctx.isVendedor && ctx.routing_team ? ` · ${VENDOR_LABELS[ctx.routing_team] ?? ctx.routing_team}` : ""}${mesParam ? ` · ${mesParam}` : ""}`}
+        desc={`${leads.length} lead(s) no pipeline · clique no card para abrir · arraste para mover · clique no topo da coluna para a lista`}
+      />
 
       {/* KPIs de topo (3 cards, clicáveis → lista no modal) */}
       <PipelineKpis kpis={kpis} />

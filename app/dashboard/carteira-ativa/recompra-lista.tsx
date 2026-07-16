@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { theme } from "@/lib/theme";
-import type { CSSProperties } from "react";
 import { statusColor, statusLabel } from "@/lib/customer-status";
 import { S } from "@/app/dashboard/lib/dashboard-tokens";
+import { SectionHead } from "@/app/dashboard/lib/ui";
+import { Users } from "lucide-react";
 
 type CestaItem = {
   id_produto: number;
@@ -36,8 +37,6 @@ export type RecompraRow = {
   cesta: CestaItem[];
 };
 
-// Título de seção (mesma camada que PageHead: page-ink, 20px) — bare heading acima do grid.
-const h1Style: CSSProperties = { color: "var(--asb-page-ink)", fontSize: 20, fontWeight: 800, fontFamily: theme.font.label, letterSpacing: "-.01em" };
 const ORDER = ["atrasado", "hoje", "proximos_3d", "proximos_7d"];
 
 const brl = (n: number) => (n ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
@@ -63,7 +62,7 @@ export function RecompraLista({ rows }: { rows: RecompraRow[] }) {
 
   return (
     <div className="space-y-4">
-      <h1 style={h1Style}>Clientes por vendedor</h1>
+      <SectionHead Icon={Users} color="#185FA5" title="Clientes por vendedor" desc="Carteira por vendedor · recompra e cesta sugerida" />
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {vendedores.map(([vend, list]) => {

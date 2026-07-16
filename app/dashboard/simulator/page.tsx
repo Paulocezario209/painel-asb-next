@@ -3,6 +3,8 @@
 import { useState, useRef, useCallback } from "react";
 import { theme } from "@/lib/theme";
 import { S } from "@/app/dashboard/lib/dashboard-tokens";
+import { PageHead, SectionHead } from "@/app/dashboard/lib/ui";
+import { SlidersHorizontal, MessageSquare, Bot, History } from "lucide-react";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface LeadConfig {
@@ -87,7 +89,7 @@ function QualBadge({ stage }: { stage: number | null }) {
   return (
     <span style={{
       display: "inline-block", background: `${color}15`, border: `1px solid ${color}50`,
-      color, fontSize: 10, fontFamily: theme.font.num, fontWeight: 700,
+      color, fontSize: 10, fontFamily: theme.font.label, fontWeight: 700,
       padding: "2px 8px", borderRadius: 3,
     }}>
       etapa {stage}
@@ -188,12 +190,7 @@ export default function SimulatorPage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {/* Header */}
-      <div>
-        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
-          Simulador RAG
-        </h1>
-        <p style={S.muted}>Teste o comportamento do SDR sem usar leads reais</p>
-      </div>
+      <PageHead title="Simulador RAG" desc="Teste o comportamento do SDR sem usar leads reais" />
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, alignItems: "start" }}>
 
@@ -202,9 +199,7 @@ export default function SimulatorPage() {
 
           {/* Bloco 1 — Config do lead */}
           <div style={{ ...S.card, padding: "20px 24px" }}>
-            <p style={S.section}>
-Perfil do Lead Simulado
-            </p>
+            <SectionHead Icon={SlidersHorizontal} color="#8bb4ff" title="Perfil do Lead Simulado" desc="Configure o contexto do lead de teste" />
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
 
               <div>
@@ -263,9 +258,7 @@ Perfil do Lead Simulado
 
           {/* Bloco 2 — Mensagem */}
           <div style={{ ...S.card, padding: "20px 24px" }}>
-            <p style={S.section}>
-Mensagem do Lead
-            </p>
+            <SectionHead Icon={MessageSquare} color="#8bb4ff" title="Mensagem do Lead" desc="O que o lead escreveria no WhatsApp" />
             <form onSubmit={handleSubmit}>
               <textarea
                 ref={textareaRef}
@@ -286,7 +279,7 @@ Mensagem do Lead
                   style={{
                     padding: "7px 20px", borderRadius: 3, cursor: loading || !message.trim() ? "not-allowed" : "pointer",
                     fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase",
-                    fontFamily: theme.font.num, fontWeight: 700,
+                    fontFamily: theme.font.label, fontWeight: 700,
                     border: "1px solid #C8102E",
                     background: loading || !message.trim() ? "rgba(200,16,46,.05)" : "rgba(200,16,46,.15)",
                     color: loading || !message.trim() ? "#e4e9f0" : "#C8102E",
@@ -305,9 +298,7 @@ Mensagem do Lead
 
           {/* Bloco 3 — Resposta */}
           <div style={{ ...S.card, padding: "20px 24px" }}>
-            <p style={S.section}>
-Resposta do SDR
-            </p>
+            <SectionHead Icon={Bot} color="#FF3B57" title="Resposta do SDR" desc="Saída do agente para a mensagem simulada" />
 
             {loading && (
               <div style={{ textAlign: "center", padding: "24px 0" }}>
@@ -382,10 +373,8 @@ Resposta do SDR
 
           {/* Bloco 4 — Histórico da sessão */}
           <div style={{ ...S.card, padding: "20px 24px" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-              <p style={{ ...S.section, marginBottom: 0 }}>
-    Histórico da Sessão
-              </p>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+              <SectionHead Icon={History} color="#f59e0b" title="Histórico da Sessão" desc="Turnos desta sessão de teste" />
               {history.length > 0 && (
                 <button
                   onClick={() => { setHistory([]); setLastResult(null); }}

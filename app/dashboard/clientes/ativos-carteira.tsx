@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { theme } from "@/lib/theme";
+import { StatTile } from "@/app/dashboard/lib/ui";
 import { CUSTOMER_STATUS, statusColor, statusLabel } from "@/lib/customer-status";
 
 export type Carteira = {
@@ -126,7 +128,11 @@ export function AtivosCarteira({
     .map(([nome, list]) => ({ nome, list }))
     .sort((a, b) => b.list.length - a.list.length);
 
-  const kpiClass = "bg-[var(--asb-card)] border rounded-lg p-4 transition-all block w-full text-left";
+  // wrapper clicável sobre o StatTile canônico — ativo = glow na cor de sinal.
+  const kpiBtn = (color: string, active: boolean): React.CSSProperties => ({
+    all: "unset", boxSizing: "border-box", cursor: "pointer", display: "block", width: "100%",
+    borderRadius: 14, boxShadow: active ? `0 0 28px -6px ${color}` : undefined,
+  });
 
   return (
     <div className="space-y-4">
@@ -139,18 +145,9 @@ export function AtivosCarteira({
               key={k.key}
               type="button"
               onClick={() => setFilter(filter === k.key ? "all" : k.key)}
-              className={kpiClass}
-              style={{
-                borderColor: active ? k.color : "var(--asb-border)",
-                borderTop: `3px solid ${k.color}`,
-                boxShadow: active ? `0 0 28px -6px ${k.color}` : "0 0 24px -8px rgba(79,125,240,0.45)",
-              }}
+              style={kpiBtn(k.color, active)}
             >
-              <div className="text-[10px] uppercase tracking-wider font-bold truncate" style={{ color: k.color }}>
-                {k.label}
-              </div>
-              <div className="text-3xl font-bold text-white mt-2">{k.count}</div>
-              <div className="text-[10px] text-slate-200 mt-2 leading-tight truncate">{k.desc}</div>
+              <StatTile label={k.label} value={k.count} accent={k.color} num="#fff" sub={k.desc} />
             </button>
           );
         })}
@@ -158,18 +155,15 @@ export function AtivosCarteira({
           <button
             type="button"
             onClick={() => setFilter(isRec ? "all" : "recuperados")}
-            className={kpiClass}
-            style={{
-              borderColor: isRec ? "#f97316" : "var(--asb-border)",
-              borderTop: "3px solid #f97316",
-              boxShadow: isRec ? "0 0 28px -6px #f97316" : "0 0 24px -8px rgba(79,125,240,0.45)",
-            }}
+            style={kpiBtn("#f97316", isRec)}
           >
-            <div className="text-[10px] uppercase tracking-wider font-bold truncate" style={{ color: "#f97316" }}>
-              Recuperados{recuperadosMes ? ` · ${recuperadosMes}` : ""}
-            </div>
-            <div className="text-3xl font-bold text-white mt-2">{recuperadosCount}</div>
-            <div className="text-[10px] text-slate-200 mt-2 leading-tight truncate">voltaram após 60+ dias fora</div>
+            <StatTile
+              label={`Recuperados${recuperadosMes ? ` · ${recuperadosMes}` : ""}`}
+              value={recuperadosCount}
+              accent="#f97316"
+              num="#fff"
+              sub="voltaram após 60+ dias fora"
+            />
           </button>
         )}
       </div>
@@ -200,8 +194,8 @@ export function AtivosCarteira({
             {gruposRec.map((g) => (
               <div key={g.nome} className="bg-[var(--asb-card)] border border-[var(--asb-border)] rounded-lg p-4 shadow-[0_0_26px_-10px_rgba(79,125,240,0.55)]">
                 <div className="flex items-center justify-between mb-4 pb-3 border-b border-[var(--asb-border)]">
-                  <h2 className="text-xs font-bold uppercase tracking-wider text-white truncate">{g.nome}</h2>
-                  <span className="text-xs text-slate-200 font-semibold shrink-0 ml-2">{g.list.length}</span>
+                  <h2 className="text-sm font-semibold text-white truncate">{g.nome}</h2>
+                  <span className="text-xs text-slate-200 font-semibold shrink-0 ml-2" style={{ fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" }}>{g.list.length}</span>
                 </div>
                 <div className="space-y-2 max-h-[70vh] overflow-y-auto">
                   {g.list.map((r) => (
@@ -223,7 +217,7 @@ export function AtivosCarteira({
                       <div className="text-[11px] text-slate-200 truncate">
                         {[r.cidade, `voltou ${fmtDia(r.data_retorno)}`].filter(Boolean).join(" · ")}
                       </div>
-                      <div className="text-[10px] text-slate-200 mt-1">{brl(r.valor_retorno)} no retorno</div>
+                      <div className="text-[10px] text-slate-200 mt-1"><span style={{ fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" }}>{brl(r.valor_retorno)}</span> no retorno</div>
                     </div>
                   ))}
                 </div>
@@ -237,8 +231,8 @@ export function AtivosCarteira({
           {colunas.map((col) => (
             <div key={col.nome} className="bg-[var(--asb-card)] border border-[var(--asb-border)] rounded-lg p-4 shadow-[0_0_26px_-10px_rgba(79,125,240,0.55)]">
               <div className="flex items-center justify-between mb-4 pb-3 border-b border-[var(--asb-border)]">
-                <h2 className="text-xs font-bold uppercase tracking-wider text-white truncate">{col.nome}</h2>
-                <span className="text-xs text-slate-200 font-semibold shrink-0 ml-2">{col.list.length}</span>
+                <h2 className="text-sm font-semibold text-white truncate">{col.nome}</h2>
+                <span className="text-xs text-slate-200 font-semibold shrink-0 ml-2" style={{ fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" }}>{col.list.length}</span>
               </div>
 
               <div className="space-y-2 max-h-[70vh] overflow-y-auto">
@@ -271,7 +265,7 @@ export function AtivosCarteira({
                             .filter(Boolean)
                             .join(" · ")}
                         </div>
-                        <div className="text-[10px] text-slate-200 mt-1">{brl(c.total_revenue_brl)} faturado</div>
+                        <div className="text-[10px] text-slate-200 mt-1"><span style={{ fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" }}>{brl(c.total_revenue_brl)}</span> faturado</div>
                       </div>
                     );
                     return c.lead_id ? (

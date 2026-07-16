@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { theme } from "@/lib/theme";
+import { SectionHead } from "@/app/dashboard/lib/ui";
+import { SlidersHorizontal } from "lucide-react";
 
 // Regua VENDEDOR (asb-comissao-rules v1.9.0)
 const COMISSAO_RATE = 0.002;
@@ -44,8 +46,8 @@ export function MinhaComissaoSimulador({
   return (
     <div className="asb-card" style={{ padding: "20px 22px", borderTop: `2px solid ${theme.colors.accent}`, display: "flex", flexDirection: "column", gap: 16 }}>
       <div>
-        <p style={lbl}>Simulador &mdash; se eu fechar o mes em...</p>
-        <p style={{ ...num(26), marginTop: 8 }}>{fmtBRL(faturado)}</p>
+        <SectionHead Icon={SlidersHorizontal} color={theme.colors.accent} title="Simulador" desc="Se eu fechar o mês em..." />
+        <p style={{ ...num(26) }}>{fmtBRL(faturado)}</p>
         <p style={{ fontSize: 11, fontFamily: theme.font.label, color: pctColor(atingimento), marginTop: 4 }}>
           {atingimento.toFixed(1)}% da minha meta ({fmtBRL(meta)})
         </p>

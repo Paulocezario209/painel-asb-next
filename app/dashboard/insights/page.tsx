@@ -8,6 +8,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getUserContext, canAccess } from "@/lib/auth/get-user-role";
 import { S } from "@/app/dashboard/lib/dashboard-tokens";
+import { PageHead, SectionHead, KpiCard, StatTile } from "@/app/dashboard/lib/ui";
+import { BadgeCheck, Flame, PhoneCall, Scale, Thermometer, Layers, Activity, Truck, Filter as FilterIcon, MapPin, Users } from "lucide-react";
 // ETAPA6 (DEBT-137): cache real dos agregados históricos (dado global, sem auth).
 import { unstable_cache } from "next/cache";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
@@ -165,13 +167,10 @@ export default async function InsightsPage() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      {/* Header */}
-      <div>
-        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
-          Inteligência
-        </h1>
-        <p style={S.muted}>Perfil da carteira · segmento · dores · fornecedores · geo</p>
-      </div>
+      <PageHead
+        title="Inteligência"
+        desc="Perfil da carteira · segmento · dores · fornecedores · geo"
+      />
 
       {!hasData ? (
         <div style={{ ...S.card, padding: "40px 24px", textAlign: "center" }}>
@@ -184,45 +183,29 @@ export default async function InsightsPage() {
           {/* KPI row */}
           <div className="asb-grid-kpi">
             {[
-              { label: "Taxa Qualificação",  value: `${taxaQual}%`,         accent: "#C8102E",  sub: `${qualified} de ${total} leads`, href: "/dashboard/leads?status=qualified" },
-              { label: "Leads c/ Dor",       value: `${taxaPain}%`,         accent: "#f59e0b",  sub: `${withPain} identificadas`, href: undefined as string | undefined },
-              { label: "Handoffs Realizados",value: String(withHandoff),     accent: "#22c55e",  sub: `${total > 0 ? Math.round(withHandoff/total*100) : 0}% da base`, href: "/dashboard/handoffs" },
-              { label: "Volume Médio",        value: avgVolume ? `${avgVolume} kg` : "—", accent: "#185FA5", sub: "por semana/lead", href: undefined },
-            ].map(({ label, value, accent, sub, href }) => {
-              const card = (
-                <div key={label} style={{ ...S.card, padding: "20px", borderTop: `2px solid ${accent}`, height: "100%" }}>
-                  <p style={{ ...S.label, color: accent }}>{label}</p>
-                  <p style={{ ...S.value, marginTop: 12 }}>{value}</p>
-                  <p style={{ ...S.muted, marginTop: 6, fontSize: 10 }}>{sub}</p>
-                </div>
-              );
-              return href
-                ? <Link key={label} href={href} style={{ textDecoration: "none" }}>{card}</Link>
-                : card;
-            })}
+              { label: "Taxa de qualificação", value: `${taxaQual}%`, Icon: BadgeCheck, accent: "#C8102E", num: "#C8102E", note: `${qualified} de ${total} leads`, href: "/dashboard/leads?status=qualified" },
+              { label: "Leads com dor",        value: `${taxaPain}%`, Icon: Flame,      accent: "#f59e0b", num: "#f59e0b", note: `${withPain} identificadas`, href: undefined as string | undefined },
+              { label: "Handoffs realizados",  value: String(withHandoff), Icon: PhoneCall, accent: "#22c55e", num: "#22c55e", note: `${total > 0 ? Math.round(withHandoff/total*100) : 0}% da base`, href: "/dashboard/handoffs" },
+              { label: "Volume médio",         value: avgVolume ? `${avgVolume} kg` : "—", Icon: Scale, accent: "#185FA5", num: "#8bb4ff", note: "por semana/lead", href: undefined },
+            ].map((k) => (
+              <KpiCard key={k.label} {...k} />
+            ))}
           </div>
 
           {/* Temperatura da carteira */}
           <div style={{ ...S.card, padding: "20px 24px" }}>
-            <p style={S.section}>Temperatura da Carteira</p>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+            <SectionHead Icon={Thermometer} color="#f59e0b" title="Temperatura da carteira" desc="Distribuição de leads por interesse" />
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
               {(["hot", "warm", "cold"] as const).map(t => {
                 const m = TEMP_META[t];
                 return (
-                  <div key={t} style={{ background: m.bg, border: `1px solid ${m.border}`, borderRadius: 5, padding: "14px 16px", textAlign: "center" }}>
-                    <p style={{ color: m.color, fontSize: 26, fontWeight: 700, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>
-                      {tempCount[t]}
-                    </p>
-                    <p style={{ color: m.color, fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase", marginTop: 4, fontFamily: theme.font.label, fontWeight: 700 }}>
-                      {m.label}
-                    </p>
-                  </div>
+                  <StatTile key={t} label={m.label} value={tempCount[t]} accent={m.color} num={m.color} />
                 );
               })}
             </div>
             {avgHandoffDays !== null && (
-              <p style={{ ...S.muted, marginTop: 14, fontSize: 10 }}>
-                Tempo médio até handoff: <span style={{ color: "#c8d8e8" }}>{avgHandoffDays} dias</span>
+              <p style={{ ...S.muted, marginTop: 14, fontSize: 11 }}>
+                Tempo médio até handoff: <span style={{ color: "#c8d8e8", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" }}>{avgHandoffDays}</span> dias
               </p>
             )}
           </div>
@@ -230,14 +213,14 @@ export default async function InsightsPage() {
           {/* Charts row — segmento + dores */}
           <div className="asb-grid-charts">
             <div style={{ ...S.card, padding: "20px 24px" }}>
-              <p style={S.section}>Leads por Segmento</p>
+              <SectionHead Icon={Layers} color="#8bb4ff" title="Leads por segmento" desc="Distribuição da carteira por tipo de negócio" />
               {segmentData.length > 0
                 ? <SegmentChart data={segmentData} />
                 : <p style={S.muted}>Sem dados de segmento</p>
               }
             </div>
             <div style={{ ...S.card, padding: "20px 24px" }}>
-              <p style={S.section}>Dores Identificadas</p>
+              <SectionHead Icon={Activity} color="#f59e0b" title="Dores identificadas" desc="Principais dores operacionais dos leads" />
               {painData.length > 0
                 ? <PainDonut data={painData} />
                 : <p style={S.muted}>Sem dores registradas</p>
@@ -247,7 +230,7 @@ export default async function InsightsPage() {
 
           {/* Fornecedores atuais */}
           <div style={{ ...S.card, padding: "20px 24px" }}>
-            <p style={S.section}>Fornecedores Atuais dos Leads</p>
+            <SectionHead Icon={Truck} color="#185FA5" title="Fornecedores atuais dos leads" desc="De quem os leads compram hoje" />
             {supplierData.length > 0
               ? <SupplierBar data={supplierData} />
               : <p style={S.muted}>Nenhum fornecedor registrado</p>
@@ -259,7 +242,7 @@ export default async function InsightsPage() {
 
             {/* Funil por segmento */}
             <div style={{ ...S.card, padding: "20px 24px" }}>
-              <p style={S.section}>Funil por Segmento</p>
+              <SectionHead Icon={FilterIcon} color="#8bb4ff" title="Funil por segmento" desc="Conversão de qualificação por tipo de negócio" />
               {funnelRows.length > 0 ? (
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
@@ -290,7 +273,7 @@ export default async function InsightsPage() {
             {/* Top cidades + Vendedor */}
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               <div style={{ ...S.card, padding: "20px 24px" }}>
-                <p style={S.section}>Top 10 Cidades</p>
+                <SectionHead Icon={MapPin} color="#FF3B57" title="Top 10 cidades" desc="Concentração geográfica dos leads" />
                 {topCities.length > 0 ? (
                   <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
                     {topCities.map(({ label: city, count }, i) => (
@@ -312,7 +295,7 @@ export default async function InsightsPage() {
               </div>
 
               <div style={{ ...S.card, padding: "20px 24px" }}>
-                <p style={S.section}>Distribuição por Vendedor</p>
+                <SectionHead Icon={Users} color="#22c55e" title="Distribuição por vendedor" desc="Carteira por responsável" />
                 {vendorRows.length > 0 ? (
                   <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
                     {vendorRows.map(({ label, count }) => (

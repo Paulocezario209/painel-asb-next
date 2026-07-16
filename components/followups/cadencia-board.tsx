@@ -2,12 +2,14 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Clock, AlertTriangle } from "lucide-react";
+import { Search, Clock, AlertTriangle, Repeat } from "lucide-react";
 import {
   CADENCIA_PHASES, CADENCIA_PHASE_LABEL, CADENCIA_PHASE_DESC, CADENCIA_PHASE_COLOR,
 } from "@/lib/followup/cadencia";
 import { VENDOR_LABELS } from "@/lib/vendor-labels";
 import { theme } from "@/lib/theme";
+import { S } from "@/app/dashboard/lib/dashboard-tokens";
+import { SectionHead } from "@/app/dashboard/lib/ui";
 
 // CADÊNCIA BOARD (DEBT-288) — leads que a automação de follow-up está nutrindo.
 // Fonte: view v_leads_cadencia (security_invoker → RLS por vendedor). O MESMO conjunto
@@ -30,8 +32,8 @@ export type CadenciaLead = {
 };
 
 const C = { bg: "#080b14", border: "#2a2a2a", text: "#FFFFFF", muted: "#c0d0e0", label: "#e4e9f0", red: "#C8102E", green: "#22c55e", amber: "#f59e0b" };
-// Tipografia padrão do painel (commit 112f221): label/texto = Geist Sans · número = Geist Mono.
-const MONO: React.CSSProperties = { fontFamily: theme.font.label };
+// Tipografia por SIGNIFICADO (linguagem do Dashboard): texto/label = sans · número = mono tabular.
+const SANS: React.CSSProperties = { fontFamily: theme.font.label };
 const NUM: React.CSSProperties = { fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" };
 
 function maskPhone(p: string): string {
@@ -90,22 +92,20 @@ export function CadenciaBoard({ leads }: { leads: CadenciaLead[] }) {
 
   return (
     <div style={{ ...S.card, padding: "16px 18px" }}>
-      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", flexWrap: "wrap", gap: 8, marginBottom: 14 }}>
-        <div>
-          <div style={{ ...MONO, color: C.text, fontSize: 12, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase" }}>
-            Cadência ativa
-          </div>
-          <div style={{ ...MONO, color: C.label, fontSize: 10, marginTop: 3 }}>
-            {leads.length} leads sendo nutridos pela automação · cada um na sua fase
-          </div>
-        </div>
-        <div style={{ position: "relative", minWidth: 180, maxWidth: 260 }}>
-          <Search style={{ position: "absolute", left: 8, top: "50%", transform: "translateY(-50%)", width: 11, height: 11, color: C.label }} />
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 4 }}>
+        <SectionHead
+          Icon={Repeat}
+          color="#f59e0b"
+          title="Cadência ativa"
+          desc={`${leads.length} leads sendo nutridos pela automação · cada um na sua fase`}
+        />
+        <div style={{ position: "relative", minWidth: 180, maxWidth: 260, flex: "1 1 200px" }}>
+          <Search style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", width: 13, height: 13, color: "#83879a" }} />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="buscar phone, restaurante, cidade..."
-            style={{ width: "100%", padding: "5px 8px 5px 26px", background: C.bg, border: `1px solid ${C.border}`, borderRadius: 3, color: C.muted, fontSize: 10, ...MONO, outline: "none", boxSizing: "border-box" }}
+            placeholder="Buscar restaurante, cidade, telefone…"
+            style={{ ...S.input, padding: "8px 11px 8px 30px" }}
           />
         </div>
       </div>
@@ -122,9 +122,9 @@ export function CadenciaBoard({ leads }: { leads: CadenciaLead[] }) {
               onClick={() => setPhase(p)}
               title={CADENCIA_PHASE_DESC[p]}
               style={{
-                display: "inline-flex", alignItems: "center", gap: 7, padding: "6px 12px", borderRadius: 3,
-                border: `1px solid ${active ? pc : C.border}`, background: active ? "rgba(27,42,107,.35)" : "transparent",
-                color: active ? C.text : C.muted, cursor: "pointer", fontSize: 10, letterSpacing: ".08em", textTransform: "uppercase", ...MONO,
+                display: "inline-flex", alignItems: "center", gap: 7, padding: "7px 13px", borderRadius: 999,
+                border: `1px solid ${active ? pc : "var(--asb-border)"}`, background: active ? pc + "1f" : "transparent",
+                color: active ? C.text : C.muted, cursor: "pointer", fontSize: 12.5, fontWeight: 600, ...SANS,
               }}
             >
               {CADENCIA_PHASE_LABEL[p] ?? p}
@@ -139,16 +139,16 @@ export function CadenciaBoard({ leads }: { leads: CadenciaLead[] }) {
         })}
       </div>
 
-      <div style={{ ...MONO, color: C.label, fontSize: 10, marginBottom: 8 }}>
+      <div style={{ ...SANS, color: "#aeb7cc", fontSize: 12.5, marginBottom: 10 }}>
         {CADENCIA_PHASE_DESC[phase]}
       </div>
 
       <div style={{ overflowX: "auto" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", ...MONO }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", ...SANS }}>
           <thead>
             <tr style={{ borderBottom: `1px solid ${C.border}` }}>
               {["Restaurante", "Cidade", "Volume", "ABC", "Temp.", "Setor", "Próximo toque", "Toques"].map((h) => (
-                <th key={h} style={{ padding: "8px 6px", textAlign: h === "Toques" ? "right" : "left", fontSize: 9, letterSpacing: ".1em", textTransform: "uppercase", color: C.label, fontFamily: theme.font.label, whiteSpace: "nowrap" }}>{h}</th>
+                <th key={h} style={{ padding: "8px 6px", textAlign: h === "Toques" ? "right" : "left", fontSize: 11, letterSpacing: ".06em", textTransform: "uppercase", color: "#83879a", fontWeight: 700, fontFamily: theme.font.label, whiteSpace: "nowrap" }}>{h}</th>
               ))}
             </tr>
           </thead>
@@ -188,11 +188,9 @@ export function CadenciaBoard({ leads }: { leads: CadenciaLead[] }) {
         </table>
       </div>
 
-      <p style={{ color: C.label, fontSize: 9, marginTop: 12, ...MONO, letterSpacing: ".06em" }}>
+      <p style={{ color: "#83879a", fontSize: 11.5, marginTop: 12, ...SANS }}>
         {filtered.length} em {CADENCIA_PHASE_LABEL[phase] ?? phase} · {leads.length} em cadência no total · fonte: v_leads_cadencia (RLS por vendedor). Estes leads saem da aba Ativos — a automação está cuidando.
       </p>
     </div>
   );
 }
-
-const S = { card: { background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8 } as React.CSSProperties };

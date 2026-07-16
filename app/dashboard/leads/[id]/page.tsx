@@ -3,7 +3,7 @@ import { theme } from "@/lib/theme";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, MapPin, Package, Thermometer, User, MessageCircle, Megaphone } from "lucide-react";
+import { ArrowLeft, MapPin, Package, Thermometer, User, MessageCircle, Megaphone, ClipboardList, Repeat, Clock, StickyNote, Zap } from "lucide-react";
 import { LeadActions } from "@/components/leads/lead-actions";
 import { ProductGroupSelector } from "@/components/leads/product-group-selector";
 import { OrigemSelector } from "@/components/leads/origem-selector";
@@ -20,6 +20,7 @@ import { MarkProposalSentButton } from "@/components/leads/mark-proposal-sent-bu
 import { FollowupCadence, type FollowupRow } from "@/components/leads/followup-cadence";
 import { getUserContext } from "@/lib/auth/get-user-role";
 import { S } from "@/app/dashboard/lib/dashboard-tokens";
+import { PageHead, SectionHead } from "@/app/dashboard/lib/ui";
 
 // ── Cores semânticas (badges / texto) — superfície de card vem de S.card ──
 const C = {
@@ -158,12 +159,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h1 style={{ color: C.text2, fontSize: 18, fontWeight: 700, fontFamily: theme.font.label, marginBottom: 2 }}>
-            {lead.restaurant_name || lead.name || "Lead sem nome"}
-          </h1>
-          <p style={{ color: C.muted, fontSize: 11, fontFamily: theme.font.label }}>{lead.phone}</p>
-        </div>
+        <PageHead title={lead.restaurant_name || lead.name || "Lead sem nome"} desc={lead.phone} />
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           <FunnelStageBadge stage={lead.funnel_stage} />
           {isGestor && <VoltarEtapaButton leadId={lead.id} currentStage={lead.funnel_stage} />}
@@ -228,13 +224,13 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
 
           {/* SDR Conversation — no topo para gestor ver conversa primeiro */}
           <div style={{ ...S.card, padding: "20px 24px" }}>
-            <p style={{ ...S.label, marginBottom: 16 }}>Conversa SDR</p>
+            <SectionHead Icon={MessageCircle} color="#8bb4ff" title="Conversa SDR" />
             <ConversationWithFeedback rows={convRows ?? []} phone={phone} />
           </div>
 
           {/* CRM card */}
           <div style={{ ...S.card, padding: "20px 24px" }}>
-            <p style={{ ...S.label, marginBottom: 16 }}>Dados CRM</p>
+            <SectionHead Icon={ClipboardList} color="#c084fc" title="Dados CRM" />
             <div className="grid grid-cols-2 gap-x-6 gap-y-4">
               <CrmField icon={<MapPin size={13} />} label="Cidade" value={lead.city} />
               <CrmField icon={<Package size={13} />} label="Segmento" value={lead.segment} capitalize />
@@ -269,19 +265,13 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
 
           {/* Vendor Conversation */}
           <div style={{ ...S.card, padding: "20px 24px" }}>
-            <p style={{ ...S.label, marginBottom: 16 }}>
-              Conversa Vendedor
-              <span style={{ color: "#e4e9f0", marginLeft: 8 }}>({vmTotal ?? 0} msgs)</span>
-            </p>
+            <SectionHead Icon={MessageCircle} color="#3fb950" title="Conversa Vendedor" desc={`${vmTotal ?? 0} mensagens`} />
             <VendorConversation messages={vendorMsgs} total={vmTotal ?? 0} />
           </div>
 
           {/* FIX4: Cadência de Follow-up */}
           <div style={{ ...S.card, padding: "20px 24px" }}>
-            <p style={{ ...S.label, marginBottom: 16 }}>
-              Cadência de Follow-up
-              <span style={{ color: "#e4e9f0", marginLeft: 8 }}>({(followupRows ?? []).length} waves)</span>
-            </p>
+            <SectionHead Icon={Repeat} color="#f0b429" title="Cadência de Follow-up" desc={`${(followupRows ?? []).length} waves`} />
             <FollowupCadence rows={(followupRows ?? []) as FollowupRow[]} />
           </div>
         </div>
@@ -291,19 +281,19 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
 
           {/* Timeline */}
           <div style={{ ...S.card, padding: "20px 24px" }}>
-            <p style={{ ...S.label, marginBottom: 16 }}>Timeline</p>
+            <SectionHead Icon={Clock} color="#8bb4ff" title="Timeline" />
             <LeadTimeline events={events} transitions={transitions} />
           </div>
 
           {/* Notes */}
           <div style={{ ...S.card, padding: "20px 24px" }}>
-            <p style={{ ...S.label, marginBottom: 16 }}>Observacoes</p>
+            <SectionHead Icon={StickyNote} color="#58a6ff" title="Observações" />
             <LeadNotes leadId={lead.id} notes={noteEvents} />
           </div>
 
           {/* Actions */}
           <div style={{ ...S.card, padding: "20px 24px" }}>
-            <p style={{ ...S.label, marginBottom: 16 }}>Acoes</p>
+            <SectionHead Icon={Zap} color="#FF3B57" title="Ações" />
             <LeadActions lead={lead} />
             {canMarkProposal && (
               <div style={{ marginTop: 12 }}>

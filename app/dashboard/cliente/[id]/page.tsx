@@ -4,6 +4,18 @@ import { statusColor, statusLabel } from "@/lib/customer-status";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CustomerActions } from "./customer-actions";
+import { PageHead, SectionHead, StatTile } from "@/app/dashboard/lib/ui";
+import {
+  Info,
+  Settings2,
+  BarChart3,
+  Sparkles,
+  Target,
+  TrendingDown,
+  ChevronsUp,
+  History,
+  Repeat,
+} from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -117,14 +129,12 @@ export default async function ClientePage({
       <div className="asb-card p-5" style={{ borderTop: "2px solid #C8102E" }}>
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
-            <h1 className="text-2xl font-bold text-white truncate">
-              {lead.restaurant_name || lead.name || lead.phone}
-            </h1>
-            <div className="text-sm text-white/70 mt-1 truncate">
-              {[lead.city, lead.segment, lead.weekly_volume_kg ? `${lead.weekly_volume_kg}kg/sem` : null, lead.phone]
+            <PageHead
+              title={lead.restaurant_name || lead.name || lead.phone}
+              desc={[lead.city, lead.segment, lead.weekly_volume_kg ? `${lead.weekly_volume_kg}kg/sem` : null, lead.phone]
                 .filter(Boolean)
                 .join(" · ")}
-            </div>
+            />
           </div>
           <div className="flex flex-col items-end gap-2 shrink-0">
             <span className="text-[10px] font-bold uppercase tracking-wider bg-white/20 text-white px-3 py-1 rounded">
@@ -148,7 +158,7 @@ export default async function ClientePage({
       <div className="grid grid-cols-3 gap-4">
         {/* Data card */}
         <div className="col-span-2 asb-card p-4">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-200 mb-3">Dados</h2>
+          <SectionHead Icon={Info} color="#8bb4ff" title="Dados" desc="Ficha do cliente" />
           <dl className="grid grid-cols-[120px_1fr] gap-y-2 gap-x-4 text-sm">
             <dt className="text-slate-200 text-xs uppercase tracking-wide">Cidade</dt>
             <dd className="text-white">{lead.city ?? "—"}</dd>
@@ -175,7 +185,7 @@ export default async function ClientePage({
 
         {/* Actions (apenas se em carteira) */}
         <div className="asb-card p-4">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-200 mb-3">Ações</h2>
+          <SectionHead Icon={Settings2} color="#f59e0b" title="Ações" desc="Gestão do cliente" />
           {inCarteira ? (
             <CustomerActions
               leadId={lead.id}
@@ -196,89 +206,60 @@ export default async function ClientePage({
       {/* F3 — Métricas calculadas pelo worker */}
       {lifecycleState && (
         <div className="asb-card p-4">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-200">
-              Métricas da Carteira (worker daily 6h BRT)
-            </h2>
-            <span className="text-[10px] text-slate-200 font-mono">
-              Calculado em {lifecycleState.last_computed_at ? new Date(lifecycleState.last_computed_at).toLocaleString("pt-BR") : "—"}
-            </span>
-          </div>
+          <SectionHead
+            Icon={BarChart3}
+            color="#22c55e"
+            title="Métricas da Carteira"
+            desc={`Worker diário 6h BRT · calculado ${lifecycleState.last_computed_at ? new Date(lifecycleState.last_computed_at).toLocaleString("pt-BR") : "—"}`}
+          />
           <div className="grid grid-cols-4 gap-3">
-            <div className="bg-[var(--asb-card-hi)] border border-[var(--asb-border)] rounded p-3">
-              <div className="text-[10px] uppercase tracking-wider text-slate-200 font-bold">Pedidos</div>
-              <div className="text-2xl font-bold text-white mt-1">{lifecycleState.total_orders ?? 0}</div>
-            </div>
-            <div className="bg-[var(--asb-card-hi)] border border-[var(--asb-border)] rounded p-3">
-              <div className="text-[10px] uppercase tracking-wider text-slate-200 font-bold">Tier ABC</div>
-              <div
-                className="text-2xl font-bold mt-1"
-                style={{
-                  color: lifecycleState.customer_tier === "A" ? theme.colors.warning :
-                         lifecycleState.customer_tier === "B" ? theme.colors.brandAsb :
-                         lifecycleState.customer_tier === "C" ? "#9696AF" : "#555",
-                }}
-              >
-                {lifecycleState.customer_tier ?? "—"}
-              </div>
-            </div>
-            <div className="bg-[var(--asb-card-hi)] border border-[var(--asb-border)] rounded p-3">
-              <div className="text-[10px] uppercase tracking-wider text-slate-200 font-bold">Receita BRL</div>
-              <div className="text-xl font-bold text-white mt-1">
-                R$ {Number(lifecycleState.total_revenue_brl ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </div>
-            </div>
-            <div className="bg-[var(--asb-card-hi)] border border-[var(--asb-border)] rounded p-3">
-              <div className="text-[10px] uppercase tracking-wider text-slate-200 font-bold">Ticket Médio</div>
-              <div className="text-xl font-bold text-white mt-1">
-                R$ {Number(lifecycleState.avg_ticket_brl ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </div>
-            </div>
-            <div className="bg-[var(--asb-card-hi)] border border-[var(--asb-border)] rounded p-3">
-              <div className="text-[10px] uppercase tracking-wider text-slate-200 font-bold">1º Pedido</div>
-              <div className="text-sm font-semibold text-white mt-1">
-                {lifecycleState.first_order_at ? new Date(lifecycleState.first_order_at).toLocaleDateString("pt-BR") : "—"}
-              </div>
-            </div>
-            <div className="bg-[var(--asb-card-hi)] border border-[var(--asb-border)] rounded p-3">
-              <div className="text-[10px] uppercase tracking-wider text-slate-200 font-bold">Último Pedido</div>
-              <div className="text-sm font-semibold text-white mt-1">
-                {lifecycleState.last_order_at ? new Date(lifecycleState.last_order_at).toLocaleDateString("pt-BR") : "—"}
-              </div>
-            </div>
-            <div className="bg-[var(--asb-card-hi)] border border-[var(--asb-border)] rounded p-3">
-              <div className="text-[10px] uppercase tracking-wider text-slate-200 font-bold">Dias Sem Comprar</div>
-              <div
-                className="text-xl font-bold mt-1"
-                style={{
-                  color: !lifecycleState.days_since_last_order ? "#fff" :
-                         lifecycleState.days_since_last_order > 60 ? "#BA1717" :
-                         lifecycleState.days_since_last_order > 14 ? "#BA7517" : "#22C55E",
-                }}
-              >
-                {lifecycleState.days_since_last_order ?? "—"}d
-              </div>
-            </div>
-            <div className="bg-[var(--asb-card-hi)] border border-[var(--asb-border)] rounded p-3">
-              <div className="text-[10px] uppercase tracking-wider text-slate-200 font-bold">Próxima Esperada</div>
-              <div className="text-sm font-semibold text-white mt-1">
-                {lifecycleState.next_expected_order_at ? new Date(lifecycleState.next_expected_order_at).toLocaleDateString("pt-BR") : "—"}
-              </div>
-              {lifecycleState.avg_order_interval_days && (
-                <div className="text-[10px] text-slate-200 mt-1">
-                  avg {Number(lifecycleState.avg_order_interval_days).toFixed(1)}d
-                </div>
-              )}
-            </div>
+            <StatTile label="Pedidos" value={lifecycleState.total_orders ?? 0} />
+            <StatTile
+              label="Tier ABC"
+              value={lifecycleState.customer_tier ?? "—"}
+              num={
+                lifecycleState.customer_tier === "A" ? theme.colors.warning :
+                lifecycleState.customer_tier === "B" ? theme.colors.brandAsb :
+                lifecycleState.customer_tier === "C" ? "#9696AF" : "#555"
+              }
+            />
+            <StatTile
+              label="Receita BRL"
+              value={`R$ ${Number(lifecycleState.total_revenue_brl ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+            />
+            <StatTile
+              label="Ticket Médio"
+              value={`R$ ${Number(lifecycleState.avg_ticket_brl ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+            />
+            <StatTile
+              label="1º Pedido"
+              value={lifecycleState.first_order_at ? new Date(lifecycleState.first_order_at).toLocaleDateString("pt-BR") : "—"}
+            />
+            <StatTile
+              label="Último Pedido"
+              value={lifecycleState.last_order_at ? new Date(lifecycleState.last_order_at).toLocaleDateString("pt-BR") : "—"}
+            />
+            <StatTile
+              label="Dias Sem Comprar"
+              value={`${lifecycleState.days_since_last_order ?? "—"}d`}
+              num={
+                !lifecycleState.days_since_last_order ? "#FFFFFF" :
+                lifecycleState.days_since_last_order > 60 ? "#BA1717" :
+                lifecycleState.days_since_last_order > 14 ? "#BA7517" : "#22C55E"
+              }
+            />
+            <StatTile
+              label="Próxima Esperada"
+              value={lifecycleState.next_expected_order_at ? new Date(lifecycleState.next_expected_order_at).toLocaleDateString("pt-BR") : "—"}
+              sub={lifecycleState.avg_order_interval_days ? `média ${Number(lifecycleState.avg_order_interval_days).toFixed(1)}d` : undefined}
+            />
           </div>
         </div>
       )}
 
       {/* FIX3: Oportunidades de expansão — seção sempre visível (cards ou empty state) */}
       <div>
-        <h2 className="text-xs font-bold uppercase tracking-wider text-slate-200 mb-3">
-          Oportunidades de Expansão
-        </h2>
+        <SectionHead Icon={Sparkles} color="#f59e0b" title="Oportunidades de Expansão" desc="Up-sell, risco de queda e upgrade de tier" />
         {(upsellOp || downsellRisk || tierUp) ? (
         <div className="grid grid-cols-2 gap-4">
           {upsellOp && (
@@ -286,12 +267,8 @@ export default async function ClientePage({
               className="asb-card p-4"
               style={{ borderLeft: "3px solid #BA7517" }}
             >
-              <div className="flex items-center gap-2 mb-3">
-                <span style={{ fontSize: 18 }}>🎯</span>
-                <h2 className="text-xs font-bold uppercase tracking-wider text-[#E0993A]">
-                  Oportunidade de Up-sell
-                </h2>
-              </div>
+              <SectionHead Icon={Target} color="#E0993A" title="Oportunidade de Up-sell" />
+
               <div className="space-y-2 text-xs">
                 <div>
                   <span className="text-slate-200">Ticket atual:</span>{" "}
@@ -339,12 +316,8 @@ export default async function ClientePage({
               className="asb-card p-4"
               style={{ borderLeft: "3px solid #BA1717" }}
             >
-              <div className="flex items-center gap-2 mb-3">
-                <span style={{ fontSize: 18 }}>🔻</span>
-                <h2 className="text-xs font-bold uppercase tracking-wider text-[#E84545]">
-                  Risco de Queda — Ticket Inflado
-                </h2>
-              </div>
+              <SectionHead Icon={TrendingDown} color="#E84545" title="Risco de Queda — Ticket Inflado" />
+
               <div className="space-y-2 text-xs">
                 <div>
                   <span className="text-slate-200">Ticket atual:</span>{" "}
@@ -377,12 +350,8 @@ export default async function ClientePage({
               className="asb-card p-4"
               style={{ borderLeft: `3px solid ${theme.colors.brandAsb}` }}
             >
-              <div className="flex items-center gap-2 mb-3">
-                <span style={{ fontSize: 18 }}>⬆</span>
-                <h2 className="text-xs font-bold uppercase tracking-wider text-[#4FA3E8]">
-                  Sugestão de Tier Upgrade
-                </h2>
-              </div>
+              <SectionHead Icon={ChevronsUp} color="#4FA3E8" title="Sugestão de Tier Upgrade" />
+
               <div className="space-y-2 text-xs">
                 <div className="flex items-center gap-2">
                   <span className="text-slate-200">Tier atual:</span>
@@ -410,7 +379,7 @@ export default async function ClientePage({
                 </div>
                 <div>
                   <span className="text-slate-200">Razão:</span>{" "}
-                  <span className="text-slate-200 text-[10px] font-mono">{tierUp.razao}</span>
+                  <span className="text-slate-200 text-[10px]">{tierUp.razao}</span>
                 </div>
                 <div className="pt-2 mt-2 border-t border-[var(--asb-border)] text-[10px] text-slate-200">
                   Reclassificação manual pelo gestor — worker calcula tier
@@ -429,9 +398,7 @@ export default async function ClientePage({
 
       {/* Timeline */}
       <div className="asb-card p-4">
-        <h2 className="text-xs font-bold uppercase tracking-wider text-slate-200 mb-3">
-          Timeline ({events?.length ?? 0} eventos)
-        </h2>
+        <SectionHead Icon={History} color="#8bb4ff" title="Timeline" desc={`${events?.length ?? 0} eventos de etapa`} />
         <div className="space-y-2 max-h-[300px] overflow-y-auto">
           {(events ?? []).map((ev, i: number) => (
             <div key={i} className="flex items-start gap-3 text-xs border-l-2 border-[#185FA5] pl-3 py-1">
@@ -455,9 +422,7 @@ export default async function ClientePage({
       {/* Reassign log */}
       {overrides && overrides.length > 0 && (
         <div className="asb-card p-4">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-200 mb-3">
-            Reassign log ({overrides.length})
-          </h2>
+          <SectionHead Icon={Repeat} color="#f59e0b" title="Reassign Log" desc={`${overrides.length} reatribuições`} />
           <div className="space-y-2">
             {overrides.map((o, i: number) => (
               <div key={i} className="text-xs flex items-start gap-3 border-l-2 border-[#BA7517] pl-3 py-1">

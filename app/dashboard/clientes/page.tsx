@@ -1,6 +1,9 @@
+import type { CSSProperties } from "react";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
+import { ArrowLeftRight } from "lucide-react";
 import { theme } from "@/lib/theme";
+import { PageHead, SectionHead, StatTile } from "@/app/dashboard/lib/ui";
 import { AtivosCarteira, type Carteira } from "./ativos-carteira";
 import { getUserContext } from "@/lib/auth/get-user-role";
 import { STATUS_FILTER_KEYS } from "@/lib/customer-status";
@@ -30,6 +33,12 @@ const brl = (n: number | null) =>
 
 const sBrl = (n: number) => (n >= 0 ? "+" : "") + brl(n);   // R$ com sinal explícito
 const sNum = (n: number) => (n >= 0 ? `+${n}` : `${n}`);
+
+// chip numérico secundário (BRL) dentro do StatTile — número SEMPRE mono/tabular.
+const monoChip = (c: string): CSSProperties => ({
+  fontSize: 13, fontWeight: 800, color: c,
+  fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums",
+});
 
 function shiftMonthDre(ym: string, delta: number): string {
   const [y, m] = ym.split("-").map(Number);
@@ -65,6 +74,7 @@ async function DRECarteiraCard({ mes }: { mes?: string }) {
   const recReceita = recRows.reduce((s, r) => s + Number(r.valor_retorno || 0), 0);
   const recGap = recRows.length ? Math.round(recRows.reduce((s, r) => s + Number(r.gap_dias || 0), 0) / recRows.length) : 0;
   const recMesLabel = MESES_DRE[Number(recMesAlvo.split("-")[1]) - 1];
+  const recMesTitle = recMesLabel.charAt(0) + recMesLabel.slice(1).toLowerCase(); // "Jul"
   const entraram = Number(data?.entraram ?? 0);
   const receitaEntrou = Number(data?.receita_entrou ?? 0);
   // Novos = só first order no mês (recuperados fora) — coluna aditiva da view (variante B).
@@ -84,12 +94,10 @@ async function DRECarteiraCard({ mes }: { mes?: string }) {
   return (
     <div className="bg-[var(--asb-card)] border border-[var(--asb-border)] rounded-lg p-4 shadow-[0_0_24px_-8px_rgba(79,125,240,0.45)]">
       <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
-        <div className="flex items-center gap-2">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-white">
-            Movimento de Carteira · {MESES_DRE[m - 1]} {y}
-          </h2>
+        <div className="flex items-center gap-2" style={{ marginBottom: -18 }}>
+          <SectionHead Icon={ArrowLeftRight} color="#4f7df0" title="Movimento de carteira" desc={`${MESES_DRE[m - 1]} ${y}`} />
           {isMTD && (
-            <span className="text-[9px] uppercase font-bold px-2 py-0.5 rounded" style={{ background: "#D4A01722", color: "#D4A017" }}>
+            <span className="text-[9px] uppercase font-bold px-2 py-0.5 rounded" style={{ background: "#D4A01722", color: "#D4A017", fontFamily: theme.font.label }}>
               MTD · mês em curso
             </span>
           )}
@@ -104,30 +112,38 @@ async function DRECarteiraCard({ mes }: { mes?: string }) {
         </div>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div>
-          <div className="text-3xl font-bold" style={{ color: "#22c55e" }}>{novosClientes}</div>
-          <div className="text-sm font-bold" style={{ color: "#22c55e" }}>{brl(receitaNovos)}</div>
-          <div className="text-[10px] uppercase tracking-wider font-bold text-white mt-1">Novos Clientes</div>
-          <div className="text-[10px] text-slate-400">convertidos no mês com pedido</div>
-        </div>
-        <div>
-          <div className="text-3xl font-bold" style={{ color: "#D4A017" }}>{sairam}</div>
-          <div className="text-sm font-bold" style={{ color: "#D4A017" }}>{brl(receitaSaiu)}</div>
-          <div className="text-[10px] uppercase tracking-wider font-bold text-white mt-1">Deixou de Faturar</div>
-          <div className="text-[10px] text-slate-400">faturava e parou no mês</div>
-        </div>
-        <div>
-          <div className="text-3xl font-bold" style={{ color: saldoCli >= 0 ? "#22c55e" : "#C8102E" }}>{sNum(saldoCli)}</div>
-          <div className="text-sm font-bold" style={{ color: saldoRec >= 0 ? "#22c55e" : "#C8102E" }}>{sBrl(saldoRec)}</div>
-          <div className="text-[10px] uppercase tracking-wider font-bold text-white mt-1">Saldo</div>
-          <div className="text-[10px] text-slate-400">líquido (entrou − saiu)</div>
-        </div>
-        <div>
-          <div className="text-3xl font-bold" style={{ color: "#f97316" }}>{recCount}</div>
-          <div className="text-sm font-bold" style={{ color: "#f97316" }}>{brl(recReceita)}</div>
-          <div className="text-[10px] uppercase tracking-wider font-bold text-white mt-1">Recuperados · {recMesLabel}</div>
-          <div className="text-[10px] text-slate-400">voltaram após 60+ dias fora · gap méd {recGap}d</div>
-        </div>
+        <StatTile
+          label="Novos clientes"
+          value={novosClientes}
+          accent="#22c55e"
+          num="#22c55e"
+          badges={<span style={monoChip("#22c55e")}>{brl(receitaNovos)}</span>}
+          sub="convertidos no mês com pedido"
+        />
+        <StatTile
+          label="Deixou de faturar"
+          value={sairam}
+          accent="#D4A017"
+          num="#D4A017"
+          badges={<span style={monoChip("#D4A017")}>{brl(receitaSaiu)}</span>}
+          sub="faturava e parou no mês"
+        />
+        <StatTile
+          label="Saldo"
+          value={sNum(saldoCli)}
+          accent={saldoCli >= 0 ? "#22c55e" : "#C8102E"}
+          num={saldoCli >= 0 ? "#22c55e" : "#C8102E"}
+          badges={<span style={monoChip(saldoRec >= 0 ? "#22c55e" : "#C8102E")}>{sBrl(saldoRec)}</span>}
+          sub="líquido (entrou − saiu)"
+        />
+        <StatTile
+          label={`Recuperados · ${recMesTitle}`}
+          value={recCount}
+          accent="#f97316"
+          num="#f97316"
+          badges={<span style={monoChip("#f97316")}>{brl(recReceita)}</span>}
+          sub={`voltaram após 60+ dias fora · gap méd ${recGap}d`}
+        />
       </div>
     </div>
   );
@@ -246,7 +262,7 @@ export default async function ClientesPage({
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold text-white">Carteira de Clientes</h1>
+      <PageHead title="Carteira de Clientes" desc="Carteira real ARES · movimento, saúde e recuperação por vendedor" />
 
       {/* Abas — pill, ativa = brandAsb + branco + border-bottom 2px */}
       <div

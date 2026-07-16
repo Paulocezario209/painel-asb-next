@@ -1,14 +1,17 @@
 "use client";
 
-import type { CSSProperties } from "react";
 import { theme } from "@/lib/theme";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from "recharts";
 import { S } from "@/app/dashboard/lib/dashboard-tokens";
+import { SectionHead } from "@/app/dashboard/lib/ui";
+import { Repeat, Package, Layers } from "lucide-react";
 
 // Padrões reusados da aba Inteligência (components/insights/segment-chart.tsx): barra horizontal
-// gradiente + tooltip estilizado + eixos mono. Adaptado ao tema tech (glow azul ASB).
+// gradiente + tooltip estilizado. Adaptado ao tema tech (glow azul ASB).
 const GRID = "rgba(27,42,107,.35)";
-const axisStyle = { fontSize: 10, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" as const, fill: "#e4e9f0" };
+// eixo numérico → mono/tabular; eixo de categoria (texto) → sans (theme.font.label).
+const numAxisStyle = { fontSize: 10, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" as const, fill: "#e4e9f0" };
+const catAxisStyle = { fontSize: 10, fontFamily: theme.font.label, fill: "#e4e9f0" };
 const tooltipStyle = {
   contentStyle: {
     background: "var(--asb-card-hi)", border: "1px solid #4f7df0", borderRadius: 4,
@@ -18,9 +21,6 @@ const tooltipStyle = {
   itemStyle: { color: "#c8d8e8" },
   labelStyle: { color: "#e4e9f0", fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase" as const },
 };
-
-// Título de seção (mesma camada que PageHead: page-ink, 20px) — bare heading acima do grid de cards.
-const h2Style: CSSProperties = { color: "var(--asb-page-ink)", fontSize: 20, fontWeight: 800, fontFamily: theme.font.label, letterSpacing: "-.01em" };
 
 const brl = (n: number) => (n ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 const dt = (s: string | null) => (s ? new Date(s).toLocaleDateString("pt-BR") : "—");
@@ -52,10 +52,12 @@ export function RecompraMetaSection({ meta, top, grupos }: { meta: MetaRow[]; to
   const metaSorted = [...meta].sort((a, b) => b.meta_dia - a.meta_dia);
   return (
     <div>
-      <h2 style={{ ...h2Style, marginBottom: 4 }}>Recompra × Meta do dia</h2>
-      <p style={{ ...S.muted, marginBottom: 12 }}>
-        Recompra esperada até o dia de meta (Σ ticket médio dos clientes com próximo ciclo ≤ data de meta) vs meta do dia
-      </p>
+      <SectionHead
+        Icon={Repeat}
+        color="#22c55e"
+        title="Recompra × Meta do dia"
+        desc="Recompra esperada até o dia de meta (Σ ticket médio dos clientes com próximo ciclo ≤ data de meta) vs meta do dia"
+      />
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {metaSorted.map((m) => {
           const pct = m.pct_atingimento ?? 0;
@@ -108,8 +110,12 @@ export function TopProdutosSection({ meta, top }: { meta: MetaRow[]; top: TopRow
   const topBy = groupBy(top);
   return (
     <div>
-      <h2 style={{ ...h2Style, marginBottom: 4 }}>Top 10 produtos · 30d</h2>
-      <p style={{ ...S.muted, marginBottom: 12 }}>Mais vendidos por faturamento, com % de representatividade · por vendedor</p>
+      <SectionHead
+        Icon={Package}
+        color="#185FA5"
+        title="Top 10 produtos · 30d"
+        desc="Mais vendidos por faturamento, com % de representatividade · por vendedor"
+      />
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {[...topBy.entries()].map(([rt, prods]) => {
           const nome = meta.find((m) => m.routing_team === rt)?.vendedor_nome ?? rt;
@@ -144,8 +150,12 @@ export function GruposSection({ meta, grupos }: { meta: MetaRow[]; grupos: Grupo
   const grupoBy = groupBy(grupos);
   return (
     <div>
-      <h2 style={{ ...h2Style, marginBottom: 4 }}>Mix por grupo de produto · 30d</h2>
-      <p style={{ ...S.muted, marginBottom: 12 }}>Representatividade da cesta da recompra por família de produto · por vendedor</p>
+      <SectionHead
+        Icon={Layers}
+        color="#4f7df0"
+        title="Mix por grupo de produto · 30d"
+        desc="Representatividade da cesta da recompra por família de produto · por vendedor"
+      />
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {[...grupoBy.entries()].map(([rt, gs]) => {
           const nome = meta.find((m) => m.routing_team === rt)?.vendedor_nome ?? rt;
@@ -167,8 +177,8 @@ export function GruposSection({ meta, grupos }: { meta: MetaRow[]; grupos: Grupo
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke={GRID} horizontal={false} />
-                    <XAxis type="number" tick={axisStyle} axisLine={{ stroke: GRID }} tickLine={false} hide />
-                    <YAxis type="category" dataKey="name" width={96} tick={axisStyle} axisLine={false} tickLine={false} />
+                    <XAxis type="number" tick={numAxisStyle} axisLine={{ stroke: GRID }} tickLine={false} hide />
+                    <YAxis type="category" dataKey="name" width={96} tick={catAxisStyle} axisLine={false} tickLine={false} />
                     <Tooltip {...tooltipStyle} cursor={{ fill: "rgba(79,125,240,.08)" }} formatter={(v) => [brl(Number(v) || 0), "Valor 30d"]} />
                     <Bar dataKey="value" fill={`url(#grupoBar-${rt})`} radius={[0, 3, 3, 0]} />
                   </BarChart>

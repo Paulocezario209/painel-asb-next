@@ -6,6 +6,7 @@ import { theme } from "@/lib/theme";
 import { getUserContext } from "@/lib/auth/get-user-role";
 import { RegrasComissaoModal } from "./regras-modal";
 import { S } from "@/app/dashboard/lib/dashboard-tokens";
+import { PageHead, StatTile } from "@/app/dashboard/lib/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -235,12 +236,10 @@ export default async function RemuneracaoPage({
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {/* Header + seletor de mes */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 12 }}>
-        <div>
-          <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
-            Remuneracao do Time
-          </h1>
-          <p style={S.muted}>Comissao do time comercial &middot; base FATURADO &middot; privada (gestor)</p>
-        </div>
+        <PageHead
+          title="Remuneração do Time"
+          desc="Comissão do time comercial · base FATURADO · privada (gestor)"
+        />
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <RegrasComissaoModal perfil="ambos" />
           <Link href={`/dashboard/remuneracao?mes=${shiftMonth(mesYM, -1)}`} style={{ ...S.muted, textDecoration: "none", padding: "4px 10px", border: `1px solid ${theme.colors.borderDefault}`, borderRadius: 6 }}>{"<"}</Link>
@@ -351,21 +350,14 @@ export default async function RemuneracaoPage({
 
           {/* 3 KPIs de rodape */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16 }}>
-            <div style={{ ...S.card, padding: "18px 22px" }}>
-              <p style={S.label}>Custo total do time</p>
-              <p style={{ ...S.value, marginTop: 10, fontSize: 22 }}>{fmtBRL(custoTotal)}</p>
-              <p style={{ ...S.muted, fontSize: 9, marginTop: 4 }}>fixo + comissao + bonus dos 3</p>
-            </div>
-            <div style={{ ...S.card, padding: "18px 22px" }}>
-              <p style={S.label}>Faturado do time</p>
-              <p style={{ ...S.value, marginTop: 10, fontSize: 22 }}>{fmtBRL(faturadoTime)}</p>
-              <p style={{ ...S.muted, fontSize: 9, marginTop: 4 }}>total empresa (eixo faturamento)</p>
-            </div>
-            <div style={{ ...S.card, padding: "18px 22px", borderTop: `2px solid ${pctColor(pctSobreFaturado != null && pctSobreFaturado <= 5 ? 100 : 0)}` }}>
-              <p style={S.label}>Custo comercial %</p>
-              <p style={{ ...S.value, marginTop: 10, fontSize: 22 }}>{pctSobreFaturado != null ? `${pctSobreFaturado.toFixed(2)}%` : "-"}</p>
-              <p style={{ ...S.muted, fontSize: 9, marginTop: 4 }}>custo total / faturado do time</p>
-            </div>
+            <StatTile label="Custo total do time" value={fmtBRL(custoTotal)} sub="fixo + comissão + bônus dos 3" />
+            <StatTile label="Faturado do time" value={fmtBRL(faturadoTime)} sub="total empresa (eixo faturamento)" />
+            <StatTile
+              label="Custo comercial %"
+              value={pctSobreFaturado != null ? `${pctSobreFaturado.toFixed(2)}%` : "-"}
+              accent={pctColor(pctSobreFaturado != null && pctSobreFaturado <= 5 ? 100 : 0)}
+              sub="custo total / faturado do time"
+            />
           </div>
         </>
       )}

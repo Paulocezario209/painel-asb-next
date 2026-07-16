@@ -1,9 +1,9 @@
-import Link from "next/link";
-import { theme } from "@/lib/theme";
 import { createClient } from "@/lib/supabase/server";
 import { FollowupsTable } from "@/components/followups/followups-table";
 import { CadenciaBoard, type CadenciaLead } from "@/components/followups/cadencia-board";
 import { S } from "../lib/dashboard-tokens";
+import { PageHead, SectionHead, KpiCard } from "../lib/ui";
+import { Send, MessageCircle, Trophy, Crosshair, History } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -91,10 +91,10 @@ export default async function FollowupsPage({ searchParams }: { searchParams: Pr
   const topAngleKey = topAngle ? topAngle[0] : "";
 
   const kpis = [
-    { label: "Total Enviados",     value: total,          accent: "#FFFFFF",  suffix: "",  href: "/dashboard/followups" },
-    { label: "Taxa de Resposta",   value: responseRate,   accent: "#22c55e",  suffix: "%", href: "/dashboard/followups?resposta=sim" },
-    { label: "Convertidos Após",   value: converted,      accent: "#f59e0b",  suffix: "",  href: "/dashboard/followups?convertido=true" },
-    { label: "Ângulo Top",         value: topAngleLabel,  accent: "#C8102E",  suffix: "",  href: topAngleKey ? `/dashboard/followups?angulo=${topAngleKey}` : "/dashboard/followups" },
+    { label: "Total enviados",   value: `${total}`,          Icon: Send,          accent: "#8bb4ff", href: "/dashboard/followups" },
+    { label: "Taxa de resposta", value: `${responseRate}%`,  Icon: MessageCircle, accent: "#22c55e", href: "/dashboard/followups?resposta=sim" },
+    { label: "Convertidos após", value: `${converted}`,      Icon: Trophy,        accent: "#f59e0b", href: "/dashboard/followups?convertido=true" },
+    { label: "Ângulo top",       value: topAngleLabel,       Icon: Crosshair,     accent: "#C8102E", href: topAngleKey ? `/dashboard/followups?angulo=${topAngleKey}` : "/dashboard/followups" },
   ];
 
   // Enrich rows with lead data for the table
@@ -109,12 +109,7 @@ export default async function FollowupsPage({ searchParams }: { searchParams: Pr
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <div>
-        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
-          Follow-ups
-        </h1>
-        <p style={S.muted}>Histórico de follow-ups automáticos</p>
-      </div>
+      <PageHead title="Follow-ups" desc="Histórico de follow-ups automáticos" />
 
       {/* Alertas de saúde do sistema (se houver problema) */}
       {((vencidos ?? 0) > 0 || (semData ?? 0) > 0) && (
@@ -160,15 +155,8 @@ export default async function FollowupsPage({ searchParams }: { searchParams: Pr
 
       {/* KPI cards */}
       <div className="asb-grid-kpi">
-        {kpis.map(({ label, value, accent, suffix, href }) => (
-          <Link key={label} href={href} style={{ textDecoration: "none" }}>
-            <div style={{ ...S.card, padding: "20px 20px", minHeight: 100, borderTop: `2px solid ${accent}`, cursor: "pointer", transition: "opacity .15s", display: "flex", flexDirection: "column", justifyContent: "space-between" }} className="asb-kpi-hover">
-              <p style={{ ...S.label, color: accent }}>{label}</p>
-              <p style={{ ...S.value, color: accent, marginTop: 12, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                {value}{suffix}
-              </p>
-            </div>
-          </Link>
+        {kpis.map((k) => (
+          <KpiCard key={k.label} {...k} />
         ))}
       </div>
 
@@ -177,9 +165,7 @@ export default async function FollowupsPage({ searchParams }: { searchParams: Pr
       <CadenciaBoard leads={cadenciaLeads} />
 
       {/* Histórico de disparos (log — não mexer) */}
-      <div>
-        <p style={{ ...S.label, marginBottom: 8 }}>Histórico de disparos</p>
-      </div>
+      <SectionHead Icon={History} color="#8bb4ff" title="Histórico de disparos" desc="Log de cada follow-up automático enviado" />
       <FollowupsTable
         rows={enriched}
         angleLabels={ANGLE_LABELS}

@@ -5,6 +5,7 @@ import { RecompraLista, type RecompraRow } from "./recompra-lista";
 import { SaudeCarteira, type SaudeVendedor } from "./saude-carteira";
 import { CarteiraKpisRow } from "./carteira-kpis";
 import { RecompraMetaSection, TopProdutosSection, GruposSection, type MetaRow, type TopRow, type GrupoRow } from "./carteira-analytics";
+import { PageHead } from "../lib/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -64,6 +65,7 @@ export default async function CarteiraAtivaPage() {
   // Nova ordem (Paulo): (a) KPIs → (b) Recompra×Meta → (c) Colunas clientes → (d) Top10 → (e) Grupos → (f) Saúde.
   return (
     <div className="space-y-6">
+      <PageHead title="Carteira Ativa" desc="Recompra, saúde e cesta projetada da carteira real ARES" />
       <CarteiraKpisRow kpis={kpis} />
       <RecompraMetaSection meta={metaRows} top={topRows} grupos={gruposRows} />
       <RecompraLista rows={list} />

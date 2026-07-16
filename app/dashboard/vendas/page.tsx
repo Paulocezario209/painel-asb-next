@@ -1,5 +1,4 @@
 import { createClient } from "@/lib/supabase/server";
-import { theme } from "@/lib/theme";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 import { getUserContext } from "@/lib/auth/get-user-role";
@@ -9,7 +8,7 @@ import { AlertasComerciais } from "./alertas-comerciais";
 import { RankingVendedores } from "./ranking-vendedores";
 import { getAlertasComerciais, getRankingVendedores, getEstrategiasComerciais } from "./actions";
 import { VENDOR_ORDER } from "@/lib/vendor-labels";
-import { S } from "@/app/dashboard/lib/dashboard-tokens";
+import { PageHead, StatTile } from "@/app/dashboard/lib/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -206,29 +205,21 @@ export default async function VendasPage() {
     <VendasPrivacyShell>
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {/* Header */}
-      <div>
-        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
-          Vendas
-        </h1>
-        <p style={S.muted}>
-          Faturamento {mesAtual} &middot; realizado OFICIAL = faturado NF+Recibo por dia de faturamento (§5) &middot; prévia por emissão (tempo real)
-        </p>
-      </div>
+      <PageHead
+        title="Vendas"
+        desc={`Faturamento ${mesAtual} · realizado OFICIAL = faturado NF+Recibo por dia de faturamento (§5) · prévia por emissão (tempo real)`}
+      />
 
       {/* KPI cards topo (5: Meta · Faturado ASB · Faturado CNB · Total §5 · % Atingido) */}
       <div className="asb-grid-kpi-5">
         {[
-          { label: "Meta Total", value: totalMeta > 0 ? <span className="priv-brl">{fmtBRL(totalMeta)}</span> : "\u2014", accent: "#f59e0b", sub: undefined as string | undefined },
-          { label: "Faturado ASB", value: <span className="priv-brl">{fmtBRL(faturadoAsb)}</span>, accent: "#22c55e", sub: "ARES \u00b7 por dia de faturamento" },
-          { label: "Faturado CNB", value: <span className="priv-brl">{fmtBRL(totalCnb)}</span>, accent: "#185FA5", sub: "Carnes Nobres Boutique (m\u00eas)" },
-          { label: "Total Faturado (\u00a75)", value: <span className="priv-brl">{fmtBRL(realizadoFatOficial)}</span>, accent: "#C8102E", sub: `ASB + CNB \u00b7 pr\u00e9via ciclo ${fmtBRL(totalCiclo)}` },
-          { label: "% Atingido", value: pctFatStr ? <span className="priv-pct">{`${pctFatStr}%`}</span> : "\u2014", accent: pctFat !== null ? (pctFat >= 100 ? "#22c55e" : pctFat >= 50 ? "#f59e0b" : "#C8102E") : "#e4e9f0", sub: undefined },
-        ].map(({ label, value, accent, sub }) => (
-          <div key={label} style={{ ...S.card, padding: "20px", borderTop: `2px solid ${accent}` }}>
-            <p style={{ ...S.label, color: accent }}>{label}</p>
-            <p style={{ ...S.value, marginTop: 12 }}>{value}</p>
-            {sub && <p style={{ ...S.muted, fontSize: 9, marginTop: 6 }}>{sub}</p>}
-          </div>
+          { label: "Meta Total", value: totalMeta > 0 ? <span className="priv-brl">{fmtBRL(totalMeta)}</span> : "\u2014", accent: "#f59e0b", sub: undefined as string | undefined, num: undefined as string | undefined },
+          { label: "Faturado ASB", value: <span className="priv-brl">{fmtBRL(faturadoAsb)}</span>, accent: "#22c55e", sub: "ARES \u00b7 por dia de faturamento", num: undefined as string | undefined },
+          { label: "Faturado CNB", value: <span className="priv-brl">{fmtBRL(totalCnb)}</span>, accent: "#185FA5", sub: "Carnes Nobres Boutique (m\u00eas)", num: undefined as string | undefined },
+          { label: "Total Faturado (\u00a75)", value: <span className="priv-brl">{fmtBRL(realizadoFatOficial)}</span>, accent: "#C8102E", sub: `ASB + CNB \u00b7 pr\u00e9via ciclo ${fmtBRL(totalCiclo)}`, num: undefined as string | undefined },
+          { label: "% Atingido", value: pctFatStr ? <span className="priv-pct">{`${pctFatStr}%`}</span> : "\u2014", accent: pctFat !== null ? (pctFat >= 100 ? "#22c55e" : pctFat >= 50 ? "#f59e0b" : "#C8102E") : "#e4e9f0", sub: undefined as string | undefined, num: pctFat !== null ? (pctFat >= 100 ? "#22c55e" : pctFat >= 50 ? "#f59e0b" : "#C8102E") : undefined },
+        ].map(({ label, value, accent, sub, num }) => (
+          <StatTile key={label} label={label} value={value} accent={accent} num={num} sub={sub} />
         ))}
       </div>
 

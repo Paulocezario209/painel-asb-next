@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { theme } from "@/lib/theme";
-import { S } from "@/app/dashboard/lib/dashboard-tokens";
+import { PageHead, SectionHead } from "@/app/dashboard/lib/ui";
+import { Flame } from "lucide-react";
 import { HotLeadsTable } from "@/components/hot-leads/hot-leads-table";
 
 export const dynamic = "force-dynamic";
@@ -18,22 +19,26 @@ export default async function HotLeadsPage() {
     .limit(100);
 
   return (
-    <div style={{ padding: "24px 20px" }}>
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
-          Leads Quentes
-        </h1>
-        <p style={S.muted}>
-          {error ? "Erro ao carregar leads" : `${leads?.length ?? 0} leads · Perfil A (ativos) + Perfil B (convertidos)`}
-        </p>
-      </div>
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <PageHead
+        title="Leads Quentes"
+        desc={error ? "Erro ao carregar leads" : `${leads?.length ?? 0} leads · Perfil A (ativos) + Perfil B (convertidos)`}
+      />
 
       {error ? (
-        <div style={{ color: "#C8102E", fontFamily: theme.font.label, fontSize: 12 }}>
+        <div className="asb-card" style={{ padding: "20px 24px", color: "#C8102E", fontFamily: theme.font.label, fontSize: 13 }}>
           Erro: {error.message}
         </div>
       ) : (
-        <HotLeadsTable leads={leads ?? []} />
+        <div className="asb-card" style={{ padding: "20px 24px" }}>
+          <SectionHead
+            Icon={Flame}
+            color="#FF3B57"
+            title="Carteira quente"
+            desc="Filtre por perfil e busque por telefone, restaurante ou cidade"
+          />
+          <HotLeadsTable leads={leads ?? []} />
+        </div>
       )}
     </div>
   );

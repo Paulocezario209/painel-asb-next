@@ -120,7 +120,7 @@ export function AlertDrawer<T extends Record<string, unknown>>({
         {rows.length === 0 ? (
           <p style={{ fontSize: 12, color: "#c0d0e0" }}>Nenhum item.</p>
         ) : (
-          <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: theme.font.num, fontSize: 11 }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: theme.font.label, fontSize: 11 }}>
             <thead>
               <tr style={{ borderBottom: "1px solid var(--asb-border)" }}>
                 {columns.map((c) => (
@@ -132,7 +132,7 @@ export function AlertDrawer<T extends Record<string, unknown>>({
               {rows.map((row, i) => (
                 <tr key={i} style={{ borderBottom: "1px solid #1f1f1f" }}>
                   {columns.map((c) => (
-                    <td key={c.key} style={{ textAlign: c.align ?? "left", padding: "8px", color: "#c8d8e8" }}>
+                    <td key={c.key} style={{ textAlign: c.align ?? "left", padding: "8px", color: "#c8d8e8", fontFamily: c.align === "right" ? theme.font.num : theme.font.label, fontVariantNumeric: c.align === "right" ? "tabular-nums" : undefined }}>
                       {c.render ? c.render(row) : String(row[c.key] ?? "—")}
                     </td>
                   ))}

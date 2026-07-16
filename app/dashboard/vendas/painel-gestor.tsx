@@ -3,8 +3,8 @@
 import type { EstrategiasResponse } from "./actions";
 import { theme } from "@/lib/theme";
 import { S } from "@/app/dashboard/lib/dashboard-tokens";
-import { SectionHead } from "@/app/dashboard/lib/ui";
-import { Users, Trophy, AlertTriangle, Lightbulb, Target } from "lucide-react";
+import { SectionHead, StatTile } from "@/app/dashboard/lib/ui";
+import { Users, Trophy, AlertTriangle, Lightbulb, Target, BarChart3 } from "lucide-react";
 
 function fmtBRL(v: number, frac = 0): string {
   return Number(v).toLocaleString("pt-BR", {
@@ -64,13 +64,13 @@ export function PainelGestor({ data, onVendorClick }: Props) {
       }}
     >
       {/* Header */}
-      <div style={{ marginBottom: 14, paddingBottom: 12, borderBottom: "1px solid var(--asb-border)" }}>
-        <p style={{ fontSize: 14, fontWeight: 700, color: "#FFFFFF", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" }}>
-          📊 Painel Gestor
-        </p>
-        <p style={{ fontSize: 10, color: "#c0d0e0", fontFamily: theme.font.label }}>
-          {SAUDACAO(hora)} · {diaSemana} {String(agora.getDate()).padStart(2, "0")}/{String(agora.getMonth() + 1).padStart(2, "0")}
-        </p>
+      <div style={{ marginBottom: 2, paddingBottom: 12, borderBottom: "1px solid var(--asb-border)" }}>
+        <SectionHead
+          Icon={BarChart3}
+          color={theme.colors.accent}
+          title="Painel Gestor"
+          desc={`${SAUDACAO(hora)} · ${diaSemana} ${String(agora.getDate()).padStart(2, "0")}/${String(agora.getMonth() + 1).padStart(2, "0")}`}
+        />
       </div>
 
       {/* KPI consolidado time */}
@@ -153,44 +153,28 @@ export function PainelGestor({ data, onVendorClick }: Props) {
       <SectionHead Icon={AlertTriangle} color={theme.colors.warning} title="Ações de gestor" />
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 14 }}>
         {/* Pendentes */}
-        <div
-          style={{
-            background: totalPendenteValor > 0 ? "rgba(212,160,23,.12)" : "rgba(85,102,119,.08)",
-            borderLeft: `3px solid ${totalPendenteValor > 0 ? theme.colors.warning : theme.colors.neutral}`,
-            borderRadius: 4,
-            padding: "10px",
-          }}
-        >
-          <p style={{ fontSize: 9, color: theme.colors.warning, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
-            📋 PENDENTES
-          </p>
-          <p style={{ fontSize: 13, color: "#FFFFFF", fontWeight: 700, marginBottom: 2 }}>
-            {totalPendenteQty} ped
-          </p>
-          <p style={{ fontSize: 10, color: "#c8d8e8" }}>
-            <span className="priv-brl">{fmtBRL(totalPendenteValor)}</span> represado (faturamento vencido)
-          </p>
-        </div>
+        <StatTile
+          label="Pendentes"
+          value={totalPendenteQty}
+          accent={totalPendenteValor > 0 ? theme.colors.warning : theme.colors.neutral}
+          badges={
+            <span style={{ fontSize: 10, color: "#c8d8e8", fontFamily: theme.font.label, lineHeight: 1.4 }}>
+              <span className="priv-brl">{fmtBRL(totalPendenteValor)}</span> represado (faturamento vencido)
+            </span>
+          }
+        />
 
         {/* Dormentes */}
-        <div
-          style={{
-            background: dormentesAlta > 0 ? "rgba(200,16,46,.12)" : "rgba(85,102,119,.08)",
-            borderLeft: `3px solid ${dormentesAlta > 0 ? theme.colors.critical : theme.colors.brandAsb}`,
-            borderRadius: 4,
-            padding: "10px",
-          }}
-        >
-          <p style={{ fontSize: 9, color: dormentesAlta > 0 ? theme.colors.critical : theme.colors.brandAsb, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
-            💤 DORMENTES
-          </p>
-          <p style={{ fontSize: 13, color: "#FFFFFF", fontWeight: 700, marginBottom: 2 }}>
-            {totalDormentes} clientes
-          </p>
-          <p style={{ fontSize: 10, color: "#c8d8e8" }}>
-            <span className="priv-brl">{fmtBRL(valorDormentes)}</span> em risco{dormentesAlta > 0 ? ` · ${dormentesAlta} alta` : ""}
-          </p>
-        </div>
+        <StatTile
+          label="Dormentes"
+          value={totalDormentes}
+          accent={dormentesAlta > 0 ? theme.colors.critical : theme.colors.brandAsb}
+          badges={
+            <span style={{ fontSize: 10, color: "#c8d8e8", fontFamily: theme.font.label, lineHeight: 1.4 }}>
+              <span className="priv-brl">{fmtBRL(valorDormentes)}</span> em risco{dormentesAlta > 0 ? ` · ${dormentesAlta} alta` : ""}
+            </span>
+          }
+        />
       </div>
 
       {/* Insights de gestor */}

@@ -9,6 +9,8 @@ import { LeadScoreBadge } from "@/components/dashboard/lead-score-badge";
 import { theme } from "@/lib/theme";
 import { VENDOR_LABELS as VENDOR_NAMES, VENDOR_ORDER } from "@/lib/vendor-labels";
 import { S } from "@/app/dashboard/lib/dashboard-tokens";
+import { PageHead, SectionHead, KpiCard } from "@/app/dashboard/lib/ui";
+import { Wallet, Target, Flame, Zap, AlertTriangle, CheckCircle2, Table } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -172,36 +174,40 @@ export default async function VendedoresPage() {
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {/* Header */}
       <div>
-        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
-          Vendedores
-        </h1>
-        <p style={S.muted}>
-          Metricas desde segunda 11/05 (8h BRT) — periodo de retomada operacional
-        </p>
-        <p style={{ ...S.muted, fontSize: 9, marginTop: 4 }}>
+        <PageHead
+          title="Vendedores"
+          desc="Metricas desde segunda 11/05 (8h BRT) — periodo de retomada operacional"
+        />
+        <p style={{ ...S.muted, fontSize: 11, marginTop: 8 }}>
           Periodo de medicao: 11/05 {"\u2192"} hoje. Janela 7 dias completa comeca 18/05. Dados anteriores excluidos: bug painel 08/05 + folga 09-10/05.
         </p>
       </div>
 
       {/* ETAPA9B: resumo de pipeline da equipe */}
       <div className="asb-grid-kpi">
-        <Link href="/dashboard/pipeline" style={{ textDecoration: "none" }}>
-          <div style={{ ...S.card, padding: "20px", borderTop: `2px solid ${theme.colors.brandAsb}`, height: "100%" }}>
-            <p style={{ ...S.label, color: theme.colors.brandAsb }}>Total em Pipeline</p>
-            <p style={{ ...S.value, fontSize: 24, marginTop: 12, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" }}>{fmtBRL0(teamPipelineValue)}</p>
-            <p style={{ ...S.muted, marginTop: 6, fontSize: 10 }}>Σ volume × R$ {PRECO_KG}/kg (leads em pipeline) · clique p/ abrir o board</p>
-          </div>
-        </Link>
-        <div style={{ ...S.card, padding: "20px", borderTop: `2px solid ${theme.colors.success}` }}>
-          <p style={{ ...S.label, color: theme.colors.success }}>Win Rate Equipe</p>
-          <p style={{ ...S.value, fontSize: 24, marginTop: 12 }}>{teamWinRate !== null ? `${teamWinRate.toFixed(0)}%` : "—"}</p>
-          <p style={{ ...S.muted, marginTop: 6, fontSize: 10 }}>handoffs com 1º pedido / total handoffs</p>
-        </div>
-        <div style={{ ...S.card, padding: "20px", borderTop: `2px solid ${theme.colors.warning}` }}>
-          <p style={{ ...S.label, color: theme.colors.warning }}>Lead Médio (pipeline)</p>
-          <p style={{ ...S.value, fontSize: 24, marginTop: 12 }}>{teamHotAvg !== null ? `${teamHotAvg.toFixed(0)}/100` : "—"}</p>
-          <p style={{ ...S.muted, marginTop: 6, fontSize: 10 }}>score médio dos leads em handoff</p>
-        </div>
+        <KpiCard
+          label="Total em pipeline"
+          value={fmtBRL0(teamPipelineValue)}
+          Icon={Wallet}
+          accent={theme.colors.brandAsb}
+          href="/dashboard/pipeline"
+          note={`Σ volume × R$ ${PRECO_KG}/kg · abrir o board`}
+        />
+        <KpiCard
+          label="Win rate equipe"
+          value={teamWinRate !== null ? `${teamWinRate.toFixed(0)}%` : "—"}
+          Icon={Target}
+          accent={theme.colors.success}
+          num={teamWinRate !== null ? theme.colors.success : undefined}
+          note="1º pedido / total handoffs"
+        />
+        <KpiCard
+          label="Lead médio (pipeline)"
+          value={teamHotAvg !== null ? `${teamHotAvg.toFixed(0)}/100` : "—"}
+          Icon={Flame}
+          accent={theme.colors.warning}
+          note="score médio dos leads em handoff"
+        />
       </div>
 
       {/* Vendor cards */}
@@ -218,8 +224,8 @@ export default async function VendedoresPage() {
 
           return (
             <div key={rt} style={{ ...S.card, padding: "20px", borderTop: `2px solid ${accent}` }}>
-              <p style={{ ...S.label, color: accent }}>{v.name}</p>
-              <p style={{ ...S.muted, fontSize: 9, marginTop: 2 }}>{v.region}</p>
+              <div style={{ fontSize: 15, fontWeight: 750, color: accent, fontFamily: theme.font.label, letterSpacing: "-.01em" }}>{v.name}</div>
+              <p style={{ ...S.muted, fontSize: 11, marginTop: 2 }}>{v.region}</p>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px 20px", marginTop: 16 }}>
                 <div>
@@ -256,13 +262,12 @@ export default async function VendedoresPage() {
 
       {/* ETAPA9B: PIPELINE VELOCITY — top 5 leads por vendedor */}
       <div style={{ ...S.card, padding: "20px 24px" }}>
-        <p style={S.section}>
-          <span style={{ color: theme.colors.accent, marginRight: 6 }}>{"⚡"}</span>
-          Pipeline Velocity
-        </p>
-        <p style={{ ...S.muted, fontSize: 9, marginBottom: 16 }}>
-          velocity = (volume × R$ {PRECO_KG}/kg × score/100) ÷ dias no pipeline — prioriza valor alto que converte rápido
-        </p>
+        <SectionHead
+          Icon={Zap}
+          color={theme.colors.accent}
+          title="Pipeline Velocity"
+          desc={`velocity = (volume × R$ ${PRECO_KG}/kg × score/100) ÷ dias no pipeline — prioriza valor alto que converte rápido`}
+        />
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
           {VENDOR_ORDER.map(rt => {
             const v = VENDOR_LABELS[rt];
@@ -304,10 +309,12 @@ export default async function VendedoresPage() {
 
       {/* Aguardando resposta */}
       <div style={{ ...S.card, padding: "20px 24px" }}>
-        <p style={S.section}>
-          <span style={{ color: waiting.length > 0 ? "#C8102E" : "#22c55e", marginRight: 6 }}>{waiting.length > 0 ? "\u26A0" : "\u2713"}</span>
-          Leads Aguardando Resposta
-        </p>
+        <SectionHead
+          Icon={waiting.length > 0 ? AlertTriangle : CheckCircle2}
+          color={waiting.length > 0 ? "#C8102E" : "#22c55e"}
+          title="Leads Aguardando Resposta"
+          desc="Handoffs sem primeira resposta do vendedor"
+        />
         {waiting.length > 0 ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {waiting.map((w, i) => (
@@ -343,7 +350,12 @@ export default async function VendedoresPage() {
 
       {/* Tabela consolidada */}
       <div style={{ ...S.card, padding: "20px 24px" }}>
-        <p style={S.section}>Tabela Consolidada (desde 11/05)</p>
+        <SectionHead
+          Icon={Table}
+          color="#8bb4ff"
+          title="Tabela Consolidada"
+          desc="Consolidado por vendedor desde 11/05"
+        />
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr>

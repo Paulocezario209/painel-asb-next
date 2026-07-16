@@ -8,6 +8,7 @@ import { VENDOR_LABELS } from "@/lib/vendor-labels";
 import { RegrasComissaoModal } from "../remuneracao/regras-modal";
 import { MinhaComissaoSimulador } from "./minha-comissao-sim";
 import { S } from "@/app/dashboard/lib/dashboard-tokens";
+import { PageHead } from "@/app/dashboard/lib/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -94,12 +95,7 @@ export default async function MinhaComissaoPage({
     <div style={{ display: "flex", flexDirection: "column", gap: 20, maxWidth: 720 }}>
       {/* Header + seletor de mes */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 12 }}>
-        <div>
-          <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
-            Minha Comissao
-          </h1>
-          <p style={S.muted}>{nome} &middot; base FATURADO &middot; so voce ve estes numeros</p>
-        </div>
+        <PageHead title="Minha Comissão" desc={`${nome} · base faturado · só você vê estes números`} />
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <RegrasComissaoModal perfil="vendedor" />
           <Link href={`/dashboard/minha-comissao?mes=${shiftMonth(mesYM, -1)}`} style={{ ...S.muted, textDecoration: "none", padding: "4px 10px", border: `1px solid ${theme.colors.borderDefault}`, borderRadius: 6 }}>{"<"}</Link>

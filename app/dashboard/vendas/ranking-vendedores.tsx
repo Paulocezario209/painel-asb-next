@@ -2,6 +2,8 @@
 
 import type { RankingItem } from "./actions";
 import { theme } from "@/lib/theme";
+import { SectionHead, Eyebrow } from "@/app/dashboard/lib/ui";
+import { Trophy } from "lucide-react";
 
 const MEDAL: Record<number, string> = { 1: "🥇", 2: "🥈", 3: "🥉" };
 const COR_HEX: Record<string, string> = {
@@ -35,13 +37,11 @@ export function RankingVendedores({ ranking }: { ranking: RankingItem[] }) {
 
   return (
     <div className="bg-[var(--asb-card)] border border-[var(--asb-border)] rounded-lg" style={{ padding: "20px 24px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 14 }}>
-        <p style={{ fontSize: 11, fontWeight: 700, color: "#c0c8d8", fontFamily: theme.font.label, textTransform: "uppercase", letterSpacing: ".1em" }}>
-          🏆 RANKING DO MÊS
-        </p>
-        <span style={{ fontSize: 9, color: "#e4e9f0", fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase" }}>
-          Hoje vs média 7d
-        </span>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 14 }}>
+        <div style={{ marginBottom: -18 }}>
+          <SectionHead Icon={Trophy} color="#f59e0b" title="Ranking do mês" desc="Ordenado por % da meta" />
+        </div>
+        <Eyebrow style={{ marginBottom: 0 }}>Hoje vs média 7d</Eyebrow>
       </div>
 
       <div style={{ overflowX: "auto" }}>
