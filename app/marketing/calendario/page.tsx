@@ -15,14 +15,26 @@ async function getPerfDiaria(ano: string) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
     { auth: { persistSession: false } },
   );
-  const { data } = await supabase
-    .from("v_performance_diaria")
-    .select("data, ad_id, ad_name, spend, leads, cpl")
-    .gte("data", `${ano}-01-01`)
-    .lte("data", `${ano}-12-31`)
-    .order("data", { ascending: true })
-    .limit(20000);
-  return (data ?? []) as unknown as DiaRow[];
+  // CAUSA-RAIZ (DEBT-307/DEBT-P2): PostgREST tem teto HARD de 1000 linhas por request — `.limit(20000)`
+  // e `.range()` NÃO furam (provado: sempre volta 0-999/*). v_performance_diaria já passou de 1000 (1009),
+  // então os últimos dias (linhas 1001+) sumiam e o calendário travava no 11/07. Fix: paginar em blocos de
+  // 1000 com order ESTÁVEL (data + ad_id, p/ não pular/duplicar linhas na borda) até esgotar. Cresça o que crescer.
+  const PAGE = 1000;
+  const all: DiaRow[] = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data } = await supabase
+      .from("v_performance_diaria")
+      .select("data, ad_id, ad_name, spend, leads, cpl")
+      .gte("data", `${ano}-01-01`)
+      .lte("data", `${ano}-12-31`)
+      .order("data", { ascending: true })
+      .order("ad_id", { ascending: true })
+      .range(from, from + PAGE - 1);
+    const rows = (data ?? []) as unknown as DiaRow[];
+    all.push(...rows);
+    if (rows.length < PAGE) break;
+  }
+  return all;
 }
 
 export default async function CalendarioPage({
