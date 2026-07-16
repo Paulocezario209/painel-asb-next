@@ -6,6 +6,7 @@ import { LeadScoreBadge } from "@/components/dashboard/lead-score-badge";
 import { createClient } from "@/lib/supabase/client";
 import { computeLeadScore, tierOf } from "@/lib/lead-score";
 import { VENDOR_LABELS } from "@/lib/vendor-labels";
+import { handoffSituacao } from "@/lib/handoff-status";
 
 export interface Handoff {
   phone: string;
@@ -33,10 +34,6 @@ const SEG_LABELS: Record<string, string> = {
 const DIAS_PT = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-function elapsedMinutes(iso: string): number {
-  return Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
-}
-
 function formatScheduled(iso: string | null): string {
   if (!iso) return "—";
   // DEBT-308 item 2: "qui, 16/07 às 13h" em BRT fixo (UTC-3, sem DST desde 2019) — desloca e lê
@@ -49,35 +46,24 @@ function formatScheduled(iso: string | null): string {
   return `${DIAS_PT[d.getUTCDay()]}, ${dd}/${mm} às ${hh}h${min ? String(min).padStart(2, "0") : ""}`;
 }
 
-function TimeBadge({ handoffAt }: { handoffAt: string }) {
-  const mins = elapsedMinutes(handoffAt);
-  const hrs = Math.floor(mins / 60);
-  const rem = mins % 60;
-  const label = hrs > 0 ? `${hrs}h${rem > 0 ? ` ${rem}min` : ""}` : `${mins}min`;
-
-  let color: string, bg: string, border: string, pulse = false;
-  if (mins < 60) {
-    color = "#22c55e"; bg = "rgba(34,197,94,.1)"; border = "rgba(34,197,94,.35)";
-  } else if (mins < 240) {
-    color = "#f59e0b"; bg = "rgba(245,158,11,.1)"; border = "rgba(245,158,11,.35)";
-  } else {
-    color = "#C8102E"; bg = "rgba(200,16,46,.1)"; border = "rgba(200,16,46,.4)"; pulse = true;
-  }
-
+// SITUAÇÃO ancorada no horário agendado (helper único). Agendado pro futuro = azul
+// "Agendado" (nunca vermelho/piscando); só vence DEPOIS do scheduled_at.
+function TimeBadge({ handoffAt, scheduledAt }: { handoffAt: string; scheduledAt: string | null }) {
+  const s = handoffSituacao(scheduledAt, handoffAt);
   return (
     <>
-      {pulse && (
+      {s.pulse && (
         <style>{`@keyframes pulse-red{0%,100%{opacity:1}50%{opacity:.45}}.pulse-red{animation:pulse-red 1.4s ease-in-out infinite}`}</style>
       )}
       <span
-        className={pulse ? "pulse-red" : undefined}
+        className={s.pulse ? "pulse-red" : undefined}
         style={{
-          display: "inline-block", background: bg, border: `1px solid ${border}`,
-          color, fontSize: 10, fontFamily: "var(--font-geist-sans), system-ui, sans-serif", fontWeight: 700,
+          display: "inline-block", background: s.bg, border: `1px solid ${s.border}`,
+          color: s.color, fontSize: 10, fontFamily: "var(--font-geist-sans), system-ui, sans-serif", fontWeight: 700,
           padding: "3px 8px", borderRadius: 3, whiteSpace: "nowrap",
         }}
       >
-        {label}
+        {s.label}
       </span>
     </>
   );
@@ -154,7 +140,7 @@ export function HandoffsTable({ initial, initialFilter }: { initial: Handoff[]; 
     const startBrt = Date.UTC(nowBrt.getUTCFullYear(), nowBrt.getUTCMonth(), nowBrt.getUTCDate(), 0, 0, 0) + BRT_OFFSET_MS;
     return rows.filter(r => {
       if (vendorFilter !== "todos" && r.routing_team !== vendorFilter) return false;
-      if (urgentOnly && elapsedMinutes(r.handoff_at) < 240) return false;
+      if (urgentOnly && !handoffSituacao(r.scheduled_at, r.handoff_at).overdue) return false;
       if (schedFilter !== "todos") {
         if (!r.scheduled_at) return false;
         const d = Math.floor((new Date(r.scheduled_at).getTime() - startBrt) / DAY);   // 0 = hoje
@@ -210,7 +196,7 @@ export function HandoffsTable({ initial, initialFilter }: { initial: Handoff[]; 
         ))}
         <div style={{ width: 1, height: 18, background: "#2a2a2a", margin: "0 4px" }} />
         <button style={btnFilter(urgentOnly)} onClick={() => setUrgent(p => !p)}>
-          ⚡ Só críticos (&gt; 4h)
+          ⚡ Só vencidos
         </button>
         <div style={{ width: 1, height: 18, background: "#2a2a2a", margin: "0 4px" }} />
         {/* Item 11: faixas de agendamento (scheduled_at, dia comercial BRT) */}
@@ -237,7 +223,7 @@ export function HandoffsTable({ initial, initialFilter }: { initial: Handoff[]; 
       {filtered.length === 0 ? (
         <div style={{ padding: "32px 0", textAlign: "center" }}>
           <p style={{ color: "#22c55e", fontSize: 12, fontFamily: "var(--font-geist-sans), system-ui, sans-serif" }}>
-            ✅ Nenhum handoff pendente{urgentOnly ? " crítico" : ""}{vendorFilter !== "todos" ? ` para ${VENDOR_LABELS[vendorFilter]}` : ""}
+            ✅ Nenhum agendamento pendente{urgentOnly ? " vencido" : ""}{vendorFilter !== "todos" ? ` para ${VENDOR_LABELS[vendorFilter]}` : ""}
           </p>
         </div>
       ) : (
@@ -245,7 +231,7 @@ export function HandoffsTable({ initial, initialFilter }: { initial: Handoff[]; 
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 720 }}>
             <thead>
               <tr style={{ borderBottom: "1px solid #2a2a2a" }}>
-                {["Lead", "Cidade / Segmento", "Volume", "Dor", "Agendado para", "Tempo", "Vendedor", ""].map(h => (
+                {["Lead", "Cidade / Segmento", "Volume", "Dor", "Agendado para", "Situação", "Vendedor", ""].map(h => (
                   <th key={h} style={{ ...S.label, textAlign: "left", padding: "8px 12px", whiteSpace: "nowrap" }}>{h}</th>
                 ))}
               </tr>
@@ -307,7 +293,7 @@ export function HandoffsTable({ initial, initialFilter }: { initial: Handoff[]; 
 
                   {/* Tempo */}
                   <td style={{ ...S.cell, whiteSpace: "nowrap" }}>
-                    <TimeBadge handoffAt={r.handoff_at} />
+                    <TimeBadge handoffAt={r.handoff_at} scheduledAt={r.scheduled_at} />
                   </td>
 
                   {/* Vendedor */}
