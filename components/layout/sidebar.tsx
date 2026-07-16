@@ -32,7 +32,7 @@ const NAV_GROUPS = [
       { href: "/dashboard/leads",          label: "Leads",          icon: Users },
       { href: "/dashboard/clientes",       label: "Clientes",       icon: Briefcase },
       { href: "/dashboard/carteira-ativa", label: "Carteira ativa", icon: Wallet },
-      { href: "/dashboard/handoffs",       label: "Handoffs",       icon: PhoneCall },
+      { href: "/dashboard/handoffs",       label: "Agendamentos",   icon: PhoneCall },
       { href: "/dashboard/cadencias",      label: "Cadências",      icon: Network },
     ],
   },

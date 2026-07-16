@@ -4,6 +4,7 @@ import { getLeadScoreMap } from "@/lib/get-lead-scores";
 import { computeLeadScore, tierOf } from "@/lib/lead-score";
 import { S } from "@/app/dashboard/lib/dashboard-tokens";
 import { PageHead, SectionHead, KpiCard } from "@/app/dashboard/lib/ui";
+import { handoffSituacao } from "@/lib/handoff-status";
 import { PhoneCall, AlertTriangle, CalendarClock, Inbox } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -70,7 +71,9 @@ export default async function HandoffsPage({ searchParams }: { searchParams?: Pr
     });
 
   const totalPending  = handoffs.length;
-  const criticalCount = handoffs.filter(h => new Date(h.handoff_at).getTime() < fourHAgo).length;
+  // DEBT-308: "vencido" = passou do horário AGENDADO (não pelo tempo desde a criação).
+  // Agendado pro futuro nunca conta como vencido.
+  const overdueCount  = handoffs.filter(h => handoffSituacao(h.scheduled_at, h.handoff_at, now).overdue).length;
 
   // Item 7: contagem vem da query independente da fila (janela BRT), não mais do slice UTC da fila.
   const todayCount = agendadosHoje ?? 0;
@@ -78,14 +81,14 @@ export default async function HandoffsPage({ searchParams }: { searchParams?: Pr
   // Cards clicáveis fase 2 (pedido Paulo): KPI filtra a tabela via ?f= (o filtro
   // vive na própria tabela — sobrevive ao refetch do Realtime).
   const kpis = [
-    { label: "Total pendentes", value: totalPending,  Icon: PhoneCall,     accent: "#f59e0b", num: "#f59e0b", note: "aguardando confirmação · clique p/ ver todos", href: "/dashboard/handoffs" },
-    { label: "Críticos (> 4h)", value: criticalCount, Icon: AlertTriangle, accent: "#C8102E", num: "#C8102E", note: "sem confirmação há > 4h · clique p/ filtrar", href: "/dashboard/handoffs?f=criticos" },
-    { label: "Agendados hoje",  value: todayCount,    Icon: CalendarClock, accent: "#22c55e", num: "#22c55e", note: "com horário p/ hoje (todos, não só a fila) · clique p/ ver os pendentes", href: "/dashboard/handoffs?f=hoje" },
+    { label: "Total pendentes", value: totalPending, Icon: PhoneCall,     accent: "#f59e0b", num: "#f59e0b", note: "aguardando confirmação · clique p/ ver todos", href: "/dashboard/handoffs" },
+    { label: "Vencidos",        value: overdueCount, Icon: AlertTriangle, accent: "#C8102E", num: "#C8102E", note: "passaram do horário agendado · clique p/ filtrar", href: "/dashboard/handoffs?f=criticos" },
+    { label: "Agendados hoje",  value: todayCount,   Icon: CalendarClock, accent: "#22c55e", num: "#22c55e", note: "com horário p/ hoje (todos, não só a fila) · clique p/ ver os pendentes", href: "/dashboard/handoffs?f=hoje" },
   ];
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <PageHead title="Fila de Handoff" desc="Leads aguardando confirmação do vendedor" />
+      <PageHead title="Agendamentos" desc="Leads agendados aguardando confirmação do vendedor" />
 
       {/* KPIs */}
       <div className="asb-grid-kpi">
@@ -96,7 +99,7 @@ export default async function HandoffsPage({ searchParams }: { searchParams?: Pr
 
       {/* Table */}
       <div style={{ ...S.card, padding: "20px 24px" }}>
-        <SectionHead Icon={Inbox} color="#C8102E" title="Handoffs pendentes" desc="Ordenados por agenda e criticidade" />
+        <SectionHead Icon={Inbox} color="#C8102E" title="Agendamentos pendentes" desc="Ordenados por agenda e criticidade" />
         <HandoffsTable initial={handoffs} initialFilter={filtroKpi} />
       </div>
     </div>
