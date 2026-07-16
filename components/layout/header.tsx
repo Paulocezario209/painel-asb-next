@@ -41,10 +41,10 @@ export function Header({
 
       <div className="flex items-center gap-3">
         <ManualTelaButton />
-        <span className="hidden sm:inline" style={{ color: "#565A6B", fontSize: 11, fontFamily: "'Courier New', monospace" }}>
+        <span className="hidden sm:inline" style={{ color: "#565A6B", fontSize: 11, fontFamily: "var(--font-geist-sans), system-ui, sans-serif" }}>
           <span style={{ color: "#C8102E" }}>›</span> {email}
         </span>
-        <span className="sm:hidden" style={{ color: "#565A6B", fontSize: 10, fontFamily: "'Courier New', monospace", maxWidth: 130, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        <span className="sm:hidden" style={{ color: "#565A6B", fontSize: 10, fontFamily: "var(--font-geist-sans), system-ui, sans-serif", maxWidth: 130, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {email.split("@")[0]}
         </span>
         <button
@@ -53,7 +53,7 @@ export function Header({
             background: "var(--asb-shell)", border: "1px solid var(--asb-shell-border)", color: "#565A6B",
             fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase",
             padding: "4px 10px", borderRadius: 8, cursor: "pointer",
-            fontFamily: "'Courier New', monospace", transition: "all .15s",
+            fontFamily: "var(--font-geist-sans), system-ui, sans-serif", transition: "all .15s",
           }}
           onMouseEnter={(e) => {
             (e.currentTarget as HTMLButtonElement).style.borderColor = "#C8102E";

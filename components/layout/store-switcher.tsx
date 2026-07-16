@@ -41,7 +41,7 @@ const STORES: Store[] = [
   },
 ];
 
-const mono = "'Courier New', monospace";
+const mono = "var(--font-geist-sans), system-ui, sans-serif";
 
 export function StoreSwitcher() {
   const router = useRouter();
