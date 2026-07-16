@@ -14,7 +14,7 @@ export function FunnelStageBadge({ stage }: { stage: string | null }) {
     <span style={{
       display: "inline-block", padding: "2px 8px", borderRadius: 3,
       fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase",
-      fontFamily: "'Courier New', monospace", fontWeight: 700,
+      fontFamily: "var(--font-geist-sans), system-ui, sans-serif", fontWeight: 700,
       color: cfg.color, background: cfg.bg, border: `1px solid ${cfg.border}`,
     }}>{cfg.label}</span>
   );

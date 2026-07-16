@@ -43,7 +43,7 @@ const C = {
 
 const LABEL: React.CSSProperties = {
   fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase",
-  color: C.muted, fontFamily: "'Courier New', monospace",
+  color: C.muted, fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
 };
 
 function fmt(iso: string | null) {
@@ -62,7 +62,7 @@ function NativeSelect({ value, onChange, children }: { value: string; onChange: 
       style={{
         background: C.bg2, border: `1px solid ${C.border2}`, borderRadius: 4,
         color: C.muted, fontSize: 10, letterSpacing: ".10em", textTransform: "uppercase",
-        padding: "5px 10px", fontFamily: "'Courier New', monospace", cursor: "pointer", outline: "none",
+        padding: "5px 10px", fontFamily: "var(--font-geist-sans), system-ui, sans-serif", cursor: "pointer", outline: "none",
         flexShrink: 0,
       }}
     >
@@ -115,7 +115,7 @@ export function FollowupsTable({
   });
 
   const TH: React.CSSProperties = { ...LABEL, padding: "10px 14px", textAlign: "left", borderBottom: `1px solid ${C.border}`, whiteSpace: "nowrap" };
-  const TD: React.CSSProperties = { padding: "10px 14px", color: C.text, fontSize: 11, fontFamily: "'Courier New', monospace", borderBottom: `1px solid ${C.border}`, whiteSpace: "nowrap" };
+  const TD: React.CSSProperties = { padding: "10px 14px", color: C.text, fontSize: 11, fontFamily: "var(--font-geist-sans), system-ui, sans-serif", borderBottom: `1px solid ${C.border}`, whiteSpace: "nowrap" };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -132,7 +132,7 @@ export function FollowupsTable({
             style={{
               width: "100%", background: C.bg2, border: `1px solid ${C.border2}`, borderRadius: 4,
               color: C.text, fontSize: 11, padding: "5px 10px 5px 24px",
-              fontFamily: "'Courier New', monospace", outline: "none", boxSizing: "border-box",
+              fontFamily: "var(--font-geist-sans), system-ui, sans-serif", outline: "none", boxSizing: "border-box",
             }}
           />
         </div>
@@ -210,19 +210,19 @@ export function FollowupsTable({
                 <div>
                   <Link
                     href={`/dashboard/leads/${encodeURIComponent(row.phone)}`}
-                    style={{ color: C.link, textDecoration: "none", fontWeight: 600, fontSize: 12, fontFamily: "'Courier New', monospace" }}
+                    style={{ color: C.link, textDecoration: "none", fontWeight: 600, fontSize: 12, fontFamily: "var(--font-geist-sans), system-ui, sans-serif" }}
                   >
                     {row.name || "—"}
                   </Link>
-                  <div style={{ color: C.muted, fontSize: 10, fontFamily: "'Courier New', monospace", marginTop: 1 }}>
+                  <div style={{ color: C.muted, fontSize: 10, fontFamily: "var(--font-geist-sans), system-ui, sans-serif", marginTop: 1 }}>
                     {row.phone}
                     {row.city && <span style={{ marginLeft: 8 }}>{row.city}</span>}
                   </div>
                 </div>
                 {/* Responded badge */}
                 {row.responded
-                  ? <span style={{ display: "inline-block", padding: "2px 6px", borderRadius: 3, fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase", fontFamily: "'Courier New', monospace", fontWeight: 700, color: C.green, background: "rgba(63,185,80,.1)", border: "1px solid rgba(63,185,80,.3)" }}>sim</span>
-                  : <span style={{ display: "inline-block", padding: "2px 6px", borderRadius: 3, fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase", fontFamily: "'Courier New', monospace", fontWeight: 700, color: C.red, background: "rgba(248,81,73,.1)", border: "1px solid rgba(248,81,73,.3)" }}>não</span>
+                  ? <span style={{ display: "inline-block", padding: "2px 6px", borderRadius: 3, fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase", fontFamily: "var(--font-geist-sans), system-ui, sans-serif", fontWeight: 700, color: C.green, background: "rgba(63,185,80,.1)", border: "1px solid rgba(63,185,80,.3)" }}>sim</span>
+                  : <span style={{ display: "inline-block", padding: "2px 6px", borderRadius: 3, fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase", fontFamily: "var(--font-geist-sans), system-ui, sans-serif", fontWeight: 700, color: C.red, background: "rgba(248,81,73,.1)", border: "1px solid rgba(248,81,73,.3)" }}>não</span>
                 }
               </div>
 
@@ -231,28 +231,28 @@ export function FollowupsTable({
                 <span style={{
                   display: "inline-block", padding: "2px 6px", borderRadius: 3,
                   fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase",
-                  fontFamily: "'Courier New', monospace", fontWeight: 700,
+                  fontFamily: "var(--font-geist-sans), system-ui, sans-serif", fontWeight: 700,
                   color: phaseCfg.color, background: phaseCfg.bg, border: `1px solid ${phaseCfg.border}`,
                 }}>
                   {phaseLabels[row.phase ?? ""] ?? row.phase ?? "—"}
                 </span>
-                <span style={{ color: angleColor, fontSize: 10, fontFamily: "'Courier New', monospace" }}>
+                <span style={{ color: angleColor, fontSize: 10, fontFamily: "var(--font-geist-sans), system-ui, sans-serif" }}>
                   {angleLabels[row.angle ?? ""] ?? row.angle ?? "—"}
                 </span>
-                <span style={{ color: C.muted, fontSize: 10, fontFamily: "'Courier New', monospace" }}>
+                <span style={{ color: C.muted, fontSize: 10, fontFamily: "var(--font-geist-sans), system-ui, sans-serif" }}>
                   #{row.followup_sequence ?? "?"}
                 </span>
               </div>
 
               {/* Date + vendor + próximo (FIX2) */}
               <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "center" }}>
-                <span style={{ color: C.muted, fontSize: 9, fontFamily: "'Courier New', monospace" }}>
+                <span style={{ color: C.muted, fontSize: 9, fontFamily: "var(--font-geist-sans), system-ui, sans-serif" }}>
                   {fmt(row.sent_at)}
                 </span>
-                <span style={{ color: C.muted, fontSize: 9, fontFamily: "'Courier New', monospace" }}>
+                <span style={{ color: C.muted, fontSize: 9, fontFamily: "var(--font-geist-sans), system-ui, sans-serif" }}>
                   {VENDOR_LABELS[row.routing_team ?? ""] ?? row.routing_team ?? "—"}
                 </span>
-                <span className={mProx.pulse ? "fu-pulse" : undefined} style={{ color: mProx.color, fontSize: 9, fontFamily: "'Courier New', monospace" }}>
+                <span className={mProx.pulse ? "fu-pulse" : undefined} style={{ color: mProx.color, fontSize: 9, fontFamily: "var(--font-geist-sans), system-ui, sans-serif" }}>
                   {"⏱"} {mProx.label}
                 </span>
               </div>
@@ -336,19 +336,19 @@ export function FollowupsTable({
                     <span style={{
                       display: "inline-block", padding: "2px 6px", borderRadius: 3,
                       fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase",
-                      fontFamily: "'Courier New', monospace", fontWeight: 700,
+                      fontFamily: "var(--font-geist-sans), system-ui, sans-serif", fontWeight: 700,
                       color: phaseCfg.color, background: phaseCfg.bg, border: `1px solid ${phaseCfg.border}`,
                     }}>
                       {phaseLabels[row.phase ?? ""] ?? row.phase ?? "—"}
                     </span>
                   </td>
                   <td style={TD}>
-                    <span style={{ color: angleCfg.color, fontSize: 10, fontFamily: "'Courier New', monospace" }}>
+                    <span style={{ color: angleCfg.color, fontSize: 10, fontFamily: "var(--font-geist-sans), system-ui, sans-serif" }}>
                       {angleLabels[row.angle ?? ""] ?? row.angle ?? "—"}
                     </span>
                   </td>
                   <td style={TD}>
-                    <span style={{ color: C.muted, fontFamily: "'Courier New', monospace", fontSize: 10 }}>
+                    <span style={{ color: C.muted, fontFamily: "var(--font-geist-sans), system-ui, sans-serif", fontSize: 10 }}>
                       #{row.followup_sequence ?? "?"}
                     </span>
                   </td>
@@ -356,14 +356,14 @@ export function FollowupsTable({
                     {fmt(row.sent_at)}
                   </td>
                   <td style={TD}>
-                    <span className={prox.pulse ? "fu-pulse" : undefined} style={{ color: prox.color, fontSize: 10, fontFamily: "'Courier New', monospace" }}>
+                    <span className={prox.pulse ? "fu-pulse" : undefined} style={{ color: prox.color, fontSize: 10, fontFamily: "var(--font-geist-sans), system-ui, sans-serif" }}>
                       {prox.label}
                     </span>
                   </td>
                   <td style={TD}>
                     {row.responded
-                      ? <span style={{ display: "inline-block", padding: "2px 6px", borderRadius: 3, fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase", fontFamily: "'Courier New', monospace", fontWeight: 700, color: C.green, background: "rgba(63,185,80,.1)", border: "1px solid rgba(63,185,80,.3)" }}>sim</span>
-                      : <span style={{ display: "inline-block", padding: "2px 6px", borderRadius: 3, fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase", fontFamily: "'Courier New', monospace", fontWeight: 700, color: C.red, background: "rgba(248,81,73,.1)", border: "1px solid rgba(248,81,73,.3)" }}>não</span>
+                      ? <span style={{ display: "inline-block", padding: "2px 6px", borderRadius: 3, fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase", fontFamily: "var(--font-geist-sans), system-ui, sans-serif", fontWeight: 700, color: C.green, background: "rgba(63,185,80,.1)", border: "1px solid rgba(63,185,80,.3)" }}>sim</span>
+                      : <span style={{ display: "inline-block", padding: "2px 6px", borderRadius: 3, fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase", fontFamily: "var(--font-geist-sans), system-ui, sans-serif", fontWeight: 700, color: C.red, background: "rgba(248,81,73,.1)", border: "1px solid rgba(248,81,73,.3)" }}>não</span>
                     }
                   </td>
                   <td style={{ ...TD, color: C.muted }}>

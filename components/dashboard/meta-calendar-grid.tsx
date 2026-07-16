@@ -56,7 +56,7 @@ export function MetaCalendarGrid({
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 16 }}>
-        <p style={{ fontSize: 11, fontWeight: 700, color: "#c0c8d8", fontFamily: "'Courier New', monospace", textTransform: "uppercase", letterSpacing: ".1em" }}>
+        <p style={{ fontSize: 11, fontWeight: 700, color: "#c0c8d8", fontFamily: "var(--font-geist-sans), system-ui, sans-serif", textTransform: "uppercase", letterSpacing: ".1em" }}>
           📅 Calendário — {mesLabel}
         </p>
         <span
@@ -64,7 +64,7 @@ export function MetaCalendarGrid({
             background: corHex, color: "#fff",
             padding: "3px 10px", borderRadius: 3, fontSize: 10,
             fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase",
-            fontFamily: "'Courier New', monospace",
+            fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
           }}
         >
           Meta mês: <span className="priv-brl">{fmtBRL(metaMesBrl)}</span>
@@ -74,7 +74,7 @@ export function MetaCalendarGrid({
       {/* DOW header */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4, marginBottom: 4 }}>
         {DOW.map(d => (
-          <div key={d} style={{ fontSize: 9, color: "#e4e9f0", textAlign: "center", fontFamily: "'Courier New', monospace", textTransform: "uppercase", letterSpacing: ".1em" }}>{d}</div>
+          <div key={d} style={{ fontSize: 9, color: "#e4e9f0", textAlign: "center", fontFamily: "var(--font-geist-sans), system-ui, sans-serif", textTransform: "uppercase", letterSpacing: ".1em" }}>{d}</div>
         ))}
       </div>
 
@@ -124,7 +124,7 @@ export function MetaCalendarGrid({
                 background: bg, border, borderRadius: 3,
                 color, padding: "6px 4px", textAlign: "center",
                 cursor: d.status_dia === "weekend" ? "default" : "pointer",
-                fontFamily: "'Courier New', monospace", fontSize: 11,
+                fontFamily: "var(--font-geist-sans), system-ui, sans-serif", fontSize: 11,
                 fontWeight: 700, position: "relative", minHeight: 52,
                 display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2,
                 transition: "all .15s",
@@ -138,7 +138,7 @@ export function MetaCalendarGrid({
                     position: "absolute", top: 2, right: 2,
                     background: "#D4A017", color: "#fff", fontSize: 9, fontWeight: 700,
                     lineHeight: 1, padding: "1px 3px", borderRadius: 2,
-                    fontFamily: "'Courier New', monospace", letterSpacing: ".02em",
+                    fontFamily: "var(--font-geist-sans), system-ui, sans-serif", letterSpacing: ".02em",
                   }}
                 >▲</span>
               )}
@@ -160,7 +160,7 @@ export function MetaCalendarGrid({
       </div>
 
       {/* Legenda */}
-      <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid rgba(27,42,107,.3)", display: "flex", gap: 14, fontSize: 9, color: "#c0d0e0", fontFamily: "'Courier New', monospace", flexWrap: "wrap" }}>
+      <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid rgba(27,42,107,.3)", display: "flex", gap: 14, fontSize: 9, color: "#c0d0e0", fontFamily: "var(--font-geist-sans), system-ui, sans-serif", flexWrap: "wrap" }}>
         <span><span style={{ color: "#22c55e", fontWeight: 900 }}>✓</span> Meta batida</span>
         <span><span style={{ color: "#C8102E", fontWeight: 900 }}>✗</span> Abaixo</span>
         <span><span style={{ color: "#185FA5", fontWeight: 900 }}>+</span> Encaixe (fora rota)</span>

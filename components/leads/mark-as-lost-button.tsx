@@ -50,7 +50,7 @@ export function MarkAsLostButton({ leadId, currentStage }: { leadId: string; cur
           padding: "6px 14px", borderRadius: 4,
           background: "transparent", border: "1px solid rgba(200,16,46,.3)",
           color: "#C8102E", fontSize: 10, letterSpacing: ".10em", textTransform: "uppercase",
-          fontFamily: "'Courier New', monospace", cursor: "pointer",
+          fontFamily: "var(--font-geist-sans), system-ui, sans-serif", cursor: "pointer",
         }}
       >
         Marcar Perdido
@@ -64,7 +64,7 @@ export function MarkAsLostButton({ leadId, currentStage }: { leadId: string; cur
       background: "#0d1117", border: "1px solid rgba(200,16,46,.3)",
       display: "flex", flexDirection: "column", gap: 12,
     }}>
-      <p style={{ color: "#C8102E", fontSize: 10, letterSpacing: ".12em", textTransform: "uppercase", fontFamily: "'Courier New', monospace", fontWeight: 700 }}>
+      <p style={{ color: "#C8102E", fontSize: 10, letterSpacing: ".12em", textTransform: "uppercase", fontFamily: "var(--font-geist-sans), system-ui, sans-serif", fontWeight: 700 }}>
         Marcar como Perdido
       </p>
 
@@ -74,7 +74,7 @@ export function MarkAsLostButton({ leadId, currentStage }: { leadId: string; cur
         style={{
           padding: "6px 10px", borderRadius: 4,
           background: "#161b22", border: "1px solid #30363d", color: "#c9d1d9",
-          fontSize: 11, fontFamily: "'Courier New', monospace",
+          fontSize: 11, fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
         }}
       >
         <option value="">Selecione motivo...</option>
@@ -88,7 +88,7 @@ export function MarkAsLostButton({ leadId, currentStage }: { leadId: string; cur
         style={{
           minHeight: 50, padding: "6px 10px", borderRadius: 4,
           background: "#161b22", border: "1px solid #30363d", color: "#c9d1d9",
-          fontSize: 11, fontFamily: "'Courier New', monospace", resize: "vertical",
+          fontSize: 11, fontFamily: "var(--font-geist-sans), system-ui, sans-serif", resize: "vertical",
         }}
       />
 
@@ -98,7 +98,7 @@ export function MarkAsLostButton({ leadId, currentStage }: { leadId: string; cur
           style={{
             padding: "5px 12px", borderRadius: 4,
             background: "transparent", border: "1px solid #30363d",
-            color: "#8b949e", fontSize: 10, fontFamily: "'Courier New', monospace", cursor: "pointer",
+            color: "#8b949e", fontSize: 10, fontFamily: "var(--font-geist-sans), system-ui, sans-serif", cursor: "pointer",
           }}
         >
           Cancelar
@@ -110,7 +110,7 @@ export function MarkAsLostButton({ leadId, currentStage }: { leadId: string; cur
             padding: "5px 12px", borderRadius: 4,
             background: saving ? "#30363d" : "#C8102E", border: "none",
             color: "#FFFFFF", fontSize: 10, letterSpacing: ".08em", textTransform: "uppercase",
-            fontFamily: "'Courier New', monospace", cursor: saving ? "wait" : "pointer",
+            fontFamily: "var(--font-geist-sans), system-ui, sans-serif", cursor: saving ? "wait" : "pointer",
             opacity: !reason ? 0.4 : 1,
           }}
         >

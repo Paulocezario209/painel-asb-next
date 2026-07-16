@@ -65,7 +65,7 @@ export function ReassignVendorButton({
           fontSize: 10,
           letterSpacing: ".10em",
           textTransform: "uppercase" as const,
-          fontFamily: "'Courier New', monospace",
+          fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
           cursor: "pointer",
         }}
       >
@@ -92,7 +92,7 @@ export function ReassignVendorButton({
           fontSize: 10,
           letterSpacing: ".12em",
           textTransform: "uppercase" as const,
-          fontFamily: "'Courier New', monospace",
+          fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
           fontWeight: 700,
         }}
       >
@@ -109,7 +109,7 @@ export function ReassignVendorButton({
           border: "1px solid #30363d",
           color: "#c9d1d9",
           fontSize: 11,
-          fontFamily: "'Courier New', monospace",
+          fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
         }}
       >
         <option value="">Selecione vendedor...</option>
@@ -132,7 +132,7 @@ export function ReassignVendorButton({
           border: "1px solid #30363d",
           color: "#c9d1d9",
           fontSize: 11,
-          fontFamily: "'Courier New', monospace",
+          fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
           resize: "vertical" as const,
         }}
       />
@@ -142,7 +142,7 @@ export function ReassignVendorButton({
           style={{
             color: "#f85149",
             fontSize: 10,
-            fontFamily: "'Courier New', monospace",
+            fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
           }}
         >
           {error}
@@ -164,7 +164,7 @@ export function ReassignVendorButton({
             border: "1px solid #30363d",
             color: "#8b949e",
             fontSize: 10,
-            fontFamily: "'Courier New', monospace",
+            fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
             cursor: "pointer",
           }}
         >
@@ -182,7 +182,7 @@ export function ReassignVendorButton({
             fontSize: 10,
             letterSpacing: ".08em",
             textTransform: "uppercase" as const,
-            fontFamily: "'Courier New', monospace",
+            fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
             cursor: saving ? "wait" : "pointer",
             opacity: !team ? 0.4 : 1,
           }}

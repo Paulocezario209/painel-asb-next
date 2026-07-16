@@ -12,14 +12,14 @@ const TEXT = "#e4e9f0";
 const tooltipStyle = {
   contentStyle: {
     background: "#1a1a1a", border: "1px solid #C8102E", borderRadius: 3,
-    fontSize: 11, fontFamily: "'Courier New', monospace", color: "#c8d8e8",
+    fontSize: 11, fontFamily: "var(--font-geist-sans), system-ui, sans-serif", color: "#c8d8e8",
     boxShadow: "0 4px 20px rgba(200,16,46,.15)",
   },
   itemStyle:  { color: "#c8d8e8" },
   labelStyle: { color: "#e4e9f0", fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase" as const },
 };
 
-const axisStyle = { fontSize: 10, fontFamily: "'Courier New', monospace", fill: TEXT };
+const axisStyle = { fontSize: 10, fontFamily: "var(--font-geist-sans), system-ui, sans-serif", fill: TEXT };
 
 export function SegmentChart({ data }: { data: Row[] }) {
   return (

@@ -55,7 +55,7 @@ const C = {
   green:  "#22c55e",
 };
 
-const LABEL: React.CSSProperties = { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", color: C.label, fontFamily: "'Courier New', monospace" };
+const LABEL: React.CSSProperties = { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", color: C.label, fontFamily: "var(--font-geist-sans), system-ui, sans-serif" };
 
 // ── Badge configs ────────────────────────────────────────────────
 type BadgeCfg = { label: string; color: string; bg: string; border: string };
@@ -133,7 +133,7 @@ function StageTimeBadge({ ts }: { ts: string | null }) {
         className={s.pulse ? "asb-pulse-sla" : undefined}
         style={{
           display: "inline-block", color: s.color, fontSize: 10, fontWeight: 700,
-          fontFamily: "'Courier New', monospace", whiteSpace: "nowrap",
+          fontFamily: "var(--font-geist-sans), system-ui, sans-serif", whiteSpace: "nowrap",
         }}
         title={`Tempo desde a última atualização — semáforo SLA`}
       >
@@ -148,7 +148,7 @@ function Badge({ cfg }: { cfg: BadgeCfg }) {
     <span style={{
       display: "inline-block", padding: "2px 5px", borderRadius: 3,
       fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase",
-      fontFamily: "'Courier New', monospace", fontWeight: 700,
+      fontFamily: "var(--font-geist-sans), system-ui, sans-serif", fontWeight: 700,
       color: cfg.color, background: cfg.bg, border: `1px solid ${cfg.border}`,
     }}>{cfg.label}</span>
   );
@@ -164,7 +164,7 @@ function OrigemBadge({ lead }: { lead: Lead }) {
       style={{
         display: "inline-block", padding: "2px 5px", borderRadius: 3,
         fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase",
-        fontFamily: "'Courier New', monospace", fontWeight: 700,
+        fontFamily: "var(--font-geist-sans), system-ui, sans-serif", fontWeight: 700,
         color: cfg.color, background: cfg.bg, border: `1px solid ${cfg.border}`,
         cursor: det ? "help" : "default",
       }}
@@ -180,7 +180,7 @@ function Select({ value, onChange, children }: { value: string; onChange: (v: st
       style={{
         background: C.bg2, border: `1px solid ${C.border2}`, borderRadius: 4,
         color: C.muted, fontSize: 10, letterSpacing: ".10em", textTransform: "uppercase",
-        padding: "5px 10px", fontFamily: "'Courier New', monospace", cursor: "pointer", outline: "none",
+        padding: "5px 10px", fontFamily: "var(--font-geist-sans), system-ui, sans-serif", cursor: "pointer", outline: "none",
         flexShrink: 0,
       }}
     >
@@ -264,7 +264,7 @@ export function LeadsTable({ leads: initialLeads, userEmail, initialStatus = "al
             style={{
               width: "100%", background: C.bg2, border: `1px solid ${C.border2}`, borderRadius: 4,
               color: C.text, fontSize: 11, padding: "5px 10px 5px 24px",
-              fontFamily: "'Courier New', monospace", outline: "none", boxSizing: "border-box",
+              fontFamily: "var(--font-geist-sans), system-ui, sans-serif", outline: "none", boxSizing: "border-box",
             }}
           />
         </div>
@@ -302,7 +302,7 @@ export function LeadsTable({ leads: initialLeads, userEmail, initialStatus = "al
           style={{
             background: "transparent", border: `1px solid ${C.border2}`, borderRadius: 4,
             color: C.muted, fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase",
-            padding: "5px 12px", cursor: "pointer", fontFamily: "'Courier New', monospace", flexShrink: 0,
+            padding: "5px 12px", cursor: "pointer", fontFamily: "var(--font-geist-sans), system-ui, sans-serif", flexShrink: 0,
           }}
         >
           {isPending ? "..." : "↺ atualizar"}
@@ -351,11 +351,11 @@ export function LeadsTable({ leads: initialLeads, userEmail, initialStatus = "al
                 <div>
                   <Link
                     href={`/dashboard/leads/${encodeURIComponent(lead.phone)}`}
-                    style={{ color: "#FFFFFF", textDecoration: "none", fontWeight: 600, fontSize: 12, fontFamily: "'Courier New', monospace" }}
+                    style={{ color: "#FFFFFF", textDecoration: "none", fontWeight: 600, fontSize: 12, fontFamily: "var(--font-geist-sans), system-ui, sans-serif" }}
                   >
                     {lead.name || "—"}
                   </Link>
-                  <div style={{ color: C.muted, fontSize: 10, fontFamily: "'Courier New', monospace", marginTop: 1 }}>
+                  <div style={{ color: C.muted, fontSize: 10, fontFamily: "var(--font-geist-sans), system-ui, sans-serif", marginTop: 1 }}>
                     {lead.phone}
                   </div>
                 </div>
@@ -389,7 +389,7 @@ export function LeadsTable({ leads: initialLeads, userEmail, initialStatus = "al
                 <Badge cfg={STATUS_CFG[status] ?? STATUS_CFG.new} />
                 <OrigemBadge lead={lead} />
                 {lead.city && (
-                  <span style={{ color: C.muted, fontSize: 9, fontFamily: "'Courier New', monospace" }}>
+                  <span style={{ color: C.muted, fontSize: 9, fontFamily: "var(--font-geist-sans), system-ui, sans-serif" }}>
                     {lead.city}
                   </span>
                 )}
@@ -397,13 +397,13 @@ export function LeadsTable({ leads: initialLeads, userEmail, initialStatus = "al
 
               {/* Volume + vendor */}
               <div style={{ display: "flex", gap: 16 }}>
-                <span style={{ color: C.muted, fontSize: 9, fontFamily: "'Courier New', monospace", letterSpacing: ".10em" }}>
+                <span style={{ color: C.muted, fontSize: 9, fontFamily: "var(--font-geist-sans), system-ui, sans-serif", letterSpacing: ".10em" }}>
                   {lead.weekly_volume_kg ? `${lead.weekly_volume_kg} kg/sem` : "vol: —"}
                 </span>
-                <span style={{ color: C.muted, fontSize: 9, fontFamily: "'Courier New', monospace", letterSpacing: ".10em" }}>
+                <span style={{ color: C.muted, fontSize: 9, fontFamily: "var(--font-geist-sans), system-ui, sans-serif", letterSpacing: ".10em" }}>
                   {VENDOR_LABELS[lead.routing_team ?? ""] ?? lead.routing_team ?? "—"}
                 </span>
-                <span style={{ color: C.muted, fontSize: 9, fontFamily: "'Courier New', monospace" }}>
+                <span style={{ color: C.muted, fontSize: 9, fontFamily: "var(--font-geist-sans), system-ui, sans-serif" }}>
                   etapa {lead.qual_stage ?? 0}/9
                 </span>
                 <StageTimeBadge ts={lead.updated_at} />

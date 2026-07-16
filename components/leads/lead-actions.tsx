@@ -85,7 +85,7 @@ export function LeadActions({ lead: initial }: { lead: Lead }) {
             {loading === "confirm" ? "Confirmando..." : "Confirmar Contato"}
           </Button>
           {confirmError && (
-            <p style={{ fontSize: 10, color: "#f85149", fontFamily: "'Courier New', monospace" }}>
+            <p style={{ fontSize: 10, color: "#f85149", fontFamily: "var(--font-geist-sans), system-ui, sans-serif" }}>
               {confirmError}
             </p>
           )}
@@ -97,7 +97,7 @@ export function LeadActions({ lead: initial }: { lead: Lead }) {
           padding: "5px 10px", borderRadius: 4,
           background: "rgba(63,185,80,.1)", border: "1px solid rgba(63,185,80,.3)",
           fontSize: 10, letterSpacing: ".10em", textTransform: "uppercase",
-          fontFamily: "'Courier New', monospace", color: "#3fb950",
+          fontFamily: "var(--font-geist-sans), system-ui, sans-serif", color: "#3fb950",
         }}>
           <CheckCircle size={12} /> Contato Confirmado
         </div>

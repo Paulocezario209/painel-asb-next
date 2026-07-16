@@ -58,14 +58,14 @@ function FeedbackButtons({
   // Após avaliação: mostra só o ícone marcado
   if (state === "positive") {
     return (
-      <span style={{ color: C.green, fontSize: 10, fontFamily: "'Courier New', monospace" }}>
+      <span style={{ color: C.green, fontSize: 10, fontFamily: "var(--font-geist-sans), system-ui, sans-serif" }}>
         <ThumbsUp size={10} style={{ display: "inline", marginRight: 3 }} />útil
       </span>
     );
   }
   if (state === "negative") {
     return (
-      <span style={{ color: C.red, fontSize: 10, fontFamily: "'Courier New', monospace" }}>
+      <span style={{ color: C.red, fontSize: 10, fontFamily: "var(--font-geist-sans), system-ui, sans-serif" }}>
         <ThumbsDown size={10} style={{ display: "inline", marginRight: 3 }} />ruim
       </span>
     );
@@ -92,7 +92,7 @@ function FeedbackButtons({
 export function ConversationWithFeedback({ rows, phone }: { rows: ConvRow[]; phone: string }) {
   if (!rows || rows.length === 0) {
     return (
-      <p style={{ color: C.muted, fontSize: 11, fontFamily: "'Courier New', monospace" }}>
+      <p style={{ color: C.muted, fontSize: 11, fontFamily: "var(--font-geist-sans), system-ui, sans-serif" }}>
         Nenhuma mensagem registrada.
       </p>
     );
@@ -110,11 +110,11 @@ export function ConversationWithFeedback({ rows, phone }: { rows: ConvRow[]; pho
               maxWidth: "85%", borderRadius: 8, padding: "8px 12px",
               background: C.bg2, border: `1px solid ${C.border}`,
             }}>
-              <p style={{ color: C.text, fontSize: 11, fontFamily: "'Courier New', monospace", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+              <p style={{ color: C.text, fontSize: 11, fontFamily: "var(--font-geist-sans), system-ui, sans-serif", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
                 {row.message_text}
               </p>
               {!isSdr && (
-                <p style={{ color: C.muted, fontSize: 9, fontFamily: "'Courier New', monospace", marginTop: 4, letterSpacing: ".08em" }}>
+                <p style={{ color: C.muted, fontSize: 9, fontFamily: "var(--font-geist-sans), system-ui, sans-serif", marginTop: 4, letterSpacing: ".08em" }}>
                   {fmt(row.created_at)}
                 </p>
               )}
@@ -129,11 +129,11 @@ export function ConversationWithFeedback({ rows, phone }: { rows: ConvRow[]; pho
               maxWidth: "85%", borderRadius: 8, padding: "8px 12px",
               background: "rgba(88,166,255,.15)", border: `1px solid rgba(88,166,255,.3)`,
             }}>
-              <p style={{ color: C.blue, fontSize: 11, fontFamily: "'Courier New', monospace", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+              <p style={{ color: C.blue, fontSize: 11, fontFamily: "var(--font-geist-sans), system-ui, sans-serif", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
                 {row.response}
               </p>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 4 }}>
-                <p style={{ color: C.muted, fontSize: 9, fontFamily: "'Courier New', monospace", letterSpacing: ".08em" }}>
+                <p style={{ color: C.muted, fontSize: 9, fontFamily: "var(--font-geist-sans), system-ui, sans-serif", letterSpacing: ".08em" }}>
                   {fmt(row.created_at)}{row.rag_domain ? ` · ${row.rag_domain.replace("_rag", "")}` : ""}
                 </p>
                 {row.request_id && (

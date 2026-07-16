@@ -151,10 +151,10 @@ export function MetasUpload() {
         >
           <input {...getInputProps()} />
           <Upload size={48} color="#556677" style={{ margin: "0 auto 12px" }} />
-          <p style={{ fontSize: 13, color: "#FFFFFF", fontWeight: 700, fontFamily: "'Courier New', monospace" }}>
+          <p style={{ fontSize: 13, color: "#FFFFFF", fontWeight: 700, fontFamily: "var(--font-geist-sans), system-ui, sans-serif" }}>
             {isDragActive ? "Solte o arquivo aqui" : "Arraste XLSX de metas ou clique pra escolher"}
           </p>
-          <p style={{ fontSize: 10, color: "#e4e9f0", marginTop: 8, fontFamily: "'Courier New', monospace" }}>
+          <p style={{ fontSize: 10, color: "#e4e9f0", marginTop: 8, fontFamily: "var(--font-geist-sans), system-ui, sans-serif" }}>
             Colunas esperadas: Vendedor · Mes · Ano · MetaMensal
           </p>
         </div>
@@ -164,7 +164,7 @@ export function MetasUpload() {
       {(state === "uploading" || state === "applying") && (
         <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg" style={{ padding: 32, textAlign: "center" }}>
           <Loader2 size={32} className="animate-spin" color="#ff7b1c" style={{ margin: "0 auto 12px" }} />
-          <p style={{ fontSize: 12, color: "#c8d8e8", fontFamily: "'Courier New', monospace" }}>
+          <p style={{ fontSize: 12, color: "#c8d8e8", fontFamily: "var(--font-geist-sans), system-ui, sans-serif" }}>
             {state === "uploading" ? "Parseando XLSX..." : "Gravando metas..."}
           </p>
         </div>
@@ -187,11 +187,11 @@ export function MetasUpload() {
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <FileSpreadsheet size={18} color="#ff7b1c" />
-              <span style={{ fontSize: 12, fontWeight: 700, color: "#FFFFFF", fontFamily: "'Courier New', monospace" }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#FFFFFF", fontFamily: "var(--font-geist-sans), system-ui, sans-serif" }}>
                 {filename}
               </span>
             </div>
-            <span style={{ fontSize: 9, color: "#ff7b1c", background: "rgba(255,123,28,.15)", padding: "3px 8px", borderRadius: 3, letterSpacing: ".1em", textTransform: "uppercase", fontWeight: 700, fontFamily: "'Courier New', monospace" }}>
+            <span style={{ fontSize: 9, color: "#ff7b1c", background: "rgba(255,123,28,.15)", padding: "3px 8px", borderRadius: 3, letterSpacing: ".1em", textTransform: "uppercase", fontWeight: 700, fontFamily: "var(--font-geist-sans), system-ui, sans-serif" }}>
               PREVIEW
             </span>
           </div>
@@ -204,11 +204,11 @@ export function MetasUpload() {
 
           {preview.previa.length > 0 && (
             <div style={{ marginBottom: 14 }}>
-              <p style={{ fontSize: 10, color: "#22c55e", fontWeight: 700, fontFamily: "'Courier New', monospace", marginBottom: 6, letterSpacing: ".1em", textTransform: "uppercase" }}>
+              <p style={{ fontSize: 10, color: "#22c55e", fontWeight: 700, fontFamily: "var(--font-geist-sans), system-ui, sans-serif", marginBottom: 6, letterSpacing: ".1em", textTransform: "uppercase" }}>
                 ✓ Será gravado
               </p>
               <div style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11, fontFamily: "'Courier New', monospace" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11, fontFamily: "var(--font-geist-sans), system-ui, sans-serif" }}>
                   <thead>
                     <tr>
                       <th style={{ ...th, textAlign: "left" }}>Vendedor</th>
@@ -236,11 +236,11 @@ export function MetasUpload() {
 
           {preview.erros.length > 0 && (
             <div style={{ marginBottom: 14 }}>
-              <p style={{ fontSize: 10, color: "#C8102E", fontWeight: 700, fontFamily: "'Courier New', monospace", marginBottom: 6, letterSpacing: ".1em", textTransform: "uppercase" }}>
+              <p style={{ fontSize: 10, color: "#C8102E", fontWeight: 700, fontFamily: "var(--font-geist-sans), system-ui, sans-serif", marginBottom: 6, letterSpacing: ".1em", textTransform: "uppercase" }}>
                 ✗ Erros
               </p>
               {preview.erros.map((e) => (
-                <p key={e.row} style={{ fontSize: 10, color: "#c8d8e8", fontFamily: "'Courier New', monospace" }}>
+                <p key={e.row} style={{ fontSize: 10, color: "#c8d8e8", fontFamily: "var(--font-geist-sans), system-ui, sans-serif" }}>
                   Linha {e.row}: <span style={{ color: "#C8102E" }}>{e.error}</span>
                 </p>
               ))}
@@ -257,7 +257,7 @@ export function MetasUpload() {
                 padding: "8px 14px",
                 borderRadius: 4,
                 fontSize: 11,
-                fontFamily: "'Courier New', monospace",
+                fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
                 cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
@@ -277,7 +277,7 @@ export function MetasUpload() {
                 borderRadius: 4,
                 fontSize: 11,
                 fontWeight: 700,
-                fontFamily: "'Courier New', monospace",
+                fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
                 cursor: preview.validas > 0 ? "pointer" : "not-allowed",
                 letterSpacing: ".05em",
                 textTransform: "uppercase",
@@ -298,14 +298,14 @@ export function MetasUpload() {
               <p style={{ fontSize: 14, fontWeight: 700, color: "#22c55e" }}>
                 {applied.aplicadas} meta(s) gravada(s)
               </p>
-              <p style={{ fontSize: 10, color: "#c0d0e0", fontFamily: "'Courier New', monospace" }}>
+              <p style={{ fontSize: 10, color: "#c0d0e0", fontFamily: "var(--font-geist-sans), system-ui, sans-serif" }}>
                 Painel /dashboard/vendas atualizado em &lt;15min (cron)
               </p>
             </div>
           </div>
           {applied.detalhe.length > 0 && (
             <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11, fontFamily: "'Courier New', monospace" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11, fontFamily: "var(--font-geist-sans), system-ui, sans-serif" }}>
                 <thead>
                   <tr>
                     <th style={{ ...th, textAlign: "left" }}>Vendedor</th>
@@ -339,7 +339,7 @@ export function MetasUpload() {
               padding: "8px 14px",
               borderRadius: 4,
               fontSize: 11,
-              fontFamily: "'Courier New', monospace",
+              fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
               cursor: "pointer",
               display: "flex",
               alignItems: "center",
@@ -357,7 +357,7 @@ export function MetasUpload() {
 function Stat({ label, value, cor }: { label: string; value: number; cor: string }) {
   return (
     <div style={{ background: "#0a0f1f", borderRadius: 4, padding: "10px 12px" }}>
-      <p style={{ fontSize: 9, color: "#e4e9f0", fontFamily: "'Courier New', monospace", letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 2 }}>
+      <p style={{ fontSize: 9, color: "#e4e9f0", fontFamily: "var(--font-geist-sans), system-ui, sans-serif", letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 2 }}>
         {label}
       </p>
       <p style={{ fontSize: 18, color: cor, fontWeight: 700, fontFamily: "'Inter', system-ui, sans-serif" }}>
@@ -370,7 +370,7 @@ function Stat({ label, value, cor }: { label: string; value: number; cor: string
 const th: React.CSSProperties = {
   fontSize: 9,
   color: "#e4e9f0",
-  fontFamily: "'Courier New', monospace",
+  fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
   letterSpacing: ".1em",
   textTransform: "uppercase",
   padding: "6px 8px",
@@ -380,5 +380,5 @@ const th: React.CSSProperties = {
 const td: React.CSSProperties = {
   padding: "6px 8px",
   color: "#c8d8e8",
-  fontFamily: "'Courier New', monospace",
+  fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
 };

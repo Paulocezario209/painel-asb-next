@@ -59,7 +59,7 @@ export function MarkProposalSentButton({
           fontSize: 10,
           letterSpacing: ".10em",
           textTransform: "uppercase" as const,
-          fontFamily: "'Courier New', monospace",
+          fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
           cursor: "pointer",
         }}
       >
@@ -86,7 +86,7 @@ export function MarkProposalSentButton({
           fontSize: 10,
           letterSpacing: ".12em",
           textTransform: "uppercase" as const,
-          fontFamily: "'Courier New', monospace",
+          fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
           fontWeight: 700,
         }}
       >
@@ -100,7 +100,7 @@ export function MarkProposalSentButton({
             letterSpacing: ".14em",
             textTransform: "uppercase" as const,
             color: "#8b949e",
-            fontFamily: "'Courier New', monospace",
+            fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
           }}
         >
           Valor da proposta (R$) — opcional
@@ -121,7 +121,7 @@ export function MarkProposalSentButton({
             border: "1px solid #30363d",
             color: "#c9d1d9",
             fontSize: 11,
-            fontFamily: "'Courier New', monospace",
+            fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
           }}
         />
       </div>
@@ -138,7 +138,7 @@ export function MarkProposalSentButton({
           border: "1px solid #30363d",
           color: "#c9d1d9",
           fontSize: 11,
-          fontFamily: "'Courier New', monospace",
+          fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
           resize: "vertical" as const,
         }}
       />
@@ -148,7 +148,7 @@ export function MarkProposalSentButton({
           style={{
             color: "#f85149",
             fontSize: 10,
-            fontFamily: "'Courier New', monospace",
+            fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
           }}
         >
           {error}
@@ -170,7 +170,7 @@ export function MarkProposalSentButton({
             border: "1px solid #30363d",
             color: "#8b949e",
             fontSize: 10,
-            fontFamily: "'Courier New', monospace",
+            fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
             cursor: "pointer",
           }}
         >
@@ -188,7 +188,7 @@ export function MarkProposalSentButton({
             fontSize: 10,
             letterSpacing: ".08em",
             textTransform: "uppercase" as const,
-            fontFamily: "'Courier New', monospace",
+            fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
             cursor: saving ? "wait" : "pointer",
           }}
         >

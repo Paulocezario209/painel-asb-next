@@ -37,7 +37,7 @@ export function OrigemSelector({ phone, initial }: { phone: string; initial: str
         onChange={(e) => onChange(e.target.value)}
         style={{
           background: "#0d1117", border: "1px solid #2A3F8F", borderRadius: 4,
-          color: "#c9d1d9", fontSize: 11, fontFamily: "'Courier New', monospace",
+          color: "#c9d1d9", fontSize: 11, fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
           padding: "4px 8px", cursor: "pointer", outline: "none",
         }}
       >
@@ -46,8 +46,8 @@ export function OrigemSelector({ phone, initial }: { phone: string; initial: str
           <option key={key} value={key}>{label}</option>
         ))}
       </select>
-      {saving && <span style={{ fontSize: 9, color: "#c0d0e0", fontFamily: "'Courier New', monospace" }}>salvando…</span>}
-      {saved && <span style={{ fontSize: 9, color: "#22c55e", fontFamily: "'Courier New', monospace" }}>salvo ✓</span>}
+      {saving && <span style={{ fontSize: 9, color: "#c0d0e0", fontFamily: "var(--font-geist-sans), system-ui, sans-serif" }}>salvando…</span>}
+      {saved && <span style={{ fontSize: 9, color: "#22c55e", fontFamily: "var(--font-geist-sans), system-ui, sans-serif" }}>salvo ✓</span>}
     </div>
   );
 }

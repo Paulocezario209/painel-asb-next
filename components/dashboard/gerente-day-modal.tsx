@@ -26,16 +26,16 @@ const fmtDate = (d: string) => new Date(d + "T00:00:00").toLocaleDateString("pt-
 const S = {
   overlay: { position: "fixed" as const, inset: 0, background: "rgba(0,0,0,0.75)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 },
   modal: { background: "#0f1117", border: "1px solid #2a2a2a", borderRadius: 8, width: "100%", maxWidth: 860, maxHeight: "90vh", overflowY: "auto" as const, padding: 24, display: "flex", flexDirection: "column" as const, gap: 20 },
-  title: { fontSize: 13, fontWeight: 700, color: "#c0c8d8", fontFamily: "'Courier New', monospace", textTransform: "uppercase" as const, letterSpacing: ".1em" },
+  title: { fontSize: 13, fontWeight: 700, color: "#c0c8d8", fontFamily: "var(--font-geist-sans), system-ui, sans-serif", textTransform: "uppercase" as const, letterSpacing: ".1em" },
   section: { display: "flex", flexDirection: "column" as const, gap: 8 },
-  sectionTitle: { fontSize: 11, fontWeight: 700, color: "#e4e9f0", fontFamily: "'Courier New', monospace", textTransform: "uppercase" as const, letterSpacing: ".08em", borderBottom: "1px solid #1e2a35", paddingBottom: 4 },
+  sectionTitle: { fontSize: 11, fontWeight: 700, color: "#e4e9f0", fontFamily: "var(--font-geist-sans), system-ui, sans-serif", textTransform: "uppercase" as const, letterSpacing: ".08em", borderBottom: "1px solid #1e2a35", paddingBottom: 4 },
   kpiRow: { display: "flex", gap: 12, flexWrap: "wrap" as const },
   kpi: { flex: 1, minWidth: 120, background: "#1a1a2e", border: "1px solid #2a2a2a", borderRadius: 6, padding: "10px 14px" },
-  kpiLabel: { fontSize: 10, color: "#e4e9f0", fontFamily: "'Courier New', monospace", textTransform: "uppercase" as const },
+  kpiLabel: { fontSize: 10, color: "#e4e9f0", fontFamily: "var(--font-geist-sans), system-ui, sans-serif", textTransform: "uppercase" as const },
   table: { width: "100%", borderCollapse: "collapse" as const, fontSize: 12 },
-  th: { textAlign: "left" as const, padding: "6px 8px", color: "#e4e9f0", fontFamily: "'Courier New', monospace", fontSize: 10, borderBottom: "1px solid #1e2a35" },
+  th: { textAlign: "left" as const, padding: "6px 8px", color: "#e4e9f0", fontFamily: "var(--font-geist-sans), system-ui, sans-serif", fontSize: 10, borderBottom: "1px solid #1e2a35" },
   td: { padding: "6px 8px", color: "#c0c8d8", borderBottom: "1px solid #111" },
-  tdVal: { padding: "6px 8px", color: "#22c55e", textAlign: "right" as const, fontFamily: "'Courier New', monospace", borderBottom: "1px solid #111" },
+  tdVal: { padding: "6px 8px", color: "#22c55e", textAlign: "right" as const, fontFamily: "var(--font-geist-sans), system-ui, sans-serif", borderBottom: "1px solid #111" },
   badge: { display: "inline-block", padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 700 },
 };
 
@@ -85,7 +85,7 @@ export default function GerenteDayModal({ dia, vendorLabel, pedidos, cnb, ausent
             ].map(k => (
               <div key={k.label} style={S.kpi}>
                 <p style={S.kpiLabel}>{k.label}</p>
-                <p style={{ fontSize: 14, fontWeight: 700, color: k.color, fontFamily: "'Courier New', monospace", marginTop: 4 }}>{k.value}</p>
+                <p style={{ fontSize: 14, fontWeight: 700, color: k.color, fontFamily: "var(--font-geist-sans), system-ui, sans-serif", marginTop: 4 }}>{k.value}</p>
               </div>
             ))}
           </div>

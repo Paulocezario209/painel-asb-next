@@ -42,7 +42,7 @@ export function VoltarEtapaButton({ leadId, currentStage }: { leadId: string; cu
   }
 
   const C = { border: "#2a2a2a", bg: "#080b14", text: "#FFFFFF", muted: "#c0d0e0", amber: "#f59e0b", red: "#C8102E" };
-  const MONO: React.CSSProperties = { fontFamily: "'Courier New', monospace" };
+  const MONO: React.CSSProperties = { fontFamily: "var(--font-geist-sans), system-ui, sans-serif" };
 
   if (!open) {
     return (

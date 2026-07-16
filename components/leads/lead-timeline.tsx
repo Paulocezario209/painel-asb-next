@@ -80,7 +80,7 @@ export function LeadTimeline({
   const display = merged.slice(0, 50);
 
   if (display.length === 0) {
-    return <p style={{ color: "#c0d0e0", fontSize: 11, fontFamily: "'Courier New', monospace" }}>Sem eventos registrados.</p>;
+    return <p style={{ color: "#c0d0e0", fontSize: 11, fontFamily: "var(--font-geist-sans), system-ui, sans-serif" }}>Sem eventos registrados.</p>;
   }
 
   return (
@@ -118,15 +118,15 @@ export function LeadTimeline({
             }} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-                <span style={{ color: "#c8d8e8", fontSize: 11, fontFamily: "'Courier New', monospace", fontWeight: 600 }}>
+                <span style={{ color: "#c8d8e8", fontSize: 11, fontFamily: "var(--font-geist-sans), system-ui, sans-serif", fontWeight: 600 }}>
                   {title}
                 </span>
-                <span style={{ color: "#e4e9f0", fontSize: 9, fontFamily: "'Courier New', monospace", flexShrink: 0, marginLeft: 8 }}>
+                <span style={{ color: "#e4e9f0", fontSize: 9, fontFamily: "var(--font-geist-sans), system-ui, sans-serif", flexShrink: 0, marginLeft: 8 }}>
                   {fmtRelative(item.created_at)}
                 </span>
               </div>
               {detail && (
-                <p style={{ color: "#c0d0e0", fontSize: 10, fontFamily: "'Courier New', monospace", marginTop: 2, wordBreak: "break-word" }}>
+                <p style={{ color: "#c0d0e0", fontSize: 10, fontFamily: "var(--font-geist-sans), system-ui, sans-serif", marginTop: 2, wordBreak: "break-word" }}>
                   {detail}
                 </p>
               )}
@@ -134,9 +134,9 @@ export function LeadTimeline({
                 <span style={{
                   fontSize: 8, padding: "1px 4px", borderRadius: 2,
                   color: actorCfg.color, background: actorCfg.bg, border: `1px solid ${actorCfg.border}`,
-                  fontFamily: "'Courier New', monospace", letterSpacing: ".08em",
+                  fontFamily: "var(--font-geist-sans), system-ui, sans-serif", letterSpacing: ".08em",
                 }}>{item._actor}</span>
-                <span style={{ color: "#444", fontSize: 8, fontFamily: "'Courier New', monospace" }}>
+                <span style={{ color: "#444", fontSize: 8, fontFamily: "var(--font-geist-sans), system-ui, sans-serif" }}>
                   {fmtDate(item.created_at)}
                 </span>
               </div>
@@ -145,7 +145,7 @@ export function LeadTimeline({
         );
       })}
       {merged.length > 50 && (
-        <p style={{ color: "#e4e9f0", fontSize: 9, fontFamily: "'Courier New', monospace", textAlign: "center", padding: "8px 0" }}>
+        <p style={{ color: "#e4e9f0", fontSize: 9, fontFamily: "var(--font-geist-sans), system-ui, sans-serif", textAlign: "center", padding: "8px 0" }}>
           +{merged.length - 50} eventos anteriores
         </p>
       )}

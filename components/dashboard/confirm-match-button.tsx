@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-const mono = "'Courier New', monospace";
+const mono = "var(--font-geist-sans), system-ui, sans-serif";
 
 // Botão "Confirmar match" — grava ares_pessoa_id via /api/lead/confirm-ares-match.
 // Ao confirmar, router.refresh() re-renderiza o server component e a linha some
