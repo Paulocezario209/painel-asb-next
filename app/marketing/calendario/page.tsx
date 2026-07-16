@@ -1,33 +1,28 @@
 import { theme } from "@/lib/theme";
 import { createClient } from "@/lib/supabase/server";
 import { CalendarioClient, type DiaRow } from "./calendario-client";
-// ETAPA6 (DEBT-137): cache real da performance diária (view global, chave inclui o ano).
-import { unstable_cache } from "next/cache";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic";
 
-
-// unstable_cache inclui os argumentos (ano) na chave automaticamente → 1 entrada por ano.
-const getCachedPerfDiaria = unstable_cache(
-  async (ano: string) => {
-    const supabase = createServiceClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      { auth: { persistSession: false } },
-    );
-    const { data } = await supabase
-      .from("v_performance_diaria")
-      .select("data, ad_id, ad_name, spend, leads, cpl")
-      .gte("data", `${ano}-01-01`)
-      .lte("data", `${ano}-12-31`)
-      .order("data", { ascending: true })
-      .limit(20000);
-    return (data ?? []) as unknown as DiaRow[];
-  },
-  ["marketing-performance-diaria"],
-  { revalidate: 300, tags: ["marketing-performance-diaria"] },
-);
+// FIX freeze (2026-07-15): consulta DIRETA por request. A página é force-dynamic; o unstable_cache
+// (revalidate 300) congelava no self-hosted standalone (EasyPanel) e a tela travava no dado do último
+// deploy (ex.: gasto só até 11/07 com a view já em 14/07). Sem cache → o calendário reflete a view na hora.
+async function getPerfDiaria(ano: string) {
+  const supabase = createServiceClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { persistSession: false } },
+  );
+  const { data } = await supabase
+    .from("v_performance_diaria")
+    .select("data, ad_id, ad_name, spend, leads, cpl")
+    .gte("data", `${ano}-01-01`)
+    .lte("data", `${ano}-12-31`)
+    .order("data", { ascending: true })
+    .limit(20000);
+  return (data ?? []) as unknown as DiaRow[];
+}
 
 export default async function CalendarioPage({
   searchParams,
@@ -42,7 +37,7 @@ export default async function CalendarioPage({
   // hidrata a sessão (view REVOKE anon / GRANT authenticated — DEBT-110)
   await supabase.auth.getUser();
 
-  const rows = await getCachedPerfDiaria(ano);  // ETAPA6: cacheado por ano (revalidate 300)
+  const rows = await getPerfDiaria(ano);  // consulta direta (force-dynamic) — sem freeze de cache
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>

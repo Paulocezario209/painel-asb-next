@@ -1,29 +1,24 @@
 import { theme } from "@/lib/theme";
 import { createClient } from "@/lib/supabase/server";
 import { AnunciosClient, type RankRow, type SparkRow } from "./anuncios-client";
-// ETAPA6 (DEBT-137): cache real do ranking de criativos (view global).
-import { unstable_cache } from "next/cache";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic";
 
-
-const getCachedRankingCriativo = unstable_cache(
-  async () => {
-    const supabase = createServiceClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      { auth: { persistSession: false } },
-    );
-    const { data } = await supabase
-      .from("v_ranking_criativo")
-      .select("ad_id, ad_name, campaign_name, periodo, spend, leads, cpl, roas, status_meta")
-      .limit(5000);
-    return (data ?? []) as unknown as RankRow[];
-  },
-  ["marketing-ranking-criativo"],
-  { revalidate: 300, tags: ["marketing-ranking-criativo"] },
-);
+// FIX freeze (2026-07-15): consulta DIRETA por request (era unstable_cache revalidate 300, que
+// congelava no self-hosted standalone). A página é force-dynamic → ranking reflete a view na hora.
+async function getRankingCriativo() {
+  const supabase = createServiceClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { persistSession: false } },
+  );
+  const { data } = await supabase
+    .from("v_ranking_criativo")
+    .select("ad_id, ad_name, campaign_name, periodo, spend, leads, cpl, roas, status_meta")
+    .limit(5000);
+  return (data ?? []) as unknown as RankRow[];
+}
 
 export default async function AnunciosPage() {
   const supabase = await createClient();
@@ -32,9 +27,9 @@ export default async function AnunciosPage() {
 
   const desde7 = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
 
-  // ranking: cacheado (global, revalidate 300). spark 7d: live (janela rolante).
+  // ranking + spark 7d: live (consulta direta por request).
   const [rank, sparkRes] = await Promise.all([
-    getCachedRankingCriativo(),
+    getRankingCriativo(),
     supabase
       .from("v_performance_diaria")
       .select("ad_id, data, spend")

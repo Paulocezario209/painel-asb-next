@@ -1,13 +1,12 @@
 import { theme } from "@/lib/theme";
 import { createClient } from "@/lib/supabase/server";
 import { OverviewClient, type CacMensalRow, type RankRow, type AlertaRow } from "./overview-client";
-// ETAPA6 (DEBT-137): cache real das views globais de marketing (sem auth).
-import { unstable_cache } from "next/cache";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic";
 
-
+// FIX freeze (2026-07-15): consultas DIRETAS por request (eram unstable_cache revalidate 300, que
+// congelavam no self-hosted standalone). A página é force-dynamic → CAC e alertas refletem a view na hora.
 function svc() {
   return createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -16,46 +15,38 @@ function svc() {
   );
 }
 
-const getCachedCacMensal = unstable_cache(
-  async () => {
-    const { data } = await svc()
-      .from("v_cac_mensal_canal")
-      .select("mes, canal, leads, convertidos, receita_brl, gasto_total, cac_por_lead, roas")
-      .order("mes", { ascending: true })
-      .limit(2000);
-    return (data ?? []) as unknown as CacMensalRow[];
-  },
-  ["marketing-cac-mensal"],
-  { revalidate: 300, tags: ["marketing-cac-mensal"] },
-);
+async function getCacMensal() {
+  const { data } = await svc()
+    .from("v_cac_mensal_canal")
+    .select("mes, canal, leads, convertidos, receita_brl, gasto_total, cac_por_lead, roas")
+    .order("mes", { ascending: true })
+    .limit(2000);
+  return (data ?? []) as unknown as CacMensalRow[];
+}
 
-const getCachedAlertas = unstable_cache(
-  async () => {
-    const { data } = await svc()
-      .from("v_marketing_alertas")
-      .select("flag, ad_id, ad_name, campaign_name, canal, valor_atual, valor_referencia, descricao, severidade")
-      .limit(200);
-    return (data ?? []) as unknown as AlertaRow[];
-  },
-  ["marketing-alertas"],
-  { revalidate: 300, tags: ["marketing-alertas"] },
-);
+async function getAlertas() {
+  const { data } = await svc()
+    .from("v_marketing_alertas")
+    .select("flag, ad_id, ad_name, campaign_name, canal, valor_atual, valor_referencia, descricao, severidade")
+    .limit(200);
+  return (data ?? []) as unknown as AlertaRow[];
+}
 
 export default async function OverviewPage() {
   const supabase = await createClient();
   // hidrata a sessão (views REVOKE anon / GRANT authenticated — DEBT-110)
   await supabase.auth.getUser();
 
-  // cac + alertas: cacheados (global, revalidate 300). ranking: live (cookie).
+  // cac + alertas + ranking: live (consulta direta por request).
   // Funil por canal foi REMOVIDO daqui (dedup) — vive só em /marketing/funil-cac.
   const [cac, rankRes, alertas] = await Promise.all([
-    getCachedCacMensal(),
+    getCacMensal(),
     supabase
       .from("v_ranking_criativo")
       .select("ad_name, campaign_name, cpl, leads, spend")
       .eq("periodo", "30d")
       .limit(500),
-    getCachedAlertas(),
+    getAlertas(),
   ]);
 
   const rank = (rankRes.error ? [] : (rankRes.data ?? [])) as unknown as RankRow[];
