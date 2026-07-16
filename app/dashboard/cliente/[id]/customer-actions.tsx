@@ -113,7 +113,7 @@ export function CustomerActions({
         <select
           value={newOwner}
           onChange={(e) => setNewOwner(e.target.value)}
-          className="w-full text-xs bg-[#0f0f0f] border border-[#2a2a2a] text-white px-2 py-1.5 rounded mb-1.5"
+          className="w-full text-xs bg-[var(--asb-card-hi)] border border-[var(--asb-border)] text-white px-2 py-1.5 rounded mb-1.5"
         >
           <option value="">(escolha vendor)</option>
           {vendors.map((v) => (
@@ -127,7 +127,7 @@ export function CustomerActions({
           placeholder="Motivo (obrigatório)"
           value={reassignMotivo}
           onChange={(e) => setReassignMotivo(e.target.value)}
-          className="w-full text-xs bg-[#0f0f0f] border border-[#2a2a2a] text-white px-2 py-1.5 rounded mb-1.5"
+          className="w-full text-xs bg-[var(--asb-card-hi)] border border-[var(--asb-border)] text-white px-2 py-1.5 rounded mb-1.5"
         />
         <button
           disabled={pending || !newOwner || newOwner === currentOwner || reassignMotivo.trim().length < 2}
@@ -144,7 +144,7 @@ export function CustomerActions({
       </div>
 
       {/* Mark lost */}
-      <div className="pt-2 border-t border-[#2a2a2a]">
+      <div className="pt-2 border-t border-[var(--asb-border)]">
         <button
           disabled={pending}
           onClick={() => {

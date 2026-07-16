@@ -7,6 +7,7 @@ import { SupplierBar }  from "@/components/insights/supplier-bar";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getUserContext, canAccess } from "@/lib/auth/get-user-role";
+import { S } from "@/app/dashboard/lib/dashboard-tokens";
 // ETAPA6 (DEBT-137): cache real dos agregados históricos (dado global, sem auth).
 import { unstable_cache } from "next/cache";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
@@ -48,15 +49,6 @@ interface Lead {
   first_order_at:   string | null;
   created_at:       string | null;
 }
-
-// ── Design tokens ─────────────────────────────────────────────────────────────
-const S = {
-  card:    { background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8 } as React.CSSProperties,
-  label:   { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#e4e9f0", fontFamily: theme.font.label },
-  value:   { fontSize: 28, fontWeight: 700, color: "#FFFFFF", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", lineHeight: 1 },
-  section: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#c0c8d8", fontFamily: theme.font.label, marginBottom: 12 } as React.CSSProperties,
-  muted:   { color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label } as React.CSSProperties,
-};
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function countBy<T>(arr: T[], key: (item: T) => string | null | undefined, topN = 8) {
@@ -175,10 +167,10 @@ export default async function InsightsPage() {
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {/* Header */}
       <div>
-        <h1 style={{ color: "var(--asb-page-ink)", fontSize: 20, fontWeight: 800, fontFamily: theme.font.label, letterSpacing: "-.01em", textTransform: "none", marginBottom: 4 }}>
+        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
           Inteligência
         </h1>
-        <p style={{ ...S.muted, color: "var(--asb-page-ink2)" }}>Perfil da carteira · segmento · dores · fornecedores · geo</p>
+        <p style={S.muted}>Perfil da carteira · segmento · dores · fornecedores · geo</p>
       </div>
 
       {!hasData ? (
@@ -212,10 +204,7 @@ export default async function InsightsPage() {
 
           {/* Temperatura da carteira */}
           <div style={{ ...S.card, padding: "20px 24px" }}>
-            <p style={S.section}>
-              <span style={{ color: "#C8102E", marginRight: 6 }}>▲</span>
-              Temperatura da Carteira
-            </p>
+            <p style={S.section}>Temperatura da Carteira</p>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
               {(["hot", "warm", "cold"] as const).map(t => {
                 const m = TEMP_META[t];
@@ -330,7 +319,7 @@ export default async function InsightsPage() {
                       <div key={label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                         <span style={{ color: "#c8d8e8", fontSize: 11, fontFamily: theme.font.label }}>{label}</span>
                         <span style={{
-                          border: "1px solid #2a2a2a", color: "#c0d0e0", fontSize: 9,
+                          border: "1px solid var(--asb-border)", color: "#c0d0e0", fontSize: 9,
                           padding: "2px 7px", borderRadius: 2, fontFamily: theme.font.label,
                         }}>{count} leads</span>
                       </div>

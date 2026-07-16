@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { theme } from "@/lib/theme";
+import { S } from "@/app/dashboard/lib/dashboard-tokens";
 import { FunnelVisual, type FunnelStage } from "@/components/dashboard/funnel-visual";
 import { DashboardFilters } from "@/components/dashboard/dashboard-filters";
 import Link from "next/link";
@@ -38,15 +39,6 @@ const getFunilContagem = unstable_cache(
 const FASE_STAGES = new Set([...FASES.flatMap(f => [...f.stages]), "lead_perdido"]);  // lateral incluso
 // Alias canônico de legado (pedido_fechado NÃO é alias — conta via CONVERTIDO_SET).
 const aliasStage = (s: string): string => LEGACY_ALIAS[s] ?? s;
-
-// ── Design tokens ─────────────────────────────────────────────────────────────
-const S = {
-  card:    { background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8 } as React.CSSProperties,
-  label:   { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#e4e9f0", fontFamily: theme.font.label },
-  value:   { fontSize: 28, fontWeight: 700, color: "#FFFFFF", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", lineHeight: 1 },
-  section: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#c0c8d8", fontFamily: theme.font.label, marginBottom: 12 } as React.CSSProperties,
-  muted:   { color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label } as React.CSSProperties,
-};
 
 // ── Interfaces ────────────────────────────────────────────────────────────────
 interface FunnelLead {
@@ -205,10 +197,10 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {/* Header */}
       <div>
-        <h1 style={{ color: "var(--asb-page-ink)", fontSize: 20, fontWeight: 800, fontFamily: theme.font.label, letterSpacing: "-.01em", textTransform: "none", marginBottom: 4 }}>
+        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
           Funil de Vendas
         </h1>
-        <p style={{ ...S.muted, color: "var(--asb-page-ink2)" }}>Bloco 1: aquisição (lead → 1ª compra) · Bloco 2: camada cliente (carteira real ARES) · {total} leads · atualizado agora</p>
+        <p style={S.muted}>Bloco 1: aquisição (lead → 1ª compra) · Bloco 2: camada cliente (carteira real ARES) · {total} leads · atualizado agora</p>
       </div>
 
       {/* P2 — filtro mês+vendedor (afeta SÓ a seção "Conversão por Marcos") */}
@@ -264,7 +256,7 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
                   style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", cursor: "pointer" }}
                 >
                   <span style={{ width: 132, color: "#c8d8e8", fontSize: 11, fontFamily: theme.font.label, flexShrink: 0 }}>{mk.label}</span>
-                  <div style={{ flex: 1, background: "#0d1117", borderRadius: 3, height: 22, position: "relative", overflow: "hidden" }}>
+                  <div style={{ flex: 1, background: "var(--asb-card)", borderRadius: 3, height: 22, position: "relative", overflow: "hidden" }}>
                     <div style={{ width: `${pctTotal}%`, height: "100%", background: "linear-gradient(90deg, #1B2A6B, #2ea043)", borderRadius: 3, minWidth: mk.count > 0 ? 3 : 0 }} />
                     <span style={{ position: "absolute", left: 8, top: 3, color: "#fff", fontSize: 11, fontFamily: theme.font.num }}>{mk.count}</span>
                   </div>
@@ -314,7 +306,7 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
         <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 10 }}>
           {CLIENTE_ETAPAS.map((e) => (
             <Link key={e.key} href={e.href} style={{ textDecoration: "none" }}>
-              <div style={{ background: "#0d1117", border: "1px solid #2a2a2a", borderTop: `2px solid ${e.cor}`, borderRadius: 6, padding: "14px 12px", height: "100%" }}>
+              <div style={{ background: "var(--asb-card)", border: "1px solid var(--asb-border)", borderTop: `2px solid ${e.cor}`, borderRadius: 6, padding: "14px 12px", height: "100%" }}>
                 <p style={{ ...S.label, color: e.cor }}>{e.label}</p>
                 <p style={{ ...S.value, fontSize: 24, marginTop: 10 }}>{e.count}</p>
                 <p style={{ ...S.muted, fontSize: 9, marginTop: 6 }}>{e.sub}</p>
@@ -361,7 +353,7 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
               const cor = STAGE_COLORS[s] ?? "#185FA5";
               return (
                 <Link key={s} href={`/dashboard/leads?etapa=${s}`} style={{ textDecoration: "none" }}>
-                  <div style={{ background: "#0d1117", border: "1px solid #2a2a2a", borderTop: `2px solid ${cor}`, borderRadius: 6, padding: "14px 12px", height: "100%" }}>
+                  <div style={{ background: "var(--asb-card)", border: "1px solid var(--asb-border)", borderTop: `2px solid ${cor}`, borderRadius: 6, padding: "14px 12px", height: "100%" }}>
                     <p style={{ ...S.label, color: cor }}>{STAGE_LABELS[s] ?? s}</p>
                     <p style={{ ...S.value, fontSize: 24, marginTop: 10 }}>{stageCounts[s] ?? 0}</p>
                     <p style={{ ...S.muted, fontSize: 9, marginTop: 6 }}>leads na etapa</p>

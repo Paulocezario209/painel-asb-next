@@ -7,6 +7,8 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { theme } from "@/lib/theme";
 import { VENDOR_LABELS } from "@/lib/vendor-labels";
+import { S } from "@/app/dashboard/lib/dashboard-tokens";
+import { PageHead } from "@/app/dashboard/lib/ui";
 import { getUserContext, canAccess } from "@/lib/auth/get-user-role";
 import { DashboardFilters } from "@/components/dashboard/dashboard-filters";
 import { unstable_cache } from "next/cache";
@@ -22,7 +24,8 @@ const svc = () => createServiceClient(
 
 // ── SERIGRAFIA (tokens centralizados — fonte única, zero hex solto no JSX) ───
 const TOK = {
-  bg: "#0a0a0a", card: "#0d0f14", cardAlt: "#0b0e13", border: "#1b2130", borderSoft: "#141a27",
+  // superfícies: CSS vars canônicas do "grafite total" (fonte única no globals.css) — sem hex solto
+  bg: "#0a0a0a", card: "var(--asb-card)", cardAlt: "var(--asb-card-hi)", border: "var(--asb-border)", borderSoft: "var(--asb-border)",
   // situação operacional (borda-topo do card / ponto de status)
   noPrazo: "#34d399", hoje: "#fbbf24", atrasado: "#f6707a", respondeu: "#60a5fa",
   humano: "#a78bfa", negocia: "#2dd4bf", pausado: "#8b93a7",
@@ -40,8 +43,9 @@ const SANS = theme.font.label;
 const mono = (size: number, extra?: React.CSSProperties): React.CSSProperties =>
   ({ fontFamily: MONO, fontSize: size, letterSpacing: ".14em", textTransform: "uppercase", ...extra });
 const cardStyle = (top?: string): React.CSSProperties => ({
-  background: TOK.card, border: `1px solid ${TOK.border}`, borderRadius: 10,
-  borderTop: top ? `3px solid ${top}` : `1px solid ${TOK.border}`, padding: "14px 16px",
+  ...S.card,                                  // superfície grafite canônica (var(--asb-card), radius 14, float)
+  padding: "14px 16px",
+  ...(top ? { borderTop: `3px solid ${top}` } : {}),
 });
 
 // ── Situação operacional (não estágio) ───────────────────────────────────────
@@ -198,7 +202,7 @@ function ContextoExtraido({ ctx }: { ctx: CtxRow | null }) {
   }
   return (
     <div style={{ ...cardStyle(analisado ? TOK.f3 : undefined) }}>
-      <p style={{ ...mono(9, { letterSpacing: ".15em" }), color: analisado ? TOK.f3 : TOK.fgDim, marginBottom: 8 }}>▸ Contexto extraído</p>
+      <p style={{ ...mono(9, { letterSpacing: ".15em" }), color: analisado ? TOK.f3 : TOK.fgDim, marginBottom: 8 }}>Contexto extraído</p>
       {!analisado ? (
         <p style={{ fontFamily: SANS, fontSize: 11.5, color: TOK.fgDim, lineHeight: 1.6 }}>Ainda não analisado pela IA.</p>
       ) : (
@@ -398,10 +402,10 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 26 }}>
       {/* Cabeçalho + linha de saúde */}
-      <div>
-        <h1 style={{ ...mono(15, { letterSpacing: ".18em" }), color: TOK.fg, marginBottom: 6 }}>Central de Orquestração de Cadências</h1>
-        <p style={{ color: "var(--asb-page-ink2)", fontFamily: SANS, fontSize: 11.5}}>Onde cada lead está na cadência agora · CURTA (até 30d) e LONGA (perdidos/nutrição) · o motor F3 já calcula a próxima ação</p>
-      </div>
+      <PageHead
+        title="Central de Orquestração de Cadências"
+        desc="Onde cada lead está na cadência agora · CURTA (até 30d) e LONGA (perdidos/nutrição) · o motor F3 já calcula a próxima ação"
+      />
 
       {/* Busca (lupa) + filtro por setor — reusa DashboardFilters (padrão das outras telas).
           Seletor de setor só p/ quem pode escolher (gestor/manager/financeiro); vendedor fica travado. */}
@@ -417,7 +421,7 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
       {/* Resultados da busca — clicar abre o Dossiê direto */}
       {qSafe && (
         <div style={{ ...cardStyle(TOK.respondeu) }}>
-          <p style={{ ...mono(9, { letterSpacing: ".15em" }), color: TOK.respondeu, marginBottom: 10 }}>▸ Busca — {busca.length} resultado(s){busca.length >= 30 ? " (30 primeiros)" : ""}</p>
+          <p style={{ ...mono(9, { letterSpacing: ".15em" }), color: TOK.respondeu, marginBottom: 10 }}>Busca — {busca.length} resultado(s){busca.length >= 30 ? " (30 primeiros)" : ""}</p>
           {busca.length === 0 ? (
             <p style={{ fontFamily: SANS, fontSize: 12, color: TOK.fgDim }}>Nenhum lead encontrado.</p>
           ) : (
@@ -484,13 +488,13 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
       {/* 01 — MAPA */}
       <Section n="01" title="Mapa" id="mapa" sub={`curta ${curtaTot} · longa ${longaTot} · ganho ${ganho} · borda-topo = situação operacional`}>
         <div style={{ ...cardStyle() }}>
-          <p style={{ ...mono(9, { letterSpacing: ".15em" }), color: TOK.respondeu, marginBottom: 10 }}>▸ Cadência Curta — até 30 dias</p>
+          <p style={{ ...mono(9, { letterSpacing: ".15em" }), color: TOK.respondeu, marginBottom: 10 }}>Cadência Curta — até 30 dias</p>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             {ESTADOS.filter(e => e.band === "curta" || e.band === "ganho").map(e => <StateCard key={e.key} e={e} row={byState.get(e.key)} active={estadoSel === e.key} carry={carry} />)}
           </div>
           {Object.keys(quebra).length > 0 && (
             <div style={{ marginTop: 16, background: TOK.cardAlt, border: `1px dashed ${TOK.border}`, borderRadius: 8, padding: "12px 14px" }}>
-              <p style={{ ...mono(9), color: TOK.fgDim, marginBottom: 10 }}>▾ em qual pergunta a qualificação quebra</p>
+              <p style={{ ...mono(9), color: TOK.fgDim, marginBottom: 10 }}>em qual pergunta a qualificação quebra</p>
               <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
                 {[1, 2, 3, 4, 5, 6].filter(q => quebra[q]).map(q => (
                   <div key={q} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 12 }}>
@@ -505,7 +509,7 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <div style={{ ...cardStyle(TOK.pausado) }}>
-            <p style={{ ...mono(9, { letterSpacing: ".15em" }), color: TOK.pausado, marginBottom: 12 }}>▸ Longa — por TEMPO (cascata de nutrição)</p>
+            <p style={{ ...mono(9, { letterSpacing: ".15em" }), color: TOK.pausado, marginBottom: 12 }}>Longa — por TEMPO (cascata de nutrição)</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
               {[...TEMPO_BUCKETS, "recorrência"].filter(b => tempoCount[b]).map(b => (
                 <div key={b} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 12 }}>
@@ -517,7 +521,7 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
             </div>
           </div>
           <div style={{ ...cardStyle(TOK.atrasado) }}>
-            <p style={{ ...mono(9, { letterSpacing: ".15em" }), color: TOK.atrasado, marginBottom: 12 }}>▸ Longa — por MOTIVO de perda</p>
+            <p style={{ ...mono(9, { letterSpacing: ".15em" }), color: TOK.atrasado, marginBottom: 12 }}>Longa — por MOTIVO de perda</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
               {motivos.slice(0, 8).map((m: { motivo: string; total: number }) => (
                 <div key={m.motivo} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 12 }}>
@@ -599,7 +603,7 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
               </div>
 
               <div style={{ ...cardStyle(TOK.f3) }}>
-                <p style={{ ...mono(9, { letterSpacing: ".15em" }), color: TOK.f3, marginBottom: 10 }}>▸ Próxima melhor ação <FaseBadge f="F3" /></p>
+                <p style={{ ...mono(9, { letterSpacing: ".15em" }), color: TOK.f3, marginBottom: 10 }}>Próxima melhor ação <FaseBadge f="F3" /></p>
                 <p style={{ fontFamily: SANS, fontSize: 14, color: TOK.fg, fontWeight: 600 }}>{dossie.proxima_acao ?? "—"}</p>
                 <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 8, flexWrap: "wrap" }}>
                   {dossie.proximo_angulo && <span style={{ ...mono(9), color: TOK.negocia, border: `1px solid ${TOK.negocia}55`, background: `${TOK.negocia}14`, borderRadius: 4, padding: "1px 6px" }}>ângulo: {dossie.proximo_angulo}</span>}
@@ -614,7 +618,7 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
 
             {/* Timeline */}
             <div style={{ ...cardStyle() }}>
-              <p style={{ ...mono(9, { letterSpacing: ".15em" }), color: TOK.fgMuted, marginBottom: 12 }}>▸ Timeline <FaseBadge f="F1" /></p>
+              <p style={{ ...mono(9, { letterSpacing: ".15em" }), color: TOK.fgMuted, marginBottom: 12 }}>Timeline <FaseBadge f="F1" /></p>
               {timeline.length === 0 ? (
                 <p style={{ fontFamily: SANS, fontSize: 11, color: TOK.fgDim }}>Sem toques registrados.</p>
               ) : (
@@ -642,14 +646,14 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
       <Section n="04" title="Contrato de dados" sub="verde = já existe (reusa) · roxo = novo (Fase 2)">
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <div style={{ ...cardStyle(TOK.f1) }}>
-            <p style={{ ...mono(9, { letterSpacing: ".15em" }), color: TOK.f1, marginBottom: 10 }}>▸ Real hoje — F1/F3 ✓</p>
+            <p style={{ ...mono(9, { letterSpacing: ".15em" }), color: TOK.f1, marginBottom: 10 }}>Real hoje — F1/F3 ✓</p>
             <ul style={{ margin: 0, paddingLeft: 16, display: "flex", flexDirection: "column", gap: 5 }}>
               {["Mapa por estado (v_orquestracao_mapa)", "Pergunta que quebra (qual_stage)", "Longa por motivo (v_motivos_perda)", "Fila: silêncio + degrau (v_cadencia_lead)", "PRÓXIMA AÇÃO + ângulo (v_lead_proxima_acao)", "Não-repetição (angulos_usados)", "Dossiê: cabeçalho + timeline", "Contexto extraído: objeção (v_orquestracao_leads)", "Contexto extraído: gramatura (v_orquestracao_leads)", "Contexto extraído: produto (v_orquestracao_leads)"].map(x =>
                 <li key={x} style={{ fontFamily: SANS, fontSize: 11.5, color: TOK.fgMuted, lineHeight: 1.5 }}>{x}</li>)}
             </ul>
           </div>
           <div style={{ ...cardStyle(TOK.f2) }}>
-            <p style={{ ...mono(9, { letterSpacing: ".15em" }), color: TOK.f2, marginBottom: 10 }}>▸ Fase 2 — placeholder (sem dado)</p>
+            <p style={{ ...mono(9, { letterSpacing: ".15em" }), color: TOK.f2, marginBottom: 10 }}>Fase 2 — placeholder (sem dado)</p>
             <ul style={{ margin: 0, paddingLeft: 16, display: "flex", flexDirection: "column", gap: 5 }}>
               {["last_lead_signal_at (último sinal) — DEBT-291, ainda não existe"].map(x =>
                 <li key={x} style={{ fontFamily: SANS, fontSize: 11.5, color: TOK.fgDim, lineHeight: 1.5 }}>{x}</li>)}

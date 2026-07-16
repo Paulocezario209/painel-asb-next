@@ -7,15 +7,9 @@ import { getUserContext } from "@/lib/auth/get-user-role";
 import { VENDOR_LABELS } from "@/lib/vendor-labels";
 import { RegrasComissaoModal } from "../remuneracao/regras-modal";
 import { MinhaComissaoSimulador } from "./minha-comissao-sim";
+import { S } from "@/app/dashboard/lib/dashboard-tokens";
 
 export const dynamic = "force-dynamic";
-
-const S = {
-  card:    { background: "#1a1a1a", border: `1px solid ${theme.colors.borderDefault}`, borderRadius: 8 } as React.CSSProperties,
-  label:   { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: theme.colors.neutral, fontFamily: theme.font.label },
-  value:   { fontSize: 28, fontWeight: 700, color: "#FFFFFF", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" as const, lineHeight: 1 },
-  muted:   { color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label } as React.CSSProperties,
-};
 
 const MESES = ["", "Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
@@ -101,10 +95,10 @@ export default async function MinhaComissaoPage({
       {/* Header + seletor de mes */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 12 }}>
         <div>
-          <h1 style={{ color: "var(--asb-page-ink)", fontSize: 20, fontWeight: 800, fontFamily: theme.font.label, letterSpacing: "-.01em", textTransform: "none", marginBottom: 4 }}>
+          <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
             Minha Comissao
           </h1>
-          <p style={{ ...S.muted, color: "var(--asb-page-ink2)" }}>{nome} &middot; base FATURADO &middot; so voce ve estes numeros</p>
+          <p style={S.muted}>{nome} &middot; base FATURADO &middot; so voce ve estes numeros</p>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <RegrasComissaoModal perfil="vendedor" />

@@ -10,6 +10,7 @@ import { LeadsCards } from "@/components/leads/leads-cards";
 import { getLeadScoreMap } from "@/lib/get-lead-scores";
 import { computeLeadScore, tierOf } from "@/lib/lead-score";
 import { theme } from "@/lib/theme";
+import { S } from "@/app/dashboard/lib/dashboard-tokens";
 
 export const dynamic = "force-dynamic";
 
@@ -190,8 +191,10 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Leads</h1>
-        <p className="text-sm text-slate-200 mt-1">
+        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
+          Leads
+        </h1>
+        <p style={S.muted}>
           {coorteEtapaAtiva ? `${leads.length} leads na etapa ${STAGE_LABELS[etapaCoorte!] ?? etapaCoorte} — posição atual no funil`
             : view === "ativos" ? `${leads.length} leads que entraram hoje — a caixa de entrada do SDR (virou o dia → Parados)`
             : view === "parados" ? "No funil há 1–30 dias — o vendedor deve resolver (fechar ou marcar perdido com motivo) até o dia 30"

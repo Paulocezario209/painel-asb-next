@@ -4,16 +4,9 @@ import { theme } from "@/lib/theme";
 import { HandoffsTable, type Handoff } from "@/components/handoffs/handoffs-table";
 import { getLeadScoreMap } from "@/lib/get-lead-scores";
 import { computeLeadScore, tierOf } from "@/lib/lead-score";
+import { S } from "@/app/dashboard/lib/dashboard-tokens";
 
 export const dynamic = "force-dynamic";
-
-const S = {
-  card:    { background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8 } as React.CSSProperties,
-  label:   { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#e4e9f0", fontFamily: theme.font.label },
-  value:   { fontSize: 28, fontWeight: 700, color: "#FFFFFF", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", lineHeight: 1 },
-  section: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#c0c8d8", fontFamily: theme.font.label, marginBottom: 12 } as React.CSSProperties,
-  muted:   { color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label } as React.CSSProperties,
-};
 
 export default async function HandoffsPage({ searchParams }: { searchParams?: Promise<{ f?: string }> }) {
   const sp = searchParams ? await searchParams : undefined;
@@ -94,10 +87,10 @@ export default async function HandoffsPage({ searchParams }: { searchParams?: Pr
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {/* Header */}
       <div>
-        <h1 style={{ color: "var(--asb-page-ink)", fontSize: 20, fontWeight: 800, fontFamily: theme.font.label, letterSpacing: "-.01em", textTransform: "none", marginBottom: 4 }}>
+        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
           Fila de Handoff
         </h1>
-        <p style={{ ...S.muted, color: "var(--asb-page-ink2)" }}>Leads aguardando confirmação do vendedor</p>
+        <p style={S.muted}>Leads aguardando confirmação do vendedor</p>
       </div>
 
       {/* KPIs */}

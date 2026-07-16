@@ -1,5 +1,6 @@
 import { MetasUpload } from "@/components/uploads/metas-upload";
 import { theme } from "@/lib/theme";
+import { S } from "@/app/dashboard/lib/dashboard-tokens";
 import { VendasCnbUpload } from "@/components/uploads/vendas-cnb-upload";
 import { redirect } from "next/navigation";
 import { getUserContext, canAccess } from "@/lib/auth/get-user-role";
@@ -14,36 +15,35 @@ export default async function UploadsPage() {
         <h1
           style={{
             color: "#FFFFFF",
-            fontSize: 18,
+            fontSize: 16,
             fontWeight: 700,
             fontFamily: theme.font.label,
-            letterSpacing: ".08em",
-            marginBottom: 6,
+            letterSpacing: ".1em",
+            textTransform: "uppercase",
+            marginBottom: 4,
           }}
         >
           Upload de Metas (XLSX)
         </h1>
-        <p style={{ color: "var(--asb-page-ink2)", fontSize: 11, fontFamily: theme.font.label, letterSpacing: ".1em" }}>
+        <p style={S.muted}>
           Metas mensais por vendedor · Preview antes de aplicar · UPSERT por vendedor+mês
         </p>
       </div>
 
       {/* Formato esperado */}
-      <div
-        className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg"
-        style={{ padding: 16, marginBottom: 20 }}
-      >
-        <p style={{ fontSize: 10, color: "#ff7b1c", fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 8 }}>
-          📋 Formato esperado do XLSX
+      <div style={{ ...S.card, padding: "20px 24px", marginBottom: 20 }}>
+        <p style={{ ...S.section, marginBottom: 8 }}>
+          <span style={{ marginRight: 6 }}>📋</span>
+          Formato esperado do XLSX
         </p>
         <div style={{ background: "#0a0f1f", padding: 12, borderRadius: 4, fontFamily: theme.font.num, fontSize: 11, color: "#c8d8e8", overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
-              <tr style={{ borderBottom: "1px solid #2a2a2a" }}>
-                <th style={{ padding: "4px 12px", textAlign: "left", color: "#ff7b1c" }}>Vendedor</th>
-                <th style={{ padding: "4px 12px", textAlign: "left", color: "#ff7b1c" }}>Mes</th>
-                <th style={{ padding: "4px 12px", textAlign: "left", color: "#ff7b1c" }}>Ano</th>
-                <th style={{ padding: "4px 12px", textAlign: "left", color: "#ff7b1c" }}>MetaMensal</th>
+              <tr style={{ borderBottom: "1px solid var(--asb-border)" }}>
+                <th style={{ padding: "4px 12px", textAlign: "left", color: "#8bb4ff" }}>Vendedor</th>
+                <th style={{ padding: "4px 12px", textAlign: "left", color: "#8bb4ff" }}>Mes</th>
+                <th style={{ padding: "4px 12px", textAlign: "left", color: "#8bb4ff" }}>Ano</th>
+                <th style={{ padding: "4px 12px", textAlign: "left", color: "#8bb4ff" }}>MetaMensal</th>
               </tr>
             </thead>
             <tbody>
@@ -62,24 +62,25 @@ export default async function UploadsPage() {
 
       {/* ── Bloco 2: Upload de Vendas CNB (DEBT-087) ─────────────────────── */}
       <div style={{ marginTop: 44, marginBottom: 28 }}>
-        <h1 style={{ color: "#FFFFFF", fontSize: 18, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".08em", marginBottom: 6 }}>
+        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
           Upload de Vendas CNB (XLSX)
         </h1>
-        <p style={{ color: "var(--asb-page-ink2)", fontSize: 11, fontFamily: theme.font.label, letterSpacing: ".1em" }}>
+        <p style={S.muted}>
           Vendas Carnes Nobres Boutique · Preview antes de aplicar · UPSERT por número+data+documento
         </p>
       </div>
 
-      <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg" style={{ padding: 16, marginBottom: 20 }}>
-        <p style={{ fontSize: 10, color: "#ff7b1c", fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 8 }}>
-          📋 Formato esperado do XLSX
+      <div style={{ ...S.card, padding: "20px 24px", marginBottom: 20 }}>
+        <p style={{ ...S.section, marginBottom: 8 }}>
+          <span style={{ marginRight: 6 }}>📋</span>
+          Formato esperado do XLSX
         </p>
         <div style={{ background: "#0a0f1f", padding: 12, borderRadius: 4, fontFamily: theme.font.num, fontSize: 11, color: "#c8d8e8", overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", whiteSpace: "nowrap" }}>
             <thead>
-              <tr style={{ borderBottom: "1px solid #2a2a2a" }}>
+              <tr style={{ borderBottom: "1px solid var(--asb-border)" }}>
                 {["numero", "data", "cliente_cnpj_cpf", "cliente_nome", "valor_total", "forma_pagamento", "vendedor"].map((c) => (
-                  <th key={c} style={{ padding: "4px 12px", textAlign: "left", color: "#ff7b1c" }}>{c}</th>
+                  <th key={c} style={{ padding: "4px 12px", textAlign: "left", color: "#8bb4ff" }}>{c}</th>
                 ))}
               </tr>
             </thead>

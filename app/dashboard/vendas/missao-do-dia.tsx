@@ -3,6 +3,9 @@
 import type { EstrategiasResponse } from "./actions";
 import { theme } from "@/lib/theme";
 import { VENDOR_LABELS } from "@/lib/vendor-labels";
+import { S } from "@/app/dashboard/lib/dashboard-tokens";
+import { SectionHead } from "@/app/dashboard/lib/ui";
+import { Target, ListChecks, PhoneCall, Clock, Quote, Flag } from "lucide-react";
 
 function fmtBRL(v: number, frac = 0): string {
   return Number(v).toLocaleString("pt-BR", {
@@ -80,16 +83,14 @@ export function MissaoDoDia({ data, vendor }: Props) {
   return (
     <div
       style={{
-        background: "#1a1a1a",
-        border: `1px solid ${theme.colors.borderDefault}`,
-        borderRadius: 8,
+        ...S.card,
         padding: 20,
         maxHeight: 600,
         overflowY: "auto",
       }}
     >
       {/* Cabeçalho com saudação */}
-      <div style={{ marginBottom: 16, paddingBottom: 12, borderBottom: `1px solid ${theme.colors.borderDefault}` }}>
+      <div style={{ marginBottom: 16, paddingBottom: 12, borderBottom: "1px solid var(--asb-border)" }}>
         <p
           style={{
             fontSize: 14,
@@ -118,9 +119,7 @@ export function MissaoDoDia({ data, vendor }: Props) {
             marginBottom: 14,
           }}
         >
-          <p style={{ fontSize: 9, color: statusCor, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", marginBottom: 4, textTransform: "uppercase" }}>
-            ▸ STATUS DA PRÓXIMA META {statusEmoji}
-          </p>
+          <SectionHead Icon={Target} color={statusCor} title="Status da próxima meta" desc={statusEmoji || undefined} />
           <p style={{ fontSize: 11, color: "#FFFFFF", lineHeight: 1.4 }}>
             <strong>{fmtDate(meu.proxima_meta)}</strong> · <span className="priv-brl">{fmtBRL(meu.realizado)}</span> / <span className="priv-brl">{fmtBRL(meu.meta)}</span> · <span className="priv-pct">{meu.pct}%</span>
           </p>
@@ -131,9 +130,7 @@ export function MissaoDoDia({ data, vendor }: Props) {
       )}
 
       {/* Checklist do dia */}
-      <p style={{ fontSize: 9, fontWeight: 700, color: theme.colors.accent, fontFamily: theme.font.label, letterSpacing: ".15em", marginBottom: 8, textTransform: "uppercase" }}>
-        ✓ CHECKLIST DO DIA
-      </p>
+      <SectionHead Icon={ListChecks} color={theme.colors.accent} title="Checklist do dia" />
       <ul style={{ listStyle: "none", padding: 0, margin: "0 0 16px 0", display: "flex", flexDirection: "column", gap: 6 }}>
         {[
           { icon: "⏰", text: "08:00 — Mensagem pra lista de recorrência" },
@@ -156,9 +153,7 @@ export function MissaoDoDia({ data, vendor }: Props) {
       {/* Top dormentes do vendedor (lista personalizada — NUNCA misturar entre vendedores) */}
       {dormentesFiltrado.length > 0 && (
         <>
-          <p style={{ fontSize: 9, fontWeight: 700, color: theme.colors.brandAsb, fontFamily: theme.font.label, letterSpacing: ".15em", marginBottom: 8, textTransform: "uppercase" }}>
-            📞 REATIVAR HOJE ({nomeAlvo})
-          </p>
+          <SectionHead Icon={PhoneCall} color={theme.colors.brandAsb} title="Reativar hoje" desc={nomeAlvo} />
           <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 14 }}>
             {dormentesFiltrado.slice(0, 5).map((d, i) => {
               const cor = d.prioridade === "alta" ? theme.colors.critical : d.prioridade === "media" ? "#BA7517" : "#c0d0e0";
@@ -166,9 +161,9 @@ export function MissaoDoDia({ data, vendor }: Props) {
                 <div
                   key={`${d.cliente}-${i}`}
                   style={{
-                    background: "#0a0f1f",
+                    background: "var(--asb-card-hi)",
                     borderLeft: `3px solid ${cor}`,
-                    borderRadius: 3,
+                    borderRadius: 8,
                     padding: "6px 9px",
                   }}
                 >
@@ -188,9 +183,7 @@ export function MissaoDoDia({ data, vendor }: Props) {
       {/* Pendentes do escritório (vendedor específico) */}
       {pendentesFiltrado.length > 0 && (
         <>
-          <p style={{ fontSize: 9, fontWeight: 700, color: theme.colors.warning, fontFamily: theme.font.label, letterSpacing: ".15em", marginBottom: 8, textTransform: "uppercase" }}>
-            ⏰ COBRAR ESCRITÓRIO
-          </p>
+          <SectionHead Icon={Clock} color={theme.colors.warning} title="Cobrar escritório" />
           {pendentesFiltrado.map((p) => (
             <div
               key={p.vendedor}
@@ -215,30 +208,35 @@ export function MissaoDoDia({ data, vendor }: Props) {
       {/* Filosofia / Frase do dia */}
       <div
         style={{
-          background: "#0a0f1f",
+          background: "var(--asb-card-hi)",
           borderLeft: `3px solid ${theme.colors.accent}`,
-          borderRadius: 4,
+          borderRadius: 8,
           padding: "10px 12px",
           marginBottom: 14,
         }}
       >
-        <p style={{ fontSize: 9, color: theme.colors.accent, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", marginBottom: 4, textTransform: "uppercase" }}>
-          💭 FILOSOFIA DO DIA
-        </p>
+        <SectionHead Icon={Quote} color={theme.colors.accent} title="Filosofia do dia" />
         <p style={{ fontSize: 11, color: "#c8d8e8", fontStyle: "italic", lineHeight: 1.5 }}>
           {fraseDoDia}
         </p>
       </div>
 
       {/* Programa C/M/L */}
-      <div style={{ paddingTop: 10, borderTop: `1px solid ${theme.colors.borderDefault}` }}>
-        <p style={{ fontSize: 9, fontWeight: 700, color: theme.colors.textPrimary, fontFamily: theme.font.label, letterSpacing: ".15em", marginBottom: 8, textTransform: "uppercase" }}>
-          🎯 PROGRAMA
-        </p>
-        <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 4, fontSize: 10, color: "#c0d0e0", fontFamily: theme.font.label }}>
-          <li>▸ <strong style={{ color: theme.colors.success }}>CURTO:</strong> bater a próxima meta de entrega</li>
-          <li>▸ <strong style={{ color: theme.colors.warning }}>MÉDIO:</strong> +10% ticket médio no mês</li>
-          <li>▸ <strong style={{ color: theme.colors.brandAsb }}>LONGO:</strong> dobrar recorrentes em 90 dias</li>
+      <div style={{ paddingTop: 10, borderTop: "1px solid var(--asb-border)" }}>
+        <SectionHead Icon={Flag} color={theme.colors.textPrimary} title="Programa" />
+        <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 6, fontSize: 10, color: "#c0d0e0", fontFamily: theme.font.label }}>
+          <li style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ width: 5, height: 5, borderRadius: "50%", background: theme.colors.success, flexShrink: 0 }} />
+            <span><strong style={{ color: theme.colors.success }}>CURTO:</strong> bater a próxima meta de entrega</span>
+          </li>
+          <li style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ width: 5, height: 5, borderRadius: "50%", background: theme.colors.warning, flexShrink: 0 }} />
+            <span><strong style={{ color: theme.colors.warning }}>MÉDIO:</strong> +10% ticket médio no mês</span>
+          </li>
+          <li style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ width: 5, height: 5, borderRadius: "50%", background: theme.colors.brandAsb, flexShrink: 0 }} />
+            <span><strong style={{ color: theme.colors.brandAsb }}>LONGO:</strong> dobrar recorrentes em 90 dias</span>
+          </li>
         </ul>
       </div>
 

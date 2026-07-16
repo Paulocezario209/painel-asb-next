@@ -6,6 +6,7 @@
 import { useEffect, useState } from "react";
 import { MOVIVEIS, LOST_REASONS, STAGE_COLORS } from "@/lib/funnel/stages";
 import { theme } from "@/lib/theme";
+import { S } from "@/app/dashboard/lib/dashboard-tokens";
 import { useRouter } from "next/navigation";
 
 export type PipelineLead = {
@@ -138,7 +139,7 @@ export function PipelineBoard({
               onDrop={() => onDrop(stage)}
               style={{
                 width: 220, flexShrink: 0, display: "flex", flexDirection: "column",
-                background: isOver ? `${col.cor}14` : "#141414",
+                background: isOver ? `${col.cor}14` : "var(--asb-card)",
                 border: `1px solid ${isOver ? col.cor : "#262626"}`,
                 borderRadius: 8, transition: "background .12s, border-color .12s",
               }}
@@ -176,7 +177,7 @@ export function PipelineBoard({
                       onClick={() => { if (!moving && lead.phone) router.push(`/dashboard/leads/${encodeURIComponent(lead.phone)}`); }}
                       title="Clique para abrir · arraste para mover de etapa"
                       style={{
-                        background: dragId === lead.id ? "#0d1117" : "#1c1c1c",
+                        background: dragId === lead.id ? "var(--asb-card)" : "#1c1c1c",
                         border: `1px solid ${dragId === lead.id ? col.cor : "#2e2e2e"}`,
                         borderLeft: `3px solid ${col.cor}`,
                         borderRadius: 5, padding: "8px 10px",
@@ -265,7 +266,7 @@ export function PipelineBoard({
 function Backdrop({ children }: { children: React.ReactNode }) {
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 60, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,.6)", backdropFilter: "blur(3px)" }}>
-      <div style={{ width: "min(420px, calc(100vw - 32px))", background: "#141414", border: "1px solid #2e2e2e", borderRadius: 10, padding: 20, boxShadow: "0 24px 48px rgba(0,0,0,.5)" }}>
+      <div style={{ width: "min(420px, calc(100vw - 32px))", background: "var(--asb-card)", border: "1px solid #2e2e2e", borderRadius: 10, padding: 20, boxShadow: "0 24px 48px rgba(0,0,0,.5)" }}>
         {children}
       </div>
     </div>
@@ -283,10 +284,10 @@ function ModalProposta({ lead, onConfirm, onCancel }: { lead: PipelineLead; onCo
       <p style={{ color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label, marginBottom: 14 }}>{lead.restaurant_name || "Lead"} → Proposta Enviada</p>
       <label style={{ color: "#c0d0e0", fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase" }}>Valor da proposta (R$)</label>
       <input value={valor} onChange={(e) => setValor(e.target.value)} placeholder="0,00" autoFocus
-        style={{ width: "100%", marginTop: 4, marginBottom: 12, background: "#0d1117", border: "1px solid #2e2e2e", borderRadius: 6, padding: "8px 10px", color: "#fff", fontSize: 12, fontFamily: theme.font.label, outline: "none" }} />
+        style={{ width: "100%", marginTop: 4, marginBottom: 12, background: "var(--asb-card)", border: "1px solid #2e2e2e", borderRadius: 6, padding: "8px 10px", color: "#fff", fontSize: 12, fontFamily: theme.font.label, outline: "none" }} />
       <label style={{ color: "#c0d0e0", fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase" }}>Notas (opcional)</label>
       <input value={notas} onChange={(e) => setNotas(e.target.value)}
-        style={{ width: "100%", marginTop: 4, marginBottom: 16, background: "#0d1117", border: "1px solid #2e2e2e", borderRadius: 6, padding: "8px 10px", color: "#fff", fontSize: 12, fontFamily: theme.font.label, outline: "none" }} />
+        style={{ width: "100%", marginTop: 4, marginBottom: 16, background: "var(--asb-card)", border: "1px solid #2e2e2e", borderRadius: 6, padding: "8px 10px", color: "#fff", fontSize: 12, fontFamily: theme.font.label, outline: "none" }} />
       <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
         <BtnCancel onClick={onCancel} />
         <button disabled={!valido} onClick={() => onConfirm(v, notas.trim() || null)}
@@ -310,13 +311,13 @@ function ModalPerdido({ lead, onConfirm, onCancel }: { lead: PipelineLead; onCon
       </p>
       <label style={{ color: "#c0d0e0", fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase" }}>Motivo</label>
       <select value={reason} onChange={(e) => setReason(e.target.value)} autoFocus
-        style={{ width: "100%", marginTop: 4, marginBottom: 12, background: "#0d1117", border: "1px solid #2e2e2e", borderRadius: 6, padding: "8px 10px", color: "#fff", fontSize: 12, fontFamily: theme.font.label, outline: "none" }}>
+        style={{ width: "100%", marginTop: 4, marginBottom: 12, background: "var(--asb-card)", border: "1px solid #2e2e2e", borderRadius: 6, padding: "8px 10px", color: "#fff", fontSize: 12, fontFamily: theme.font.label, outline: "none" }}>
         <option value="">Selecione…</option>
         {LOST_REASONS.map((r) => <option key={r} value={r}>{r}</option>)}
       </select>
       <label style={{ color: "#c0d0e0", fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase" }}>Detalhe (opcional)</label>
       <input value={detail} onChange={(e) => setDetail(e.target.value)}
-        style={{ width: "100%", marginTop: 4, marginBottom: 16, background: "#0d1117", border: "1px solid #2e2e2e", borderRadius: 6, padding: "8px 10px", color: "#fff", fontSize: 12, fontFamily: theme.font.label, outline: "none" }} />
+        style={{ width: "100%", marginTop: 4, marginBottom: 16, background: "var(--asb-card)", border: "1px solid #2e2e2e", borderRadius: 6, padding: "8px 10px", color: "#fff", fontSize: 12, fontFamily: theme.font.label, outline: "none" }} />
       <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
         <BtnCancel onClick={onCancel} />
         <button disabled={!reason} onClick={() => onConfirm(reason, detail.trim() || null)}
@@ -355,7 +356,6 @@ export function PipelineKpis({ kpis }: {
 }) {
   const [open, setOpen] = useState<number | null>(null);
   const router = useRouter();
-  const card: React.CSSProperties = { background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8 };
   return (
     <>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
@@ -363,7 +363,7 @@ export function PipelineKpis({ kpis }: {
           <div
             key={k.label}
             onClick={() => k.leads && setOpen(i)}
-            style={{ ...card, padding: "16px 18px", borderTop: `2px solid ${k.accent}`, cursor: k.leads ? "pointer" : "default" }}
+            style={{ ...S.card, padding: "16px 18px", borderTop: `2px solid ${k.accent}`, cursor: k.leads ? "pointer" : "default" }}
           >
             <p style={{ fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", color: "#e4e9f0", fontFamily: theme.font.label, marginBottom: 8 }}>{k.label}</p>
             <p style={{ fontSize: 24, fontWeight: 700, color: "#FFFFFF", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>{k.value}</p>
@@ -387,7 +387,7 @@ function ModalLista({ stage, leads, onClose, onOpenLead }: { stage: string; lead
   const col = STAGE_COL[stage] ?? { label: stage, cor: "#c0d0e0" };
   return (
     <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 60, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,.6)", backdropFilter: "blur(3px)" }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ width: "min(580px, calc(100vw - 32px))", maxHeight: "80vh", display: "flex", flexDirection: "column", background: "#141414", border: `1px solid ${col.cor}`, borderRadius: 10, boxShadow: "0 24px 48px rgba(0,0,0,.5)" }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ width: "min(580px, calc(100vw - 32px))", maxHeight: "80vh", display: "flex", flexDirection: "column", background: "var(--asb-card)", border: `1px solid ${col.cor}`, borderRadius: 10, boxShadow: "0 24px 48px rgba(0,0,0,.5)" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", borderBottom: "1px solid #262626" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ width: 9, height: 9, borderRadius: 2, background: col.cor }} />
@@ -492,7 +492,7 @@ function ModalSugestao({ lead, stage, onClose }: { lead: PipelineLead; stage: st
         <div style={{ maxHeight: "50vh", overflowY: "auto", paddingRight: 4 }}>
           {bloco("Diagnóstico", data.diagnostico)}
           {bloco("Estratégia", data.estrategia)}
-          <div style={{ marginBottom: 10, background: "#0d1117", border: "1px solid #2e2e2e", borderRadius: 6, padding: "10px 12px" }}>
+          <div style={{ marginBottom: 10, background: "var(--asb-card)", border: "1px solid #2e2e2e", borderRadius: 6, padding: "10px 12px" }}>
             <p style={{ color: "#e4e9f0", fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".12em", textTransform: "uppercase", marginBottom: 4 }}>Mensagem sugerida (edite ao colar)</p>
             <p style={{ color: "#fff", fontSize: 11, fontFamily: theme.font.label, lineHeight: 1.55, whiteSpace: "pre-wrap" }}>{data.mensagem_whatsapp}</p>
           </div>

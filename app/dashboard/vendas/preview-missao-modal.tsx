@@ -96,7 +96,7 @@ export function PreviewMissaoModal({ vendor, data, onClose }: Props) {
         </div>
 
         {/* Missão real do vendedor */}
-        <div style={{ background: "#1a1a1a", borderBottomLeftRadius: 8, borderBottomRightRadius: 8, overflow: "hidden" }}>
+        <div style={{ background: "var(--asb-card)", borderBottomLeftRadius: 8, borderBottomRightRadius: 8, overflow: "hidden" }}>
           <MissaoDoDia data={data} vendor={vendor} />
         </div>
 

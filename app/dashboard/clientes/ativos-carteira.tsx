@@ -126,7 +126,7 @@ export function AtivosCarteira({
     .map(([nome, list]) => ({ nome, list }))
     .sort((a, b) => b.list.length - a.list.length);
 
-  const kpiClass = "bg-[#16161c] border rounded-lg p-4 transition-all block w-full text-left";
+  const kpiClass = "bg-[var(--asb-card)] border rounded-lg p-4 transition-all block w-full text-left";
 
   return (
     <div className="space-y-4">
@@ -141,7 +141,7 @@ export function AtivosCarteira({
               onClick={() => setFilter(filter === k.key ? "all" : k.key)}
               className={kpiClass}
               style={{
-                borderColor: active ? k.color : "#2a2a35",
+                borderColor: active ? k.color : "var(--asb-border)",
                 borderTop: `3px solid ${k.color}`,
                 boxShadow: active ? `0 0 28px -6px ${k.color}` : "0 0 24px -8px rgba(79,125,240,0.45)",
               }}
@@ -160,7 +160,7 @@ export function AtivosCarteira({
             onClick={() => setFilter(isRec ? "all" : "recuperados")}
             className={kpiClass}
             style={{
-              borderColor: isRec ? "#f97316" : "#2a2a35",
+              borderColor: isRec ? "#f97316" : "var(--asb-border)",
               borderTop: "3px solid #f97316",
               boxShadow: isRec ? "0 0 28px -6px #f97316" : "0 0 24px -8px rgba(79,125,240,0.45)",
             }}
@@ -187,19 +187,19 @@ export function AtivosCarteira({
         value={q}
         onChange={(e) => setQ(e.target.value)}
         placeholder="Buscar por nome ou cidade…"
-        className="w-full bg-[#0f0f0f] border border-[#2a2a35] focus:border-[#4f7df0] rounded-md px-3 py-2 text-sm text-white placeholder:text-gray-600 outline-none transition-colors"
+        className="w-full bg-[var(--asb-card-hi)] border border-[var(--asb-border)] focus:border-[#4f7df0] rounded-md px-3 py-2 text-sm text-white placeholder:text-gray-600 outline-none transition-colors"
       />
 
       {isRec ? (
         gruposRec.length === 0 ? (
-          <div className="bg-[#16161c] border border-[#2a2a35] rounded-lg p-8 text-center text-sm text-slate-400">
+          <div className="bg-[var(--asb-card)] border border-[var(--asb-border)] rounded-lg p-8 text-center text-sm text-slate-400">
             Nenhum cliente recuperado em {recuperadosMes ?? "—"}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {gruposRec.map((g) => (
-              <div key={g.nome} className="bg-[#16161c] border border-[#2a2a35] rounded-lg p-4 shadow-[0_0_26px_-10px_rgba(79,125,240,0.55)]">
-                <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#2a2a2a]">
+              <div key={g.nome} className="bg-[var(--asb-card)] border border-[var(--asb-border)] rounded-lg p-4 shadow-[0_0_26px_-10px_rgba(79,125,240,0.55)]">
+                <div className="flex items-center justify-between mb-4 pb-3 border-b border-[var(--asb-border)]">
                   <h2 className="text-xs font-bold uppercase tracking-wider text-white truncate">{g.nome}</h2>
                   <span className="text-xs text-slate-200 font-semibold shrink-0 ml-2">{g.list.length}</span>
                 </div>
@@ -207,7 +207,7 @@ export function AtivosCarteira({
                   {g.list.map((r) => (
                     <div
                       key={r.ares_cliente_id}
-                      className="bg-[#0f0f0f] border border-[#2a2a35] rounded-md p-3 shadow-[0_0_12px_-9px_rgba(79,125,240,0.6)]"
+                      className="bg-[var(--asb-card-hi)] border border-[var(--asb-border)] rounded-md p-3 shadow-[0_0_12px_-9px_rgba(79,125,240,0.6)]"
                     >
                       <div className="flex items-start justify-between gap-2 mb-1">
                         <div className="text-sm font-semibold text-white truncate flex-1">
@@ -235,8 +235,8 @@ export function AtivosCarteira({
         /* Colunas por vendedor, receita DESC dentro de cada */
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {colunas.map((col) => (
-            <div key={col.nome} className="bg-[#16161c] border border-[#2a2a35] rounded-lg p-4 shadow-[0_0_26px_-10px_rgba(79,125,240,0.55)]">
-              <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#2a2a2a]">
+            <div key={col.nome} className="bg-[var(--asb-card)] border border-[var(--asb-border)] rounded-lg p-4 shadow-[0_0_26px_-10px_rgba(79,125,240,0.55)]">
+              <div className="flex items-center justify-between mb-4 pb-3 border-b border-[var(--asb-border)]">
                 <h2 className="text-xs font-bold uppercase tracking-wider text-white truncate">{col.nome}</h2>
                 <span className="text-xs text-slate-200 font-semibold shrink-0 ml-2">{col.list.length}</span>
               </div>
@@ -247,7 +247,7 @@ export function AtivosCarteira({
                 ) : (
                   col.list.map((c) => {
                     const card = (
-                      <div className="bg-[#0f0f0f] border border-[#2a2a35] hover:border-[#4f7df0] rounded-md p-3 transition-all shadow-[0_0_12px_-9px_rgba(79,125,240,0.6)]">
+                      <div className="bg-[var(--asb-card-hi)] border border-[var(--asb-border)] hover:border-[#4f7df0] rounded-md p-3 transition-all shadow-[0_0_12px_-9px_rgba(79,125,240,0.6)]">
                         <div className="flex items-start justify-between gap-2 mb-1">
                           <div className="text-sm font-semibold text-white truncate flex-1">
                             {c.name || `cliente ${c.ares_pessoa_id}`}

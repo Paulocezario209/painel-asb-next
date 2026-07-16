@@ -82,7 +82,7 @@ async function DRECarteiraCard({ mes }: { mes?: string }) {
   const isMTD = mesYM === curYM;
 
   return (
-    <div className="bg-[#16161c] border border-[#2a2a35] rounded-lg p-4 shadow-[0_0_24px_-8px_rgba(79,125,240,0.45)]">
+    <div className="bg-[var(--asb-card)] border border-[var(--asb-border)] rounded-lg p-4 shadow-[0_0_24px_-8px_rgba(79,125,240,0.45)]">
       <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
         <div className="flex items-center gap-2">
           <h2 className="text-xs font-bold uppercase tracking-wider text-white">
@@ -95,11 +95,11 @@ async function DRECarteiraCard({ mes }: { mes?: string }) {
           )}
         </div>
         <div className="flex items-center gap-2">
-          <Link href={`/dashboard/clientes?tab=ativos&mes=${prevYM}`} className={`${navBase} border-[#2a2a35] text-slate-200 hover:border-[#185FA5]`}>{"<"}</Link>
+          <Link href={`/dashboard/clientes?tab=ativos&mes=${prevYM}`} className={`${navBase} border-[var(--asb-border)] text-slate-200 hover:border-[#185FA5]`}>{"<"}</Link>
           {canNext ? (
-            <Link href={`/dashboard/clientes?tab=ativos&mes=${nextYM}`} className={`${navBase} border-[#2a2a35] text-slate-200 hover:border-[#185FA5]`}>{">"}</Link>
+            <Link href={`/dashboard/clientes?tab=ativos&mes=${nextYM}`} className={`${navBase} border-[var(--asb-border)] text-slate-200 hover:border-[#185FA5]`}>{">"}</Link>
           ) : (
-            <span className={`${navBase} border-[#1a1a1a] text-gray-700 cursor-not-allowed`} aria-disabled>{">"}</span>
+            <span className={`${navBase} border-[var(--asb-card)] text-gray-700 cursor-not-allowed`} aria-disabled>{">"}</span>
           )}
         </div>
       </div>

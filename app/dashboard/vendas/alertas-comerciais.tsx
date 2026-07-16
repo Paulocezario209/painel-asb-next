@@ -55,7 +55,7 @@ export function AlertasComerciais({ data }: { data: AlertasResponse }) {
 
   if (data.total === 0) {
     return (
-      <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg" style={{ padding: "20px 24px" }}>
+      <div className="bg-[var(--asb-card)] border border-[var(--asb-border)] rounded-lg" style={{ padding: "20px 24px" }}>
         <p style={{ fontSize: 11, fontWeight: 700, color: "#22c55e", fontFamily: theme.font.label, textTransform: "uppercase", letterSpacing: ".1em", marginBottom: 6 }}>
           🟢 ALERTAS COMERCIAIS
         </p>
@@ -67,7 +67,7 @@ export function AlertasComerciais({ data }: { data: AlertasResponse }) {
   }
 
   return (
-    <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg" style={{ padding: "20px 24px" }}>
+    <div className="bg-[var(--asb-card)] border border-[var(--asb-border)] rounded-lg" style={{ padding: "20px 24px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 14 }}>
         <p style={{ fontSize: 11, fontWeight: 700, color: "#c0c8d8", fontFamily: theme.font.label, textTransform: "uppercase", letterSpacing: ".1em" }}>
           ⚠ ALERTAS COMERCIAIS — {data.total}
@@ -84,7 +84,7 @@ export function AlertasComerciais({ data }: { data: AlertasResponse }) {
             </span>
           )}
           {data.contadores.amarelo > 0 && (
-            <span style={{ color: "#0f0f0f", background: "#D4A017", padding: "2px 8px", borderRadius: 3, fontWeight: 700 }}>
+            <span style={{ color: "var(--asb-card-hi)", background: "#D4A017", padding: "2px 8px", borderRadius: 3, fontWeight: 700 }}>
               {data.contadores.amarelo} AVISO
             </span>
           )}

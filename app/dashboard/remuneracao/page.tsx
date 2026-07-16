@@ -5,18 +5,9 @@ import Link from "next/link";
 import { theme } from "@/lib/theme";
 import { getUserContext } from "@/lib/auth/get-user-role";
 import { RegrasComissaoModal } from "./regras-modal";
+import { S } from "@/app/dashboard/lib/dashboard-tokens";
 
 export const dynamic = "force-dynamic";
-
-// ── Design tokens (padrao /dashboard/gerente) ───────────────────────────────
-const S = {
-  card:    { background: "#1a1a1a", border: `1px solid ${theme.colors.borderDefault}`, borderRadius: 8 } as React.CSSProperties,
-  label:   { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: theme.colors.neutral, fontFamily: theme.font.label },
-  value:   { fontSize: 28, fontWeight: 700, color: "#FFFFFF", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" as const, lineHeight: 1 },
-  section: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: theme.colors.textPrimary, fontFamily: theme.font.label, marginBottom: 12 } as React.CSSProperties,
-  muted:   { color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label } as React.CSSProperties,
-  num:     { fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" as const, color: "#FFFFFF" } as React.CSSProperties,
-};
 
 const VENDOR_LABELS: Record<string, { name: string; region: string }> = {
   SETOR_CUIT:               { name: "Fernando Carvalho", region: "Gerente Comercial - meta total do time" },
@@ -245,10 +236,10 @@ export default async function RemuneracaoPage({
       {/* Header + seletor de mes */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 12 }}>
         <div>
-          <h1 style={{ color: "var(--asb-page-ink)", fontSize: 20, fontWeight: 800, fontFamily: theme.font.label, letterSpacing: "-.01em", textTransform: "none", marginBottom: 4 }}>
+          <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
             Remuneracao do Time
           </h1>
-          <p style={{ ...S.muted, color: "var(--asb-page-ink2)" }}>Comissao do time comercial &middot; base FATURADO &middot; privada (gestor)</p>
+          <p style={S.muted}>Comissao do time comercial &middot; base FATURADO &middot; privada (gestor)</p>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <RegrasComissaoModal perfil="ambos" />
@@ -289,7 +280,7 @@ export default async function RemuneracaoPage({
                   <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
                     <div>
                       <p style={{ ...S.label, fontSize: 8 }}>Faturado</p>
-                      <p style={{ ...S.num, fontSize: 13 }}>{fmtBRL(c.faturado)}</p>
+                      <p style={{ fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", color: "#FFFFFF", fontSize: 13 }}>{fmtBRL(c.faturado)}</p>
                       <p style={{ fontSize: 10, fontFamily: theme.font.label, color: "#8aa0b8", marginTop: 3 }}>
                         ASB {fmtBRL(c.asb)}
                         {c.cnb > 0 ? <> &middot; <span style={{ color: theme.colors.accent, fontWeight: 700 }}>CNB {fmtBRL(c.cnb)}</span></> : null}
@@ -297,7 +288,7 @@ export default async function RemuneracaoPage({
                     </div>
                     <div>
                       <p style={{ ...S.label, fontSize: 8 }}>Meta</p>
-                      <p style={{ ...S.num, fontSize: 13, color: "#c0d0e0" }}>{fmtBRL(c.meta)}</p>
+                      <p style={{ fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", color: "#c0d0e0", fontSize: 13 }}>{fmtBRL(c.meta)}</p>
                     </div>
                     <div>
                       <p style={{ ...S.label, fontSize: 8 }}>Atingimento</p>

@@ -1,5 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
+import { theme } from "@/lib/theme";
+import { S } from "@/app/dashboard/lib/dashboard-tokens";
 
 export const dynamic = "force-dynamic";
 
@@ -88,45 +90,48 @@ export default async function UpSellPage() {
   const riscoTotal = downsellRows.reduce((acc, r) => acc + Number(r.revenue_em_risco_brl ?? 0), 0);
 
   return (
-    <div className="space-y-4">
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div>
-        <h1 className="text-2xl font-bold text-white">Ticket — Up-sell · Risco de Queda · Tier Upgrade</h1>
-        <p className="text-sm text-slate-200 mt-1">
+        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
+          Ticket — Up-sell · Risco de Queda · Tier Upgrade
+        </h1>
+        <p style={S.muted}>
           {upsellRows.length} up-sell · {downsellRows.length} risco queda · {upgradeRows.length} tier upgrade · potencial {fmtBRL(potencialTotal)} · em risco {fmtBRL(riscoTotal)}
         </p>
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-4 gap-4">
-        <div className="bg-[#16161c] border border-[#2a2a35] rounded-lg p-4 shadow-[0_0_24px_-8px_rgba(79,125,240,0.45)]" style={{ borderTop: "3px solid #BA7517" }}>
-          <div className="text-[10px] uppercase tracking-wider font-bold text-[#BA7517]">Up-sell Ticket</div>
-          <div className="text-3xl font-bold text-white mt-1">{upsellRows.length}</div>
-          <div className="text-[10px] text-slate-200 mt-1">ticket 20%+ abaixo da média do tier (&lt; 80%)</div>
+      <div className="asb-grid-kpi">
+        <div style={{ ...S.card, padding: "20px 20px", borderTop: "2px solid #BA7517" }}>
+          <p style={{ ...S.label, color: "#BA7517" }} translate="no">Up-sell Ticket</p>
+          <p style={{ ...S.value, marginTop: 12 }}>{upsellRows.length}</p>
+          <p style={{ ...S.muted, fontSize: 10, marginTop: 6 }}>ticket 20%+ abaixo da média do tier (&lt; 80%)</p>
         </div>
-        <div className="bg-[#16161c] border border-[#2a2a35] rounded-lg p-4 shadow-[0_0_24px_-8px_rgba(79,125,240,0.45)]" style={{ borderTop: "3px solid #BA1717" }}>
-          <div className="text-[10px] uppercase tracking-wider font-bold text-[#BA1717]">Risco Queda</div>
-          <div className="text-3xl font-bold text-white mt-1">{downsellRows.length}</div>
-          <div className="text-[10px] text-slate-200 mt-1">ticket 20%+ acima da média do tier (&gt; 120%)</div>
+        <div style={{ ...S.card, padding: "20px 20px", borderTop: "2px solid #C8102E" }}>
+          <p style={{ ...S.label, color: "#C8102E" }} translate="no">Risco Queda</p>
+          <p style={{ ...S.value, marginTop: 12 }}>{downsellRows.length}</p>
+          <p style={{ ...S.muted, fontSize: 10, marginTop: 6 }}>ticket 20%+ acima da média do tier (&gt; 120%)</p>
         </div>
-        <div className="bg-[#16161c] border border-[#2a2a35] rounded-lg p-4 shadow-[0_0_24px_-8px_rgba(79,125,240,0.45)]" style={{ borderTop: "3px solid #185FA5" }}>
-          <div className="text-[10px] uppercase tracking-wider font-bold text-[#185FA5]">Tier Upgrade</div>
-          <div className="text-3xl font-bold text-white mt-1">{upgradeRows.length}</div>
-          <div className="text-[10px] text-slate-200 mt-1">volume justifica tier maior</div>
+        <div style={{ ...S.card, padding: "20px 20px", borderTop: "2px solid #185FA5" }}>
+          <p style={{ ...S.label, color: "#185FA5" }} translate="no">Tier Upgrade</p>
+          <p style={{ ...S.value, marginTop: 12 }}>{upgradeRows.length}</p>
+          <p style={{ ...S.muted, fontSize: 10, marginTop: 6 }}>volume justifica tier maior</p>
         </div>
-        <div className="bg-[#16161c] border border-[#2a2a35] rounded-lg p-4 shadow-[0_0_24px_-8px_rgba(79,125,240,0.45)]" style={{ borderTop: "3px solid #22C55E" }}>
-          <div className="text-[10px] uppercase tracking-wider font-bold text-[#22C55E]">Potencial Anual</div>
-          <div className="text-2xl font-bold text-white mt-1">{fmtBRL(potencialTotal)}</div>
-          <div className="text-[10px] text-slate-200 mt-1">gap × frequência real (pedidos/ano)</div>
+        <div style={{ ...S.card, padding: "20px 20px", borderTop: "2px solid #22c55e" }}>
+          <p style={{ ...S.label, color: "#22c55e" }} translate="no">Potencial Anual</p>
+          <p style={{ ...S.value, marginTop: 12, fontSize: 20 }}>{fmtBRL(potencialTotal)}</p>
+          <p style={{ ...S.muted, fontSize: 10, marginTop: 6 }}>gap × frequência real (pedidos/ano)</p>
         </div>
       </div>
 
       {/* Up-sell ticket */}
-      <div className="bg-[#16161c] border border-[#2a2a35] rounded-lg p-4 shadow-[0_0_24px_-8px_rgba(79,125,240,0.45)]">
-        <h2 className="text-xs font-bold uppercase tracking-wider text-[#BA7517] mb-3 pb-2 border-b border-[#2a2a2a]">
-          🎯 Up-sell — Ticket abaixo da média do tier
-        </h2>
+      <div style={{ ...S.card, padding: "20px 24px" }}>
+        <p style={{ ...S.section }}>
+          <span style={{ color: "#BA7517", marginRight: 6 }}>🎯</span>
+          Up-sell — Ticket abaixo da média do tier
+        </p>
         {upsellRows.length === 0 ? (
-          <div className="text-xs text-gray-600 italic py-3 text-center">Nenhuma oportunidade hoje.</div>
+          <p style={{ ...S.muted, fontStyle: "italic", textAlign: "center", padding: "12px 0", margin: 0 }}>Nenhuma oportunidade hoje.</p>
         ) : (
           <div className="space-y-1.5">
             {upsellRows.map((r) => {
@@ -134,7 +139,7 @@ export default async function UpSellPage() {
               const abaixo = Math.round(100 - pctMedia);        // quanto abaixo da média
               const verificarTier = pctMedia < 30;              // ticket muito baixo p/ o tier
               const row = (
-                <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_auto] gap-2 items-center bg-[#0f0f0f] hover:bg-[#181818] border border-[#2a2a35] hover:border-[#BA7517] rounded p-3 text-xs transition-all shadow-[0_0_12px_-9px_rgba(79,125,240,0.6)]">
+                <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_auto] gap-2 items-center bg-[var(--asb-card-hi)] hover:bg-[var(--asb-card-hi)] border border-[var(--asb-border)] hover:border-[#BA7517] rounded p-3 text-xs transition-all">
                   <div className="text-white font-semibold truncate">
                     {r.name || r.phone}
                     <span className="text-slate-200 text-[10px] font-normal ml-2">
@@ -179,19 +184,20 @@ export default async function UpSellPage() {
       </div>
 
       {/* Risco de queda (downsell) */}
-      <div className="bg-[#16161c] border border-[#2a2a35] rounded-lg p-4 shadow-[0_0_24px_-8px_rgba(79,125,240,0.45)]">
-        <h2 className="text-xs font-bold uppercase tracking-wider text-[#E84545] mb-3 pb-2 border-b border-[#2a2a2a]">
-          🔻 Risco de Queda — Ticket acima da média do tier
-        </h2>
+      <div style={{ ...S.card, padding: "20px 24px" }}>
+        <p style={{ ...S.section }}>
+          <span style={{ color: "#C8102E", marginRight: 6 }}>🔻</span>
+          Risco de Queda — Ticket acima da média do tier
+        </p>
         {downsellRows.length === 0 ? (
-          <div className="text-xs text-gray-600 italic py-3 text-center">Nenhum cliente com ticket inflado hoje.</div>
+          <p style={{ ...S.muted, fontStyle: "italic", textAlign: "center", padding: "12px 0", margin: 0 }}>Nenhum cliente com ticket inflado hoje.</p>
         ) : (
           <div className="space-y-1.5">
             {downsellRows.map((r) => {
               // % da média = posição do ticket vs média do tier (client-side; view intocada)
               const pctMedia = Math.round((r.cliente_ticket / r.tier_avg_ticket) * 100);
               const row = (
-                <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_auto] gap-2 items-center bg-[#0f0f0f] hover:bg-[#181818] border border-[#2a2a35] hover:border-[#BA1717] rounded p-3 text-xs transition-all shadow-[0_0_12px_-9px_rgba(79,125,240,0.6)]">
+                <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_auto] gap-2 items-center bg-[var(--asb-card-hi)] hover:bg-[var(--asb-card-hi)] border border-[var(--asb-border)] hover:border-[#C8102E] rounded p-3 text-xs transition-all">
                   <div className="text-white font-semibold truncate">
                     {r.name || r.phone}
                     <span className="text-slate-200 text-[10px] font-normal ml-2">
@@ -208,11 +214,11 @@ export default async function UpSellPage() {
                   </div>
                   <div className="text-slate-200">
                     <span className="text-slate-200 text-[10px]">Ticket vs média:</span>{" "}
-                    <span className="text-[#E84545] font-bold">{pctMedia}% da média</span>
+                    <span className="text-[#FF3B57] font-bold">{pctMedia}% da média</span>
                   </div>
                   <div className="text-slate-200">
                     <span className="text-slate-200 text-[10px]">Revenue em risco:</span>{" "}
-                    <span className="text-[#E84545] font-bold">{fmtBRL(r.revenue_em_risco_brl)}</span>
+                    <span className="text-[#FF3B57] font-bold">{fmtBRL(r.revenue_em_risco_brl)}</span>
                   </div>
                   <div className="text-slate-200 text-right">{vend(r.vendedor_nome)}</div>
                 </div>
@@ -228,17 +234,18 @@ export default async function UpSellPage() {
       </div>
 
       {/* Tier upgrade */}
-      <div className="bg-[#16161c] border border-[#2a2a35] rounded-lg p-4 shadow-[0_0_24px_-8px_rgba(79,125,240,0.45)]">
-        <h2 className="text-xs font-bold uppercase tracking-wider text-[#185FA5] mb-3 pb-2 border-b border-[#2a2a2a]">
-          ⬆ Tier Upgrade — Volume justifica reclassificação
-        </h2>
+      <div style={{ ...S.card, padding: "20px 24px" }}>
+        <p style={{ ...S.section }}>
+          <span style={{ color: "#185FA5", marginRight: 6 }}>⬆</span>
+          Tier Upgrade — Volume justifica reclassificação
+        </p>
         {upgradeRows.length === 0 ? (
-          <div className="text-xs text-gray-600 italic py-3 text-center">Nenhum candidato a upgrade hoje.</div>
+          <p style={{ ...S.muted, fontStyle: "italic", textAlign: "center", padding: "12px 0", margin: 0 }}>Nenhum candidato a upgrade hoje.</p>
         ) : (
           <div className="space-y-1.5">
             {upgradeRows.map((r) => {
               const row = (
-                <div className="grid grid-cols-[2fr_1fr_auto_auto_1fr_auto] gap-2 items-center bg-[#0f0f0f] hover:bg-[#181818] border border-[#2a2a35] hover:border-[#185FA5] rounded p-3 text-xs transition-all shadow-[0_0_12px_-9px_rgba(79,125,240,0.6)]">
+                <div className="grid grid-cols-[2fr_1fr_auto_auto_1fr_auto] gap-2 items-center bg-[var(--asb-card-hi)] hover:bg-[var(--asb-card-hi)] border border-[var(--asb-border)] hover:border-[#185FA5] rounded p-3 text-xs transition-all">
                   <div className="text-white font-semibold truncate">
                     {r.name || r.phone}
                     <span className="text-slate-200 text-[10px] font-normal ml-2">{r.city ?? "—"}</span>
@@ -274,12 +281,12 @@ export default async function UpSellPage() {
         )}
       </div>
 
-      <div className="text-[10px] text-gray-600 text-center mt-4">
+      <p style={{ ...S.muted, fontSize: 10, textAlign: "center", marginTop: 8 }}>
         Up-sell via <code>v_upsell_oportunidades</code> (ticket 20%+ abaixo da média do tier &middot; &lt; 80%).{" "}
         Risco queda via <code>v_downsell_risco_queda</code> (ticket 20%+ acima da média do tier &middot; &gt; 120%).{" "}
         Tier upgrade via <code>v_tier_upgrade_candidates</code> (weekly_volume_kg justifica tier maior).{" "}
         Fonte: carteira real ARES (v_carteira_360).
-      </div>
+      </p>
     </div>
   );
 }

@@ -4,16 +4,12 @@ import type { CSSProperties } from "react";
 import { theme } from "@/lib/theme";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { CUSTOMER_STATUS, STATUS_FILTER_KEYS } from "@/lib/customer-status";
+import { S } from "@/app/dashboard/lib/dashboard-tokens";
 
 export type SaudeVendedor = { vendedor: string; dist: Record<string, number> };
 
-// Tokens do design-system (padrão Inteligência).
-const S = {
-  card: { background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8 } as CSSProperties,
-  h2: { color: "var(--asb-page-ink)", fontSize: 20, fontWeight: 800, fontFamily: theme.font.label, letterSpacing: "-.01em", textTransform: "none" } as CSSProperties,
-  section: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", color: "#c0c8d8", fontFamily: theme.font.label } as CSSProperties,
-  muted: { color: "#c0d0e0", fontSize: 10, fontFamily: theme.font.label } as CSSProperties,
-};
+// Título de seção (mesma camada que PageHead: page-ink, 20px) — bare heading acima do grid de cards.
+const h2Style: CSSProperties = { color: "var(--asb-page-ink)", fontSize: 20, fontWeight: 800, fontFamily: theme.font.label, letterSpacing: "-.01em" };
 
 const totalOf = (d: Record<string, number>) => Object.values(d).reduce((a, b) => a + b, 0);
 
@@ -26,7 +22,7 @@ export function SaudeCarteira({ saude }: { saude: SaudeVendedor[] }) {
 
   return (
     <div>
-      <h2 style={{ ...S.h2, marginBottom: 4 }}>Saúde da carteira por vendedor</h2>
+      <h2 style={{ ...h2Style, marginBottom: 4 }}>Saúde da carteira por vendedor</h2>
       <p style={{ ...S.muted, marginBottom: 12 }}>
         Carteira real ARES por status (régua absoluta, 6 faixas de dias sem comprar)
       </p>
@@ -41,9 +37,9 @@ export function SaudeCarteira({ saude }: { saude: SaudeVendedor[] }) {
           })).filter((d) => d.value > 0);
 
           return (
-            <div key={s.vendedor} style={{ background: "#16161c", border: "1px solid #2a2a35", borderRadius: 8, boxShadow: "0 0 22px -8px #4f7df0, inset 0 1px 0 0 #4f7df01a" }} className="p-4">
+            <div key={s.vendedor} style={{ ...S.card, padding: 16 }}>
               <div className="flex items-center justify-between mb-2">
-                <span style={S.section}>{s.vendedor}</span>
+                <span style={{ ...S.section, marginBottom: 0 }}>{s.vendedor}</span>
                 <span style={S.muted}>{total} clientes</span>
               </div>
 
@@ -56,7 +52,7 @@ export function SaudeCarteira({ saude }: { saude: SaudeVendedor[] }) {
                       ))}
                     </Pie>
                     <Tooltip
-                      contentStyle={{ background: "#16161c", border: "1px solid #4f7df0", borderRadius: 4, fontSize: 11, fontFamily: theme.font.num, color: "#c8d8e8", boxShadow: "0 4px 20px rgba(79,125,240,.20)" }}
+                      contentStyle={{ background: "var(--asb-card-hi)", border: "1px solid #4f7df0", borderRadius: 4, fontSize: 11, fontFamily: theme.font.num, color: "#c8d8e8", boxShadow: "0 4px 20px rgba(79,125,240,.20)" }}
                       itemStyle={{ color: "#c8d8e8" }}
                       formatter={(v, n) => {
                         const val = Number(v) || 0;

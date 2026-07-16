@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useTransition } from "react";
 import { theme } from "@/lib/theme";
+import { S } from "@/app/dashboard/lib/dashboard-tokens";
 import Link from "next/link";
 import { getDayPedidos, getDayCnb, getDayAusentes, type EstrategiasResponse } from "./actions";
 import GerenteDayModal from "@/components/dashboard/gerente-day-modal";
@@ -234,8 +235,8 @@ export function CalendarSection({
                   fontFamily: theme.font.label, fontWeight: 700,
                   background: active ? accent : "transparent",
                   color: active ? "#FFFFFF" : theme.colors.textPrimary,
-                  border: `1px solid ${active ? accent : theme.colors.borderDefault}`,
-                  borderRadius: 3,
+                  border: `1px solid ${active ? accent : "var(--asb-border)"}`,
+                  borderRadius: 8,
                   cursor: "pointer", transition: "all .15s",
                 }}
               >
@@ -273,10 +274,9 @@ export function CalendarSection({
             <div
               key={rt}
               style={{
-                background: "#1a1a1a",
-                border: `1px solid ${vendor === rt ? v.accent : theme.colors.borderDefault}`,
+                ...S.card,
+                border: `1px solid ${vendor === rt ? v.accent : "var(--asb-border)"}`,
                 borderTop: `3px solid ${v.accent}`,
-                borderRadius: 4,
                 padding: 20,
               }}
             >
@@ -335,7 +335,7 @@ export function CalendarSection({
                 ))}
               </div>
 
-              <div style={{ borderTop: "1px solid rgba(27,42,107,.3)", marginTop: 12, paddingTop: 10, display: "flex", justifyContent: "space-between", fontSize: 10 }}>
+              <div style={{ borderTop: "1px solid var(--asb-border)", marginTop: 12, paddingTop: 10, display: "flex", justifyContent: "space-between", fontSize: 10 }}>
                 <span style={{ color: "#c0d0e0", fontFamily: theme.font.label }}>
                   ✓ <span style={{ color: theme.colors.success, fontWeight: 700 }}>{r.dias_batidos}</span> &nbsp;
                   ✗ <span style={{ color: theme.colors.critical, fontWeight: 700 }}>{r.dias_abaixo}</span>
@@ -371,7 +371,7 @@ export function CalendarSection({
             <MissaoDoDia data={estrategias} vendor={vendor} />
           )
         ) : (
-        <div style={{ background: "#1a1a1a", border: `1px solid ${theme.colors.borderDefault}`, borderRadius: 8, padding: 20, maxHeight: 540, overflowY: "auto", display: "none" }}>
+        <div style={{ ...S.card, padding: 20, maxHeight: 540, overflowY: "auto", display: "none" }}>
           <p style={{ fontSize: 11, fontWeight: 700, color: theme.colors.textPrimary, fontFamily: theme.font.label, textTransform: "uppercase", letterSpacing: ".1em", marginBottom: 12 }}>
             Detalhe por dia (legacy — escondido se estrategias presente)
           </p>
@@ -400,10 +400,10 @@ export function CalendarSection({
                   key={d.dia}
                   onClick={() => openDayModal(d.dia)}
                   style={{
-                    background: isSelected ? "#15203d" : "#0a0f1f",
+                    background: isSelected ? "var(--asb-border2)" : "var(--asb-card-hi)",
                     border: `1px solid ${isSelected ? theme.colors.textPrimary : accent}`,
                     borderLeft: `3px solid ${accent}`,
-                    borderRadius: 3, padding: "10px 12px",
+                    borderRadius: 8, padding: "10px 12px",
                     cursor: "pointer", transition: "all .15s",
                   }}
                 >
@@ -416,7 +416,7 @@ export function CalendarSection({
                       {isEncaixe && <span style={{ background: "rgba(24,95,165,.15)", color: theme.colors.brandAsb, padding: "1px 6px", borderRadius: 3, fontSize: 8, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: theme.font.label }}>ENCAIXE</span>}
                       {d.is_dia_meta && !d.is_futuro && d.status_dia === "batida" && <span style={{ color: theme.colors.success, fontSize: 13, fontWeight: 900 }}>✓</span>}
                       {d.is_dia_meta && !d.is_futuro && d.status_dia === "abaixo" && <span style={{ color: theme.colors.critical, fontSize: 13, fontWeight: 900 }}>✗</span>}
-                      {d.is_dia_meta && d.is_futuro && Number(d.realizado_brl) > 0 && <span style={{ color: theme.colors.accent, fontSize: 13, fontWeight: 900 }}>▸</span>}
+                      {d.is_dia_meta && d.is_futuro && Number(d.realizado_brl) > 0 && <span style={{ color: theme.colors.accent, fontSize: 13, fontWeight: 900 }}>•</span>}
                     </div>
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 4, fontSize: 10, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" }}>

@@ -48,7 +48,7 @@ export function VendasPrivacyShell({ children }: { children: ReactNode }) {
           right: 18,
           zIndex: 50,
           background: hidden ? "#1f1f1f" : "#0F6E56",
-          border: `1px solid ${hidden ? "#2a2a2a" : "#22c55e"}`,
+          border: `1px solid ${hidden ? "var(--asb-border)" : "#22c55e"}`,
           borderRadius: 8,
           padding: "8px 12px",
           cursor: "pointer",

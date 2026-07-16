@@ -3,16 +3,9 @@ import { theme } from "@/lib/theme";
 import { createClient } from "@/lib/supabase/server";
 import { FollowupsTable } from "@/components/followups/followups-table";
 import { CadenciaBoard, type CadenciaLead } from "@/components/followups/cadencia-board";
+import { S } from "../lib/dashboard-tokens";
 
 export const dynamic = "force-dynamic";
-
-// ── Design tokens ────────────────────────────────────────────────────────────
-const S = {
-  card:    { background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8 } as React.CSSProperties,
-  label:   { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#e4e9f0", fontFamily: theme.font.label },
-  value:   { fontSize: 22, fontWeight: 700, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", lineHeight: 1 } as React.CSSProperties,
-  muted:   { color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label } as React.CSSProperties,
-};
 
 const ANGLE_LABELS: Record<string, string> = {
   retomada:       "Retomada",
@@ -117,48 +110,48 @@ export default async function FollowupsPage({ searchParams }: { searchParams: Pr
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div>
-        <h1 style={{ color: "var(--asb-page-ink)", fontSize: 20, fontWeight: 800, fontFamily: theme.font.label, letterSpacing: "-.01em", textTransform: "none", marginBottom: 4 }}>
+        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
           Follow-ups
         </h1>
-        <p style={{ ...S.muted, color: "var(--asb-page-ink2)" }}>Histórico de follow-ups automáticos</p>
+        <p style={S.muted}>Histórico de follow-ups automáticos</p>
       </div>
 
       {/* Alertas de saúde do sistema (se houver problema) */}
       {((vencidos ?? 0) > 0 || (semData ?? 0) > 0) && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {(vencidos ?? 0) > 0 && (
-            <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4" style={{ borderLeft: "3px solid #BA7517" }}>
-              <div className="flex items-center justify-between">
+            <div style={{ ...S.card, padding: 16, borderLeft: "3px solid #f59e0b" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#BA7517]">
-                    🟠 Vencidos não disparados
+                  <p style={{ ...S.label, color: "#f59e0b" }}>
+                    Vencidos não disparados
                   </p>
-                  <p className="text-xs text-slate-200 mt-1">
-                    leads com `next_followup_at` no passado aguardando envio
+                  <p style={{ ...S.muted, marginTop: 4 }}>
+                    leads com next_followup_at no passado aguardando envio
                   </p>
                 </div>
-                <span className="text-3xl font-bold text-[#E0993A] font-mono">{vencidos}</span>
+                <span style={{ ...S.value, color: "#f59e0b" }}>{vencidos}</span>
               </div>
-              <p className="text-[10px] text-gray-600 mt-2">
+              <p style={{ ...S.muted, fontSize: 10, color: "#8b949e", marginTop: 8 }}>
                 Backlog esvazia ~2-3 dias úteis (cooldown 23h por lead). Sem ação necessária.
               </p>
             </div>
           )}
           {(semData ?? 0) > 0 && (
-            <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4" style={{ borderLeft: "3px solid #BA1717" }}>
-              <div className="flex items-center justify-between">
+            <div style={{ ...S.card, padding: 16, borderLeft: "3px solid #C8102E" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#BA1717]">
-                    🔴 Elegíveis sem data
+                  <p style={{ ...S.label, color: "#C8102E" }}>
+                    Elegíveis sem data
                   </p>
-                  <p className="text-xs text-slate-200 mt-1">
-                    leads marcados elegíveis mas sem `next_followup_at` — não disparam
+                  <p style={{ ...S.muted, marginTop: 4 }}>
+                    leads marcados elegíveis mas sem next_followup_at — não disparam
                   </p>
                 </div>
-                <span className="text-3xl font-bold text-[#E84545] font-mono">{semData}</span>
+                <span style={{ ...S.value, color: "#C8102E" }}>{semData}</span>
               </div>
-              <p className="text-[10px] text-gray-600 mt-2">
-                Bug em writer upstream. Investigar qual workflow setou `followup_eligible=true` sem agendar.
+              <p style={{ ...S.muted, fontSize: 10, color: "#8b949e", marginTop: 8 }}>
+                Bug em writer upstream. Investigar qual workflow setou followup_eligible=true sem agendar.
               </p>
             </div>
           )}

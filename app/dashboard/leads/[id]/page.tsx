@@ -19,15 +19,13 @@ import { ReactivateAiButton } from "@/components/leads/reactivate-ai-button";
 import { MarkProposalSentButton } from "@/components/leads/mark-proposal-sent-button";
 import { FollowupCadence, type FollowupRow } from "@/components/leads/followup-cadence";
 import { getUserContext } from "@/lib/auth/get-user-role";
+import { S } from "@/app/dashboard/lib/dashboard-tokens";
 
-// ── Design tokens ────────────────────────────────────────────────
+// ── Cores semânticas (badges / texto) — superfície de card vem de S.card ──
 const C = {
-  bg: "#161b22", bg2: "#0d1117", border: "#21262d", border2: "#30363d",
   text: "#c9d1d9", text2: "#e6edf3", muted: "#8b949e",
   blue: "#58a6ff", green: "#3fb950", amber: "#f0b429", red: "#f85149", purple: "#c084fc",
 };
-const LABEL: React.CSSProperties = { fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase", color: C.muted, fontFamily: theme.font.label };
-const CARD: React.CSSProperties  = { background: C.bg, border: `1px solid ${C.border2}`, borderRadius: 6 };
 
 const TEMP_CFG: Record<string, { label: string; color: string; bg: string; border: string }> = {
   HOT:          { label: "HOT",   color: C.red,    bg: "rgba(248,81,73,.1)",   border: "rgba(248,81,73,.3)" },
@@ -164,7 +162,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
           <h1 style={{ color: C.text2, fontSize: 18, fontWeight: 700, fontFamily: theme.font.label, marginBottom: 2 }}>
             {lead.restaurant_name || lead.name || "Lead sem nome"}
           </h1>
-          <p style={{ color: "var(--asb-page-ink2)", fontSize: 11, fontFamily: theme.font.label }}>{lead.phone}</p>
+          <p style={{ color: C.muted, fontSize: 11, fontFamily: theme.font.label }}>{lead.phone}</p>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           <FunnelStageBadge stage={lead.funnel_stage} />
@@ -210,7 +208,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
           </div>
         );
         return (
-          <div style={{ ...CARD, padding: "13px 18px", borderLeft: `3px solid ${sitCor}`, display: "flex", flexWrap: "wrap", gap: "10px 26px", alignItems: "center" }}>
+          <div style={{ ...S.card, padding: "13px 18px", borderLeft: `3px solid ${sitCor}`, display: "flex", flexWrap: "wrap", gap: "10px 26px", alignItems: "center" }}>
             <p style={{ fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase", color: "#8b949e", fontFamily: theme.font.label, marginRight: 4 }}>Orquestração</p>
             {cell("Estado", OLBL[orqRow.journey_state] ?? orqRow.journey_state, "#c8d8e8")}
             {cell("Cadência", longa ? "Longa (nutrição)" : "Curta")}
@@ -229,14 +227,14 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
         <div className="lg:col-span-2 space-y-4">
 
           {/* SDR Conversation — no topo para gestor ver conversa primeiro */}
-          <div style={{ ...CARD, padding: "20px 24px" }}>
-            <p style={{ ...LABEL, marginBottom: 16 }}>Conversa SDR</p>
+          <div style={{ ...S.card, padding: "20px 24px" }}>
+            <p style={{ ...S.label, marginBottom: 16 }}>Conversa SDR</p>
             <ConversationWithFeedback rows={convRows ?? []} phone={phone} />
           </div>
 
           {/* CRM card */}
-          <div style={{ ...CARD, padding: "20px 24px" }}>
-            <p style={{ ...LABEL, marginBottom: 16 }}>Dados CRM</p>
+          <div style={{ ...S.card, padding: "20px 24px" }}>
+            <p style={{ ...S.label, marginBottom: 16 }}>Dados CRM</p>
             <div className="grid grid-cols-2 gap-x-6 gap-y-4">
               <CrmField icon={<MapPin size={13} />} label="Cidade" value={lead.city} />
               <CrmField icon={<Package size={13} />} label="Segmento" value={lead.segment} capitalize />
@@ -256,22 +254,22 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
               <CrmField icon={<Megaphone size={13} />} label="Campanha" value={lead.origem_utm_campaign || lead.ad_id || null} />
               {lead.pain_point && (
                 <div className="col-span-2">
-                  <p style={LABEL}>Dor identificada</p>
+                  <p style={S.label}>Dor identificada</p>
                   <p style={{ color: C.muted, fontSize: 11, fontFamily: theme.font.label, marginTop: 4, fontStyle: "italic" }}>
                     &quot;{lead.pain_point}&quot;
                   </p>
                 </div>
               )}
               <div className="col-span-2">
-                <p style={{ ...LABEL, marginBottom: 8 }}>Grupos de produto</p>
+                <p style={{ ...S.label, marginBottom: 8 }}>Grupos de produto</p>
                 <ProductGroupSelector phone={lead.phone} initial={(lead.product_groups as string[] | null) ?? []} />
               </div>
             </div>
           </div>
 
           {/* Vendor Conversation */}
-          <div style={{ ...CARD, padding: "20px 24px" }}>
-            <p style={{ ...LABEL, marginBottom: 16 }}>
+          <div style={{ ...S.card, padding: "20px 24px" }}>
+            <p style={{ ...S.label, marginBottom: 16 }}>
               Conversa Vendedor
               <span style={{ color: "#e4e9f0", marginLeft: 8 }}>({vmTotal ?? 0} msgs)</span>
             </p>
@@ -279,8 +277,8 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
           </div>
 
           {/* FIX4: Cadência de Follow-up */}
-          <div style={{ ...CARD, padding: "20px 24px" }}>
-            <p style={{ ...LABEL, marginBottom: 16 }}>
+          <div style={{ ...S.card, padding: "20px 24px" }}>
+            <p style={{ ...S.label, marginBottom: 16 }}>
               Cadência de Follow-up
               <span style={{ color: "#e4e9f0", marginLeft: 8 }}>({(followupRows ?? []).length} waves)</span>
             </p>
@@ -292,20 +290,20 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
           {/* Timeline */}
-          <div style={{ ...CARD, padding: "20px 24px" }}>
-            <p style={{ ...LABEL, marginBottom: 16 }}>Timeline</p>
+          <div style={{ ...S.card, padding: "20px 24px" }}>
+            <p style={{ ...S.label, marginBottom: 16 }}>Timeline</p>
             <LeadTimeline events={events} transitions={transitions} />
           </div>
 
           {/* Notes */}
-          <div style={{ ...CARD, padding: "20px 24px" }}>
-            <p style={{ ...LABEL, marginBottom: 16 }}>Observacoes</p>
+          <div style={{ ...S.card, padding: "20px 24px" }}>
+            <p style={{ ...S.label, marginBottom: 16 }}>Observacoes</p>
             <LeadNotes leadId={lead.id} notes={noteEvents} />
           </div>
 
           {/* Actions */}
-          <div style={{ ...CARD, padding: "20px 24px" }}>
-            <p style={{ ...LABEL, marginBottom: 16 }}>Acoes</p>
+          <div style={{ ...S.card, padding: "20px 24px" }}>
+            <p style={{ ...S.label, marginBottom: 16 }}>Acoes</p>
             <LeadActions lead={lead} />
             {canMarkProposal && (
               <div style={{ marginTop: 12 }}>

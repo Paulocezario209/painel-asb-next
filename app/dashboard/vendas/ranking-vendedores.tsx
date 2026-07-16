@@ -34,7 +34,7 @@ export function RankingVendedores({ ranking }: { ranking: RankingItem[] }) {
   }
 
   return (
-    <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg" style={{ padding: "20px 24px" }}>
+    <div className="bg-[var(--asb-card)] border border-[var(--asb-border)] rounded-lg" style={{ padding: "20px 24px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 14 }}>
         <p style={{ fontSize: 11, fontWeight: 700, color: "#c0c8d8", fontFamily: theme.font.label, textTransform: "uppercase", letterSpacing: ".1em" }}>
           🏆 RANKING DO MÊS
@@ -47,7 +47,7 @@ export function RankingVendedores({ ranking }: { ranking: RankingItem[] }) {
       <div style={{ overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 600 }}>
           <thead>
-            <tr style={{ borderBottom: "1px solid #2a2a2a" }}>
+            <tr style={{ borderBottom: "1px solid var(--asb-border)" }}>
               {["#", "Vendedor", "% Mês", "Realizado", "Saldo", "Média 7d", "Hoje", "Δ vs Média"].map((h) => (
                 <th
                   key={h}
