@@ -27,7 +27,7 @@ const VIEWS = [
 const MARCOS_COORTE: Record<string, string> = {
   criados: "Leads criados",
   qualificados: "Qualificados (qual_stage ≥ 7)",
-  handoff: "Handoff",
+  handoff: "Agendamento",
   vendedor_assumiu: "Vendedor assumiu",
   pedido_fechado: "Pedido fechado",
 };

@@ -39,7 +39,7 @@ export function FunilCacClient({ funil, mensal, cac }: { funil: FunilRow[]; mens
     const base = [
       { label: "Leads", count: agg.leads },
       { label: "Qualificados", count: agg.qualificados },
-      { label: "Handoffs", count: agg.handoffs },
+      { label: "Agendamentos", count: agg.handoffs },
       { label: "Convertidos", count: agg.convertidos },
     ];
     const N = base.length;
@@ -70,7 +70,7 @@ export function FunilCacClient({ funil, mensal, cac }: { funil: FunilRow[]; mens
       <div className="asb-grid-kpi">
         <StatTile label="Leads" value={agg.leads} accent="#8bb4ff" num="#8bb4ff" sub="Total atribuído" />
         <StatTile label="Qualificados" value={agg.qualificados} accent={theme.colors.chartNavyLight} num={theme.colors.chartNavyLight} sub="qual_stage ≥ 7" />
-        <StatTile label="Handoffs" value={agg.handoffs} accent={YELLOW} num={YELLOW} sub="Entregues ao vendedor" />
+        <StatTile label="Agendamentos" value={agg.handoffs} accent={YELLOW} num={YELLOW} sub="Entregues ao vendedor" />
         <StatTile label="Convertidos" value={agg.convertidos} accent={GREEN} num={GREEN} sub="Primeiro pedido" />
       </div>
 
@@ -93,7 +93,7 @@ export function FunilCacClient({ funil, mensal, cac }: { funil: FunilRow[]; mens
 
       {/* Breakdown por canal */}
       <div style={{ ...S.card, padding: "20px 24px", overflowX: "auto" }}>
-        <SectionHead Icon={BarChart3} color="#534AB7" title="Por canal" desc="Leads, qualificação, handoff, conversão e CAC" />
+        <SectionHead Icon={BarChart3} color="#534AB7" title="Por canal" desc="Leads, qualificação, agendamento, conversão e CAC" />
         {funil.length === 0 ? (
           <p style={{ color: MUT, fontSize: 11, fontFamily: theme.font.label, textAlign: "center", padding: 16 }}>Sem dados.</p>
         ) : (
@@ -103,10 +103,10 @@ export function FunilCacClient({ funil, mensal, cac }: { funil: FunilRow[]; mens
                 <th style={{ ...th, textAlign: "left" }}>Canal</th>
                 <th style={th}>Leads</th>
                 <th style={th}>Qualif.</th>
-                <th style={th}>Handoff</th>
+                <th style={th}>Agendamento</th>
                 <th style={th}>Convert.</th>
                 <th style={th}>% Qualif.</th>
-                <th style={th}>% Handoff</th>
+                <th style={th}>% Agendamento</th>
                 <th style={th}>% Conv.</th>
                 <th style={th}>Gasto</th>
                 <th style={th}>CAC/lead</th>
@@ -157,7 +157,7 @@ export function FunilCacClient({ funil, mensal, cac }: { funil: FunilRow[]; mens
       </div>
 
       <p style={{ color: MUT, fontSize: 9, fontFamily: theme.font.label }}>
-        Fonte: v_funil_por_canal (qualificado = qual_stage ≥ 7 / lead realmente qualificado · handoff=seller_first_reply_at · convertido=first_order_at) + v_cac_por_canal (Gasto/CAC/Custo por conversão) + v_cac_mensal_canal (conversão mensal). % do funil = razão sobre Leads. Leads atribuídos desde 02/06.
+        Fonte: v_funil_por_canal (qualificado = qual_stage ≥ 7 / lead realmente qualificado · agendamento=seller_first_reply_at · convertido=first_order_at) + v_cac_por_canal (Gasto/CAC/Custo por conversão) + v_cac_mensal_canal (conversão mensal). % do funil = razão sobre Leads. Leads atribuídos desde 02/06.
       </p>
     </div>
   );

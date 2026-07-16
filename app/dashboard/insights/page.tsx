@@ -110,7 +110,7 @@ export default async function InsightsPage() {
   const taxaQual = total > 0 ? Math.round((qualified / total) * 100) : 0;
   const taxaPain = total > 0 ? Math.round((withPain  / total) * 100) : 0;
 
-  // Avg days to handoff
+  // Avg days to agendamento
   const handoffDelays = leads
     .filter(l => l.handoff_at && l.created_at)
     .map(l => (new Date(l.handoff_at!).getTime() - new Date(l.created_at!).getTime()) / 86400000);
@@ -185,7 +185,7 @@ export default async function InsightsPage() {
             {[
               { label: "Taxa de qualificação", value: `${taxaQual}%`, Icon: BadgeCheck, accent: "#C8102E", num: "#C8102E", note: `${qualified} de ${total} leads`, href: "/dashboard/leads?status=qualified" },
               { label: "Leads com dor",        value: `${taxaPain}%`, Icon: Flame,      accent: "#f59e0b", num: "#f59e0b", note: `${withPain} identificadas`, href: undefined as string | undefined },
-              { label: "Handoffs realizados",  value: String(withHandoff), Icon: PhoneCall, accent: "#22c55e", num: "#22c55e", note: `${total > 0 ? Math.round(withHandoff/total*100) : 0}% da base`, href: "/dashboard/handoffs" },
+              { label: "Agendamentos realizados",  value: String(withHandoff), Icon: PhoneCall, accent: "#22c55e", num: "#22c55e", note: `${total > 0 ? Math.round(withHandoff/total*100) : 0}% da base`, href: "/dashboard/handoffs" },
               { label: "Volume médio",         value: avgVolume ? `${avgVolume} kg` : "—", Icon: Scale, accent: "#185FA5", num: "#8bb4ff", note: "por semana/lead", href: undefined },
             ].map((k) => (
               <KpiCard key={k.label} {...k} />

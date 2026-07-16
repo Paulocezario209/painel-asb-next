@@ -131,7 +131,7 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
   const marcos = _m ? [
     { label: "Leads criados",    count: _m.criados,      marco: "criados" },
     { label: "Qualificados",     count: _m.qualificados, marco: "qualificados" },
-    { label: "Handoff",          count: _m.handoff,      marco: "handoff" },
+    { label: "Agendamento",          count: _m.handoff,      marco: "handoff" },
     { label: "Vendedor assumiu", count: _m.assumidos,    marco: "vendedor_assumiu" },
     { label: "Pedido fechado",   count: _m.pedidos,      marco: "pedido_fechado" },
   ] : [];
@@ -216,8 +216,8 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
         {[
           { label: "Total de leads",       value: String(total),                         accent: "#185FA5", num: "#FFFFFF", Icon: Users,     note: "na base · inclui perdidos",              href: "/dashboard/leads" as string | undefined },
           { label: "Em qualificação",      value: String(emQualificacao),                accent: "#f59e0b", num: "#f59e0b", Icon: Filter,    note: "fase: em qualificação",                  href: "/dashboard/leads" },
-          { label: "Handoff+",             value: String(emHandoffPlus),                 accent: "#22c55e", num: "#22c55e", Icon: Handshake, note: "com vendedor + cliente · abre o pipeline", href: "/dashboard/pipeline" },
-          { label: "Taxa SDR → handoff",   value: taxaHandoff ? `${taxaHandoff}%` : "—", accent: "#C8102E", num: "#C8102E", Icon: Percent,   note: total > 0 ? `${emHandoffPlus} de ${total} leads` : "", href: undefined },
+          { label: "Agendamento+",             value: String(emHandoffPlus),                 accent: "#22c55e", num: "#22c55e", Icon: Handshake, note: "com vendedor + cliente · abre o pipeline", href: "/dashboard/pipeline" },
+          { label: "Taxa SDR → agendamento",   value: taxaHandoff ? `${taxaHandoff}%` : "—", accent: "#C8102E", num: "#C8102E", Icon: Percent,   note: total > 0 ? `${emHandoffPlus} de ${total} leads` : "", href: undefined },
         ].map((k) => (
           <KpiCard key={k.label} {...k} />
         ))}

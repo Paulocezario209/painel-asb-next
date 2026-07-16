@@ -2,7 +2,7 @@
 
 // FIX 4 (auditoria 2026-06-08): funil VISUAL real (Recharts FunnelChart) — substitui o
 // BarChart horizontal no /dashboard/funil. Cada nível afunila do topo (mais largo) à base.
-// Cores semânticas: qualificação #185FA5, handoff #D4A017, avançadas #22c55e.
+// Cores semânticas: qualificação #185FA5, agendamento #D4A017, avançadas #22c55e.
 // Recebe data já enriquecida no server (label, count, pct vs etapa anterior, fill).
 
 import { FunnelChart, Funnel, LabelList, Tooltip, ResponsiveContainer, Cell } from "recharts";

@@ -1,7 +1,7 @@
 // lib/vendor-labels.ts — FONTE ÚNICA do mapa routing_team → nome de exibição.
 //
 // Antes vivia copiado/hardcoded em 10+ arquivos (home, pipeline, leads-table,
-// handoffs-table, followups-table, insights, card-reconciliar-ares,
+// agendamentos-table, followups-table, insights, card-reconciliar-ares,
 // dashboard-filters, vendas/*, gerente, vendedores) — e o hot-leads fazia
 // replace("SETOR_","") manual. Vendedor novo/troca de nome = mexer SÓ aqui.
 //

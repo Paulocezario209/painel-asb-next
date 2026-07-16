@@ -184,7 +184,7 @@ export default async function GerentePage() {
   // ── E3 Sprint Fernando: worklist órfãos de atendimento (v_leads_orfaos) ────
   // Leitura via SERVICE ROLE server-side (mesmo padrão do ciclo em /vendas —
   // evita assimetria RLS de view security_invoker; página já é gestor-only pelo
-  // redirect acima). View: handoff + seller_first_reply_at NULL + >48h + não-teste.
+  // redirect acima). View: agendamento + seller_first_reply_at NULL + >48h + não-teste.
   const srkOrf = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const orfaosClient = srkOrf
     ? createServiceClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, srkOrf)
@@ -234,10 +234,10 @@ export default async function GerentePage() {
           Icon={AlertTriangle}
           color={orfaos.length > 0 ? "#ef4444" : theme.colors.success}
           title={orfaos.length > 0 ? `Órfãos de atendimento (${orfaos.length})` : "Órfãos de atendimento"}
-          desc="Handoff sem resposta do vendedor"
+          desc="Agendamento sem resposta do vendedor"
         />
         {orfaos.length === 0 ? (
-          <p style={{ ...S.muted, color: theme.colors.success }}>✓ Nenhum lead órfão — todos os handoffs com resposta do vendedor.</p>
+          <p style={{ ...S.muted, color: theme.colors.success }}>✓ Nenhum lead órfão — todos os agendamentos com resposta do vendedor.</p>
         ) : (
           <>
             <p style={{ ...S.muted, fontSize: 9, marginBottom: 12 }}>

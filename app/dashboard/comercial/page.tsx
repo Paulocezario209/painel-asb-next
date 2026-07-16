@@ -52,7 +52,7 @@ export default async function ComercialPage() {
   // Sem número no card do fluxo — os números vivem nos StatTiles abaixo.
   const FLUXO: FlowStep[] = [
     { cat: "SDR",       cor: "#6390f5", titulo: "Lead novo → Qualificado", sub: "lead_novo · atendido_sdr · qualif · lead_qualificado (qs7)", href: "/dashboard/leads" },
-    { cat: "SDR→VEND",  cor: "#6390f5", titulo: "Handoff",                 sub: "passa pro vendedor (handoff_at)", href: "/dashboard/handoffs" },
+    { cat: "SDR→VEND",  cor: "#6390f5", titulo: "Agendamento",                 sub: "passa pro vendedor (handoff_at)", href: "/dashboard/handoffs" },
     { cat: "VENDEDOR",  cor: "#e8b923", titulo: "Pipeline",                sub: "em_andamento · negociação · proposta · pedido_teste", href: "/dashboard/pipeline" },
     { cat: "FRONTEIRA", cor: "#22c55e", titulo: "Convertido",              sub: "pedido_fechado · 1º pedido ARES (first_order_at)", href: "/dashboard/clientes" },
     { cat: "CLIENTE",   cor: "#2dd4bf", titulo: "Ativo → Recorrente",      sub: "carteira real · recência + frequência", href: "/dashboard/clientes" },

@@ -89,7 +89,7 @@ const ESTADOS: Estado[] = [
   { key: "INBOUND_SEM_RESPOSTA", label: "Entrada (Inbound)", band: "curta" },
   { key: "QUALIFICACAO_INTERROMPIDA", label: "Qualificação interrompida", band: "curta" },
   { key: "QUALIFICADO_AGUARDANDO_VENDEDOR", label: "Qualificado · aguard. vendedor", band: "curta" },
-  { key: "HANDOFF_SEM_CONTATO", label: "Handoff sem contato", band: "curta" },
+  { key: "HANDOFF_SEM_CONTATO", label: "Agendamento sem contato", band: "curta" },
   { key: "EM_ANDAMENTO", label: "Em andamento", band: "curta" },
   { key: "NEGOCIACAO", label: "Negociação", band: "curta" },
   { key: "PROPOSTA", label: "Proposta enviada", band: "curta" },

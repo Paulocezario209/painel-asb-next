@@ -21,7 +21,7 @@ export function LeadActions({ lead: initial }: { lead: Lead }) {
   const [loading, setLoading] = useState<string | null>(null);
   const [confirmError, setConfirmError] = useState<string | null>(null);
 
-  // Botão visível apenas quando vendedor está ativo e handoff ainda não foi confirmado
+  // Botão visível apenas quando vendedor está ativo e agendamento ainda não foi confirmado
   const showConfirm = lead.human_active === true && lead.handoff_confirmed === false;
   const showConvert = (lead.qual_stage ?? 0) >= 7 && !lead.first_order_at;
 

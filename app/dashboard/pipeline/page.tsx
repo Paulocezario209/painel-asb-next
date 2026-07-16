@@ -106,7 +106,7 @@ export default async function PipelinePage({ searchParams }: { searchParams: Pro
   const kpis = [
     { label: "Leads ativos", value: String(ativos.length), accent: "#185FA5", sub: "em aberto (exclui convertido/perdido)", leads: ativos },
     { label: "Valor estimado", value: brl(valorEstimado), accent: "#22c55e", sub: `${ativos.length} leads × R$${PRECO_KG}/kg`, leads: ativos },
-    { label: "Parados >7d", value: String(parados7d), accent: parados7d > 0 ? "#f59e0b" : "#e4e9f0", sub: "sem mover desde o handoff", leads: paradosList },
+    { label: "Parados >7d", value: String(parados7d), accent: parados7d > 0 ? "#f59e0b" : "#e4e9f0", sub: "sem mover desde o agendamento", leads: paradosList },
   ];
 
   return (
