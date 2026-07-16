@@ -46,6 +46,9 @@ const SANS = theme.font.label;  // Geist Sans — todo TEXTO/label
 // NOME histórico "mono" mantido p/ minimizar diff — mas o corpo é SANS: ZERO mono em label.
 const mono = (size: number, extra?: React.CSSProperties): React.CSSProperties =>
   ({ fontFamily: SANS, fontSize: size, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", ...extra });
+// label de KPI/tile — Title Case sans (igual KpiCard do Dashboard, sem uppercase).
+const tc = (size: number, extra?: React.CSSProperties): React.CSSProperties =>
+  ({ fontFamily: SANS, fontSize: size, fontWeight: 650, letterSpacing: 0, ...extra });
 const cardStyle = (top?: string): React.CSSProperties => ({
   ...S.card,                                  // superfície grafite canônica (var(--asb-card), radius 14, float)
   padding: "14px 16px",
@@ -177,7 +180,7 @@ function StateCard({ e, row, active, carry }: { e: Estado; row: MapaRow | undefi
   return (
     <Link href={href} style={{ textDecoration: "none", flex: "1 1 150px", minWidth: 150 }}>
       <div style={{ ...cardStyle(cor), background: active ? TOK.card : TOK.cardAlt, borderColor: active ? cor : TOK.border, boxShadow: active ? `0 0 0 1px ${cor}` : "none", height: "100%" }}>
-        <p style={{ ...mono(9, { letterSpacing: ".12em" }), color: cor, minHeight: "2.2em", lineHeight: 1.25 }}>{e.label}</p>
+        <p style={{ ...tc(12, { color: cor, minHeight: "2.2em", lineHeight: 1.25 }) }}>{e.label}</p>
         <p style={{ fontFamily: MONO, fontSize: 26, fontWeight: 700, color: TOK.fg, lineHeight: 1, marginTop: 8, fontVariantNumeric: "tabular-nums" }}>{total}</p>
         <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
           {atr > 0 && <span style={{ ...mono(9), color: TOK.atrasado, background: `${TOK.atrasado}22`, borderRadius: 4, padding: "1px 6px" }}>{atr} atras.</span>}
@@ -459,7 +462,7 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
             { l: "Atrasados", v: saude.atrasados, c: Number(saude.atrasados) > 0 ? TOK.hoje : TOK.fg },
           ].map(k => (
             <div key={k.l} style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-              <span style={{ ...mono(9), color: TOK.fgDim }}>{k.l}</span>
+              <span style={{ ...tc(11.5, { color: TOK.fgMuted }) }}>{k.l}</span>
               <span style={{ fontFamily: MONO, fontSize: 20, color: k.c, fontVariantNumeric: "tabular-nums" }}>{k.v ?? 0}</span>
             </div>
           ))}
@@ -477,7 +480,7 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
             <a key={c.t} href={c.a} style={{ textDecoration: "none" }}>
               <div style={{ ...cardStyle(), height: "100%" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-                  <span style={{ ...mono(12, { letterSpacing: ".16em" }), color: TOK.fg }}>{c.t}</span>
+                  <span style={{ ...tc(14, { fontWeight: 750, color: TOK.fg }) }}>{c.t}</span>
                   <FaseBadge f={c.f} />
                 </div>
                 <p style={{ fontFamily: SANS, fontSize: 11.5, color: TOK.fgMuted, marginTop: 8, lineHeight: 1.5 }}>{c.d}</p>
