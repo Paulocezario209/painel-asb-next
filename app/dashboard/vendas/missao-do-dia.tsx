@@ -93,10 +93,11 @@ export function MissaoDoDia({ data, vendor }: Props) {
       <div style={{ marginBottom: 16, paddingBottom: 12, borderBottom: "1px solid var(--asb-border)" }}>
         <p
           style={{
-            fontSize: 14,
-            fontWeight: 700,
+            fontSize: 15,
+            fontWeight: 750,
             color: "#FFFFFF",
-            fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums",
+            fontFamily: theme.font.label,
+            letterSpacing: "-.01em",
             lineHeight: 1.3,
             marginBottom: 4,
           }}

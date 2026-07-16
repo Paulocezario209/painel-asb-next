@@ -1,15 +1,13 @@
 "use client";
 
-import type { CSSProperties } from "react";
 import { theme } from "@/lib/theme";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { CUSTOMER_STATUS, STATUS_FILTER_KEYS } from "@/lib/customer-status";
 import { S } from "@/app/dashboard/lib/dashboard-tokens";
+import { SectionHead } from "@/app/dashboard/lib/ui";
+import { Activity } from "lucide-react";
 
 export type SaudeVendedor = { vendedor: string; dist: Record<string, number> };
-
-// Título de seção (mesma camada que PageHead: page-ink, 20px) — bare heading acima do grid de cards.
-const h2Style: CSSProperties = { color: "var(--asb-page-ink)", fontSize: 20, fontWeight: 800, fontFamily: theme.font.label, letterSpacing: "-.01em" };
 
 const totalOf = (d: Record<string, number>) => Object.values(d).reduce((a, b) => a + b, 0);
 
@@ -22,10 +20,12 @@ export function SaudeCarteira({ saude }: { saude: SaudeVendedor[] }) {
 
   return (
     <div>
-      <h2 style={{ ...h2Style, marginBottom: 4 }}>Saúde da carteira por vendedor</h2>
-      <p style={{ ...S.muted, marginBottom: 12 }}>
-        Carteira real ARES por status (régua absoluta, 6 faixas de dias sem comprar)
-      </p>
+      <SectionHead
+        Icon={Activity}
+        color="#8bb4ff"
+        title="Saúde da carteira por vendedor"
+        desc="Carteira real ARES por status (régua absoluta, 6 faixas de dias sem comprar)"
+      />
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {vendedores.map((s) => {
           const total = totalOf(s.dist);

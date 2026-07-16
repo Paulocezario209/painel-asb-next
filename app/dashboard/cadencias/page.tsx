@@ -1,14 +1,16 @@
-// app/dashboard/cadencias/page.tsx — Central de Orquestração de Cadências (réplica da spec serigrafia).
-// 5 seções (00 três visões · 01 Mapa · 02 Fila · 03 Dossiê · 04 Contrato · 05 Plano) com DADOS REAIS.
+// app/dashboard/cadencias/page.tsx — Central de Orquestração de Cadências.
+// Seções (As três visões · Mapa · Fila · Dossiê · Contrato · Plano) com DADOS REAIS, na LINGUAGEM
+// canônica do Dashboard: PageHead/SectionHead, número=mono, texto/label=sans (zero mono em label).
 // Fontes (todas read-only, já em produção): v_orquestracao_mapa · v_orquestracao_leads ·
 // v_cadencia_saude · v_cadencia_lead · v_lead_proxima_acao · v_motivos_perda. Service-role + cache 60s.
-// Zero tabela/coluna nova; a tela só CONSOME. Serigrafia = tokens centralizados no objeto TOK (sem hex solto).
+// Zero tabela/coluna nova; a tela só CONSOME. Cor de situação = tokens centralizados em TOK (sem hex solto).
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { theme } from "@/lib/theme";
 import { VENDOR_LABELS } from "@/lib/vendor-labels";
 import { S } from "@/app/dashboard/lib/dashboard-tokens";
-import { PageHead } from "@/app/dashboard/lib/ui";
+import { PageHead, SectionHead } from "@/app/dashboard/lib/ui";
+import { Layers, Map as MapIcon, ListOrdered, FileText, FileCheck2, GitBranch } from "lucide-react";
 import { getUserContext, canAccess } from "@/lib/auth/get-user-role";
 import { DashboardFilters } from "@/components/dashboard/dashboard-filters";
 import { unstable_cache } from "next/cache";
@@ -37,11 +39,13 @@ const TOK = {
   barFrom: "#3b82f6", barTo: "#a855f7",
 } as const;
 const GRAD = `linear-gradient(90deg,${TOK.barFrom},${TOK.barTo})`;
-const MONO = theme.font.num;    // JetBrains/Geist Mono do design system
-const SANS = theme.font.label;
+const MONO = theme.font.num;    // Geist Mono — SÓ para NÚMERO (tabular)
+const SANS = theme.font.label;  // Geist Sans — todo TEXTO/label
 
+// eyebrow canônico da linguagem (sans uppercase pequeno, igual S.label do Dashboard).
+// NOME histórico "mono" mantido p/ minimizar diff — mas o corpo é SANS: ZERO mono em label.
 const mono = (size: number, extra?: React.CSSProperties): React.CSSProperties =>
-  ({ fontFamily: MONO, fontSize: size, letterSpacing: ".14em", textTransform: "uppercase", ...extra });
+  ({ fontFamily: SANS, fontSize: size, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", ...extra });
 const cardStyle = (top?: string): React.CSSProperties => ({
   ...S.card,                                  // superfície grafite canônica (var(--asb-card), radius 14, float)
   padding: "14px 16px",
@@ -144,15 +148,13 @@ function CadBadge({ cadencia }: { cadencia: string }) {
 function SituDot({ s, title }: { s: Situ; title?: string }) {
   return <span style={{ width: 8, height: 8, borderRadius: 4, background: SITU_COR[s], flexShrink: 0 }} title={title ?? SITU_LABEL[s]} aria-hidden />;
 }
-function Section({ n, title, sub, id, children }: { n: string; title: string; sub?: string; id?: string; children: React.ReactNode }) {
+// Título de SEÇÃO = <SectionHead> canônico (chip de ícone + sans Title Case).
+// Sem marcador "00"/"01", sem título mono uppercase.
+function Section({ Icon, color, title, sub, id, children }: { Icon: React.ComponentType<{ size?: number }>; color?: string; title: string; sub?: string; id?: string; children: React.ReactNode }) {
   return (
-    <section id={id} style={{ display: "flex", flexDirection: "column", gap: 14, scrollMarginTop: 16 }}>
-      <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
-        <span style={{ ...mono(11, { letterSpacing: ".22em" }), color: TOK.fgDim }}>{n}</span>
-        <h2 style={{ ...mono(13, { letterSpacing: ".16em" }), color: TOK.fg, margin: 0 }}>{title}</h2>
-        {sub && <span style={{ fontFamily: SANS, fontSize: 11, color: TOK.fgMuted }}>{sub}</span>}
-      </div>
-      {children}
+    <section id={id} style={{ scrollMarginTop: 16 }}>
+      <SectionHead Icon={Icon} color={color} title={title} desc={sub} />
+      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>{children}</div>
     </section>
   );
 }
@@ -464,8 +466,8 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
         </div>
       )}
 
-      {/* 00 — AS TRÊS VISÕES */}
-      <Section n="00" title="As três visões" sub="uma tela, três lentes sobre a mesma cadência">
+      {/* AS TRÊS VISÕES */}
+      <Section Icon={Layers} color={TOK.respondeu} title="As três visões" sub="uma tela, três lentes sobre a mesma cadência">
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 12 }}>
           {[
             { a: "#mapa", t: "Mapa", f: "F1" as const, d: "onde cada lead está — por estado da jornada, com atrasados e ação de hoje." },
@@ -485,8 +487,8 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
         </div>
       </Section>
 
-      {/* 01 — MAPA */}
-      <Section n="01" title="Mapa" id="mapa" sub={`curta ${curtaTot} · longa ${longaTot} · ganho ${ganho} · borda-topo = situação operacional`}>
+      {/* MAPA */}
+      <Section Icon={MapIcon} color={TOK.f1} title="Mapa" id="mapa" sub={`curta ${curtaTot} · longa ${longaTot} · ganho ${ganho} · borda-topo = situação operacional`}>
         <div style={{ ...cardStyle() }}>
           <p style={{ ...mono(9, { letterSpacing: ".15em" }), color: TOK.respondeu, marginBottom: 10 }}>Cadência Curta — até 30 dias</p>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
@@ -498,7 +500,7 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
               <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
                 {[1, 2, 3, 4, 5, 6].filter(q => quebra[q]).map(q => (
                   <div key={q} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 12 }}>
-                    <span style={{ width: 130, color: TOK.fgMuted, fontFamily: MONO, fontSize: 11, flexShrink: 0 }}>{q} · {QS_LABEL[q]}</span>
+                    <span style={{ width: 130, color: TOK.fgMuted, fontFamily: SANS, fontSize: 11, flexShrink: 0 }}>{q} · {QS_LABEL[q]}</span>
                     <Bar frac={quebra[q] / quebraMax} w={26} value={quebra[q]} />
                   </div>
                 ))}
@@ -513,7 +515,7 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
             <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
               {[...TEMPO_BUCKETS, "recorrência"].filter(b => tempoCount[b]).map(b => (
                 <div key={b} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 12 }}>
-                  <span style={{ width: 96, color: TOK.fgMuted, fontFamily: MONO, fontSize: 11, flexShrink: 0 }}>{b}</span>
+                  <span style={{ width: 96, color: TOK.fgMuted, fontFamily: SANS, fontSize: 11, flexShrink: 0 }}>{b}</span>
                   <Bar frac={tempoCount[b] / tempoMax} value={tempoCount[b]} />
                 </div>
               ))}
@@ -535,8 +537,8 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
         </div>
       </Section>
 
-      {/* 02 — FILA */}
-      <Section n="02" title="Fila" id="fila" sub={`${fila.length} lead(s)${fila.length >= 200 ? " (200 mais urgentes)" : ""}${estadoSel ? ` · ${LABEL[estadoSel]}` : ""} · Próxima ação = motor F3`}>
+      {/* FILA */}
+      <Section Icon={ListOrdered} color={TOK.f2} title="Fila" id="fila" sub={`${fila.length} lead(s)${fila.length >= 200 ? " (200 mais urgentes)" : ""}${estadoSel ? ` · ${LABEL[estadoSel]}` : ""} · Próxima ação = motor F3`}>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
           {FILTROS.map(f => {
             const on = filtroSel === f;
@@ -581,8 +583,8 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
         </div>
       </Section>
 
-      {/* 03 — DOSSIÊ */}
-      <Section n="03" title="Dossiê" id="dossie" sub={dossie ? "próxima melhor ação + timeline (clique num lead da fila para trocar)" : "selecione um lead na Fila"}>
+      {/* DOSSIÊ */}
+      <Section Icon={FileText} color={TOK.f3} title="Dossiê" id="dossie" sub={dossie ? "próxima melhor ação + timeline (clique num lead da fila para trocar)" : "selecione um lead na Fila"}>
         {!dossie ? (
           <div style={{ ...cardStyle() }}><p style={{ fontFamily: SANS, fontSize: 12, color: TOK.fgDim }}>Sem lead selecionado.</p></div>
         ) : (
@@ -642,8 +644,8 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
         )}
       </Section>
 
-      {/* 04 — CONTRATO DE DADOS */}
-      <Section n="04" title="Contrato de dados" sub="verde = já existe (reusa) · roxo = novo (Fase 2)">
+      {/* CONTRATO DE DADOS */}
+      <Section Icon={FileCheck2} color={TOK.respondeu} title="Contrato de dados" sub="verde = já existe (reusa) · roxo = novo (Fase 2)">
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <div style={{ ...cardStyle(TOK.f1) }}>
             <p style={{ ...mono(9, { letterSpacing: ".15em" }), color: TOK.f1, marginBottom: 10 }}>Real hoje — F1/F3 ✓</p>
@@ -663,8 +665,8 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
         </div>
       </Section>
 
-      {/* 05 — PLANO POR FASES */}
-      <Section n="05" title="Plano por fases">
+      {/* PLANO POR FASES */}
+      <Section Icon={GitBranch} color={TOK.negocia} title="Plano por fases">
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 12 }}>
           {[
             { f: "F1" as const, t: "Mapa & Fila no ar", d: "estados, atrasados, silêncio, degrau, motivo de perda — tudo lendo as views de orquestração." },

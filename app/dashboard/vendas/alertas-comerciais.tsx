@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { theme } from "@/lib/theme";
 import Link from "next/link";
+import { SectionHead } from "@/app/dashboard/lib/ui";
+import { ShieldCheck, AlertTriangle } from "lucide-react";
 import type { Alerta, AlertasResponse } from "./actions";
 import { getPedidosAtrasadosPorVendedor, getClientesDormentes } from "./actions";
 import {
@@ -56,22 +58,27 @@ export function AlertasComerciais({ data }: { data: AlertasResponse }) {
   if (data.total === 0) {
     return (
       <div className="bg-[var(--asb-card)] border border-[var(--asb-border)] rounded-lg" style={{ padding: "20px 24px" }}>
-        <p style={{ fontSize: 11, fontWeight: 700, color: "#22c55e", fontFamily: theme.font.label, textTransform: "uppercase", letterSpacing: ".1em", marginBottom: 6 }}>
-          🟢 ALERTAS COMERCIAIS
-        </p>
-        <p style={{ fontSize: 12, color: "#c0d0e0" }}>
-          Nenhum alerta no momento. Operação saudável.
-        </p>
+        <SectionHead
+          Icon={ShieldCheck}
+          color="#22c55e"
+          title="Alertas comerciais"
+          desc="Nenhum alerta no momento. Operação saudável."
+        />
       </div>
     );
   }
 
   return (
     <div className="bg-[var(--asb-card)] border border-[var(--asb-border)] rounded-lg" style={{ padding: "20px 24px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 14 }}>
-        <p style={{ fontSize: 11, fontWeight: 700, color: "#c0c8d8", fontFamily: theme.font.label, textTransform: "uppercase", letterSpacing: ".1em" }}>
-          ⚠ ALERTAS COMERCIAIS — {data.total}
-        </p>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 14 }}>
+        <div style={{ marginBottom: -18 }}>
+          <SectionHead
+            Icon={AlertTriangle}
+            color="#f59e0b"
+            title="Alertas comerciais"
+            desc={`${data.total} no total`}
+          />
+        </div>
         <div style={{ display: "flex", gap: 6, fontSize: 9, fontFamily: theme.font.label }}>
           {data.contadores.vermelho > 0 && (
             <span style={{ color: "#fff", background: "#C8102E", padding: "2px 8px", borderRadius: 3, fontWeight: 700 }}>

@@ -3,10 +3,28 @@ import Link from "next/link";
 import { CUSTOMER_STATUS, CHURN_STATES } from "@/lib/customer-status";
 import { theme } from "@/lib/theme";
 import { S } from "@/app/dashboard/lib/dashboard-tokens";
+import { PageHead, SectionHead, StatTile } from "@/app/dashboard/lib/ui";
+import { AlertTriangle, AlertOctagon, UserX, Ban } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 const STATUS_COLS = CHURN_STATES.map((k) => ({ key: k, ...CUSTOMER_STATUS[k] }));
+
+// Título Title Case sans para os componentes canônicos (o label do CUSTOMER_STATUS é
+// UPPERCASE, usado por outras telas — não mexer lá; aqui traduzimos só a apresentação).
+const TITLE: Record<string, string> = {
+  risco: "Risco",
+  pre_churn: "Pré-churn",
+  churn_comercial: "Churn comercial",
+  inativo_definitivo: "Inativo definitivo",
+};
+
+const ICON: Record<string, React.ComponentType<{ size?: number }>> = {
+  risco: AlertTriangle,
+  pre_churn: AlertOctagon,
+  churn_comercial: UserX,
+  inativo_definitivo: Ban,
+};
 
 const brl = (n: number | null) =>
   (n ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
@@ -14,6 +32,9 @@ const brl = (n: number | null) =>
 // % pt-BR, 1 decimal, virgula (ex: 14,6)
 const pct = (n: number) =>
   n.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
+// número mono/tabular para valores dentro das linhas (regra de ouro da linguagem)
+const NUM: React.CSSProperties = { fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" };
 
 type Customer = {
   ares_pessoa_id: number;
@@ -61,16 +82,12 @@ export default async function ChurnPage() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <div>
-        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
-          Churn — Carteira de Clientes
-        </h1>
-        <p style={S.muted}>
-          {total} clientes em risco/pré-churn/churn/inativo · carteira real ARES (v_carteira_360) · maiores no topo
-        </p>
-      </div>
+      <PageHead
+        title="Churn — Carteira de Clientes"
+        desc={`${total} clientes em risco/pré-churn/churn/inativo · carteira real ARES (v_carteira_360) · maiores no topo`}
+      />
 
-      {/* KPIs */}
+      {/* KPIs por estado de churn */}
       <div className="asb-grid-kpi">
         {STATUS_COLS.map((col) => {
           const count = byStatus[col.key].length;
@@ -79,21 +96,19 @@ export default async function ChurnPage() {
           const pctCli = totCli ? (count / totCli) * 100 : 0;
           const verbo = col.key === "inativo_definitivo" ? "perdido" : "em risco";
           return (
-            <div
+            <StatTile
               key={col.key}
-              className="asb-card"
-              style={{ padding: "20px 20px", borderTop: `2px solid ${col.color}` }}
-            >
-              <p style={{ ...S.label, color: col.color }}>{col.label}</p>
-              <p style={{ ...S.value, marginTop: 12 }}>{count}</p>
-              <p style={{ color: "#FFFFFF", fontSize: 12, fontWeight: 700, fontFamily: theme.font.label, marginTop: 4 }}>
-                {brl(receita)} {verbo}
-              </p>
-              <p style={{ color: "#8b949e", fontSize: 10, fontFamily: theme.font.label, marginTop: 2 }}>
-                {pct(pctRec)}% da receita · {pct(pctCli)}% da carteira
-              </p>
-              <p style={{ ...S.muted, fontSize: 10, marginTop: 8, lineHeight: 1.3 }}>{col.desc}</p>
-            </div>
+              label={TITLE[col.key]}
+              value={count}
+              accent={col.color}
+              num={col.color}
+              badges={
+                <span style={{ background: col.color + "22", color: col.color, fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 999, fontFamily: theme.font.label }}>
+                  {brl(receita)} {verbo}
+                </span>
+              }
+              sub={`${pct(pctRec)}% da receita · ${pct(pctCli)}% da carteira · ${col.desc}`}
+            />
           );
         })}
       </div>
@@ -102,11 +117,12 @@ export default async function ChurnPage() {
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         {STATUS_COLS.map((col) => (
           <div key={col.key} className="asb-card" style={{ padding: "20px 24px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12, paddingBottom: 8, borderBottom: "1px solid var(--asb-border)" }}>
-              <span style={{ width: 8, height: 8, borderRadius: "50%", background: col.color, boxShadow: `0 0 6px ${col.color}` }} />
-              <span style={{ ...S.section, marginBottom: 0 }}>{col.label}</span>
-              <span style={{ ...S.muted, marginLeft: "auto" }}>{byStatus[col.key].length} clientes</span>
-            </div>
+            <SectionHead
+              Icon={ICON[col.key]}
+              color={col.color}
+              title={TITLE[col.key]}
+              desc={`${byStatus[col.key].length} clientes · ${col.desc}`}
+            />
 
             {byStatus[col.key].length === 0 ? (
               <p style={{ ...S.muted, fontStyle: "italic", textAlign: "center", padding: "16px 0" }}>
@@ -123,15 +139,15 @@ export default async function ChurnPage() {
                       </div>
                       <div className="text-slate-200">
                         <span className="text-slate-200 text-[10px]">Receita:</span>{" "}
-                        <span className="text-white">{brl(c.total_revenue_brl)}</span>
+                        <span className="text-white" style={NUM}>{brl(c.total_revenue_brl)}</span>
                       </div>
                       <div className="text-slate-200">
                         <span className="text-slate-200 text-[10px]">Pedidos:</span>{" "}
-                        <span className="text-white">{c.total_orders ?? "—"}</span>
+                        <span className="text-white" style={NUM}>{c.total_orders ?? "—"}</span>
                       </div>
                       <div className="text-slate-200">
                         <span className="text-slate-200 text-[10px]">Sem comprar:</span>{" "}
-                        <span className="text-white">{c.dias_sem_compra ?? "—"}d</span>
+                        <span className="text-white" style={NUM}>{c.dias_sem_compra ?? "—"}d</span>
                       </div>
                       <div className="text-slate-200">
                         <span className="text-slate-200 text-[10px]">Tier:</span>{" "}

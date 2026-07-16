@@ -1,7 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { theme } from "@/lib/theme";
 import { S } from "@/app/dashboard/lib/dashboard-tokens";
+import { PageHead, SectionHead, KpiCard } from "@/app/dashboard/lib/ui";
+import { TrendingUp, TrendingDown, ChevronsUp } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -91,45 +92,50 @@ export default async function UpSellPage() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <div>
-        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
-          Ticket — Up-sell · Risco de Queda · Tier Upgrade
-        </h1>
-        <p style={S.muted}>
-          {upsellRows.length} up-sell · {downsellRows.length} risco queda · {upgradeRows.length} tier upgrade · potencial {fmtBRL(potencialTotal)} · em risco {fmtBRL(riscoTotal)}
-        </p>
-      </div>
+      <PageHead
+        title="Up-sell · Risco de Queda · Tier Upgrade"
+        desc={`${upsellRows.length} up-sell · ${downsellRows.length} risco queda · ${upgradeRows.length} tier upgrade · potencial ${fmtBRL(potencialTotal)} · em risco ${fmtBRL(riscoTotal)}`}
+      />
 
       {/* KPIs */}
       <div className="asb-grid-kpi">
-        <div style={{ ...S.card, padding: "20px 20px", borderTop: "2px solid #BA7517" }}>
-          <p style={{ ...S.label, color: "#BA7517" }} translate="no">Up-sell Ticket</p>
-          <p style={{ ...S.value, marginTop: 12 }}>{upsellRows.length}</p>
-          <p style={{ ...S.muted, fontSize: 10, marginTop: 6 }}>ticket 20%+ abaixo da média do tier (&lt; 80%)</p>
-        </div>
-        <div style={{ ...S.card, padding: "20px 20px", borderTop: "2px solid #C8102E" }}>
-          <p style={{ ...S.label, color: "#C8102E" }} translate="no">Risco Queda</p>
-          <p style={{ ...S.value, marginTop: 12 }}>{downsellRows.length}</p>
-          <p style={{ ...S.muted, fontSize: 10, marginTop: 6 }}>ticket 20%+ acima da média do tier (&gt; 120%)</p>
-        </div>
-        <div style={{ ...S.card, padding: "20px 20px", borderTop: "2px solid #185FA5" }}>
-          <p style={{ ...S.label, color: "#185FA5" }} translate="no">Tier Upgrade</p>
-          <p style={{ ...S.value, marginTop: 12 }}>{upgradeRows.length}</p>
-          <p style={{ ...S.muted, fontSize: 10, marginTop: 6 }}>volume justifica tier maior</p>
-        </div>
-        <div style={{ ...S.card, padding: "20px 20px", borderTop: "2px solid #22c55e" }}>
-          <p style={{ ...S.label, color: "#22c55e" }} translate="no">Potencial Anual</p>
-          <p style={{ ...S.value, marginTop: 12, fontSize: 20 }}>{fmtBRL(potencialTotal)}</p>
-          <p style={{ ...S.muted, fontSize: 10, marginTop: 6 }}>gap × frequência real (pedidos/ano)</p>
-        </div>
+        <KpiCard
+          label="Up-sell Ticket"
+          value={upsellRows.length}
+          Icon={TrendingUp}
+          accent="#BA7517"
+          num="#BA7517"
+          note="ticket < 80% da média do tier"
+        />
+        <KpiCard
+          label="Risco de Queda"
+          value={downsellRows.length}
+          Icon={TrendingDown}
+          accent="#C8102E"
+          num="#C8102E"
+          note="ticket > 120% da média do tier"
+        />
+        <KpiCard
+          label="Tier Upgrade"
+          value={upgradeRows.length}
+          Icon={ChevronsUp}
+          accent="#185FA5"
+          num="#185FA5"
+          note="volume justifica tier maior"
+        />
+        <KpiCard
+          label="Potencial Anual"
+          value={fmtBRL(potencialTotal)}
+          Icon={TrendingUp}
+          accent="#22c55e"
+          num="#22c55e"
+          note="gap × frequência real (pedidos/ano)"
+        />
       </div>
 
       {/* Up-sell ticket */}
       <div style={{ ...S.card, padding: "20px 24px" }}>
-        <p style={{ ...S.section }}>
-          <span style={{ color: "#BA7517", marginRight: 6 }}>🎯</span>
-          Up-sell — Ticket abaixo da média do tier
-        </p>
+        <SectionHead Icon={TrendingUp} color="#BA7517" title="Up-sell — Ticket Abaixo da Média do Tier" desc="Ticket 20%+ abaixo da média do tier (< 80%)" />
         {upsellRows.length === 0 ? (
           <p style={{ ...S.muted, fontStyle: "italic", textAlign: "center", padding: "12px 0", margin: 0 }}>Nenhuma oportunidade hoje.</p>
         ) : (
@@ -185,10 +191,7 @@ export default async function UpSellPage() {
 
       {/* Risco de queda (downsell) */}
       <div style={{ ...S.card, padding: "20px 24px" }}>
-        <p style={{ ...S.section }}>
-          <span style={{ color: "#C8102E", marginRight: 6 }}>🔻</span>
-          Risco de Queda — Ticket acima da média do tier
-        </p>
+        <SectionHead Icon={TrendingDown} color="#C8102E" title="Risco de Queda — Ticket Acima da Média do Tier" desc="Ticket 20%+ acima da média do tier (> 120%)" />
         {downsellRows.length === 0 ? (
           <p style={{ ...S.muted, fontStyle: "italic", textAlign: "center", padding: "12px 0", margin: 0 }}>Nenhum cliente com ticket inflado hoje.</p>
         ) : (
@@ -235,10 +238,7 @@ export default async function UpSellPage() {
 
       {/* Tier upgrade */}
       <div style={{ ...S.card, padding: "20px 24px" }}>
-        <p style={{ ...S.section }}>
-          <span style={{ color: "#185FA5", marginRight: 6 }}>⬆</span>
-          Tier Upgrade — Volume justifica reclassificação
-        </p>
+        <SectionHead Icon={ChevronsUp} color="#185FA5" title="Tier Upgrade — Volume Justifica Reclassificação" desc="Weekly volume justifica tier maior" />
         {upgradeRows.length === 0 ? (
           <p style={{ ...S.muted, fontStyle: "italic", textAlign: "center", padding: "12px 0", margin: 0 }}>Nenhum candidato a upgrade hoje.</p>
         ) : (

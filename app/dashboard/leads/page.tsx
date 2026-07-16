@@ -10,7 +10,7 @@ import { LeadsCards } from "@/components/leads/leads-cards";
 import { getLeadScoreMap } from "@/lib/get-lead-scores";
 import { computeLeadScore, tierOf } from "@/lib/lead-score";
 import { theme } from "@/lib/theme";
-import { S } from "@/app/dashboard/lib/dashboard-tokens";
+import { PageHead } from "@/app/dashboard/lib/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -191,16 +191,16 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
   return (
     <div className="space-y-4">
       <div>
-        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
-          Leads
-        </h1>
-        <p style={S.muted}>
-          {coorteEtapaAtiva ? `${leads.length} leads na etapa ${STAGE_LABELS[etapaCoorte!] ?? etapaCoorte} — posição atual no funil`
-            : view === "ativos" ? `${leads.length} leads que entraram hoje — a caixa de entrada do SDR (virou o dia → Parados)`
-            : view === "parados" ? "No funil há 1–30 dias — o vendedor deve resolver (fechar ou marcar perdido com motivo) até o dia 30"
-            : view === "perdidos" ? "Fila de recuperação — perdidos nos últimos 180 dias"
-            : "Fora de cobertura — registrados para expansão futura"}
-        </p>
+        <PageHead
+          title="Leads"
+          desc={
+            coorteEtapaAtiva ? `${leads.length} leads na etapa ${STAGE_LABELS[etapaCoorte!] ?? etapaCoorte} — posição atual no funil`
+              : view === "ativos" ? `${leads.length} leads que entraram hoje — a caixa de entrada do SDR (virou o dia → Parados)`
+              : view === "parados" ? "No funil há 1–30 dias — o vendedor deve resolver (fechar ou marcar perdido com motivo) até o dia 30"
+              : view === "perdidos" ? "Fila de recuperação — perdidos nos últimos 180 dias"
+              : "Fora de cobertura — registrados para expansão futura"
+          }
+        />
         {(coorteAtiva || coorteEtapaAtiva) && (
           <div style={{ display: "inline-flex", alignItems: "center", gap: 10, marginTop: 8, background: "rgba(46,160,67,.12)", border: "1px solid #2ea043", borderRadius: 4, padding: "6px 12px" }}>
             <span style={{ color: "#2ea043", fontSize: 11, fontFamily: theme.font.label, fontWeight: 700, letterSpacing: ".06em" }}>

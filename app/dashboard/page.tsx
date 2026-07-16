@@ -12,7 +12,7 @@ import { DashboardFilters } from "@/components/dashboard/dashboard-filters";
 import { theme } from "@/lib/theme";
 import { VENDOR_LABELS } from "@/lib/vendor-labels";
 import { S } from "./lib/dashboard-tokens";
-import { PageHead, SectionHead, Sparkline } from "./lib/ui";
+import { PageHead, SectionHead, KpiCard } from "./lib/ui";
 import { Users, BadgeCheck, PhoneCall, Trophy, XCircle, Target, Filter as FilterIcon, TrendingUp, BarChart3 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -341,30 +341,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       {/* KPI cards — grandes, com trend chip + sparkline (dados reais) */}
       <div className="asb-grid-kpi">
         {kpis.map((k) => (
-          <Link key={k.label} href={k.href} style={{ textDecoration: "none" }}>
-            <div className="asb-kpi-hover" style={{ ...S.card, padding: 22, borderTop: `3px solid ${k.accent}`, cursor: "pointer", overflow: "hidden" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 16 }}>
-                <span style={{ width: 38, height: 38, borderRadius: 11, display: "grid", placeItems: "center", background: k.accent + "22", color: k.accent, flexShrink: 0 }}>
-                  <k.Icon size={20} />
-                </span>
-                <span style={{ fontSize: 13.5, fontWeight: 650, color: "#c8d2e6", fontFamily: theme.font.label }} translate="no">{k.label}</span>
-              </div>
-              <div style={{ fontSize: 42, fontWeight: 850, letterSpacing: "-.03em", lineHeight: 1, color: k.num, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" }}>
-                {k.value}
-              </div>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 14, gap: 8 }}>
-                <span style={{
-                  display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, fontWeight: 750, padding: "3px 9px", borderRadius: 999,
-                  background: k.chipUp === null ? "rgba(255,255,255,.08)" : (k.chipUp ? "rgba(34,197,94,.16)" : "rgba(200,16,46,.16)"),
-                  color: k.chipUp === null ? "#aeb7cc" : (k.chipUp ? "#22c55e" : "#ff5a72"), fontFamily: theme.font.label,
-                }}>
-                  {k.chipUp !== null && <span style={{ fontSize: 13, lineHeight: 1 }}>{k.chipUp ? "↗" : "↘"}</span>}{k.chip}
-                </span>
-                <span style={{ fontSize: 11.5, color: "#83879a", fontFamily: theme.font.label }}>{k.note}</span>
-              </div>
-              <Sparkline data={k.series} color={k.accent} />
-            </div>
-          </Link>
+          <KpiCard key={k.label} {...k} />
         ))}
       </div>
 

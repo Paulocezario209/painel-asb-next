@@ -8,6 +8,8 @@ import { MetasCalendarioGerente } from "@/components/dashboard/metas-calendario-
 import { businessDaysInMonth, businessDaysElapsed, dateAfterNBusinessDays } from "@/lib/utils/business-days";
 import { VENDOR_LABELS as VENDOR_NAMES, VENDOR_ORDER } from "@/lib/vendor-labels";
 import { S } from "@/app/dashboard/lib/dashboard-tokens";
+import { PageHead, SectionHead, KpiCard, StatTile } from "@/app/dashboard/lib/ui";
+import { Wallet, TrendingUp, AlertTriangle, HeartPulse, Flame, GitCompareArrows, LineChart, CalendarDays } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -198,44 +200,42 @@ export default async function GerentePage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {/* Header */}
-      <div>
-        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
-          Gerente Comercial
-        </h1>
-        <p style={S.muted}>
-          Visao consolidada {mesAtual} &middot; {diasDecorridos}/{totalDiasUteis} dias uteis
-        </p>
-      </div>
+      <PageHead
+        title="Gerente Comercial"
+        desc={`Visão consolidada ${mesAtual} · ${diasDecorridos}/${totalDiasUteis} dias úteis`}
+      />
 
       {/* Faturado total real (NF+Recibo). Σ por vendedor (§5) + não-atribuído = total. */}
-      <div style={{ ...S.card, padding: "20px 24px", borderTop: `2px solid ${theme.colors.success}`, maxWidth: 360 }}>
-        <p style={{ ...S.label, color: theme.colors.success }}>Faturado total (NF+Recibo)</p>
-        <p style={{ ...S.value, marginTop: 12 }}>{fmtBRL(totalFaturadoReal)}</p>
-        <p style={{ ...S.muted, fontSize: 9, marginTop: 6 }}>
-          MTD &middot; por vendedor {fmtBRL(somaFatVendedores)}
-          {naoAtribuido > 0 ? ` + não-atribuído ${fmtBRL(naoAtribuido)}` : ""}
-        </p>
+      <div style={{ maxWidth: 360 }}>
+        <KpiCard
+          label="Faturado total (NF+Recibo)"
+          value={fmtBRL(totalFaturadoReal)}
+          Icon={Wallet}
+          accent={theme.colors.success}
+          note={`MTD · por vendedor ${fmtBRL(somaFatVendedores)}${naoAtribuido > 0 ? ` + não-atribuído ${fmtBRL(naoAtribuido)}` : ""}`}
+        />
       </div>
 
       {/* ── Up-sell / Risco da carteira (visibilidade; resultado pago pelo balde Crescimento) ── */}
       <Link href="/dashboard/up-sell" style={{ textDecoration: "none" }}>
-        <div style={{ ...S.card, padding: "16px 20px", borderTop: "2px solid #f97316", maxWidth: 420 }}>
-          <p style={S.label}>Up-sell / Risco (carteira)</p>
-          <p style={{ ...S.value, fontSize: 18, marginTop: 8 }}>
-            {upsellN} up-sell &middot; {fmtBRL(upsellPot)} &middot; {riscoN} risco
-          </p>
-          <p style={{ ...S.muted, fontSize: 9, marginTop: 6 }}>
-            oportunidades da carteira &middot; resultado pago pelo balde Crescimento (0,6%)
-          </p>
+        <div style={{ maxWidth: 420 }}>
+          <StatTile
+            label="Up-sell / Risco (carteira)"
+            value={`${upsellN} up-sell · ${fmtBRL(upsellPot)} · ${riscoN} risco`}
+            accent="#f97316"
+            sub="oportunidades da carteira · resultado pago pelo balde Crescimento (0,6%)"
+          />
         </div>
       </Link>
 
       {/* ── E3 Sprint Fernando: Órfãos de atendimento (worklist gestor) ────── */}
       <div style={{ ...S.card, padding: "20px 24px", borderTop: orfaos.length > 0 ? "2px solid #ef4444" : `2px solid ${theme.colors.success}` }}>
-        <p style={S.section}>
-          <span style={{ color: orfaos.length > 0 ? "#ef4444" : theme.colors.success, marginRight: 6 }}>{"●"}</span>
-          {orfaos.length > 0 ? `Órfãos de atendimento (${orfaos.length})` : "Órfãos de atendimento"}
-        </p>
+        <SectionHead
+          Icon={AlertTriangle}
+          color={orfaos.length > 0 ? "#ef4444" : theme.colors.success}
+          title={orfaos.length > 0 ? `Órfãos de atendimento (${orfaos.length})` : "Órfãos de atendimento"}
+          desc="Handoff sem resposta do vendedor"
+        />
         {orfaos.length === 0 ? (
           <p style={{ ...S.muted, color: theme.colors.success }}>✓ Nenhum lead órfão — todos os handoffs com resposta do vendedor.</p>
         ) : (
@@ -286,45 +286,39 @@ export default async function GerentePage() {
       {/* ── Retention Carteira (Funil v2 Fase 3 — atualizado pelo worker daily) ── */}
       {retention && (
         <div style={{ ...S.card, padding: "20px 24px" }}>
-          <p style={S.section}>
-            <span style={{ color: "#22C55E", marginRight: 6 }}>{"♥"}</span>
-            Retention da Carteira
-          </p>
+          <SectionHead Icon={HeartPulse} color="#22C55E" title="Retention da Carteira" desc="Saúde e recorrência da base de clientes" />
           <div className="asb-grid-kpi">
-            <div style={{ ...S.card, padding: 16, borderTop: "2px solid #22C55E" }}>
-              <p style={{ ...S.label, color: "#22C55E" }}>Carteira Total</p>
-              <p style={{ ...S.value, marginTop: 6 }}>{retention.total_carteira ?? 0}</p>
-              <p style={{ ...S.muted, fontSize: 9, marginTop: 6 }}>
-                {retention.em_ativacao ?? 0} em ativação · {retention.ativos ?? 0} ativos · {retention.recorrentes ?? 0} recorrentes
-              </p>
-            </div>
-            <div style={{ ...S.card, padding: 16, borderTop: `2px solid ${theme.colors.brandAsb}` }}>
-              <p style={{ ...S.label, color: theme.colors.brandAsb }}>Retention Rate</p>
-              <p style={{ ...S.value, marginTop: 6 }}>{retention.retention_rate_pct ?? 0}%</p>
-              <p style={{ ...S.muted, fontSize: 9, marginTop: 6 }}>% da carteira já recorrente</p>
-            </div>
-            <div style={{ ...S.card, padding: 16, borderTop: "2px solid #BA7517" }}>
-              <p style={{ ...S.label, color: "#BA7517" }}>Activation Rate</p>
-              <p style={{ ...S.value, marginTop: 6 }}>{retention.activation_rate_pct ?? 0}%</p>
-              <p style={{ ...S.muted, fontSize: 9, marginTop: 6 }}>% saiu de em_ativacao</p>
-            </div>
-            <div style={{ ...S.card, padding: 16, borderTop: `2px solid ${theme.colors.warning}` }}>
-              <p style={{ ...S.label, color: theme.colors.warning }}>Health Rate</p>
-              <p style={{ ...S.value, marginTop: 6 }}>{retention.health_rate_pct ?? 0}%</p>
-              <p style={{ ...S.muted, fontSize: 9, marginTop: 6 }}>
-                {retention.healthy ?? 0} healthy · {retention.at_risk ?? 0} risco · {retention.inactive ?? 0} inativos
-              </p>
-            </div>
+            <StatTile
+              label="Carteira Total"
+              value={retention.total_carteira ?? 0}
+              accent="#22C55E"
+              sub={`${retention.em_ativacao ?? 0} em ativação · ${retention.ativos ?? 0} ativos · ${retention.recorrentes ?? 0} recorrentes`}
+            />
+            <StatTile
+              label="Retention Rate"
+              value={`${retention.retention_rate_pct ?? 0}%`}
+              accent={theme.colors.brandAsb}
+              sub="% da carteira já recorrente"
+            />
+            <StatTile
+              label="Activation Rate"
+              value={`${retention.activation_rate_pct ?? 0}%`}
+              accent="#BA7517"
+              sub="% saiu de em ativação"
+            />
+            <StatTile
+              label="Health Rate"
+              value={`${retention.health_rate_pct ?? 0}%`}
+              accent={theme.colors.warning}
+              sub={`${retention.healthy ?? 0} healthy · ${retention.at_risk ?? 0} risco · ${retention.inactive ?? 0} inativos`}
+            />
           </div>
         </div>
       )}
 
       {/* ── B1 PRIORIDADES DO DIA (ranking pior em cima) ──────────────────── */}
       <div style={{ ...S.card, padding: "20px 24px" }}>
-        <p style={S.section}>
-          <span style={{ color: theme.colors.critical, marginRight: 6 }}>{"\u25B2"}</span>
-          Prioridades do Dia
-        </p>
+        <SectionHead Icon={Flame} color={theme.colors.critical} title="Prioridades do Dia" desc="Ranking por % atingido \u2014 pior em cima" />
         <p style={{ ...S.muted, fontSize: 9, marginBottom: 16 }}>
           Ordenado por % atingido (pior em cima) &middot; realizado/meta OFICIAL por <b style={{ color: "#c0d0e0" }}>faturamento</b> NF+Recibo (§5, = /vendas); &ldquo;prévia emissão&rdquo; = tempo real, não-oficial
         </p>
@@ -386,13 +380,7 @@ export default async function GerentePage() {
 
       {/* ── B2 COMPARATIVO MES ANTERIOR ──────────────────────────────────── */}
       <div style={{ ...S.card, padding: "20px 24px" }}>
-        <p style={S.section}>
-          <span style={{ color: theme.colors.borderDefault, marginRight: 6 }}>{"\u25C6"}</span>
-          Comparativo Mes Anterior
-        </p>
-        <p style={{ ...S.muted, fontSize: 9, marginBottom: 16 }}>
-          {MESES_LABEL[month]} ({diasDecorridos} dias uteis) vs {MESES_LABEL[mesAnterior]} (mesmos {diasDecorridos} dias uteis)
-        </p>
+        <SectionHead Icon={GitCompareArrows} color="#8bb4ff" title="Comparativo M\u00EAs Anterior" desc={`${MESES_LABEL[month]} (${diasDecorridos} dias \u00FAteis) vs ${MESES_LABEL[mesAnterior]} (mesmos ${diasDecorridos} dias \u00FAteis)`} />
 
         <div className="asb-grid-kpi">
           {[
@@ -402,14 +390,18 @@ export default async function GerentePage() {
             const arrow = deltaPct === null ? "" : deltaPct > 0 ? "\u2191" : deltaPct < 0 ? "\u2193" : "\u2192";
             const color = deltaPct === null ? theme.colors.neutral : deltaPct > 5 ? theme.colors.success : deltaPct < -5 ? theme.colors.critical : "#c8d8e8";
             return (
-              <div key={label} style={{ ...S.card, padding: "16px", borderTop: `2px solid ${color}` }}>
-                <p style={{ ...S.label, color }}>{label}</p>
-                <p style={{ ...S.value, fontSize: 18, marginTop: 8 }}>{fmtBRL(atual)}</p>
-                <p style={{ ...S.muted, fontSize: 10, marginTop: 6 }}>vs {fmtBRL(anterior)}</p>
-                <p style={{ color, fontSize: 14, fontWeight: 700, fontFamily: theme.font.num, marginTop: 4 }}>
-                  {deltaPct !== null ? `${arrow} ${deltaPct >= 0 ? "+" : ""}${deltaPct.toFixed(1)}%` : "\u2014"}
-                </p>
-              </div>
+              <StatTile
+                key={label}
+                label={label}
+                value={fmtBRL(atual)}
+                accent={color}
+                sub={`vs ${fmtBRL(anterior)}`}
+                badges={
+                  <span style={{ color, fontSize: 13, fontWeight: 700, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" }}>
+                    {deltaPct !== null ? `${arrow} ${deltaPct >= 0 ? "+" : ""}${deltaPct.toFixed(1)}%` : "\u2014"}
+                  </span>
+                }
+              />
             );
           })}
         </div>
@@ -417,26 +409,17 @@ export default async function GerentePage() {
 
       {/* ── B6 PROJECAO FIM DE MES ────────────────────────────────────────── */}
       <div style={{ ...S.card, padding: "20px 24px" }}>
-        <p style={S.section}>
-          <span style={{ color: "#f59e0b", marginRight: 6 }}>{"\u25B6"}</span>
-          Projecao Fim de Mes
-        </p>
-        <p style={{ ...S.muted, fontSize: 9, marginBottom: 16 }}>
-          Run rate: realizado / {diasDecorridos} dias decorridos &times; {totalDiasUteis} dias uteis no mes
-        </p>
+        <SectionHead Icon={LineChart} color="#f59e0b" title="Proje\u00E7\u00E3o Fim de M\u00EAs" desc={`Run rate: realizado \u00F7 ${diasDecorridos} dias decorridos \u00D7 ${totalDiasUteis} dias \u00FAteis no m\u00EAs`} />
 
         {/* KPI cards */}
         <div className="asb-grid-kpi" style={{ marginBottom: 20 }}>
           {[
             { label: "Dias Decorridos", value: `${diasDecorridos}/${totalDiasUteis}`, accent: theme.colors.brandAsb },
-            { label: "Projecao Total", value: fmtBRL(projecaoTotal), accent: projColor(projecaoVsMeta) },
+            { label: "Proje\u00e7\u00e3o Total", value: fmtBRL(projecaoTotal), accent: projColor(projecaoVsMeta) },
             { label: "vs Meta", value: totalMeta > 0 ? `${projecaoVsMeta.toFixed(1)}%` : "\u2014", accent: projColor(projecaoVsMeta) },
             { label: "Delta", value: totalMeta > 0 ? `${deltaTotal >= 0 ? "+" : ""}${fmtBRL(deltaTotal)}` : "\u2014", accent: deltaTotal >= 0 ? theme.colors.success : theme.colors.critical },
           ].map(({ label, value, accent }) => (
-            <div key={label} style={{ ...S.card, padding: "16px", borderTop: `2px solid ${accent}` }}>
-              <p style={{ ...S.label, color: accent }}>{label}</p>
-              <p style={{ ...S.value, fontSize: 20, marginTop: 8 }}>{value}</p>
-            </div>
+            <StatTile key={label} label={label} value={value} accent={accent} />
           ))}
         </div>
 
@@ -444,7 +427,7 @@ export default async function GerentePage() {
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr>
-              {["Vendedor", "Realizado", "Projecao", "Meta", "vs Meta"].map(h => (
+              {["Vendedor", "Realizado", "Projeção", "Meta", "vs Meta"].map(h => (
                 <th key={h} style={{ ...S.label, textAlign: h === "Vendedor" ? "left" : "right", paddingBottom: 8 }}>{h}</th>
               ))}
             </tr>
@@ -481,12 +464,7 @@ export default async function GerentePage() {
 
       {/* Calendário de Metas multi-mês (Feature 1 / DEBT-108) — RPC calendario_metas_mes */}
       <div style={{ marginTop: 8 }}>
-        <h2 style={{ color: "#FFFFFF", fontSize: 13, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
-          Calendário de Metas
-        </h2>
-        <p style={{ color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label, marginBottom: 14 }}>
-          Navegue qualquer mês · clique no dia para ver meta (e realizado, se já passou)
-        </p>
+        <SectionHead Icon={CalendarDays} color="#8bb4ff" title="Calendário de Metas" desc="Navegue qualquer mês · clique no dia para ver meta (e realizado, se já passou)" />
         <MetasCalendarioGerente />
       </div>
     </div>

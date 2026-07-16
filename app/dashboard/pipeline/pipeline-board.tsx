@@ -6,7 +6,7 @@
 import { useEffect, useState } from "react";
 import { MOVIVEIS, LOST_REASONS, STAGE_COLORS } from "@/lib/funnel/stages";
 import { theme } from "@/lib/theme";
-import { S } from "@/app/dashboard/lib/dashboard-tokens";
+import { StatTile } from "@/app/dashboard/lib/ui";
 import { useRouter } from "next/navigation";
 
 export type PipelineLead = {
@@ -154,7 +154,7 @@ export function PipelineBoard({
                   <span style={{ width: 8, height: 8, borderRadius: 2, background: col.cor, flexShrink: 0 }} />
                   <span style={{ color: "#e0e6ef", fontSize: 10, fontFamily: theme.font.label, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase" }}>{col.label}</span>
                 </div>
-                <span style={{ color: col.cor, fontSize: 11, fontFamily: theme.font.num, fontWeight: 700 }}>{leads.length}</span>
+                <span style={{ color: col.cor, fontSize: 11, fontFamily: theme.font.num, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{leads.length}</span>
               </div>
 
               {/* Cards (área droppable) */}
@@ -280,7 +280,7 @@ function ModalProposta({ lead, onConfirm, onCancel }: { lead: PipelineLead; onCo
   const valido = !isNaN(v) && v > 0;
   return (
     <Backdrop>
-      <p style={{ color: "#fff", fontSize: 12, fontFamily: theme.font.label, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 4 }}>Registrar Proposta</p>
+      <p style={{ color: "#fff", fontSize: 14, fontFamily: theme.font.label, fontWeight: 750, letterSpacing: "-.01em", marginBottom: 4 }}>Registrar Proposta</p>
       <p style={{ color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label, marginBottom: 14 }}>{lead.restaurant_name || "Lead"} → Proposta Enviada</p>
       <label style={{ color: "#c0d0e0", fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase" }}>Valor da proposta (R$)</label>
       <input value={valor} onChange={(e) => setValor(e.target.value)} placeholder="0,00" autoFocus
@@ -304,7 +304,7 @@ function ModalPerdido({ lead, onConfirm, onCancel }: { lead: PipelineLead; onCon
   const [detail, setDetail] = useState("");
   return (
     <Backdrop>
-      <p style={{ color: "#C8102E", fontSize: 12, fontFamily: theme.font.label, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 4 }}>Marcar como Perdido</p>
+      <p style={{ color: "#C8102E", fontSize: 14, fontFamily: theme.font.label, fontWeight: 750, letterSpacing: "-.01em", marginBottom: 4 }}>Marcar como Perdido</p>
       <p style={{ color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label, marginBottom: 6 }}>{lead.restaurant_name || "Lead"} → Perdido</p>
       <p style={{ color: "#f59e0b", fontSize: 10, fontFamily: theme.font.label, marginBottom: 14, lineHeight: 1.5 }}>
         ⚠ Ação destrutiva: encerra o atendimento (human_active=false, lost_at). Confirme o motivo.
@@ -332,7 +332,7 @@ function ModalPerdido({ lead, onConfirm, onCancel }: { lead: PipelineLead; onCon
 function ModalFechar({ lead, onConfirm, onCancel }: { lead: PipelineLead; onConfirm: () => void; onCancel: () => void }) {
   return (
     <Backdrop>
-      <p style={{ color: "#22c55e", fontSize: 12, fontFamily: theme.font.label, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 4 }}>Confirmar Conversão</p>
+      <p style={{ color: "#22c55e", fontSize: 14, fontFamily: theme.font.label, fontWeight: 750, letterSpacing: "-.01em", marginBottom: 4 }}>Confirmar Conversão</p>
       <p style={{ color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label, marginBottom: 14 }}>{lead.restaurant_name || "Lead"} → Convertido (1ª compra) · o ARES confirma quando faturar</p>
       <p style={{ color: "#c8d8e8", fontSize: 11, fontFamily: theme.font.label, marginBottom: 18, lineHeight: 1.5 }}>
         Marca o lead como convertido (grava <span style={{ color: "#22c55e" }}>first_order_at</span>). Confirma o fechamento do pedido?
@@ -363,11 +363,14 @@ export function PipelineKpis({ kpis }: {
           <div
             key={k.label}
             onClick={() => k.leads && setOpen(i)}
-            style={{ ...S.card, padding: "16px 18px", borderTop: `2px solid ${k.accent}`, cursor: k.leads ? "pointer" : "default" }}
+            style={{ cursor: k.leads ? "pointer" : "default", height: "100%" }}
           >
-            <p style={{ fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", color: "#e4e9f0", fontFamily: theme.font.label, marginBottom: 8 }}>{k.label}</p>
-            <p style={{ fontSize: 24, fontWeight: 700, color: "#FFFFFF", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>{k.value}</p>
-            <p style={{ color: "#c0d0e0", fontSize: 9, fontFamily: theme.font.label, marginTop: 6 }}>{k.sub}{k.leads ? " · clique p/ ver a lista" : ""}</p>
+            <StatTile
+              label={k.label}
+              value={k.value}
+              accent={k.accent}
+              sub={`${k.sub}${k.leads ? " · clique p/ ver a lista" : ""}`}
+            />
           </div>
         ))}
       </div>
@@ -391,8 +394,8 @@ function ModalLista({ stage, leads, onClose, onOpenLead }: { stage: string; lead
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", borderBottom: "1px solid #262626" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ width: 9, height: 9, borderRadius: 2, background: col.cor }} />
-            <span style={{ color: "#fff", fontSize: 12, fontFamily: theme.font.label, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase" }}>{col.label}</span>
-            <span style={{ color: col.cor, fontSize: 12, fontFamily: theme.font.num, fontWeight: 700 }}>{leads.length}</span>
+            <span style={{ color: "#fff", fontSize: 14, fontFamily: theme.font.label, fontWeight: 750, letterSpacing: "-.01em" }}>{col.label}</span>
+            <span style={{ color: col.cor, fontSize: 12, fontFamily: theme.font.num, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{leads.length}</span>
           </div>
           <button onClick={onClose} style={{ background: "none", border: "none", color: "#c0d0e0", fontSize: 18, cursor: "pointer", lineHeight: 1 }}>×</button>
         </div>
@@ -475,7 +478,7 @@ function ModalSugestao({ lead, stage, onClose }: { lead: PipelineLead; stage: st
 
   return (
     <Backdrop>
-      <p style={{ color: "#fff", fontSize: 12, fontFamily: theme.font.label, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 4 }}>
+      <p style={{ color: "#fff", fontSize: 14, fontFamily: theme.font.label, fontWeight: 750, letterSpacing: "-.01em", marginBottom: 4 }}>
         💡 Estrategista · {STAGE_COL[stage]?.label ?? stage}
       </p>
       <p style={{ color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label, marginBottom: 14 }}>

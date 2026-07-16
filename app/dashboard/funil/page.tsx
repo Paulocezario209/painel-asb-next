@@ -1,9 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import { theme } from "@/lib/theme";
 import { S } from "@/app/dashboard/lib/dashboard-tokens";
+import { PageHead, SectionHead, KpiCard, StatTile } from "@/app/dashboard/lib/ui";
 import { FunnelVisual, type FunnelStage } from "@/components/dashboard/funnel-visual";
 import { DashboardFilters } from "@/components/dashboard/dashboard-filters";
 import Link from "next/link";
+import { Users, Filter, Handshake, Percent, CheckCircle2, TrendingDown, Store, XCircle, LayoutGrid, Activity } from "lucide-react";
 
 import { redirect } from "next/navigation";
 import { getUserContext, canAccess } from "@/lib/auth/get-user-role";
@@ -196,12 +198,10 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {/* Header */}
-      <div>
-        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
-          Funil de Vendas
-        </h1>
-        <p style={S.muted}>Bloco 1: aquisição (lead → 1ª compra) · Bloco 2: camada cliente (carteira real ARES) · {total} leads · atualizado agora</p>
-      </div>
+      <PageHead
+        title="Funil de Vendas"
+        desc={`Bloco 1: aquisição (lead → 1ª compra) · Bloco 2: camada cliente (carteira real ARES) · ${total} leads · atualizado agora`}
+      />
 
       {/* P2 — filtro mês+vendedor (afeta SÓ a seção "Conversão por Marcos") */}
       <div style={{ ...S.card, padding: "12px 16px" }}>
@@ -214,31 +214,24 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
       {/* KPI row */}
       <div className="asb-grid-kpi">
         {[
-          { label: "Total Leads",          value: String(total),                                   accent: "#185FA5", sub: "na base · inclui perdidos", href: "/dashboard/leads" as string | undefined },
-          { label: "Em Qualificacao",       value: String(emQualificacao),                         accent: "#f59e0b", sub: "fase: em qualificação", href: "/dashboard/leads" },
-          { label: "Handoff+",             value: String(emHandoffPlus),                           accent: "#22c55e", sub: "com vendedor + cliente · abre o pipeline", href: "/dashboard/pipeline" },
-          { label: "Taxa SDR → Handoff", value: taxaHandoff ? `${taxaHandoff}%` : "—", accent: "#C8102E", sub: total > 0 ? `${emHandoffPlus} de ${total} leads` : "", href: undefined },
-        ].map(({ label, value, accent, sub, href }) => {
-          const card = (
-            <div style={{ ...S.card, padding: "20px", borderTop: `2px solid ${accent}`, height: "100%" }}>
-              <p style={{ ...S.label, color: accent }}>{label}</p>
-              <p style={{ ...S.value, marginTop: 12 }}>{value}</p>
-              <p style={{ ...S.muted, marginTop: 6, fontSize: 10 }}>{sub}</p>
-            </div>
-          );
-          return href
-            ? <Link key={label} href={href} style={{ textDecoration: "none" }}>{card}</Link>
-            : <div key={label}>{card}</div>;
-        })}
+          { label: "Total de leads",       value: String(total),                         accent: "#185FA5", num: "#FFFFFF", Icon: Users,     note: "na base · inclui perdidos",              href: "/dashboard/leads" as string | undefined },
+          { label: "Em qualificação",      value: String(emQualificacao),                accent: "#f59e0b", num: "#f59e0b", Icon: Filter,    note: "fase: em qualificação",                  href: "/dashboard/leads" },
+          { label: "Handoff+",             value: String(emHandoffPlus),                 accent: "#22c55e", num: "#22c55e", Icon: Handshake, note: "com vendedor + cliente · abre o pipeline", href: "/dashboard/pipeline" },
+          { label: "Taxa SDR → handoff",   value: taxaHandoff ? `${taxaHandoff}%` : "—", accent: "#C8102E", num: "#C8102E", Icon: Percent,   note: total > 0 ? `${emHandoffPlus} de ${total} leads` : "", href: undefined },
+        ].map((k) => (
+          <KpiCard key={k.label} {...k} />
+        ))}
       </div>
 
       {/* P5/P2 — Conversão por marcos (timestamps confiáveis; filtrável por mês/vendedor) */}
       {marcos.length > 0 && marcos[0].count > 0 && (
         <div style={{ ...S.card, padding: "20px 24px" }}>
-          <p style={S.section}>
-            <span style={{ color: "#22c55e", marginRight: 6 }}>{"✓"}</span>
-            Conversão da coorte de {mesParam}{vend ? " · vendedor" : ""}
-          </p>
+          <SectionHead
+            Icon={CheckCircle2}
+            color="#22c55e"
+            title={`Conversão da coorte de ${mesParam}`}
+            desc={`Marcos com timestamp confiável${vend ? " · vendedor filtrado" : ""}`}
+          />
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {marcos.map((mk, i) => {
               const base = marcos[0].count;
@@ -280,10 +273,12 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
 
       {/* Funnel chart */}
       <div style={{ ...S.card, padding: "20px 24px" }}>
-        <p style={S.section}>
-          <span style={{ color: "#C8102E", marginRight: 6 }}>{"▼"}</span>
-          Onde estão os leads agora <span style={{ color: "#e4e9f0", textTransform: "none", letterSpacing: 0 }}>· % = fatia do pipe ativo ({totalAtivos})</span>
-        </p>
+        <SectionHead
+          Icon={TrendingDown}
+          color="#C8102E"
+          title="Onde estão os leads agora"
+          desc={`% = fatia do pipe ativo (${totalAtivos})`}
+        />
         {orfaos.length > 0 && (
           <p style={{ ...S.muted, color: "#D4A017", fontSize: 10, marginBottom: 8 }}>
             ⚠ {orfaos.length} funnel_stage órfão (fora das fases): {orfaos.join(", ")}
@@ -299,18 +294,16 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
           MESMAS views das telas Clientes e Carteira Ativa — cada etapa é um atalho
           para a tela que já trata aquele grupo. Zero lógica nova de cliente aqui. */}
       <div style={{ ...S.card, padding: "20px 24px", borderTop: "2px solid #22c55e" }}>
-        <p style={S.section}>
-          <span style={{ color: "#22c55e", marginRight: 6 }}>{"◆"}</span>
-          Camada Cliente · pós 1ª compra <span style={{ color: "#e4e9f0", textTransform: "none", letterSpacing: 0 }}>· carteira real ARES ({carteira.length} clientes) · clique para abrir a tela</span>
-        </p>
+        <SectionHead
+          Icon={Store}
+          color="#22c55e"
+          title="Camada Cliente · pós 1ª compra"
+          desc={`Carteira real ARES (${carteira.length} clientes) · clique para abrir a tela`}
+        />
         <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 10 }}>
           {CLIENTE_ETAPAS.map((e) => (
             <Link key={e.key} href={e.href} style={{ textDecoration: "none" }}>
-              <div style={{ background: "var(--asb-card)", border: "1px solid var(--asb-border)", borderTop: `2px solid ${e.cor}`, borderRadius: 6, padding: "14px 12px", height: "100%" }}>
-                <p style={{ ...S.label, color: e.cor }}>{e.label}</p>
-                <p style={{ ...S.value, fontSize: 24, marginTop: 10 }}>{e.count}</p>
-                <p style={{ ...S.muted, fontSize: 9, marginTop: 6 }}>{e.sub}</p>
-              </div>
+              <StatTile label={e.label} value={e.count} accent={e.cor} num={e.cor} sub={e.sub} />
             </Link>
           ))}
         </div>
@@ -328,10 +321,12 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
       {/* Perdidos — saída LATERAL (fora do cone). Destaque: maior balde da base. */}
       {perdidos > 0 && (
         <div style={{ ...S.card, padding: "20px 24px", borderTop: "2px solid #C8102E" }}>
-          <p style={S.section}>
-            <span style={{ color: "#C8102E", marginRight: 6 }}>{"✕"}</span>
-            Perdidos (aquisição) · saída lateral do pipeline
-          </p>
+          <SectionHead
+            Icon={XCircle}
+            color="#C8102E"
+            title="Perdidos (aquisição)"
+            desc="Saída lateral do pipeline"
+          />
           <div style={{ display: "flex", alignItems: "baseline", gap: 14 }}>
             <span style={{ ...S.value, color: "#C8102E" }}>{perdidos}</span>
             <span style={S.muted}>
@@ -343,21 +338,19 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
 
       {/* Leads por etapa — cards clicáveis (drill direto p/ a lista da etapa · posição atual) */}
       <div style={{ ...S.card, padding: "20px 24px" }}>
-        <p style={S.section}>
-          <span style={{ color: "#185FA5", marginRight: 6 }}>{"◉"}</span>
-          Leads por Etapa <span style={{ color: "#e4e9f0", textTransform: "none", letterSpacing: 0 }}>· posição atual · clique para abrir a lista da etapa</span>
-        </p>
+        <SectionHead
+          Icon={LayoutGrid}
+          color="#185FA5"
+          title="Leads por etapa"
+          desc="Posição atual · clique para abrir a lista da etapa"
+        />
         {etapasDrill.length > 0 ? (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 10 }}>
             {etapasDrill.map(s => {
               const cor = STAGE_COLORS[s] ?? "#185FA5";
               return (
                 <Link key={s} href={`/dashboard/leads?etapa=${s}`} style={{ textDecoration: "none" }}>
-                  <div style={{ background: "var(--asb-card)", border: "1px solid var(--asb-border)", borderTop: `2px solid ${cor}`, borderRadius: 6, padding: "14px 12px", height: "100%" }}>
-                    <p style={{ ...S.label, color: cor }}>{STAGE_LABELS[s] ?? s}</p>
-                    <p style={{ ...S.value, fontSize: 24, marginTop: 10 }}>{stageCounts[s] ?? 0}</p>
-                    <p style={{ ...S.muted, fontSize: 9, marginTop: 6 }}>leads na etapa</p>
-                  </div>
+                  <StatTile label={STAGE_LABELS[s] ?? s} value={stageCounts[s] ?? 0} accent={cor} num={cor} sub="leads na etapa" />
                 </Link>
               );
             })}
@@ -369,10 +362,12 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
 
       {/* Timeline */}
       <div style={{ ...S.card, padding: "20px 24px" }}>
-        <p style={S.section}>
-          <span style={{ color: "#22c55e", marginRight: 6 }}>{"●"}</span>
-          Timeline — Ultimas Transicoes
-        </p>
+        <SectionHead
+          Icon={Activity}
+          color="#22c55e"
+          title="Timeline — últimas transições"
+          desc="Movimentações recentes de etapa"
+        />
         {events.length > 0 ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {events.map((e, i) => {

@@ -1,10 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
-import Link from "next/link";
-import { theme } from "@/lib/theme";
 import { HandoffsTable, type Handoff } from "@/components/handoffs/handoffs-table";
 import { getLeadScoreMap } from "@/lib/get-lead-scores";
 import { computeLeadScore, tierOf } from "@/lib/lead-score";
 import { S } from "@/app/dashboard/lib/dashboard-tokens";
+import { PageHead, SectionHead, KpiCard } from "@/app/dashboard/lib/ui";
+import { PhoneCall, AlertTriangle, CalendarClock, Inbox } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -78,40 +78,25 @@ export default async function HandoffsPage({ searchParams }: { searchParams?: Pr
   // Cards clicáveis fase 2 (pedido Paulo): KPI filtra a tabela via ?f= (o filtro
   // vive na própria tabela — sobrevive ao refetch do Realtime).
   const kpis = [
-    { label: "Total Pendentes",    value: totalPending,  accent: "#f59e0b", sub: "aguardando confirmação · clique p/ ver todos", href: "/dashboard/handoffs" },
-    { label: "Críticos (> 4h)",    value: criticalCount, accent: "#C8102E", sub: "sem confirmação há > 4h · clique p/ filtrar", href: "/dashboard/handoffs?f=criticos" },
-    { label: "Agendados Hoje",     value: todayCount,    accent: "#22c55e", sub: "com horário p/ hoje (todos, não só a fila) · clique p/ ver os pendentes", href: "/dashboard/handoffs?f=hoje" },
+    { label: "Total pendentes", value: totalPending,  Icon: PhoneCall,     accent: "#f59e0b", num: "#f59e0b", note: "aguardando confirmação · clique p/ ver todos", href: "/dashboard/handoffs" },
+    { label: "Críticos (> 4h)", value: criticalCount, Icon: AlertTriangle, accent: "#C8102E", num: "#C8102E", note: "sem confirmação há > 4h · clique p/ filtrar", href: "/dashboard/handoffs?f=criticos" },
+    { label: "Agendados hoje",  value: todayCount,    Icon: CalendarClock, accent: "#22c55e", num: "#22c55e", note: "com horário p/ hoje (todos, não só a fila) · clique p/ ver os pendentes", href: "/dashboard/handoffs?f=hoje" },
   ];
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      {/* Header */}
-      <div>
-        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
-          Fila de Handoff
-        </h1>
-        <p style={S.muted}>Leads aguardando confirmação do vendedor</p>
-      </div>
+      <PageHead title="Fila de Handoff" desc="Leads aguardando confirmação do vendedor" />
 
       {/* KPIs */}
       <div className="asb-grid-kpi">
-        {kpis.map(({ label, value, accent, sub, href }) => (
-          <Link key={label} href={href} style={{ textDecoration: "none" }}>
-            <div style={{ ...S.card, padding: "20px", borderTop: `2px solid ${accent}`, height: "100%" }}>
-              <p style={{ ...S.label, color: accent }}>{label}</p>
-              <p style={{ ...S.value, marginTop: 12 }}>{value}</p>
-              <p style={{ ...S.muted, marginTop: 6, fontSize: 10 }}>{sub}</p>
-            </div>
-          </Link>
+        {kpis.map((k) => (
+          <KpiCard key={k.label} {...k} />
         ))}
       </div>
 
       {/* Table */}
       <div style={{ ...S.card, padding: "20px 24px" }}>
-        <p style={S.section}>
-          <span style={{ color: "#C8102E", marginRight: 6 }}>▲</span>
-          Handoffs Pendentes
-        </p>
+        <SectionHead Icon={Inbox} color="#C8102E" title="Handoffs pendentes" desc="Ordenados por agenda e criticidade" />
         <HandoffsTable initial={handoffs} initialFilter={filtroKpi} />
       </div>
     </div>

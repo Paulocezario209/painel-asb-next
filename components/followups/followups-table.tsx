@@ -3,6 +3,7 @@
 import { Fragment, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Search, ChevronDown, ChevronUp } from "lucide-react";
 import { theme } from "@/lib/theme";
 import { VENDOR_LABELS } from "@/lib/vendor-labels";
 
@@ -41,9 +42,10 @@ const C = {
   amber: "#f59e0b", red: "#C8102E", blue: "#3a3a3a",
 };
 
+// Column/eyebrow label — canônico (igual Dashboard): SANS uppercase pequeno, nunca mono.
 const LABEL: React.CSSProperties = {
-  fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase",
-  color: C.muted, fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
+  fontSize: 11, letterSpacing: ".06em", textTransform: "uppercase", fontWeight: 700,
+  color: "#83879a", fontFamily: theme.font.label,
 };
 
 function fmt(iso: string | null) {
@@ -60,9 +62,9 @@ function NativeSelect({ value, onChange, children }: { value: string; onChange: 
       value={value}
       onChange={e => onChange(e.target.value)}
       style={{
-        background: C.bg2, border: `1px solid ${C.border2}`, borderRadius: 4,
-        color: C.muted, fontSize: 10, letterSpacing: ".10em", textTransform: "uppercase",
-        padding: "5px 10px", fontFamily: "var(--font-geist-sans), system-ui, sans-serif", cursor: "pointer", outline: "none",
+        background: C.bg2, border: `1px solid ${C.border2}`, borderRadius: 8,
+        color: C.muted, fontSize: 12,
+        padding: "7px 11px", fontFamily: theme.font.label, cursor: "pointer", outline: "none",
         flexShrink: 0,
       }}
     >
@@ -123,16 +125,16 @@ export function FollowupsTable({
       {/* Filters — horizontal scroll on mobile */}
       <div className="asb-filters-bar">
         <div style={{ position: "relative", minWidth: 160, flexShrink: 0 }}>
-          <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: C.muted, fontSize: 12 }}>›</span>
+          <Search style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", width: 13, height: 13, color: "#83879a" }} />
           <input
             type="text"
-            placeholder="buscar..."
+            placeholder="Buscar…"
             value={search}
             onChange={e => setSearch(e.target.value)}
             style={{
-              width: "100%", background: C.bg2, border: `1px solid ${C.border2}`, borderRadius: 4,
-              color: C.text, fontSize: 11, padding: "5px 10px 5px 24px",
-              fontFamily: "var(--font-geist-sans), system-ui, sans-serif", outline: "none", boxSizing: "border-box",
+              width: "100%", background: C.bg2, border: `1px solid ${C.border2}`, borderRadius: 8,
+              color: C.text, fontSize: 12, padding: "7px 11px 7px 30px",
+              fontFamily: theme.font.label, outline: "none", boxSizing: "border-box",
             }}
           />
         </div>
@@ -260,15 +262,15 @@ export function FollowupsTable({
               {/* FIX1: ver mensagem (expand inline) */}
               <button
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); setExpandedKey(mIsExp ? null : mRowKey); }}
-                style={{ alignSelf: "flex-start", background: "transparent", border: `1px solid ${theme.colors.borderDefault}`, color: theme.colors.neutral, fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase", fontFamily: theme.font.mono, padding: "3px 8px", borderRadius: 3, cursor: "pointer" }}
+                style={{ alignSelf: "flex-start", display: "inline-flex", alignItems: "center", gap: 5, background: "transparent", border: `1px solid ${theme.colors.borderDefault}`, color: theme.colors.neutral, fontSize: 11, fontWeight: 600, fontFamily: theme.font.label, padding: "4px 10px", borderRadius: 8, cursor: "pointer" }}
               >
-                {mIsExp ? "▲" : "▼"} Ver mensagem
+                {mIsExp ? <ChevronUp size={13} /> : <ChevronDown size={13} />} Ver mensagem
               </button>
               {mIsExp && (
-                <div style={{ background: theme.colors.bgElevated, borderRadius: 4, padding: "10px 12px" }}>
+                <div style={{ background: theme.colors.bgElevated, borderRadius: 8, padding: "10px 12px" }}>
                   {row.message_sent
-                    ? <span style={{ color: theme.colors.textPrimary, fontFamily: theme.font.mono, fontSize: 12, whiteSpace: "pre-wrap", lineHeight: 1.5 }}>{row.message_sent}</span>
-                    : <span style={{ color: theme.colors.neutral, fontFamily: theme.font.mono, fontSize: 12, fontStyle: "italic" }}>Mensagem não registrada</span>}
+                    ? <span style={{ color: theme.colors.textPrimary, fontFamily: theme.font.label, fontSize: 12.5, whiteSpace: "pre-wrap", lineHeight: 1.5 }}>{row.message_sent}</span>
+                    : <span style={{ color: theme.colors.neutral, fontFamily: theme.font.label, fontSize: 12.5, fontStyle: "italic" }}>Mensagem não registrada</span>}
                 </div>
               )}
             </Link>
@@ -372,9 +374,9 @@ export function FollowupsTable({
                   <td style={TD}>
                     <button
                       onClick={(e) => { e.stopPropagation(); setExpandedKey(isExp ? null : rowKey); }}
-                      style={{ background: "transparent", border: `1px solid ${theme.colors.borderDefault}`, color: theme.colors.neutral, fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase", fontFamily: theme.font.mono, padding: "3px 8px", borderRadius: 3, cursor: "pointer", whiteSpace: "nowrap" }}
+                      style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "transparent", border: `1px solid ${theme.colors.borderDefault}`, color: theme.colors.neutral, fontSize: 11, fontWeight: 600, fontFamily: theme.font.label, padding: "4px 10px", borderRadius: 8, cursor: "pointer", whiteSpace: "nowrap" }}
                     >
-                      {isExp ? "▲" : "▼"} Ver mensagem
+                      {isExp ? <ChevronUp size={13} /> : <ChevronDown size={13} />} Ver mensagem
                     </button>
                   </td>
                 </tr>
@@ -382,8 +384,8 @@ export function FollowupsTable({
                   <tr>
                     <td colSpan={10} style={{ background: theme.colors.bgElevated, padding: "12px 16px", borderBottom: `1px solid ${C.border}` }}>
                       {row.message_sent
-                        ? <span style={{ color: theme.colors.textPrimary, fontFamily: theme.font.mono, fontSize: 12, whiteSpace: "pre-wrap", lineHeight: 1.5 }}>{row.message_sent}</span>
-                        : <span style={{ color: theme.colors.neutral, fontFamily: theme.font.mono, fontSize: 12, fontStyle: "italic" }}>Mensagem não registrada</span>}
+                        ? <span style={{ color: theme.colors.textPrimary, fontFamily: theme.font.label, fontSize: 12.5, whiteSpace: "pre-wrap", lineHeight: 1.5 }}>{row.message_sent}</span>
+                        : <span style={{ color: theme.colors.neutral, fontFamily: theme.font.label, fontSize: 12.5, fontStyle: "italic" }}>Mensagem não registrada</span>}
                     </td>
                   </tr>
                 )}
