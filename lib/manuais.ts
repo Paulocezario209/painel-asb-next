@@ -156,11 +156,12 @@ export const MANUAIS: Record<string, ManualTela> = {
     oQueE: "Fila de leads qualificados pelo SDR aguardando o vendedor assumir — o ponto mais sensível da esteira.",
     fontes: [
       "Lista: leads com handoff feito e ainda não confirmado pelo vendedor (tempo real).",
+      "Coluna “Agendado para”: dia e hora (BRT) que o lead marcou com o especialista — vem de scheduled_at.",
       "Críticos: esperando há mais de 4 horas.",
       "Agendados Hoje: lead marcou horário com o especialista para hoje.",
     ],
     comoUsar: [
-      "Ordem = mais antigo primeiro; zere os críticos antes de tudo.",
+      "Ordem = por horário AGENDADO (mais cedo primeiro) = prioridade de atendimento; quem não tem agenda vai pro fim. Entre os sem agenda, críticos (>4h) e maior score sobem.",
       "“Confirmar” marca que o vendedor assumiu (para o relógio do SLA).",
       "Volume ≥300kg é conta CUIT — atenção redobrada.",
     ],

@@ -31,7 +31,6 @@ const SEG_LABELS: Record<string, string> = {
 };
 
 const DIAS_PT = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
-const MESES_PT = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function elapsedMinutes(iso: string): number {
@@ -40,8 +39,14 @@ function elapsedMinutes(iso: string): number {
 
 function formatScheduled(iso: string | null): string {
   if (!iso) return "—";
-  const d = new Date(iso);
-  return `${DIAS_PT[d.getDay()]}, ${d.getDate()} ${MESES_PT[d.getMonth()]} ${String(d.getHours()).padStart(2,"0")}h`;
+  // DEBT-308 item 2: "qui, 16/07 às 13h" em BRT fixo (UTC-3, sem DST desde 2019) — desloca e lê
+  // as partes UTC p/ a hora/dia baterem independente do fuso do browser. Mostra min só se ≠ 0 (13h30).
+  const d = new Date(new Date(iso).getTime() - 3 * 3600 * 1000);
+  const dd = String(d.getUTCDate()).padStart(2, "0");
+  const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const hh = String(d.getUTCHours()).padStart(2, "0");
+  const min = d.getUTCMinutes();
+  return `${DIAS_PT[d.getUTCDay()]}, ${dd}/${mm} às ${hh}h${min ? String(min).padStart(2, "0") : ""}`;
 }
 
 function TimeBadge({ handoffAt }: { handoffAt: string }) {
@@ -119,7 +124,10 @@ export function HandoffsTable({ initial, initialFilter }: { initial: Handoff[]; 
           const score = computeLeadScore(h);              // fallback (view = server-only)
           return { ...h, lead_score: score, lead_tier: tierOf(score) };
         })
-        .sort((a, b) => {                                 // mesma ordem do server: críticos→score
+        .sort((a, b) => {                                 // DEBT-308 item 3: agenda ASC (nulls last) → críticos → score
+          const sa = a.scheduled_at ? new Date(a.scheduled_at).getTime() : Infinity;
+          const sb = b.scheduled_at ? new Date(b.scheduled_at).getTime() : Infinity;
+          if (sa !== sb) return sa - sb;                  // mais cedo primeiro; sem agenda vai pro fim
           const ca = new Date(a.handoff_at).getTime() < fourHAgo ? 1 : 0;
           const cb = new Date(b.handoff_at).getTime() < fourHAgo ? 1 : 0;
           if (ca !== cb) return cb - ca;

@@ -57,7 +57,8 @@ export default async function HandoffsPage({ searchParams }: { searchParams?: Pr
   const now      = nowMs;
   const fourHAgo = now - 4 * 60 * 60 * 1000;
 
-  // ETAPA 4: enriquece score (view/fallback) + ordena críticos(>4h) primeiro, depois score DESC
+  // ETAPA 4 + DEBT-308 item 3: enriquece score e ordena por AGENDA (scheduled_at ASC, nulls last) =
+  // prioridade de atendimento (mais cedo primeiro); sem agenda vai pro fim. Empate/tail: críticos(>4h) → score DESC.
   const handoffs = ((raw ?? []) as unknown as Handoff[])
     .map((h) => {
       const fromView = scoreMap[h.phone];
@@ -66,9 +67,12 @@ export default async function HandoffsPage({ searchParams }: { searchParams?: Pr
       return { ...h, lead_score: score, lead_tier: tier };
     })
     .sort((a, b) => {
+      const sa = a.scheduled_at ? new Date(a.scheduled_at).getTime() : Infinity;
+      const sb = b.scheduled_at ? new Date(b.scheduled_at).getTime() : Infinity;
+      if (sa !== sb) return sa - sb;                             // agenda ASC, nulls last
       const critA = new Date(a.handoff_at).getTime() < fourHAgo ? 1 : 0;
       const critB = new Date(b.handoff_at).getTime() < fourHAgo ? 1 : 0;
-      if (critA !== critB) return critB - critA;                 // críticos primeiro
+      if (critA !== critB) return critB - critA;                 // tail sem agenda: críticos primeiro
       return (b.lead_score ?? 0) - (a.lead_score ?? 0);          // depois score DESC
     });
 
