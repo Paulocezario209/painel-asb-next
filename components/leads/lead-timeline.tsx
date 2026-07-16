@@ -10,7 +10,7 @@ const ACTOR_COLORS: Record<string, { color: string; bg: string; border: string }
 const EVENT_LABELS: Record<string, string> = {
   lead_created: "Lead criado",
   qualification_completed: "Qualificacao completa",
-  handoff_sent: "Handoff enviado",
+  handoff_sent: "Agendamento enviado",
   seller_first_response: "Vendedor respondeu",
   escalation_fired: "Escalacao disparada",
   lead_lost: "Marcado como perdido",
@@ -21,7 +21,7 @@ const EVENT_LABELS: Record<string, string> = {
 const STAGE_LABELS: Record<string, string> = {
   lead_novo: "Lead Novo", atendido_sdr: "Atendido SDR",
   qualificacao_inicial: "Qualif. Inicial", lead_qualificado: "Qualificado",
-  handoff: "Handoff", vendedor_assumiu: "Vendedor Assumiu",
+  handoff: "Agendamento", vendedor_assumiu: "Vendedor Assumiu",
   diagnostico_comercial: "Diag. Comercial", proposta_enviada: "Proposta",
   negociacao: "Negociacao", pedido_fechado: "Pedido Fechado",
   lead_perdido: "Perdido",

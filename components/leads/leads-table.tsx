@@ -70,7 +70,7 @@ const TEMP_CFG: Record<string, BadgeCfg> = {
 const STATUS_CFG: Record<string, BadgeCfg> = {
   new:              { label: "Novo",             color: "#8899bb", bg: "rgba(27,42,107,.27)",  border: "#2a2a2a" },
   qualified:        { label: "Qualificado",      color: "#C8102E", bg: "rgba(200,16,46,.13)",  border: "rgba(200,16,46,.5)" },
-  handoff:          { label: "Handoff",          color: "#D4A017", bg: "rgba(212,160,23,.12)", border: "rgba(212,160,23,.45)" },
+  handoff:          { label: "Agendamento",          color: "#D4A017", bg: "rgba(212,160,23,.12)", border: "rgba(212,160,23,.45)" },
   vendedor_assumiu: { label: "Vendedor assumiu", color: "#185FA5", bg: "rgba(24,95,165,.14)",  border: "rgba(24,95,165,.5)" },
   pedido_fechado:   { label: "Pedido fechado",   color: "#22c55e", bg: "rgba(34,197,94,.1)",   border: "rgba(34,197,94,.3)" },
   converted: { label: "Convertido",  color: "#22c55e", bg: "rgba(34,197,94,.1)",   border: "rgba(34,197,94,.3)" },
@@ -313,7 +313,7 @@ export function LeadsTable({ leads: initialLeads, userEmail, initialStatus = "al
 
       {/* ── Camada de cima (cards de lead) — representação ÚNICA da aba Leads ─────
           Reversão Paulo 2026-07-14: restaurado EXATAMENTE o bloco original de cards
-          (a "camada de cima": onde o vendedor confirma handoff, vê a qualificação por
+          (a "camada de cima": onde o vendedor confirma agendamento, vê a qualificação por
           etapas e age); removida a tabela densa de baixo. Só saiu o className
           `asb-mobile-only` para o bloco valer também no desktop. */}
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -367,7 +367,7 @@ export function LeadsTable({ leads: initialLeads, userEmail, initialStatus = "al
                     </button>
                   </Link>
                   {showConfirm && (
-                    <button onClick={() => confirmHandoff(lead.phone)} style={{ background: "transparent", border: "none", color: C.amber, cursor: "pointer", padding: 4 }} title="Confirmar handoff">
+                    <button onClick={() => confirmHandoff(lead.phone)} style={{ background: "transparent", border: "none", color: C.amber, cursor: "pointer", padding: 4 }} title="Confirmar agendamento">
                       <CheckCircle size={16} />
                     </button>
                   )}

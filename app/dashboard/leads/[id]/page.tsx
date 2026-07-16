@@ -183,7 +183,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
       {orqRow && (() => {
         const OLBL: Record<string, string> = {
           INBOUND_SEM_RESPOSTA: "Entrada (Inbound)", QUALIFICACAO_INTERROMPIDA: "Qualificação interrompida",
-          QUALIFICADO_AGUARDANDO_VENDEDOR: "Qualificado · aguard. vendedor", HANDOFF_SEM_CONTATO: "Handoff sem contato",
+          QUALIFICADO_AGUARDANDO_VENDEDOR: "Qualificado · aguard. vendedor", HANDOFF_SEM_CONTATO: "Agendamento sem contato",
           EM_ANDAMENTO: "Em andamento", NEGOCIACAO: "Negociação", PROPOSTA: "Proposta enviada",
           PEDIDO_TESTE: "Pedido teste", GANHO: "Ganho (convertido)", PERDIDO_NURTURE: "Perdido · nutrição",
         };

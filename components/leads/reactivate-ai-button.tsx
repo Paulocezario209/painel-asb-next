@@ -19,7 +19,7 @@ export function ReactivateAiButton({
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  // Visivel apenas se IA esta desligada (lead em handoff humano)
+  // Visivel apenas se IA esta desligada (lead em agendamento humano)
   // e nao esta em estado terminal
   const TERMINAL = ["pedido_fechado", "cliente_ativo", "cliente_recorrente", "lead_perdido"];
   const visible =

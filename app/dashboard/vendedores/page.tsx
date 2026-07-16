@@ -199,14 +199,14 @@ export default async function VendedoresPage() {
           Icon={Target}
           accent={theme.colors.success}
           num={teamWinRate !== null ? theme.colors.success : undefined}
-          note="1º pedido / total handoffs"
+          note="1º pedido / total agendamentos"
         />
         <KpiCard
           label="Lead médio (pipeline)"
           value={teamHotAvg !== null ? `${teamHotAvg.toFixed(0)}/100` : "—"}
           Icon={Flame}
           accent={theme.colors.warning}
-          note="score médio dos leads em handoff"
+          note="score médio dos leads em agendamento"
         />
       </div>
 
@@ -229,7 +229,7 @@ export default async function VendedoresPage() {
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px 20px", marginTop: 16 }}>
                 <div>
-                  <p style={S.label}>Handoffs</p>
+                  <p style={S.label}>Agendamentos</p>
                   <p style={{ ...S.value, fontSize: 22, marginTop: 4 }}>{m.handoffs}</p>
                 </div>
                 <div>
@@ -313,7 +313,7 @@ export default async function VendedoresPage() {
           Icon={waiting.length > 0 ? AlertTriangle : CheckCircle2}
           color={waiting.length > 0 ? "#C8102E" : "#22c55e"}
           title="Leads Aguardando Resposta"
-          desc="Handoffs sem primeira resposta do vendedor"
+          desc="Agendamentos sem primeira resposta do vendedor"
         />
         {waiting.length > 0 ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -343,7 +343,7 @@ export default async function VendedoresPage() {
           </div>
         ) : (
           <p style={{ color: "#22c55e", fontSize: 12, fontFamily: theme.font.label }}>
-            Todos os handoffs respondidos {"\u2713"}
+            Todos os agendamentos respondidos {"\u2713"}
           </p>
         )}
       </div>
@@ -359,7 +359,7 @@ export default async function VendedoresPage() {
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr>
-              {["Vendedor", "Handoffs", "% Resp", "Tempo", "Pipeline", "Conv."].map(h => (
+              {["Vendedor", "Agendamentos", "% Resp", "Tempo", "Pipeline", "Conv."].map(h => (
                 <th key={h} style={{ ...S.label, textAlign: h === "Vendedor" ? "left" : "right", paddingBottom: 8 }}>{h}</th>
               ))}
             </tr>

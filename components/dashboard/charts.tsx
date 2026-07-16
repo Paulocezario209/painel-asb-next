@@ -90,7 +90,7 @@ export function VendorPerformance({ data }: { data: VendorRow[] }) {
         <YAxis tick={axisStyle} axisLine={false} tickLine={false} />
         <Tooltip {...tooltipStyle} />
         <Legend wrapperStyle={{ fontSize: 11.5, fontFamily: SANS, color: TEXT, fontWeight: 600 }} />
-        <Bar dataKey="handoffs"  name="Handoffs"    fill="url(#amberVert)"  radius={[3, 3, 0, 0]} />
+        <Bar dataKey="handoffs"  name="Agendamentos"    fill="url(#amberVert)"  radius={[3, 3, 0, 0]} />
         <Bar dataKey="confirmed" name="Confirmados"  fill="url(#blueVert)"   radius={[3, 3, 0, 0]} />
         <Bar dataKey="converted" name="Convertidos"  fill="url(#redVert)"    radius={[3, 3, 0, 0]} />
       </BarChart>

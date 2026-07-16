@@ -74,7 +74,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   let qTotal = supabase.from("ai_sdr_leads").select("*", { count: "exact", head: true }).eq("is_test", false).or("routing_team.is.null,routing_team.neq.fora_de_rota");  // DEBT-167 4
   if (vend) qTotal = qTotal.eq("routing_team", vend);
   if (mesIni && mesFimEx) qTotal = qTotal.gte("created_at", mesIni).lt("created_at", mesFimEx);
-  // ALERTA — handoff pendente (DEBT-208: definição CANÔNICA via v_handoff_pendentes;
+  // ALERTA — agendamento pendente (DEBT-208: definição CANÔNICA via v_handoff_pendentes;
   // resolver por funnel_stage/confirmar/resposta remove de TODOS os detectores de uma vez)
   let qHandoff = supabase.from("v_handoff_pendentes").select("id, phone, restaurant_name, qual_stage, first_order_at, routing_team, handoff_at, handoff_confirmed, weekly_volume_kg, city, product_groups, human_active, followup_eligible, next_followup_at, horas_desde_handoff");
   if (vend) qHandoff = qHandoff.eq("routing_team", vend);
@@ -131,7 +131,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   );
   const alertFollowupStale = alertFollowupStaleLeads.length;
 
-  // DEBT-208: handoffs de hoje = pendentes canônicos entregues hoje
+  // DEBT-208: agendamentos de hoje = pendentes canônicos entregues hoje
   const alertHandoffsTodayLeads = pend.filter(l =>
     new Date(l.handoff_at as string) >= _todayStart
   );
@@ -213,7 +213,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       chip: trTotal === null ? "no período" : `${trTotal >= 0 ? "+" : ""}${trTotal}%`, chipUp: trTotal === null ? null : trTotal >= 0, note: "vs. período anterior", series: sTotal },
     { label: "Qualificados", value: qualifiedLeads ?? 0, num: "#5B8DEF", accent: "#5B8DEF", Icon: BadgeCheck, href: "/dashboard/hot-leads",
       chip: `${qualPct}%`, chipUp: true, note: "do total", series: sQual },
-    { label: "Handoffs pendentes", value: handoffPending ?? 0, num: "#f59e0b", accent: "#f59e0b", Icon: PhoneCall, href: "/dashboard/handoffs",
+    { label: "Agendamentos pendentes", value: handoffPending ?? 0, num: "#f59e0b", accent: "#f59e0b", Icon: PhoneCall, href: "/dashboard/handoffs",
       chip: "a distribuir", chipUp: null as boolean | null, note: "SLA < 2h", series: sHandoff },
     { label: "Convertidos", value: convertidos, num: "#22c55e", accent: "#22c55e", Icon: Trophy, href: "/dashboard/leads?status=converted",
       chip: `${convPct}%`, chipUp: true, note: "taxa de conversão", series: sConv },
@@ -250,14 +250,14 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                 count: alertTierA,
                 leads: alertTierALeads,
                 label: "lead",
-                desc: "Tier A sem confirmação de handoff há mais de 4h",
+                desc: "Tier A sem confirmação de agendamento há mais de 4h",
                 level: "critical" as const,
               },
               {
                 count: alertMissedHandoff,
                 leads: alertMissedHandoffLeads,
                 label: "lead",
-                desc: "Qualificado (etapa 9) sem handoff disparado — verificar bug",
+                desc: "Qualificado (etapa 9) sem agendamento disparado — verificar bug",
                 level: "critical" as const,
               },
               {
@@ -270,7 +270,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
               {
                 count: alertHandoffsToday,
                 leads: alertHandoffsTodayLeads,
-                label: "handoff",
+                label: "agendamento",
                 desc: "Pendente de confirmação hoje",
                 level: "warn" as const,
               },
@@ -388,10 +388,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             marginBottom: 16,
           }}>
             <p style={{ color: "#FFFFFF", fontSize: 11, fontFamily: theme.font.label, fontWeight: 700 }}>
-              ⚡ {urgentA} lead{urgentA > 1 ? "s" : ""} Tier A aguardando confirmação de handoff
+              ⚡ {urgentA} lead{urgentA > 1 ? "s" : ""} Tier A aguardando confirmação de agendamento
             </p>
             <p style={{ color: "#c0d0e0", fontSize: 10, fontFamily: theme.font.label, marginTop: 2 }}>
-              ação imediata — alto volume, handoff não confirmado
+              ação imediata — alto volume, agendamento não confirmado
             </p>
             {urgentALeads.length > 0 && (
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 6 }}>
@@ -465,7 +465,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
       {/* Vendor */}
       <div className="asb-card" style={{ padding: "20px 24px" }}>
-        <SectionHead Icon={BarChart3} color="#f59e0b" title="Performance por vendedor" desc="Handoffs · confirmados · convertidos" />
+        <SectionHead Icon={BarChart3} color="#f59e0b" title="Performance por vendedor" desc="Agendamentos · confirmados · convertidos" />
         <VendorPerformance data={vendorData} />
       </div>
 

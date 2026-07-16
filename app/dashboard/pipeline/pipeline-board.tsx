@@ -35,7 +35,7 @@ export type PipelineCtx = { isGestor: boolean; routing_team: string | null; canM
 // Rótulos de COLUNA (view do board — "Convertido" é projeção, ver lib/funnel/stages).
 // Cores: fonte única STAGE_COLORS (DEBT-157).
 const COL_LABEL: Record<string, string> = {
-  handoff: "Handoff", lead_em_andamento: "Em Andamento", negociacao: "Negociação",
+  handoff: "Agendamento", lead_em_andamento: "Em Andamento", negociacao: "Negociação",
   proposta_enviada: "Proposta", pedido_teste: "Pedido Teste",
   pedido_fechado: "Convertido", lead_perdido: "Perdido",
 };

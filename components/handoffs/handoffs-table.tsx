@@ -86,7 +86,7 @@ export function HandoffsTable({ initial, initialFilter }: { initial: Handoff[]; 
   const [errors, setErrors]       = useState<Record<string, string>>({});
   const [live, setLive]           = useState(false);   // ETAPA7: canal Realtime conectado
 
-  // ETAPA7 — Supabase Realtime: detecta novo/alterado handoff e re-busca a lista
+  // ETAPA7 — Supabase Realtime: detecta novo/alterado agendamento e re-busca a lista
   // completa (refetch é mais seguro que mutar o array). ANON key (RLS authenticated).
   // O fetch inicial continua no server component pai; aqui só reagimos a mudanças.
   useEffect(() => {

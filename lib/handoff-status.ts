@@ -46,7 +46,7 @@ export function handoffSituacao(
     if (delta < LATE_MIN)  return { kind: "atrasado",   label: `Atrasado ${fmtDur(delta)}`, ...C.red, pulse: false, overdue: true };
     return { kind: "vencido", label: `Vencido ${fmtDur(delta)}`, ...C.red, pulse: true, overdue: true };
   }
-  // Legado sem agenda: SLA por tempo desde o handoff (fallback da regra antiga).
+  // Legado sem agenda: SLA por tempo desde o agendamento (fallback da regra antiga).
   const mins = Math.floor((nowMs - new Date(handoffAt).getTime()) / 60000);
   if (mins < 60)  return { kind: "sem_agenda", label: fmtDur(mins), ...C.green, pulse: false, overdue: false };
   if (mins < 240) return { kind: "sem_agenda", label: fmtDur(mins), ...C.amber, pulse: false, overdue: false };

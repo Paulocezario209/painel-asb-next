@@ -20,7 +20,7 @@ export const MANUAIS: Record<string, ManualTela> = {
     oQueE: "A jornada completa do lead: da chegada no SDR até virar cliente (1ª compra). Mostra onde cada lead está AGORA e a conversão da coorte do mês.",
     fontes: [
       "Cone de 4 fases e KPIs: etapas (funnel_stage) de todos os leads reais (sem testes, sem fora de rota).",
-      "Conversão por marcos: função no banco (criados → qualificados → handoff → assumidos → pedidos) do mês/vendedor filtrado.",
+      "Conversão por marcos: função no banco (criados → qualificados → agendamento → assumidos → pedidos) do mês/vendedor filtrado.",
       "Camada Cliente e Recuperados: carteira real do ARES (v_carteira_360) — mesma base das telas Clientes/Carteira.",
       "Convertido = fechou pedido OU faturou no ARES (mesmo sem o vendedor arrastar o card).",
     ],
@@ -92,7 +92,7 @@ export const MANUAIS: Record<string, ManualTela> = {
     comoUsar: [
       "Prioridades do Dia ordena o pior primeiro — é a lista de cobrança da manhã.",
       "Projeção = ritmo atual (run-rate §5) projetado até o fim do mês.",
-      "Órfãos de atendimento: leads com handoff sem resposta do vendedor — clique para abrir.",
+      "Órfãos de atendimento: leads com agendamento sem resposta do vendedor — clique para abrir.",
     ],
   },
   "/dashboard/minha-comissao": {
@@ -155,7 +155,7 @@ export const MANUAIS: Record<string, ManualTela> = {
     titulo: "Agendamentos",
     oQueE: "Fila de leads qualificados pelo SDR, com horário agendado, aguardando o vendedor assumir — o ponto mais sensível da esteira.",
     fontes: [
-      "Lista: leads com handoff feito e ainda não confirmado pelo vendedor (tempo real).",
+      "Lista: leads com agendamento feito e ainda não confirmado pelo vendedor (tempo real).",
       "Coluna “Agendado para”: dia e hora (BRT) que o lead marcou com o especialista — vem de scheduled_at.",
       "Coluna “Situação”: ancorada no horário AGENDADO — Agendado (azul, no futuro) → No horário (âmbar, até 30min depois) → Atrasado / Vencido (vermelho, só DEPOIS do horário passar). Agendado pro futuro NUNCA aparece como vencido.",
       "Vencidos: leads que JÁ passaram do horário agendado (não é mais “esperando há X horas desde a criação”).",
@@ -197,11 +197,11 @@ export const MANUAIS: Record<string, ManualTela> = {
     titulo: "Vendedores",
     oQueE: "Performance comercial pós-handoff por vendedor: resposta, tempo, pipeline em mãos e conversão.",
     fontes: [
-      "Tudo vem dos leads (CRM): handoffs recebidos, % respondido, tempo médio de 1ª resposta, convertidos (1ª compra), win rate.",
+      "Tudo vem dos leads (CRM): agendamentos recebidos, % respondido, tempo médio de 1ª resposta, convertidos (1ª compra), win rate.",
       "Pipeline (R$): volume dos leads em aberto × R$/kg médio.",
     ],
     comoUsar: [
-      "Win rate = convertidos ÷ handoffs — compare vendedores no mesmo período.",
+      "Win rate = convertidos ÷ agendamentos — compare vendedores no mesmo período.",
       "“Aguardando resposta” é a fila de cobrança: lead esperando o vendedor falar.",
     ],
   },
@@ -268,7 +268,7 @@ export const MANUAIS: Record<string, ManualTela> = {
   },
   "/dashboard": {
     titulo: "Dashboard",
-    oQueE: "A página inicial: pulso geral do mês — leads, qualificados, handoffs, convertidos, alertas e onde focar agora.",
+    oQueE: "A página inicial: pulso geral do mês — leads, qualificados, agendamentos, convertidos, alertas e onde focar agora.",
     fontes: [
       "KPIs e alertas: base de leads reais do mês (sem testes, sem fora de rota).",
       "Top 10 clientes do mês: faturado real ARES.",
@@ -423,9 +423,9 @@ export const MANUAIS: Record<string, ManualTela> = {
   },
   "/marketing/funil-cac": {
     titulo: "Marketing · Funil & CAC",
-    oQueE: "O funil por canal (lead → qualificado → handoff → convertido) com gasto, CAC por lead e custo por conversão de cada canal.",
+    oQueE: "O funil por canal (lead → qualificado → agendamento → convertido) com gasto, CAC por lead e custo por conversão de cada canal.",
     fontes: [
-      "Funil: v_funil_por_canal — qualificado = escada completa (qual_stage ≥ 7), handoff = vendedor respondeu, convertido = 1º pedido.",
+      "Funil: v_funil_por_canal — qualificado = escada completa (qual_stage ≥ 7), agendamento = vendedor respondeu, convertido = 1º pedido.",
       "Gasto/CAC/Custo por conversão: v_cac_por_canal. Conversão mensal: v_cac_mensal_canal.",
     ],
     comoUsar: [

@@ -73,7 +73,7 @@ export const STAGE_LABELS: Record<string, string> = {
   produto_definido:       "Produto Definido",      // legacy → aliased (só timeline)
   volume_definido:        "Volume Definido",       // legacy → aliased (só timeline)
   lead_qualificado:       "Lead Qualificado",
-  handoff:                "Handoff",
+  handoff:                "Agendamento",
   vendedor_assumiu:       "Vendedor Assumiu",      // legacy → aliased (só timeline)
   diagnostico_comercial:  "Diag. Comercial",       // legacy → aliased (só timeline)
   lead_em_andamento:      "Lead em Andamento",
@@ -114,7 +114,7 @@ export const STAGE_COLORS: Record<string, string> = {
 };
 
 // ── Pipeline (board Kanban do vendedor) ──────────────────────────────────────
-// Colunas na ordem do fluxo. handoff = origem (não-destino de drag).
+// Colunas na ordem do fluxo. agendamento = origem (não-destino de drag).
 export const PIPELINE_STAGES = [
   "handoff", "lead_em_andamento", "negociacao", "proposta_enviada",
   "pedido_teste", "pedido_fechado", "lead_perdido",
