@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { VENDOR_LABELS, VENDOR_ORDER } from "@/lib/vendor-labels";
 
-const mono = "'Courier New', monospace";
+const mono = "var(--font-geist-sans), system-ui, sans-serif";
 const GREEN = "#2ea043";
 
 // showSemTime (opt-in, default off): acrescenta "Sem time" (?vendedor=none → routing_team null/'').
@@ -60,7 +60,7 @@ export function DashboardFilters({ showMonth = true, showVendedor = true, showSe
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
       {showSearch && (
-        <div style={{ display: "flex", alignItems: "center", gap: 6, background: "#0d1117", border: `1px solid ${qLocal ? GREEN : "#2a2a2a"}`, borderRadius: 5, padding: "4px 9px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, background: "var(--asb-card-hi)", border: `1px solid ${qLocal ? GREEN : "rgba(255,255,255,.14)"}`, borderRadius: 5, padding: "4px 9px" }}>
           <span style={{ color: qLocal ? GREEN : "#c0d0e0", fontSize: 12 }} aria-hidden>{"⌕"}</span>
           <input
             type="search"
@@ -82,7 +82,7 @@ export function DashboardFilters({ showMonth = true, showVendedor = true, showSe
             value={mesLocal}
             max={maxMonth}
             onChange={(e) => { setMesLocal(e.target.value); update("mes", e.target.value); }}
-            style={{ background: "#0d1117", border: "1px solid #2a2a2a", borderRadius: 5, padding: "5px 8px", color: "#c8d8e8", fontSize: 11, fontFamily: mono, colorScheme: "dark" }}
+            style={{ background: "var(--asb-card-hi)", border: "1px solid #2a2a2a", borderRadius: 5, padding: "5px 8px", color: "#c8d8e8", fontSize: 11, fontFamily: mono, colorScheme: "dark" }}
           />
           {(defaultMes ? (mesUrl && mesUrl !== defaultMes) : mesLocal) && (
             <button onClick={() => { setMesLocal(defaultMes ?? ""); update("mes", ""); }} style={{ background: "none", border: "none", color: "#c0d0e0", fontSize: 10, fontFamily: mono, cursor: "pointer" }}>
@@ -102,12 +102,12 @@ export function DashboardFilters({ showMonth = true, showVendedor = true, showSe
                 key={v || "todos"}
                 onClick={() => update("vendedor", v)}
                 style={{
-                  background: active ? `rgba(46,160,67,.16)` : "transparent",
-                  border: `1px solid ${active ? GREEN : "#2a2a2a"}`,
-                  borderRadius: 5, padding: "5px 11px",
+                  background: active ? "#C8102E" : "transparent",
+                  border: `1px solid ${active ? "#C8102E" : "rgba(255,255,255,.14)"}`,
+                  borderRadius: 8, padding: "6px 13px",
                   color: active ? "#fff" : "#c0d0e0",
-                  fontSize: 10, fontFamily: mono, letterSpacing: ".06em", cursor: "pointer",
-                  fontWeight: active ? 700 : 400,
+                  fontSize: 12, fontFamily: mono, cursor: "pointer",
+                  fontWeight: active ? 700 : 500,
                 }}
               >
                 {label}

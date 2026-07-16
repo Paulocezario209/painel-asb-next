@@ -11,7 +11,7 @@ import { usePathname } from "next/navigation";
 import { HelpCircle, X } from "lucide-react";
 import { manualForPath } from "@/lib/manuais";
 
-const mono = "'Courier New', monospace";
+const mono = "var(--font-geist-sans), system-ui, sans-serif";
 
 export function ManualTelaButton() {
   const pathname = usePathname();
@@ -26,19 +26,19 @@ export function ManualTelaButton() {
         title={`Manual · ${manual.titulo}`}
         aria-label="Manual da tela"
         style={{
-          background: "transparent", border: "1px solid #1B2A6B", color: "#c0d0e0",
+          background: "var(--asb-shell)", border: "1px solid var(--asb-shell-border)", color: "#565A6B",
           fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase",
-          padding: "4px 8px", borderRadius: 2, cursor: "pointer",
+          padding: "5px 10px", borderRadius: 8, cursor: "pointer",
           fontFamily: mono, transition: "all .15s",
           display: "inline-flex", alignItems: "center", gap: 5,
         }}
         onMouseEnter={(e) => {
-          (e.currentTarget as HTMLButtonElement).style.borderColor = "#185FA5";
-          (e.currentTarget as HTMLButtonElement).style.color = "#6390f5";
+          (e.currentTarget as HTMLButtonElement).style.borderColor = "#1B2A6B";
+          (e.currentTarget as HTMLButtonElement).style.color = "#1B2A6B";
         }}
         onMouseLeave={(e) => {
-          (e.currentTarget as HTMLButtonElement).style.borderColor = "#1B2A6B";
-          (e.currentTarget as HTMLButtonElement).style.color = "#c0d0e0";
+          (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--asb-shell-border)";
+          (e.currentTarget as HTMLButtonElement).style.color = "#565A6B";
         }}
       >
         <HelpCircle size={12} />
