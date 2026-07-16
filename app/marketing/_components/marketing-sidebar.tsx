@@ -7,7 +7,6 @@ import { LayoutDashboard, CalendarDays, Radar, Megaphone, DollarSign, Wallet } f
 
 const SANS = "var(--font-geist-sans), system-ui, sans-serif";
 const RED = "#FF3B57";
-const RED_BRAND = "#C8102E";
 
 const navItems = [
   { href: "/marketing/overview",   label: "Overview",         icon: LayoutDashboard },
@@ -28,7 +27,7 @@ export function MarketingSidebar({ isOpen = false, onClose }: { isOpen?: boolean
       style={{ background: SB.bg, borderRight: `1px solid ${SB.border}`, overflowY: "auto" }}
     >
       <Link href="/inicio" title="Voltar à frente institucional" style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none", padding: "18px 14px 16px", borderBottom: `1px solid ${SB.border}` }}>
-        <div style={{ width: 42, height: 42, borderRadius: 12, flexShrink: 0, background: `linear-gradient(140deg, ${RED} 0%, ${RED_BRAND} 45%, #1B2A6B 100%)`, display: "grid", placeItems: "center", color: "#fff", fontWeight: 850, fontSize: 15, letterSpacing: ".5px", boxShadow: "0 8px 18px -8px rgba(200,16,46,.5)" }}>ASB</div>
+        <div style={{ width: 42, height: 42, borderRadius: 12, flexShrink: 0, background: "linear-gradient(140deg, #E01235 0%, #C8102E 45%, #1B2A6B 100%)", display: "grid", placeItems: "center", color: "#fff", fontWeight: 850, fontSize: 15, letterSpacing: ".5px", boxShadow: "0 8px 18px -8px rgba(200,16,46,.55)" }}>ASB</div>
         <div style={{ lineHeight: 1.15 }}>
           <div style={{ fontWeight: 750, fontSize: 15, color: "#fff", fontFamily: SANS, letterSpacing: "-.01em" }}>American Steak</div>
           <div style={{ fontSize: 10.5, color: "#8b93a7", fontWeight: 600, fontFamily: SANS, marginTop: 1 }}>Marketing</div>

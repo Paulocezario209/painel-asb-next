@@ -1,7 +1,9 @@
 "use client";
 // Etapa 2 item 5: relatório mensal de insumos — READ-ONLY (resumo das views + apontamentos automáticos).
 // Sem persistência/tabela. Montado em 2 lugares (Meses 2026 + Gerencial) com a MESMA lógica.
+import { FileText } from "lucide-react";
 import { C, sCard, sLabel } from "../lib/ui";
+import { StatTile, SectionHead } from "@/app/dashboard/lib/ui";
 import { theme } from "@/lib/theme";
 import { brl, num } from "../lib/formatadores";
 import { CAT_RECORTE, CAT_GORDURA, type InsumoDiario, type InsumoComparativo } from "../lib/storage-supabase";
@@ -28,19 +30,13 @@ export function RelatorioInsumos({ mesLabel, diario, comparativo }: { mesLabel: 
   if (pctMedio != null && pctMedio >= 6 && pctMedio <= 14 && !diasAlto.length && !diasBaixo.length) apont.push({ tipo: "positivo", txt: `Mês dentro da faixa ideal — % médio ${pctMedio.toFixed(1)}%.` });
 
   const card = (label: string, valor: string, cor: string, sub?: string) => (
-    <div style={{ ...sCard, padding: "12px 14px" }}>
-      <p style={{ ...sLabel, marginBottom: 4 }}>{label}</p>
-      <p style={{ fontSize: 18, color: cor, fontWeight: 700, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" }}>{valor}</p>
-      {sub && <p style={{ fontSize: 9, color: C.mut2, fontFamily: theme.font.label, marginTop: 2 }}>{sub}</p>}
-    </div>
+    <StatTile label={label} value={valor} num={cor} sub={sub} />
   );
   const corPct = pctMedio == null ? C.mut : pctMedio < 6 ? C.amarelo : pctMedio > 14 ? C.vermelho : C.verde2;
 
   return (
     <div style={{ ...sCard, padding: 16 }}>
-      <p style={{ color: C.branco, fontSize: 12, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 12 }}>
-        Relatório de Insumos — {mesLabel}
-      </p>
+      <SectionHead Icon={FileText} color={C.azul} title={`Relatório de insumos — ${mesLabel}`} desc="Recorte 80/20 · gordura · % e apontamentos do mês" />
       {diario.length === 0 ? (
         <p style={{ color: C.mut, fontSize: 11, fontFamily: theme.font.label }}>sem lançamentos de insumo no mês.</p>
       ) : (

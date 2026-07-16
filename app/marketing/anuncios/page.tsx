@@ -2,6 +2,7 @@ import { theme } from "@/lib/theme";
 import { createClient } from "@/lib/supabase/server";
 import { AnunciosClient, type RankRow, type SparkRow } from "./anuncios-client";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
+import { PageHead } from "@/app/dashboard/lib/ui";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
@@ -44,17 +45,13 @@ export default async function AnunciosPage() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <div>
-        <h1 style={{ color: "var(--asb-page-ink)", fontSize: 20, fontWeight: 800, fontFamily: theme.font.label, letterSpacing: "-.01em", textTransform: "none", marginBottom: 4 }}>
-          Anúncios
-        </h1>
-        <p style={{ color: "var(--asb-page-ink2)", fontSize: 11, fontFamily: theme.font.label }}>
-          Ranking de criativos · gasto · leads · CPL · ROAS · tendência 7d (Meta Ads)
-        </p>
-      </div>
+      <PageHead
+        title="Anúncios"
+        desc="Ranking de criativos · gasto · leads · CPL · ROAS · tendência 7d (Meta Ads)"
+      />
 
       {erro && (
-        <div style={{ background: "#1a1a1a", border: "1px solid #C8102E", borderRadius: 6, padding: 16, color: "#C8102E", fontSize: 11, fontFamily: theme.font.label }}>
+        <div style={{ background: "var(--asb-card)", border: "1px solid #C8102E", borderRadius: 6, padding: 16, color: "#C8102E", fontSize: 11, fontFamily: theme.font.label }}>
           View <code>v_ranking_criativo</code> indisponível. {erro}
         </div>
       )}

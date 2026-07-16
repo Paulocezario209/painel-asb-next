@@ -6,6 +6,9 @@ import {
 } from "recharts";
 import { FunnelVisual, type FunnelStage } from "@/components/dashboard/funnel-visual";
 import { theme } from "@/lib/theme";
+import { Filter as FilterIcon, BarChart3, TrendingUp } from "lucide-react";
+import { SectionHead, StatTile } from "@/app/dashboard/lib/ui";
+import { S } from "@/app/dashboard/lib/dashboard-tokens";
 import { GREEN, YELLOW, MUT, GRID, fmtBRLc, fmtMes, tooltipStyle, axisStyle, th, td } from "@/lib/marketing/ui";
 
 export type FunilRow = {
@@ -63,11 +66,17 @@ export function FunilCacClient({ funil, mensal, cac }: { funil: FunilRow[]; mens
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+      {/* KPIs do funil agregado — stat compactos canônicos (linguagem do Dashboard) */}
+      <div className="asb-grid-kpi">
+        <StatTile label="Leads" value={agg.leads} accent="#8bb4ff" num="#8bb4ff" sub="Total atribuído" />
+        <StatTile label="Qualificados" value={agg.qualificados} accent={theme.colors.chartNavyLight} num={theme.colors.chartNavyLight} sub="qual_stage ≥ 7" />
+        <StatTile label="Handoffs" value={agg.handoffs} accent={YELLOW} num={YELLOW} sub="Entregues ao vendedor" />
+        <StatTile label="Convertidos" value={agg.convertidos} accent={GREEN} num={GREEN} sub="Primeiro pedido" />
+      </div>
+
       {/* FIX2: Funil visual (Recharts FunnelChart) — afunila topo→fundo, count nos labels */}
-      <div style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8, padding: 16 }}>
-        <p style={{ color: "#FFFFFF", fontSize: 11, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 14 }}>
-          Funil de conversão (todos os canais)
-        </p>
+      <div style={{ ...S.card, padding: "20px 24px" }}>
+        <SectionHead Icon={FilterIcon} color="#8bb4ff" title="Funil de conversão" desc="Todos os canais" />
         {agg.leads === 0 ? (
           <p style={{ color: MUT, fontSize: 11, fontFamily: theme.font.label, textAlign: "center", padding: 24 }}>
             Sem leads atribuídos ainda (captura desde 02/06).
@@ -83,16 +92,14 @@ export function FunilCacClient({ funil, mensal, cac }: { funil: FunilRow[]; mens
       </div>
 
       {/* Breakdown por canal */}
-      <div style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8, padding: 16, overflowX: "auto" }}>
-        <p style={{ color: "#FFFFFF", fontSize: 11, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 12 }}>
-          Por canal
-        </p>
+      <div style={{ ...S.card, padding: "20px 24px", overflowX: "auto" }}>
+        <SectionHead Icon={BarChart3} color="#534AB7" title="Por canal" desc="Leads, qualificação, handoff, conversão e CAC" />
         {funil.length === 0 ? (
           <p style={{ color: MUT, fontSize: 11, fontFamily: theme.font.label, textAlign: "center", padding: 16 }}>Sem dados.</p>
         ) : (
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12, fontFamily: theme.font.num }}>
             <thead>
-              <tr style={{ borderBottom: "1px solid #2a2a2a" }}>
+              <tr style={{ borderBottom: "1px solid var(--asb-border)" }}>
                 <th style={{ ...th, textAlign: "left" }}>Canal</th>
                 <th style={th}>Leads</th>
                 <th style={th}>Qualif.</th>
@@ -110,8 +117,8 @@ export function FunilCacClient({ funil, mensal, cac }: { funil: FunilRow[]; mens
               {[...funil].sort((a, b) => Number(b.leads_total) - Number(a.leads_total)).map(f => {
                 const c = cacPorCanal.get(f.canal);
                 return (
-                <tr key={f.canal} style={{ borderTop: "1px solid #2a2a2a" }}>
-                  <td style={{ ...td, color: "#FFFFFF", textTransform: "uppercase" }}>{f.canal}</td>
+                <tr key={f.canal} style={{ borderTop: "1px solid var(--asb-border)" }}>
+                  <td style={{ ...td, color: "#FFFFFF", fontFamily: theme.font.label, textTransform: "uppercase" }}>{f.canal}</td>
                   <td style={{ ...td, textAlign: "center" }}>{f.leads_total}</td>
                   <td style={{ ...td, textAlign: "center", color: theme.colors.chartNavyLight }}>{f.qualificados_real}</td>
                   <td style={{ ...td, textAlign: "center", color: YELLOW }}>{f.handoffs}</td>
@@ -130,10 +137,8 @@ export function FunilCacClient({ funil, mensal, cac }: { funil: FunilRow[]; mens
       </div>
 
       {/* Linha: conversão mensal */}
-      <div style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8, padding: 16 }}>
-        <p style={{ color: "#FFFFFF", fontSize: 11, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 12 }}>
-          Taxa de conversão — evolução mensal
-        </p>
+      <div style={{ ...S.card, padding: "20px 24px" }}>
+        <SectionHead Icon={TrendingUp} color={GREEN} title="Taxa de conversão" desc="Evolução mensal" />
         {!temConv ? (
           <p style={{ color: MUT, fontSize: 11, fontFamily: theme.font.label, textAlign: "center", padding: 30 }}>
             Sem conversão mensal ainda (leads atribuídos só desde 02/06).

@@ -7,8 +7,8 @@ import { Search, X, Send, Loader2 } from "lucide-react";
 
 import { theme } from "@/lib/theme";
 const GREEN = "#2ea043";
-const BG = "#0d1117";
-const BORDER = "#1e2a35";
+const BG = "var(--asb-card)";
+const BORDER = "var(--asb-border)";
 const MUTED = "#c0d0e0";
 
 type Cotacao = { proteina: string; valor: number; unidade: string; variacao_pct: number | null };
@@ -175,7 +175,7 @@ export default function MercadoChat({ cotacoes }: { cotacoes: Cotacao[] }) {
               onChange={(e) => setQuestion(e.target.value)}
               placeholder="Pergunte sobre o mercado…"
               disabled={loading}
-              style={{ flex: 1, background: "#080b14", border: `1px solid ${BORDER}`, borderRadius: 6, padding: "8px 10px", color: "#fff", fontSize: 11.5, fontFamily: theme.font.label, outline: "none" }}
+              style={{ flex: 1, background: "var(--asb-card-hi)", border: `1px solid ${BORDER}`, borderRadius: 6, padding: "8px 10px", color: "#fff", fontSize: 11.5, fontFamily: theme.font.label, outline: "none" }}
             />
             <button type="submit" disabled={loading || !question.trim()} aria-label="Enviar"
               style={{ width: 38, background: question.trim() && !loading ? GREEN : BORDER, border: "none", borderRadius: 6, cursor: loading || !question.trim() ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>

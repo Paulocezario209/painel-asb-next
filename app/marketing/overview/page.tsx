@@ -2,6 +2,8 @@ import { theme } from "@/lib/theme";
 import { createClient } from "@/lib/supabase/server";
 import { OverviewClient, type CacMensalRow, type RankRow, type AlertaRow } from "./overview-client";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
+import { PageHead } from "@/app/dashboard/lib/ui";
+import { S } from "@/app/dashboard/lib/dashboard-tokens";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
@@ -56,17 +58,13 @@ export default async function OverviewPage() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <div>
-        <h1 style={{ color: "var(--asb-page-ink)", fontSize: 20, fontWeight: 800, fontFamily: theme.font.label, letterSpacing: "-.01em", textTransform: "none", marginBottom: 4 }}>
-          Overview
-        </h1>
-        <p style={{ color: "var(--asb-page-ink2)", fontSize: 11, fontFamily: theme.font.label }}>
-          Investimento · CAC · ROAS · funil · ranking de criativos (Meta Ads)
-        </p>
-      </div>
+      <PageHead
+        title="Overview"
+        desc="Investimento · CAC · ROAS · funil · ranking de criativos (Meta Ads)"
+      />
 
       {erro && (
-        <div style={{ background: "#1a1a1a", border: "1px solid #C8102E", borderRadius: 6, padding: 16, color: "#C8102E", fontSize: 11, fontFamily: theme.font.label }}>
+        <div style={{ ...S.card, borderColor: "#C8102E", padding: 16, color: "#C8102E", fontSize: 12, fontFamily: theme.font.label }}>
           Views de marketing indisponíveis — conferir aplicação das migrations. {erro}
         </div>
       )}

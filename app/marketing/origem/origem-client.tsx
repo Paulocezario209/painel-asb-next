@@ -5,6 +5,9 @@ import {
   ResponsiveContainer, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
 } from "recharts";
 import { theme } from "@/lib/theme";
+import { BarChart3, TrendingUp } from "lucide-react";
+import { SectionHead } from "@/app/dashboard/lib/ui";
+import { S } from "@/app/dashboard/lib/dashboard-tokens";
 import {
   GREEN, YELLOW, MUT, GRID, CANAL_COR, ordemCanal,
   fmtBRLc, fmtMes, tooltipStyle, axisStyle,
@@ -73,7 +76,7 @@ export function OrigemClient({ canais, mensal }: { canais: CanalConsolidado[]; m
         ) : cards.map(c => {
           const cor = CANAL_COR[c.canal] ?? MUT;
           return (
-            <div key={c.canal} style={{ background: "#1a1a1a", border: `1px solid #2a2a2a`, borderLeft: `3px solid ${cor}`, borderRadius: 8, padding: 16 }}>
+            <div key={c.canal} style={{ ...S.card, borderLeft: `3px solid ${cor}`, padding: 16 }}>
               <p style={{ color: cor, fontSize: 12, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".06em", textTransform: "uppercase", marginBottom: 12 }}>{c.canal}</p>
               <Linha label="Gasto" valor={fmtBRLc(Number(c.gasto_total ?? 0))} cor={YELLOW} />
               <Linha label="Leads" valor={String(c.leads ?? 0)} cor="#c8d8e8" />
@@ -85,10 +88,8 @@ export function OrigemClient({ canais, mensal }: { canais: CanalConsolidado[]; m
       </div>
 
       {/* Barras: gasto mensal por canal (visível mesmo sem CAC) */}
-      <div style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8, padding: 16 }}>
-        <p style={{ color: "#FFFFFF", fontSize: 11, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 12 }}>
-          Gasto mensal por canal
-        </p>
+      <div style={{ ...S.card, padding: "20px 24px" }}>
+        <SectionHead Icon={BarChart3} color={YELLOW} title="Gasto Mensal por Canal" desc="Investimento por canal de aquisição, mês a mês" />
         {!temGasto ? (
           <p style={{ color: MUT, fontSize: 11, fontFamily: theme.font.label, textAlign: "center", padding: 30 }}>Sem gasto registrado.</p>
         ) : (
@@ -108,10 +109,8 @@ export function OrigemClient({ canais, mensal }: { canais: CanalConsolidado[]; m
       </div>
 
       {/* Linha: CAC por canal mês a mês */}
-      <div style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8, padding: 16 }}>
-        <p style={{ color: "#FFFFFF", fontSize: 11, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 12 }}>
-          CAC por canal — evolução mensal
-        </p>
+      <div style={{ ...S.card, padding: "20px 24px" }}>
+        <SectionHead Icon={TrendingUp} color={GREEN} title="CAC por Canal" desc="Custo de aquisição por lead — evolução mensal" />
         {lineData.length === 0 || canaisComCac.length === 0 || mesesComCac < 2 ? (
           <p style={{ color: MUT, fontSize: 11, fontFamily: theme.font.label, textAlign: "center", padding: 30 }}>
             Evolução mensal aparece com ≥2 meses de CAC válido (atribuição só desde 02/06).

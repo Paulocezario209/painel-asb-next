@@ -1,7 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
 import { ResponsiveContainer, ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
+import { FileText, ClipboardCheck } from "lucide-react";
 import { C, sCard, sLabel } from "../lib/ui";
+import { StatTile, SectionHead } from "@/app/dashboard/lib/ui";
 import { theme } from "@/lib/theme";
 import { brl, num } from "../lib/formatadores";
 
@@ -32,16 +34,13 @@ export function AbaRelatorio({ ano, mes }: { ano: number; mes: number }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <p style={{ color: C.branco, fontSize: 13, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".08em", textTransform: "uppercase" }}>Relatório {MESES[d.mes]}/{d.ano}</p>
+      <SectionHead Icon={FileText} color={C.azul} title={`Relatório ${MESES[d.mes]}/${d.ano}`} desc="Composição de custo, detalhamento diário e apontamentos" />
 
       {/* 4 cards composição */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: 10 }}>
         {d.composicao.map((c) => (
-          <div key={c.nome} style={{ ...sCard, padding: "12px 14px", borderLeft: `3px solid ${c.cor}` }}>
-            <p style={{ ...sLabel, marginBottom: 4 }}>{c.nome}</p>
-            <p style={{ fontSize: 18, color: c.cor, fontWeight: 700, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" }}>{brl(c.valor)}</p>
-            <p style={{ fontSize: 9, color: C.mut, fontFamily: theme.font.label }}>{pct(c.valor)}% do total{c.horas != null ? ` · ${num(c.horas, 1)}h · R$ ${(c.custo_hora ?? 0).toFixed(2)}/h` : ""}</p>
-          </div>
+          <StatTile key={c.nome} label={c.nome} value={brl(c.valor)} num={c.cor} accent={c.cor}
+            sub={`${pct(c.valor)}% do total${c.horas != null ? ` · ${num(c.horas, 1)}h · R$ ${(c.custo_hora ?? 0).toFixed(2)}/h` : ""}`} />
         ))}
       </div>
 
@@ -68,7 +67,7 @@ export function AbaRelatorio({ ano, mes }: { ano: number; mes: number }) {
           <thead><tr><th style={{ ...th, textAlign: "left" }}>Data</th><th style={th}>Kg</th><th style={th}>MP</th><th style={th}>Moag.</th><th style={th}>Model.</th><th style={th}>Embal.</th><th style={th}>Total</th><th style={th}>R$/Kg</th></tr></thead>
           <tbody>
             {d.dias.map((x) => (
-              <tr key={x.data} style={{ borderBottom: "1px solid #0b0f1d" }}>
+              <tr key={x.data} style={{ borderBottom: `1px solid ${C.borda}` }}>
                 <td style={{ ...td, textAlign: "left", color: C.branco }}>{x.data.slice(5)}</td>
                 <td style={td}>{num(x.kg, 1)}</td><td style={td}>{brl(x.mp)}</td><td style={td}>{brl(x.moagem)}</td><td style={td}>{brl(x.modelagem)}</td><td style={td}>{brl(x.embalamento)}</td>
                 <td style={td}>{brl(x.total)}</td><td style={{ ...td, fontWeight: 700, color: C.texto }}>{x.custo_kg != null ? brl(x.custo_kg) : "—"}</td>
@@ -102,13 +101,13 @@ export function AbaRelatorio({ ano, mes }: { ano: number; mes: number }) {
       {/* 9 KPIs */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 8 }}>
         {[["MP/Kg", brl(k.mp_kg)], ["Moagem/Kg", brl(k.moagem_kg)], ["Model./Kg", brl(k.modelagem_kg)], ["Embal./Kg", brl(k.embalamento_kg)], ["Total/Kg", brl(k.total_kg)], ["H Moagem", `${num(k.h_moagem, 1)}h`], ["H Model.", `${num(k.h_modelagem, 1)}h`], ["H Embal.", `${num(k.h_embalamento, 1)}h`], ["OPs / Kg-dia", `${k.ops} / ${num(k.kg_dia, 0)}`]].map(([a, b]) => (
-          <div key={a} style={{ background: C.card2, borderRadius: 4, padding: "8px 10px" }}><p style={{ fontSize: 8, color: C.mut2, fontFamily: theme.font.label, textTransform: "uppercase" }}>{a}</p><p style={{ fontSize: 13, color: C.texto, fontFamily: theme.font.label, fontWeight: 700 }}>{b}</p></div>
+          <div key={a} style={{ background: C.card2, borderRadius: 4, padding: "8px 10px" }}><p style={{ fontSize: 8, color: C.mut2, fontFamily: theme.font.label, textTransform: "uppercase", letterSpacing: ".06em" }}>{a}</p><p style={{ fontSize: 13, color: C.texto, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", fontWeight: 700 }}>{b}</p></div>
         ))}
       </div>
 
       {/* Apontamentos */}
       <div style={{ ...sCard, padding: 16 }}>
-        <p style={{ color: C.branco, fontSize: 12, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 12 }}>Apontamentos Fora do Padrão — Melhoria Contínua</p>
+        <SectionHead Icon={ClipboardCheck} color={C.amarelo} title="Apontamentos fora do padrão" desc="Melhoria contínua — dias acima do threshold de alerta" />
         {d.apontamentos.length === 0 ? <p style={{ color: C.verde2, fontSize: 12, fontFamily: theme.font.label }}>Nenhum dia acima do threshold de alerta.</p> :
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {d.apontamentos.map((a) => (

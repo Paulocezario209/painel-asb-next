@@ -16,7 +16,20 @@ import {
 export const dynamic = "force-dynamic";
 
 import { theme } from "@/lib/theme";
+import { S } from "@/app/dashboard/lib/dashboard-tokens";
+import { PageHead, SectionHead, StatTile } from "@/app/dashboard/lib/ui";
+import { CalendarDays, LineChart } from "lucide-react";
 import { EMITENTES_ASB, brl, semaforoPct, nivelSemaforo, corSemaforoLabel } from "@/lib/compras/regras";
+
+// Pill de detalhe (breakdown): rótulo sans + número mono, cor de sinal preservada.
+function Pill({ label, value, color }: { label?: string; value: string; color: string }) {
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 999, background: color + "1f", color, fontFamily: theme.font.label }}>
+      {label ? <span>{label}</span> : null}
+      <b style={{ fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" }}>{value}</b>
+    </span>
+  );
+}
 const MESES_PT = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
 type MensalRow = {
@@ -226,26 +239,15 @@ export default async function ResultadosPage({
   const mensalByNum = new Map(mensalRows.filter((r) => r.ano === 2026).map((r) => [r.mes_num, r]));
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <h1
-        style={{
-          color: "var(--asb-page-ink)",
-          fontSize: 20,
-          fontWeight: 800,
-          fontFamily: theme.font.label,
-          letterSpacing: "-.01em",
-          textTransform: "none",
-        }}
-      >
-        Resultado de {MESES_PT[mesSel]}/{anoSel}{" "}
-        <span style={{ color: "var(--asb-page-ink2)", fontSize: 12 }}>
-          {isMesCorrente ? `(em andamento · ${duDecorridos}/${duTotal} dias úteis)` : "(mês fechado)"}
-        </span>
-      </h1>
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <PageHead
+        title={`Resultado de ${MESES_PT[mesSel]}/${anoSel}`}
+        desc={isMesCorrente ? `Em andamento · ${duDecorridos}/${duTotal} dias úteis` : "Mês fechado — resultado realizado"}
+      />
 
       {/* Painel ANO 2026 — 12 tiles (faturado/compras/% + semáforo). Navega via ?mes= */}
-      <div>
-        <div style={{ ...labelS, marginBottom: 8 }}>Ano 2026</div>
+      <div className="asb-card" style={{ padding: "20px 24px" }}>
+        <SectionHead Icon={CalendarDays} color="#8bb4ff" title="Ano 2026" desc="Resultado mês a mês · clique para abrir um mês" />
         <div
           style={{
             display: "grid",
@@ -265,12 +267,12 @@ export default async function ResultadosPage({
             const tile = (
               <div
                 style={{
-                  background: ativo ? "rgba(46,160,67,.10)" : "#0f1428",
-                  border: `1px solid ${ativo ? "#2ea043" : "#1B2A6B"}`,
+                  background: ativo ? "rgba(46,160,67,.10)" : "var(--asb-card-hi)",
+                  border: `1px solid ${ativo ? "#2ea043" : "var(--asb-border)"}`,
                   borderRadius: 6,
                   padding: 10,
                   opacity: futuro ? 0.45 : 1,
-                  fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums",
+                  fontFamily: theme.font.label,
                   height: "100%",
                 }}
               >
@@ -281,9 +283,9 @@ export default async function ResultadosPage({
                 <div style={{ ...labelS, marginTop: 4, fontSize: 8, color: corrente ? "#d29922" : "#e4e9f0" }}>{status}</div>
                 {row ? (
                   <div style={{ marginTop: 6, fontSize: 10, color: "#c0d0e0", lineHeight: 1.5 }}>
-                    <div>Fat: <b style={{ color: "#c8d8e8" }}>{brl(Number(row.faturado_brl || 0))}</b></div>
-                    <div>Comp: <b style={{ color: "#c8d8e8" }}>{brl(Number(row.compras_brl || 0))}</b></div>
-                    <div style={{ color: cor, fontWeight: 700 }}>{Number(row.pct_compras_faturado ?? 0).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%</div>
+                    <div>Fat: <b style={{ color: "#c8d8e8", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" }}>{brl(Number(row.faturado_brl || 0))}</b></div>
+                    <div>Comp: <b style={{ color: "#c8d8e8", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" }}>{brl(Number(row.compras_brl || 0))}</b></div>
+                    <div style={{ color: cor, fontWeight: 700, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" }}>{Number(row.pct_compras_faturado ?? 0).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%</div>
                   </div>
                 ) : (
                   <div style={{ marginTop: 6, fontSize: 9, color: "#e4e9f0" }}>{futuro ? "—" : "sem dados"}</div>
@@ -303,81 +305,89 @@ export default async function ResultadosPage({
         </div>
       </div>
 
-      {/* Cards topo */}
-      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-        <div style={{ background: "#0f1428", border: "1px solid #1B2A6B", borderRadius: 6, padding: 18, flex: 1, minWidth: 200 }}>
-          <div style={labelS}>Faturado {mtdLabel}</div>
-          {/* mês corrente em andamento: zerado é estado válido (R$ 0), nunca "sem dados" */}
-          {!isMesCorrente && fatRows.length === 0 ? (
-            <div style={{ ...labelS, marginTop: 10, textTransform: "none", letterSpacing: 0 }}>Sem dados de faturamento neste período</div>
-          ) : (
-            <div style={{ fontSize: 26, fontWeight: 700, color: "#FFFFFF", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", marginTop: 6 }}>{brl(faturadoMtd)}</div>
-          )}
-        </div>
+      {/* Cards topo — resumo do mês (faturado · compras entrada real · % semáforo) */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
+        {/* mês corrente em andamento: zerado é estado válido (R$ 0), nunca "sem dados" */}
+        <StatTile
+          label={`Faturado ${mtdLabel}`}
+          accent="#8bb4ff"
+          value={!isMesCorrente && fatRows.length === 0 ? "—" : brl(faturadoMtd)}
+          sub={!isMesCorrente && fatRows.length === 0 ? "Sem dados de faturamento neste período" : undefined}
+        />
 
-        <div style={{ background: "#0f1428", border: "1px solid #1B2A6B", borderRadius: 6, padding: 18, flex: 1, minWidth: 200 }}>
-          <div style={labelS}>Compras {mtdLabel}</div>
-          {/* mês corrente em andamento: zerado é estado válido (R$ 0), nunca "sem dados" */}
-          {!isMesCorrente && compRows.length === 0 ? (
-            <div style={{ ...labelS, marginTop: 10, textTransform: "none", letterSpacing: 0 }}>Sem dados de compras neste período</div>
-          ) : (
-            <>
-              {/* Headline = ENTRADA REAL (NF+Recibo − devolução; mesmo comprasParaPct do box %). */}
-              <div style={{ fontSize: 26, fontWeight: 700, color: "#FFFFFF", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", marginTop: 6 }}>{brl(comprasParaPct)}</div>
-              <div style={{ ...labelS, marginTop: 8, color: "#c0d0e0", textTransform: "none", letterSpacing: 0 }}>
-                Entrada (NF+Recibo): <b style={{ color: "#2ea043" }}>{brl(recebidoEntrada)}</b>
-                {isMesCorrente ? <> · A chegar: <b style={{ color: "#d29922" }}>{brl(aChegarEntrada)}</b></> : null}
-              </div>
-              {devolucaoMtd > 0 && (
-                <div style={{ ...labelS, marginTop: 4, color: "#c0d0e0", textTransform: "none", letterSpacing: 0 }}>
-                  (−) Devolução: <b style={{ color: "#d29922" }}>{brl(devolucaoMtd)}</b>
-                </div>
-              )}
-            </>
-          )}
-        </div>
+        {/* Headline = ENTRADA REAL (NF+Recibo − devolução; mesmo comprasParaPct do box %). */}
+        <StatTile
+          label={`Compras ${mtdLabel}`}
+          accent="#8bb4ff"
+          value={!isMesCorrente && compRows.length === 0 ? "—" : brl(comprasParaPct)}
+          sub={!isMesCorrente && compRows.length === 0 ? "Sem dados de compras neste período" : undefined}
+          badges={
+            !isMesCorrente && compRows.length === 0 ? undefined : (
+              <>
+                <Pill label="Entrada (NF+Recibo):" value={brl(recebidoEntrada)} color="#2ea043" />
+                {isMesCorrente ? <Pill label="A chegar:" value={brl(aChegarEntrada)} color="#d29922" /> : null}
+                {devolucaoMtd > 0 ? <Pill label="(−) Devolução:" value={brl(devolucaoMtd)} color="#d29922" /> : null}
+              </>
+            )
+          }
+        />
 
-        <div style={{ background: "#0f1428", border: `1px solid ${sem.cor}`, borderRadius: 6, padding: 18, flex: 1, minWidth: 200 }}>
-          <div style={labelS}>% Compras / Faturado</div>
-          <div style={{ fontSize: 26, fontWeight: 700, color: sem.cor, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", marginTop: 6 }}>
-            {pct}% <span style={{ fontSize: 12, fontFamily: theme.font.label }}>{sem.label}</span>
-          </div>
-          <div style={{ ...labelS, marginTop: 8, color: "#e4e9f0", textTransform: "none", letterSpacing: 0 }}>teto 54% · 🟢≤54 🟡54-65 🔴&gt;65</div>
-        </div>
+        <StatTile
+          label="% Compras / Faturado"
+          accent={sem.cor}
+          num={sem.cor}
+          value={`${pct}%`}
+          badges={<Pill label="" value={sem.label} color={sem.cor} />}
+          sub="teto 54% · 🟢≤54 🟡54-65 🔴>65"
+        />
       </div>
 
       {/* Projeção — só no mês corrente; mês fechado mostra "resultado realizado" */}
       {isMesCorrente ? (
-        <div style={{ background: "#0f1428", border: `1px solid ${semProj.cor}`, borderRadius: 6, padding: 18 }}>
-          <div style={{ ...labelS, marginBottom: 8 }}>
-            Projeção fechamento do mês (FATURADO: RITMO DO PERÍODO · COMPRAS: TETO 54% DO PROJETADO)
-          </div>
-          <div style={{ display: "flex", gap: 24, flexWrap: "wrap", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", fontSize: 13, color: "#c8d8e8" }}>
-            <span>Faturado proj.: <b>{brl(projFaturado)}</b></span>
-            <span>Orçamento compras (54%): <b>{brl(projCompras)}</b></span>
-            <span>Comprometido até hoje: <b>{brl(comprasMtd)}</b></span>
-            <span>
-              Disponível p/ comprar:{" "}
-              <b style={{ color: disponivelCompras >= 0 ? "#2ea043" : "#f85149" }}>{brl(disponivelCompras)}</b>
-            </span>
-            <span style={{ color: semProj.cor }}>% comprometido do proj.: <b>{pctComprometido}% {semProj.label}</b></span>
+        <div className="asb-card" style={{ padding: "20px 24px", borderTop: `3px solid ${semProj.cor}` }}>
+          <SectionHead
+            Icon={LineChart}
+            color={semProj.cor}
+            title="Projeção de Fechamento do Mês"
+            desc="Faturado = ritmo do período · Compras = teto 54% do projetado"
+          />
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
+            <StatTile label="Faturado Projetado" value={brl(projFaturado)} />
+            <StatTile label="Orçamento Compras (54%)" value={brl(projCompras)} />
+            <StatTile label="Comprometido Até Hoje" value={brl(comprasMtd)} />
+            <StatTile
+              label="Disponível p/ Comprar"
+              value={brl(disponivelCompras)}
+              num={disponivelCompras >= 0 ? "#2ea043" : "#f85149"}
+              accent={disponivelCompras >= 0 ? "#2ea043" : "#f85149"}
+            />
+            <StatTile
+              label="% Comprometido do Proj."
+              value={`${pctComprometido}%`}
+              num={semProj.cor}
+              accent={semProj.cor}
+              badges={<Pill value={semProj.label} color={semProj.cor} />}
+            />
             {metaAcum > 0 && (
-              <span style={{ color: fatorRitmo >= 1 ? "#2ea043" : "#d29922" }}>
-                Ritmo: <b>{Math.round(fatorRitmo * 100)}%</b> da meta {fatorRitmo >= 1 ? "↑" : "↓"}
-              </span>
+              <StatTile
+                label="Ritmo da Meta"
+                value={`${Math.round(fatorRitmo * 100)}%`}
+                num={fatorRitmo >= 1 ? "#2ea043" : "#d29922"}
+                sub={fatorRitmo >= 1 ? "acima da meta ↑" : "abaixo da meta ↓"}
+              />
             )}
           </div>
         </div>
       ) : (
-        <div style={{ background: "#0f1428", border: "1px solid #1B2A6B", borderRadius: 6, padding: 14 }}>
-          <span style={{ ...labelS, textTransform: "none", letterSpacing: 0 }}>Mês fechado — resultado realizado (sem projeção).</span>
+        <div style={{ ...S.card, padding: "14px 20px" }}>
+          <span style={S.text}>Mês fechado — resultado realizado (sem projeção).</span>
         </div>
       )}
 
       {/* Fase 1.5 + 1.6 — calendário + gráficos + donut NF/Recibo + drawer com drilldown de produto */}
       {calRows.length === 0 && itensRows.length === 0 ? (
-        <div style={{ background: "#0f1428", border: "1px solid #1B2A6B", borderRadius: 6, padding: 18 }}>
-          <span style={{ ...labelS, textTransform: "none", letterSpacing: 0 }}>Sem dados de calendário/compras neste período.</span>
+        <div style={{ ...S.card, padding: "14px 20px" }}>
+          <span style={S.text}>Sem dados de calendário/compras neste período.</span>
         </div>
       ) : (
         <CalendarDashboard days={calRowsEmissao} itens={itensRows} fatTipo={fatTipoRows} devolucoes={devolRows} isMesCorrente={isMesCorrente} />

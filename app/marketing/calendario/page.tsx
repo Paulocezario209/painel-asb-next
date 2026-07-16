@@ -2,6 +2,7 @@ import { theme } from "@/lib/theme";
 import { createClient } from "@/lib/supabase/server";
 import { CalendarioClient, type DiaRow } from "./calendario-client";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
+import { PageHead } from "@/app/dashboard/lib/ui";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";  // blindagem: nenhum fetch (supabase incluso) entra no cache
@@ -58,14 +59,10 @@ export default async function CalendarioPage({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <div>
-        <h1 style={{ color: "var(--asb-page-ink)", fontSize: 20, fontWeight: 800, fontFamily: theme.font.label, letterSpacing: "-.01em", textTransform: "none", marginBottom: 4 }}>
-          Calendário
-        </h1>
-        <p style={{ color: "var(--asb-page-ink2)", fontSize: 11, fontFamily: theme.font.label }}>
-          Gasto diário por mês · heatmap · KPIs do dia (Meta Ads)
-        </p>
-      </div>
+      <PageHead
+        title="Calendário"
+        desc="Gasto diário por mês · heatmap · KPIs do dia (Meta Ads)"
+      />
 
       <CalendarioClient ano={Number(ano)} rows={rows} />
 

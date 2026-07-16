@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { ResponsiveContainer, ComposedChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine } from "recharts";
 import { C, sCard, sLabel, sInput, btn, btnGhost } from "../lib/ui";
+import { PageHead, StatTile } from "@/app/dashboard/lib/ui";
 import { theme } from "@/lib/theme";
 import { brl, kg, num } from "../lib/formatadores";
 import { THRESHOLDS_DEFAULT, STATUS_COR, STATUS_LABEL, type Thresholds, type Status } from "../lib/classificar";
@@ -144,6 +145,7 @@ export function DashboardCustos() {
   const axis = { tick: { fill: C.mut, fontSize: 10, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" }, stroke: C.borda };
   const th: React.CSSProperties = { ...sLabel, padding: "8px 10px", textAlign: "right", borderBottom: `1px solid ${C.borda}` };
   const td: React.CSSProperties = { padding: "6px 10px", color: C.texto, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", fontSize: 12, textAlign: "right" };
+  const tdText: React.CSSProperties = { ...td, fontFamily: theme.font.label, fontVariantNumeric: "normal" }; // texto = sans (regra de ouro)
 
   if (loading) return <div style={{ padding: 40, textAlign: "center", color: C.mut, fontFamily: theme.font.label }}><Loader2 className="animate-spin" style={{ margin: "0 auto 10px" }} /> Carregando custos...</div>;
 
@@ -151,10 +153,7 @@ export function DashboardCustos() {
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
-        <div>
-          <h1 style={{ color: C.branco, fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase" }}>Custo de Produção</h1>
-          <p style={{ color: "var(--asb-page-ink2)", fontSize: 11, fontFamily: theme.font.label }}>Dashboard ASB 2026 · realizado, projeção, alertas, relatório e controle estatístico</p>
-        </div>
+        <PageHead title="Custo de Produção" desc="Dashboard ASB 2026 · realizado, projeção, alertas, relatório e controle estatístico" />
         <div style={{ display: "flex", gap: 8 }}>
           <button onClick={() => acao("ares", () => api.aresSync())} disabled={!!busy} style={btnGhost}><Database size={14} /> {busy === "ares" ? "Sync..." : "Sync ARES"}</button>
           <button onClick={() => acao("backup", () => api.criarBackup(`Backup ${new Date().toLocaleString("pt-BR")}`))} disabled={!!busy} style={btnGhost}><Save size={14} /> Backup</button>
@@ -244,7 +243,7 @@ export function DashboardCustos() {
               <tbody>
                 {diasDoMes.length === 0 ? <tr><td colSpan={8} style={{ ...td, textAlign: "center", color: C.mut2, padding: 20 }}>sem registros neste mês</td></tr> :
                   diasDoMes.map((r) => { const st = (r.status as Status) ?? "sem_dados"; return (
-                    <tr key={r.data} style={{ borderBottom: "1px solid #0b0f1d" }}>
+                    <tr key={r.data} style={{ borderBottom: `1px solid ${C.borda}` }}>
                       <td style={{ ...td, textAlign: "left", color: C.branco }}>{r.data}</td>
                       <td style={td}>{num(r.kg_produzido, 1)}</td><td style={td}>{brl(r.custo_total)}</td>
                       <td style={{ ...td, color: STATUS_COR[st], fontWeight: 700 }}>{r.custo_kg != null ? brl(r.custo_kg) : "—"}</td>
@@ -309,8 +308,8 @@ export function DashboardCustos() {
               <tbody>
                 {insumos.length === 0 ? <tr><td colSpan={7} style={{ ...td, textAlign: "center", color: C.mut2, padding: 20 }}>nenhum insumo</td></tr> :
                   insumos.map((i) => (
-                    <tr key={i.id} style={{ borderBottom: "1px solid #0b0f1d" }}>
-                      <td style={{ ...td, textAlign: "left" }}>{i.data}</td><td style={{ ...td, textAlign: "left", color: C.branco }}>{i.materia}</td><td style={{ ...td, textAlign: "left", color: C.mut }}>{i.fornecedor ?? "—"}</td>
+                    <tr key={i.id} style={{ borderBottom: `1px solid ${C.borda}` }}>
+                      <td style={{ ...td, textAlign: "left" }}>{i.data}</td><td style={{ ...tdText, textAlign: "left", color: C.branco }}>{i.materia}</td><td style={{ ...tdText, textAlign: "left", color: C.mut }}>{i.fornecedor ?? "—"}</td>
                       <td style={td}>{num(i.quantidade, 2)}</td><td style={td}>{i.unidade}</td><td style={td}>{brl(i.custo_unit)}</td>
                       <td style={{ ...td, textAlign: "center" }}><button onClick={() => acao("delins", () => api.removerInsumo(i.id))} style={{ background: "none", border: "none", color: C.vermelho, cursor: "pointer" }}><Trash2 size={13} /></button></td>
                     </tr>))}
@@ -353,14 +352,10 @@ export function DashboardCustos() {
   );
 }
 
+// KPI compacto → StatTile canônico do painel (label Title Case sans + número mono).
+// `cor` (sinal verde/vermelho/âmbar) vira a cor do número via `num`, preservando o significado.
 function Kpi({ label, value, cor, sub }: { label: string; value: string; cor: string; sub?: string }) {
-  return (
-    <div style={{ ...sCard, padding: "12px 14px" }}>
-      <p style={{ ...sLabel, marginBottom: 4 }}>{label}</p>
-      <p style={{ fontSize: 18, color: cor, fontWeight: 700, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" }}>{value}</p>
-      {sub && <p style={{ fontSize: 9, color: C.mut2, fontFamily: theme.font.label, marginTop: 2 }}>{sub}</p>}
-    </div>
-  );
+  return <StatTile label={label} value={value} num={cor} sub={sub} />;
 }
 
 function MesSelector({ ano, mes, setAno, setMes }: { ano: number; mes: number; setAno: (n: number) => void; setMes: (n: number) => void }) {
