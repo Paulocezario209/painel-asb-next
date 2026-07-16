@@ -90,7 +90,7 @@ export function StoreSwitcher() {
           <active.Icon size={13} color="#08110a" />
         </div>
         <span
-          style={{ color: "#12131A", fontSize: 12, fontWeight: 700, fontFamily: mono, letterSpacing: ".1em", textTransform: "uppercase" }}
+          style={{ color: "#f4f4f8", fontSize: 12, fontWeight: 700, fontFamily: mono, letterSpacing: ".1em", textTransform: "uppercase" }}
           translate="no"
         >
           ASB

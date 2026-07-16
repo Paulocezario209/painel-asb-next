@@ -26,19 +26,19 @@ export function ManualTelaButton() {
         title={`Manual · ${manual.titulo}`}
         aria-label="Manual da tela"
         style={{
-          background: "var(--asb-shell)", border: "1px solid var(--asb-shell-border)", color: "#565A6B",
+          background: "var(--asb-shell)", border: "1px solid var(--asb-shell-border)", color: "#aeb7cc",
           fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase",
           padding: "5px 10px", borderRadius: 8, cursor: "pointer",
           fontFamily: mono, transition: "all .15s",
           display: "inline-flex", alignItems: "center", gap: 5,
         }}
         onMouseEnter={(e) => {
-          (e.currentTarget as HTMLButtonElement).style.borderColor = "#1B2A6B";
-          (e.currentTarget as HTMLButtonElement).style.color = "#1B2A6B";
+          (e.currentTarget as HTMLButtonElement).style.borderColor = "#FF3B57";
+          (e.currentTarget as HTMLButtonElement).style.color = "#FF3B57";
         }}
         onMouseLeave={(e) => {
           (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--asb-shell-border)";
-          (e.currentTarget as HTMLButtonElement).style.color = "#565A6B";
+          (e.currentTarget as HTMLButtonElement).style.color = "#aeb7cc";
         }}
       >
         <HelpCircle size={12} />
