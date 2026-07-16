@@ -8,6 +8,7 @@ import { getLeadScoreMap } from "@/lib/get-lead-scores";
 import { LeadScoreBadge } from "@/components/dashboard/lead-score-badge";
 import { theme } from "@/lib/theme";
 import { VENDOR_LABELS as VENDOR_NAMES, VENDOR_ORDER } from "@/lib/vendor-labels";
+import { S } from "@/app/dashboard/lib/dashboard-tokens";
 
 export const dynamic = "force-dynamic";
 
@@ -27,15 +28,6 @@ const PIPELINE_STAGES = new Set([
   "handoff", "vendedor_assumiu", "diagnostico_comercial",
   "proposta_enviada", "negociacao",
 ]);
-
-// ── Design tokens ─────────────────────────────────────────────────────────────
-const S = {
-  card:    { background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8 } as React.CSSProperties,
-  label:   { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#e4e9f0", fontFamily: theme.font.label },
-  value:   { fontSize: 28, fontWeight: 700, color: "#FFFFFF", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", lineHeight: 1 },
-  section: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#c0c8d8", fontFamily: theme.font.label, marginBottom: 12 } as React.CSSProperties,
-  muted:   { color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label } as React.CSSProperties,
-};
 
 // ── Interfaces ────────────────────────────────────────────────────────────────
 interface Lead {
@@ -180,10 +172,10 @@ export default async function VendedoresPage() {
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {/* Header */}
       <div>
-        <h1 style={{ color: "var(--asb-page-ink)", fontSize: 20, fontWeight: 800, fontFamily: theme.font.label, letterSpacing: "-.01em", textTransform: "none", marginBottom: 4 }}>
+        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
           Vendedores
         </h1>
-        <p style={{ ...S.muted, color: "var(--asb-page-ink2)" }}>
+        <p style={S.muted}>
           Metricas desde segunda 11/05 (8h BRT) — periodo de retomada operacional
         </p>
         <p style={{ ...S.muted, fontSize: 9, marginTop: 4 }}>
@@ -351,10 +343,7 @@ export default async function VendedoresPage() {
 
       {/* Tabela consolidada */}
       <div style={{ ...S.card, padding: "20px 24px" }}>
-        <p style={S.section}>
-          <span style={{ color: "#2a2a2a", marginRight: 6 }}>{"\u25A0"}</span>
-          Tabela Consolidada (desde 11/05)
-        </p>
+        <p style={S.section}>Tabela Consolidada (desde 11/05)</p>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr>

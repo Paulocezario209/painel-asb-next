@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Flame, ShoppingBag, Users, Search } from "lucide-react";
 import { LeadScoreBadge } from "@/components/dashboard/lead-score-badge";
 import { vendorLabel } from "@/lib/vendor-labels";
+import { theme } from "@/lib/theme";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -33,7 +34,7 @@ type Filter = "all" | "hot" | "client";
 // ── Design tokens ────────────────────────────────────────────────────────────
 
 const C = {
-  bg:     "#080b14",
+  bg:     "#141414",
   bg2:    "#1a1a1a",
   border: "#2a2a2a",
   text:   "#FFFFFF",
@@ -45,7 +46,7 @@ const C = {
   blue:   "#60a5fa",
 };
 
-const MONO: React.CSSProperties = { fontFamily: "var(--font-geist-sans), system-ui, sans-serif" };
+const MONO: React.CSSProperties = { fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -127,7 +128,7 @@ export function HotLeadsTable({ leads }: { leads: HotLead[] }) {
         display: "inline-flex", alignItems: "center", gap: 6,
         padding: "5px 12px", borderRadius: 3,
         border: `1px solid ${filter === f ? C.border : "transparent"}`,
-        background: filter === f ? "rgba(27,42,107,.35)" : "transparent",
+        background: filter === f ? "rgba(255,255,255,.06)" : "transparent",
         color: filter === f ? C.text : C.muted,
         fontSize: 10, letterSpacing: ".12em", textTransform: "uppercase",
         cursor: "pointer", ...MONO,
@@ -190,8 +191,8 @@ export function HotLeadsTable({ leads }: { leads: HotLead[] }) {
                   key={lead.phone}
                   onClick={() => router.push(`/dashboard/leads/${encodeURIComponent(lead.phone)}`)}
                   style={{
-                    borderBottom: `1px solid ${i < filtered.length - 1 ? "#0f1826" : "transparent"}`,
-                    background: i % 2 === 0 ? "transparent" : "rgba(27,42,107,.04)",
+                    borderBottom: `1px solid ${i < filtered.length - 1 ? "rgba(255,255,255,.05)" : "transparent"}`,
+                    background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,.02)",
                     cursor: "pointer",
                   }}
                 >

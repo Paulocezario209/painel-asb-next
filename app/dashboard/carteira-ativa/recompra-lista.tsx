@@ -4,6 +4,7 @@ import { useState } from "react";
 import { theme } from "@/lib/theme";
 import type { CSSProperties } from "react";
 import { statusColor, statusLabel } from "@/lib/customer-status";
+import { S } from "@/app/dashboard/lib/dashboard-tokens";
 
 type CestaItem = {
   id_produto: number;
@@ -35,17 +36,8 @@ export type RecompraRow = {
   cesta: CestaItem[];
 };
 
-// Cards de vendedor com PRESENÇA (Paulo): elevados + glow tech, mesmo estilo p/ todos (sem cor por vendedor).
-const cardPresenca: CSSProperties = {
-  background: "#16161c", border: "1px solid #2a2a35", borderRadius: 10,
-  boxShadow: "0 0 26px -10px rgba(79,125,240,.55), inset 0 1px 0 0 rgba(79,125,240,.10)",
-};
-const S = {
-  card: { background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8 } as CSSProperties,
-  h1: { color: "var(--asb-page-ink)", fontSize: 20, fontWeight: 800, fontFamily: theme.font.label, letterSpacing: "-.01em", textTransform: "none" } as CSSProperties,
-  section: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", color: "#c0c8d8", fontFamily: theme.font.label } as CSSProperties,
-  muted: { color: "#c0d0e0", fontSize: 10, fontFamily: theme.font.label } as CSSProperties,
-};
+// Título de seção (mesma camada que PageHead: page-ink, 20px) — bare heading acima do grid.
+const h1Style: CSSProperties = { color: "var(--asb-page-ink)", fontSize: 20, fontWeight: 800, fontFamily: theme.font.label, letterSpacing: "-.01em" };
 const ORDER = ["atrasado", "hoje", "proximos_3d", "proximos_7d"];
 
 const brl = (n: number) => (n ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
@@ -71,7 +63,7 @@ export function RecompraLista({ rows }: { rows: RecompraRow[] }) {
 
   return (
     <div className="space-y-4">
-      <h1 style={S.h1}>Clientes por vendedor</h1>
+      <h1 style={h1Style}>Clientes por vendedor</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {vendedores.map(([vend, list]) => {
@@ -83,24 +75,24 @@ export function RecompraLista({ rows }: { rows: RecompraRow[] }) {
           const proxMeta = sorted[0]?.proxima_data_meta ?? null;
           const isVendOpen = openVend.has(vend);
           return (
-            <div key={vend} style={{ ...cardPresenca }} className="p-5 flex flex-col">
-              {/* Header colapsável (presença tech) */}
+            <div key={vend} style={S.card} className="p-5 flex flex-col">
+              {/* Header colapsável */}
               <button
                 onClick={() => toggleVend(vend)}
                 className="w-full flex items-center gap-3 text-left"
-                style={{ paddingBottom: isVendOpen ? 10 : 0, borderBottom: isVendOpen ? "1px solid #2a2a35" : "none", marginBottom: isVendOpen ? 12 : 0 }}
+                style={{ paddingBottom: isVendOpen ? 10 : 0, borderBottom: isVendOpen ? "1px solid var(--asb-border)" : "none", marginBottom: isVendOpen ? 12 : 0 }}
               >
                 <span
                   style={{
                     width: 22, height: 22, flexShrink: 0, display: "inline-flex", alignItems: "center", justifyContent: "center",
-                    borderRadius: 6, background: "#0c0c12", border: "1px solid #2a2a35", color: "#4f7df0",
-                    fontSize: 14, fontWeight: 700, boxShadow: "0 0 8px -2px #4f7df0",
+                    borderRadius: 6, background: "var(--asb-card-hi)", border: "1px solid var(--asb-border)", color: "#8bb4ff",
+                    fontSize: 14, fontWeight: 700,
                   }}
                   aria-hidden
                 >
                   {isVendOpen ? "−" : "+"}
                 </span>
-                <span style={{ ...S.section, fontSize: 11, color: "#FFFFFF" }}>{vend}</span>
+                <span style={{ ...S.section, marginBottom: 0, fontSize: 11, color: "#FFFFFF" }}>{vend}</span>
                 <span style={{ ...S.muted, marginLeft: "auto" }}>
                   {proxMeta ? `próx meta ${dt(proxMeta)} · ` : ""}
                   {sorted.length} clientes
@@ -114,10 +106,10 @@ export function RecompraLista({ rows }: { rows: RecompraRow[] }) {
                     const isOpen = open.has(r.ares_pessoa_id);
                     const col = statusColor(r.customer_status);
                     return (
-                      <div key={r.ares_pessoa_id} style={{ background: "#0f0f0f", border: "1px solid #2a2a2a", borderRadius: 6 }} className="overflow-hidden">
+                      <div key={r.ares_pessoa_id} style={{ background: "var(--asb-card-hi)", border: "1px solid var(--asb-border)", borderRadius: 6 }} className="overflow-hidden">
                         <button
                           onClick={() => toggle(r.ares_pessoa_id)}
-                          className="w-full flex items-center gap-2 p-3 text-left hover:bg-[#181818] transition-colors"
+                          className="w-full flex items-center gap-2 p-3 text-left hover:bg-[var(--asb-card-hi)] transition-colors"
                         >
                           <span className="w-2 h-2 rounded-full shrink-0" style={{ background: col, boxShadow: `0 0 6px ${col}` }} />
                           <span className="flex-1 min-w-0">
@@ -165,7 +157,7 @@ function CestaView({ cesta, pedidos }: { cesta: CestaItem[]; pedidos: number }) 
   if (!cesta?.length)
     return <div className="px-3 pb-3 text-[11px] text-gray-600 italic">Sem cesta nos últimos 90d.</div>;
   return (
-    <div className="px-3 pb-3 pt-1 border-t border-[#2a2a2a] space-y-1">
+    <div className="px-3 pb-3 pt-1 border-t border-[var(--asb-border)] space-y-1">
       <div className="text-[10px] text-slate-200 uppercase tracking-wider mt-1 mb-1" style={{ fontFamily: theme.font.label }}>
         Sugestão de pedido — média por compra · {pedidos} pedidos/90d
       </div>

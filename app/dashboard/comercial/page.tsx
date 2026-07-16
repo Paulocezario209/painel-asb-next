@@ -3,6 +3,7 @@ import { theme } from "@/lib/theme";
 import { createClient } from "@/lib/supabase/server";
 import { NAO_ATIVO_STAGES } from "@/lib/funnel/stages";
 import { CADENCIA_PHASES } from "@/lib/followup/cadencia";
+import { S } from "@/app/dashboard/lib/dashboard-tokens";
 
 export const dynamic = "force-dynamic";
 
@@ -70,15 +71,15 @@ export default async function ComercialPage() {
   return (
     <div className="space-y-7">
       <div>
-        <h1 className="text-2xl font-bold text-white">Comercial</h1>
-        <p className="text-sm text-slate-300 mt-1">A jornada de ponta a ponta — clique numa etapa para abrir a tela.</p>
+        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
+          Comercial
+        </h1>
+        <p style={S.muted}>A jornada de ponta a ponta — clique numa etapa para abrir a tela.</p>
       </div>
 
       {/* O FLUXO — idêntico ao artifact */}
       <div className="space-y-3">
-        <div style={{ fontFamily: theme.font.num, fontSize: 11, letterSpacing: ".2em", textTransform: "uppercase", color: "#8b9bb4" }}>
-          <span style={{ color: "#4f7df0", marginRight: 8 }}>▸</span>A jornada de ponta a ponta
-        </div>
+        <p style={S.section}>A jornada de ponta a ponta</p>
         <div style={{ display: "flex", alignItems: "stretch", width: "100%" }}>
           {FLUXO.map((s, i) => (
             <div key={s.cat} style={{ display: "flex", alignItems: "center", flex: 1, minWidth: 0 }}>
@@ -108,8 +109,8 @@ function FlowCard({ step: s }: { step: FlowStep }) {
     <Link
       href={s.href}
       style={{
+        ...S.card,
         display: "block", flex: 1, minWidth: 0, minHeight: 128, textDecoration: "none",
-        background: "#0b0f1a", border: "1px solid #1c2637", borderRadius: 12,
         padding: "14px 16px",
       }}
     >
@@ -129,20 +130,15 @@ function FlowCard({ step: s }: { step: FlowStep }) {
 function Secao({ titulo, cards }: { titulo: string; cards: Kpi[] }) {
   return (
     <div className="space-y-3">
-      <div style={{ fontFamily: theme.font.num, fontSize: 11, letterSpacing: ".2em", textTransform: "uppercase", color: "#8b9bb4" }}>
-        <span style={{ color: "#4f7df0", marginRight: 8 }}>▸</span>{titulo}
-      </div>
+      <p style={S.section}>{titulo}</p>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {cards.map((c) => (
-          <Link
-            key={c.label}
-            href={c.href}
-            className="bg-[#16161c] border rounded-lg p-4 transition-all block w-full text-left"
-            style={{ borderColor: "#2a2a35", borderTop: `3px solid ${c.color}`, boxShadow: "0 0 24px -8px rgba(79,125,240,0.45)" }}
-          >
-            <div className="text-[10px] uppercase tracking-wider font-bold truncate" style={{ color: c.color }}>{c.label}</div>
-            <div className="text-3xl font-bold text-white mt-2">{c.n}</div>
-            <div className="text-[10px] text-slate-200 mt-2 leading-tight">{c.desc}</div>
+          <Link key={c.label} href={c.href} style={{ textDecoration: "none" }}>
+            <div style={{ ...S.card, padding: "20px 20px", borderTop: `2px solid ${c.color}`, cursor: "pointer", transition: "opacity .15s" }} className="asb-kpi-hover">
+              <p style={{ ...S.label, color: c.color }} translate="no">{c.label}</p>
+              <p style={{ ...S.value, marginTop: 12 }}>{c.n}</p>
+              <p style={{ ...S.muted, marginTop: 8 }}>{c.desc}</p>
+            </div>
           </Link>
         ))}
       </div>

@@ -1,14 +1,4 @@
-import type { CSSProperties } from "react";
-import { theme } from "@/lib/theme";
-
-// Tokens do design-system (padrão Inteligência) — camada de comando: card elevado + glow sutil.
-const glow = (hex: string): CSSProperties => ({ boxShadow: `0 0 22px -8px ${hex}, inset 0 1px 0 0 ${hex}1a` });
-const S = {
-  card: { background: "#16161c", border: "1px solid #2a2a35", borderRadius: 8 } as CSSProperties,
-  label: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", color: "#e4e9f0", fontFamily: theme.font.label } as CSSProperties,
-  value: { fontSize: 28, fontWeight: 700, color: "#FFFFFF", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" as const, lineHeight: 1 } as CSSProperties,
-  muted: { color: "#c0d0e0", fontSize: 10, fontFamily: theme.font.label } as CSSProperties,
-};
+import { S } from "@/app/dashboard/lib/dashboard-tokens";
 
 const brl = (n: number) => (n ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 
@@ -24,7 +14,7 @@ export function CarteiraKpisRow({ kpis }: { kpis: CarteiraKpis }) {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
       {cards.map((c) => (
-        <div key={c.label} style={{ ...S.card, ...glow(c.accent), padding: 20, borderTop: `2px solid ${c.accent}` }}>
+        <div key={c.label} style={{ ...S.card, padding: "20px 24px", borderTop: `3px solid ${c.accent}` }}>
           <p style={{ ...S.label, color: c.accent }}>{c.label}</p>
           <p style={{ ...S.value, marginTop: 12 }}>{c.value}</p>
           <p style={{ ...S.muted, marginTop: 6 }}>{c.sub}</p>

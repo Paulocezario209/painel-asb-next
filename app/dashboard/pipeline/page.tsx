@@ -11,6 +11,7 @@ import { VENDOR_LABELS } from "@/lib/vendor-labels";
 import { createClient } from "@/lib/supabase/server";
 import { DashboardFilters } from "@/components/dashboard/dashboard-filters";
 import { PipelineBoard, PipelineKpis, type PipelineLead, type PipelineCtx } from "./pipeline-board";
+import { S } from "@/app/dashboard/lib/dashboard-tokens";
 
 export const dynamic = "force-dynamic";
 
@@ -35,13 +36,6 @@ const aliasStage = (s: string | null) => (s && BOARD_ALIAS[s]) || s || "handoff"
 
 // Ativos = em aberto (exclui fechado/perdido). Base dos KPIs.
 const ATIVOS = PIPELINE_ATIVOS;
-
-const S = {
-  card: { background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8 } as React.CSSProperties,
-  muted: { color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label } as React.CSSProperties,
-  kpiLabel: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#e4e9f0", fontFamily: theme.font.label },
-  kpiValue: { fontSize: 24, fontWeight: 700, color: "#FFFFFF", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", lineHeight: 1 },
-};
 
 const brl = (v: number) => "R$ " + v.toLocaleString("pt-BR", { maximumFractionDigits: 0 });
 
@@ -119,11 +113,11 @@ export default async function PipelinePage({ searchParams }: { searchParams: Pro
     <div style={{ display: "flex", flexDirection: "column", gap: 16, height: "100%" }}>
       {/* Header */}
       <div>
-        <h1 style={{ color: "var(--asb-page-ink)", fontSize: 20, fontWeight: 800, fontFamily: theme.font.label, letterSpacing: "-.01em", textTransform: "none", marginBottom: 4 }}>
+        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
           Pipeline {ctx.isVendedor && ctx.routing_team ? `· ${VENDOR_LABELS[ctx.routing_team] ?? ctx.routing_team}` : ""}
           {mesParam ? ` · ${mesParam}` : ""}
         </h1>
-        <p style={{ ...S.muted, color: "var(--asb-page-ink2)" }}>{leads.length} lead(s) no pipeline · clique no card para abrir · arraste para mover · clique no topo da coluna para a lista</p>
+        <p style={S.muted}>{leads.length} lead(s) no pipeline · clique no card para abrir · arraste para mover · clique no topo da coluna para a lista</p>
       </div>
 
       {/* KPIs de topo (3 cards, clicáveis → lista no modal) */}

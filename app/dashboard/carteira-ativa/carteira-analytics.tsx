@@ -3,6 +3,7 @@
 import type { CSSProperties } from "react";
 import { theme } from "@/lib/theme";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from "recharts";
+import { S } from "@/app/dashboard/lib/dashboard-tokens";
 
 // Padrões reusados da aba Inteligência (components/insights/segment-chart.tsx): barra horizontal
 // gradiente + tooltip estilizado + eixos mono. Adaptado ao tema tech (glow azul ASB).
@@ -10,7 +11,7 @@ const GRID = "rgba(27,42,107,.35)";
 const axisStyle = { fontSize: 10, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" as const, fill: "#e4e9f0" };
 const tooltipStyle = {
   contentStyle: {
-    background: "#16161c", border: "1px solid #4f7df0", borderRadius: 4,
+    background: "var(--asb-card-hi)", border: "1px solid #4f7df0", borderRadius: 4,
     fontSize: 11, fontFamily: theme.font.num, color: "#c8d8e8",
     boxShadow: "0 4px 20px rgba(79,125,240,.20)",
   },
@@ -18,17 +19,8 @@ const tooltipStyle = {
   labelStyle: { color: "#e4e9f0", fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase" as const },
 };
 
-// Tokens do design-system (padrão Inteligência) + camada de glow tech sutil.
-const S = {
-  card: { background: "#16161c", border: "1px solid #2a2a35", borderRadius: 8 } as CSSProperties, // camada INTELIGÊNCIA (levemente elevada)
-  h2: { color: "var(--asb-page-ink)", fontSize: 20, fontWeight: 800, fontFamily: theme.font.label, letterSpacing: "-.01em", textTransform: "none" } as CSSProperties,
-  section: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", color: "#c0c8d8", fontFamily: theme.font.label } as CSSProperties,
-  label: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", color: "#e4e9f0", fontFamily: theme.font.label } as CSSProperties,
-  value: { fontSize: 28, fontWeight: 700, color: "#FFFFFF", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" as const, lineHeight: 1 } as CSSProperties,
-  muted: { color: "#c0d0e0", fontSize: 10, fontFamily: theme.font.label } as CSSProperties,
-};
-// glow sutil por accent (camada de inteligência = "painel de comando")
-const glow = (hex: string): CSSProperties => ({ boxShadow: `0 0 22px -8px ${hex}, inset 0 1px 0 0 ${hex}1a` });
+// Título de seção (mesma camada que PageHead: page-ink, 20px) — bare heading acima do grid de cards.
+const h2Style: CSSProperties = { color: "var(--asb-page-ink)", fontSize: 20, fontWeight: 800, fontFamily: theme.font.label, letterSpacing: "-.01em" };
 
 const brl = (n: number) => (n ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 const dt = (s: string | null) => (s ? new Date(s).toLocaleDateString("pt-BR") : "—");
@@ -60,7 +52,7 @@ export function RecompraMetaSection({ meta, top, grupos }: { meta: MetaRow[]; to
   const metaSorted = [...meta].sort((a, b) => b.meta_dia - a.meta_dia);
   return (
     <div>
-      <h2 style={{ ...S.h2, marginBottom: 4 }}>Recompra × Meta do dia</h2>
+      <h2 style={{ ...h2Style, marginBottom: 4 }}>Recompra × Meta do dia</h2>
       <p style={{ ...S.muted, marginBottom: 12 }}>
         Recompra esperada até o dia de meta (Σ ticket médio dos clientes com próximo ciclo ≤ data de meta) vs meta do dia
       </p>
@@ -74,20 +66,20 @@ export function RecompraMetaSection({ meta, top, grupos }: { meta: MetaRow[]; to
             (topBy.get(m.routing_team) ?? []).find((p) => grupoTop && p.grupo_nome === grupoTop.grupo_nome) ??
             (topBy.get(m.routing_team) ?? [])[0];
           return (
-            <div key={m.routing_team} style={{ ...S.card, ...glow(cor), padding: 20, borderTop: `2px solid ${cor}` }}>
+            <div key={m.routing_team} style={{ ...S.card, padding: "20px 24px", borderTop: `3px solid ${cor}` }}>
               <div className="flex items-center justify-between">
-                <span style={S.section}>{m.vendedor_nome}</span>
+                <span style={{ ...S.section, marginBottom: 0 }}>{m.vendedor_nome}</span>
                 <span style={S.muted}>meta {dt(m.proxima_data_meta)}</span>
               </div>
-              <p style={{ ...S.value, marginTop: 12, color: cor, textShadow: `0 0 18px ${cor}66` }}>{pct}%</p>
+              <p style={{ ...S.value, marginTop: 12, color: cor }}>{pct}%</p>
               <p style={{ ...S.muted, marginTop: 4 }}>
                 {brl(m.recompra_projetada)} de {brl(m.meta_dia)} · {m.clientes_no_dia} clientes no dia
               </p>
-              <div style={{ marginTop: 10, height: 6, background: "#0c0c12", borderRadius: 3, overflow: "hidden" }}>
-                <div style={{ width: `${Math.min(100, pct)}%`, height: "100%", background: `linear-gradient(90deg, ${cor}cc, ${cor})`, boxShadow: `0 0 10px ${cor}aa` }} />
+              <div style={{ marginTop: 10, height: 6, background: "var(--asb-card-hi)", borderRadius: 3, overflow: "hidden" }}>
+                <div style={{ width: `${Math.min(100, pct)}%`, height: "100%", background: `linear-gradient(90deg, ${cor}cc, ${cor})` }} />
               </div>
               {m.gap_brl > 0 && (
-                <div style={{ marginTop: 12, padding: "10px 12px", background: "#0c0c12", border: "1px solid #2a2a35", borderRadius: 6 }}>
+                <div style={{ marginTop: 12, padding: "10px 12px", background: "var(--asb-card-hi)", border: "1px solid var(--asb-border)", borderRadius: 6 }}>
                   <p style={{ ...S.label, color: "#C8102E" }}>Fechar o gap · {brl(m.gap_brl)}</p>
                   <p style={{ ...S.muted, marginTop: 6, lineHeight: 1.5 }}>
                     {grupoTop ? (
@@ -116,14 +108,14 @@ export function TopProdutosSection({ meta, top }: { meta: MetaRow[]; top: TopRow
   const topBy = groupBy(top);
   return (
     <div>
-      <h2 style={{ ...S.h2, marginBottom: 4 }}>Top 10 produtos · 30d</h2>
+      <h2 style={{ ...h2Style, marginBottom: 4 }}>Top 10 produtos · 30d</h2>
       <p style={{ ...S.muted, marginBottom: 12 }}>Mais vendidos por faturamento, com % de representatividade · por vendedor</p>
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {[...topBy.entries()].map(([rt, prods]) => {
           const nome = meta.find((m) => m.routing_team === rt)?.vendedor_nome ?? rt;
           const max = Math.max(...prods.map((p) => p.pct), 1);
           return (
-            <div key={rt} style={{ ...S.card, ...glow("#185FA5") }} className="p-4">
+            <div key={rt} style={S.card} className="p-4">
               <div style={{ ...S.section, marginBottom: 10 }}>{nome}</div>
               <div className="space-y-1.5">
                 {prods.map((p) => (
@@ -133,7 +125,7 @@ export function TopProdutosSection({ meta, top }: { meta: MetaRow[]; top: TopRow
                       <span className="truncate flex-1" style={{ color: "#c8d8e8" }}>{p.descricao_produto}</span>
                       <span className="font-mono tabular-nums" style={{ color: "#FFFFFF", width: 44, textAlign: "right" }}>{p.pct}%</span>
                     </div>
-                    <div style={{ height: 4, background: "#0c0c12", borderRadius: 2, marginTop: 2, overflow: "hidden" }}>
+                    <div style={{ height: 4, background: "var(--asb-card-hi)", borderRadius: 2, marginTop: 2, overflow: "hidden" }}>
                       <div style={{ width: `${(p.pct / max) * 100}%`, height: "100%", background: "linear-gradient(90deg, #185FA5, #4f7df0)", boxShadow: "0 0 8px -1px #4f7df0" }} />
                     </div>
                   </div>
@@ -152,7 +144,7 @@ export function GruposSection({ meta, grupos }: { meta: MetaRow[]; grupos: Grupo
   const grupoBy = groupBy(grupos);
   return (
     <div>
-      <h2 style={{ ...S.h2, marginBottom: 4 }}>Mix por grupo de produto · 30d</h2>
+      <h2 style={{ ...h2Style, marginBottom: 4 }}>Mix por grupo de produto · 30d</h2>
       <p style={{ ...S.muted, marginBottom: 12 }}>Representatividade da cesta da recompra por família de produto · por vendedor</p>
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {[...grupoBy.entries()].map(([rt, gs]) => {
@@ -163,7 +155,7 @@ export function GruposSection({ meta, grupos }: { meta: MetaRow[]; grupos: Grupo
             .map((g) => ({ name: g.grupo_nome, value: Number(g.valor_total), pct: g.pct }));
           const h = Math.max(140, data.length * 30);
           return (
-            <div key={rt} style={{ ...S.card, ...glow("#4f7df0") }} className="p-4">
+            <div key={rt} style={S.card} className="p-4">
               <div style={{ ...S.section, marginBottom: 8 }}>{nome}</div>
               <div style={{ height: h, filter: "drop-shadow(0 0 6px rgba(79,125,240,.25))" }}>
                 <ResponsiveContainer width="100%" height="100%">

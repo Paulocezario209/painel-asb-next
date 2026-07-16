@@ -7,17 +7,9 @@ import { getUserContext } from "@/lib/auth/get-user-role";
 import { MetasCalendarioGerente } from "@/components/dashboard/metas-calendario-gerente";
 import { businessDaysInMonth, businessDaysElapsed, dateAfterNBusinessDays } from "@/lib/utils/business-days";
 import { VENDOR_LABELS as VENDOR_NAMES, VENDOR_ORDER } from "@/lib/vendor-labels";
+import { S } from "@/app/dashboard/lib/dashboard-tokens";
 
 export const dynamic = "force-dynamic";
-
-// ── Design tokens ───────────────────────────────────────────────────────────
-const S = {
-  card:    { background: "#1a1a1a", border: `1px solid ${theme.colors.borderDefault}`, borderRadius: 8 } as React.CSSProperties,
-  label:   { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: theme.colors.neutral, fontFamily: theme.font.label },
-  value:   { fontSize: 28, fontWeight: 700, color: "#FFFFFF", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", lineHeight: 1 },
-  section: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: theme.colors.textPrimary, fontFamily: theme.font.label, marginBottom: 12 } as React.CSSProperties,
-  muted:   { color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label } as React.CSSProperties,
-};
 
 // Nomes vêm da fonte única (@/lib/vendor-labels); region é detalhe local desta tela.
 const VENDOR_LABELS: Record<string, { name: string; region: string }> = {
@@ -207,10 +199,10 @@ export default async function GerentePage() {
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {/* Header */}
       <div>
-        <h1 style={{ color: "var(--asb-page-ink)", fontSize: 20, fontWeight: 800, fontFamily: theme.font.label, letterSpacing: "-.01em", textTransform: "none", marginBottom: 4 }}>
+        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
           Gerente Comercial
         </h1>
-        <p style={{ ...S.muted, color: "var(--asb-page-ink2)" }}>
+        <p style={S.muted}>
           Visao consolidada {mesAtual} &middot; {diasDecorridos}/{totalDiasUteis} dias uteis
         </p>
       </div>
@@ -347,7 +339,7 @@ export default async function GerentePage() {
                 padding: "16px 20px",
                 borderLeft: `3px solid ${accent}`,
                 borderTop: i === 0 ? `1px solid ${barColor}40` : undefined,
-                background: i === 0 ? `${barColor}08` : "#1a1a1a",
+                background: i === 0 ? `${barColor}08` : "var(--asb-card)",
               }}>
                 {/* Top row: nome + % */}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10 }}>

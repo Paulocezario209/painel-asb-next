@@ -2,6 +2,9 @@
 
 import type { EstrategiasResponse } from "./actions";
 import { theme } from "@/lib/theme";
+import { S } from "@/app/dashboard/lib/dashboard-tokens";
+import { SectionHead } from "@/app/dashboard/lib/ui";
+import { Users, Trophy, AlertTriangle, Lightbulb, Target } from "lucide-react";
 
 function fmtBRL(v: number, frac = 0): string {
   return Number(v).toLocaleString("pt-BR", {
@@ -54,16 +57,14 @@ export function PainelGestor({ data, onVendorClick }: Props) {
   return (
     <div
       style={{
-        background: "#1a1a1a",
-        border: `1px solid ${theme.colors.borderDefault}`,
-        borderRadius: 8,
+        ...S.card,
         padding: 20,
         maxHeight: 600,
         overflowY: "auto",
       }}
     >
       {/* Header */}
-      <div style={{ marginBottom: 14, paddingBottom: 12, borderBottom: `1px solid ${theme.colors.borderDefault}` }}>
+      <div style={{ marginBottom: 14, paddingBottom: 12, borderBottom: "1px solid var(--asb-border)" }}>
         <p style={{ fontSize: 14, fontWeight: 700, color: "#FFFFFF", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" }}>
           📊 Painel Gestor
         </p>
@@ -82,9 +83,7 @@ export function PainelGestor({ data, onVendorClick }: Props) {
           marginBottom: 14,
         }}
       >
-        <p style={{ fontSize: 9, color: corTime, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 6 }}>
-          ▸ STATUS DO TIME (PRÓXIMO CICLO)
-        </p>
+        <SectionHead Icon={Users} color={corTime} title="Status do time" desc="Próximo ciclo" />
         <p style={{ fontSize: 13, color: "#FFFFFF", fontWeight: 700, marginBottom: 4 }}>
           <span className="priv-brl">{fmtBRL(totalRealizadoCiclo)}</span> / <span className="priv-brl">{fmtBRL(totalMetaCiclo)}</span>
         </p>
@@ -94,15 +93,10 @@ export function PainelGestor({ data, onVendorClick }: Props) {
       </div>
 
       {/* Ranking — clicável pra ver a Missão do vendedor */}
-      <p style={{ fontSize: 9, fontWeight: 700, color: theme.colors.accent, fontFamily: theme.font.label, letterSpacing: ".15em", marginBottom: 4, textTransform: "uppercase" }}>
-        🏆 RANKING DO CICLO
-      </p>
-      <p style={{ fontSize: 9, color: theme.colors.neutral, marginBottom: 8, fontStyle: "italic" }}>
-        💬 Clique no vendedor pra ver a missão que ele recebe
-      </p>
+      <SectionHead Icon={Trophy} color={theme.colors.accent} title="Ranking do ciclo" desc="Clique no vendedor pra ver a missão que ele recebe" />
       <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 14 }}>
         {ranked.map((b, i) => {
-          const medalha = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : "▸";
+          const medalha = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}º`;
           const cor =
             b.status === "bater" ? theme.colors.success :
             b.status === "no_alvo" ? theme.colors.warning : theme.colors.critical;
@@ -111,10 +105,10 @@ export function PainelGestor({ data, onVendorClick }: Props) {
               key={b.vendedor}
               onClick={() => onVendorClick?.(b.vendedor)}
               style={{
-                background: "#0a0f1f",
+                background: "var(--asb-card-hi)",
                 borderLeft: `3px solid ${cor}`,
-                border: `1px solid ${theme.colors.borderDefault}`,
-                borderRadius: 3,
+                border: "1px solid var(--asb-border)",
+                borderRadius: 8,
                 padding: "8px 10px",
                 display: "flex",
                 justifyContent: "space-between",
@@ -125,10 +119,10 @@ export function PainelGestor({ data, onVendorClick }: Props) {
                 width: "100%",
               }}
               onMouseEnter={(e) => {
-                if (onVendorClick) e.currentTarget.style.background = "#15203d";
+                if (onVendorClick) e.currentTarget.style.background = "var(--asb-border2)";
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = "#0a0f1f";
+                e.currentTarget.style.background = "var(--asb-card-hi)";
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -156,9 +150,7 @@ export function PainelGestor({ data, onVendorClick }: Props) {
       </div>
 
       {/* Alertas operacionais agregados */}
-      <p style={{ fontSize: 9, fontWeight: 700, color: theme.colors.warning, fontFamily: theme.font.label, letterSpacing: ".15em", marginBottom: 8, textTransform: "uppercase" }}>
-        ⚠ AÇÕES DE GESTOR
-      </p>
+      <SectionHead Icon={AlertTriangle} color={theme.colors.warning} title="Ações de gestor" />
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 14 }}>
         {/* Pendentes */}
         <div
@@ -202,9 +194,7 @@ export function PainelGestor({ data, onVendorClick }: Props) {
       </div>
 
       {/* Insights de gestor */}
-      <p style={{ fontSize: 9, fontWeight: 700, color: theme.colors.brandAsb, fontFamily: theme.font.label, letterSpacing: ".15em", marginBottom: 8, textTransform: "uppercase" }}>
-        💡 INSIGHTS PARA GESTOR
-      </p>
+      <SectionHead Icon={Lightbulb} color={theme.colors.brandAsb} title="Insights para gestor" />
       <ul style={{ listStyle: "none", padding: 0, margin: "0 0 14px 0", display: "flex", flexDirection: "column", gap: 6 }}>
         {ranked.find(b => b.status === "abaixo") && (
           <li style={{ fontSize: 10, color: "#c8d8e8", lineHeight: 1.4 }}>
@@ -226,20 +216,27 @@ export function PainelGestor({ data, onVendorClick }: Props) {
             🔥 Time inteiro acima da meta — momento de premiar
           </li>
         )}
-        <li style={{ fontSize: 10, color: "#c0d0e0", lineHeight: 1.4, fontStyle: "italic", paddingTop: 4, borderTop: "1px dashed #2a2a2a", marginTop: 4 }}>
+        <li style={{ fontSize: 10, color: "#c0d0e0", lineHeight: 1.4, fontStyle: "italic", paddingTop: 4, borderTop: "1px dashed var(--asb-border)", marginTop: 4 }}>
           💭 Disciplina diária + ZERO desconto como muleta = margem saudável.
         </li>
       </ul>
 
       {/* Visão estratégica */}
-      <div style={{ paddingTop: 10, borderTop: `1px solid ${theme.colors.borderDefault}` }}>
-        <p style={{ fontSize: 9, fontWeight: 700, color: theme.colors.textPrimary, fontFamily: theme.font.label, letterSpacing: ".15em", marginBottom: 6, textTransform: "uppercase" }}>
-          🎯 FOCO ESTRATÉGICO
-        </p>
-        <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 4, fontSize: 10, color: "#c0d0e0", fontFamily: theme.font.label }}>
-          <li>▸ <strong style={{ color: theme.colors.success }}>CICLO:</strong> garantir fechamento da próxima meta</li>
-          <li>▸ <strong style={{ color: theme.colors.warning }}>SEMANA:</strong> reduzir pendentes &gt;5d e reativar dormentes alta</li>
-          <li>▸ <strong style={{ color: theme.colors.brandAsb }}>MÊS:</strong> ticket médio +10% via mix, não desconto</li>
+      <div style={{ paddingTop: 10, borderTop: "1px solid var(--asb-border)" }}>
+        <SectionHead Icon={Target} color={theme.colors.textPrimary} title="Foco estratégico" />
+        <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 6, fontSize: 10, color: "#c0d0e0", fontFamily: theme.font.label }}>
+          <li style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ width: 5, height: 5, borderRadius: "50%", background: theme.colors.success, flexShrink: 0 }} />
+            <span><strong style={{ color: theme.colors.success }}>CICLO:</strong> garantir fechamento da próxima meta</span>
+          </li>
+          <li style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ width: 5, height: 5, borderRadius: "50%", background: theme.colors.warning, flexShrink: 0 }} />
+            <span><strong style={{ color: theme.colors.warning }}>SEMANA:</strong> reduzir pendentes &gt;5d e reativar dormentes alta</span>
+          </li>
+          <li style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ width: 5, height: 5, borderRadius: "50%", background: theme.colors.brandAsb, flexShrink: 0 }} />
+            <span><strong style={{ color: theme.colors.brandAsb }}>MÊS:</strong> ticket médio +10% via mix, não desconto</span>
+          </li>
         </ul>
       </div>
     </div>

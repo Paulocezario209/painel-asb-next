@@ -1,6 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { CUSTOMER_STATUS, CHURN_STATES } from "@/lib/customer-status";
+import { theme } from "@/lib/theme";
+import { S } from "@/app/dashboard/lib/dashboard-tokens";
 
 export const dynamic = "force-dynamic";
 
@@ -58,16 +60,18 @@ export default async function ChurnPage() {
   const total = (customers ?? []).length;
 
   return (
-    <div className="space-y-4">
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div>
-        <h1 className="text-2xl font-bold text-white">Churn — Carteira de Clientes</h1>
-        <p className="text-sm text-slate-200 mt-1">
+        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
+          Churn — Carteira de Clientes
+        </h1>
+        <p style={S.muted}>
           {total} clientes em risco/pré-churn/churn/inativo · carteira real ARES (v_carteira_360) · maiores no topo
         </p>
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="asb-grid-kpi">
         {STATUS_COLS.map((col) => {
           const count = byStatus[col.key].length;
           const receita = byStatus[col.key].reduce((s, c) => s + (Number(c.total_revenue_brl) || 0), 0);
@@ -77,40 +81,42 @@ export default async function ChurnPage() {
           return (
             <div
               key={col.key}
-              className="bg-[#16161c] border border-[#2a2a35] rounded-lg p-4 shadow-[0_0_24px_-8px_rgba(79,125,240,0.45)]"
-              style={{ borderTop: `3px solid ${col.color}` }}
+              className="asb-card"
+              style={{ padding: "20px 20px", borderTop: `2px solid ${col.color}` }}
             >
-              <div className="text-[10px] uppercase tracking-wider font-bold" style={{ color: col.color }}>
-                {col.label}
-              </div>
-              <div className="text-4xl font-bold text-white mt-2">{count}</div>
-              <div className="text-sm font-bold text-white mt-1">{brl(receita)} {verbo}</div>
-              <div className="text-[10px] text-slate-400 mt-0.5">{pct(pctRec)}% da receita · {pct(pctCli)}% da carteira</div>
-              <div className="text-[10px] text-slate-200 mt-2 leading-tight">{col.desc}</div>
+              <p style={{ ...S.label, color: col.color }}>{col.label}</p>
+              <p style={{ ...S.value, marginTop: 12 }}>{count}</p>
+              <p style={{ color: "#FFFFFF", fontSize: 12, fontWeight: 700, fontFamily: theme.font.label, marginTop: 4 }}>
+                {brl(receita)} {verbo}
+              </p>
+              <p style={{ color: "#8b949e", fontSize: 10, fontFamily: theme.font.label, marginTop: 2 }}>
+                {pct(pctRec)}% da receita · {pct(pctCli)}% da carteira
+              </p>
+              <p style={{ ...S.muted, fontSize: 10, marginTop: 8, lineHeight: 1.3 }}>{col.desc}</p>
             </div>
           );
         })}
       </div>
 
       {/* Listas por status */}
-      <div className="space-y-4">
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         {STATUS_COLS.map((col) => (
-          <div key={col.key} className="bg-[#16161c] border border-[#2a2a35] rounded-lg p-4 shadow-[0_0_24px_-8px_rgba(79,125,240,0.45)]">
-            <div className="flex items-center gap-2 mb-3 pb-2 border-b border-[#2a2a2a]">
-              <div className="w-3 h-3 rounded-full" style={{ background: col.color, boxShadow: `0 0 6px ${col.color}` }} />
-              <h2 className="text-xs font-bold uppercase tracking-wider text-white">{col.label}</h2>
-              <span className="text-xs text-slate-200 ml-auto">{byStatus[col.key].length} clientes</span>
+          <div key={col.key} className="asb-card" style={{ padding: "20px 24px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12, paddingBottom: 8, borderBottom: "1px solid var(--asb-border)" }}>
+              <span style={{ width: 8, height: 8, borderRadius: "50%", background: col.color, boxShadow: `0 0 6px ${col.color}` }} />
+              <span style={{ ...S.section, marginBottom: 0 }}>{col.label}</span>
+              <span style={{ ...S.muted, marginLeft: "auto" }}>{byStatus[col.key].length} clientes</span>
             </div>
 
             {byStatus[col.key].length === 0 ? (
-              <div className="text-xs text-gray-600 italic py-4 text-center">
+              <p style={{ ...S.muted, fontStyle: "italic", textAlign: "center", padding: "16px 0" }}>
                 Nenhum cliente neste estado.
-              </div>
+              </p>
             ) : (
               <div className="space-y-1.5">
                 {byStatus[col.key].map((c) => {
                   const row = (
-                    <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_auto] gap-2 items-center bg-[#0f0f0f] hover:bg-[#181818] border border-[#2a2a35] hover:border-[#185FA5] rounded p-3 text-xs transition-all shadow-[0_0_12px_-9px_rgba(79,125,240,0.6)]">
+                    <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_auto] gap-2 items-center bg-[var(--asb-card-hi)] hover:bg-[var(--asb-card-hi)] border border-[var(--asb-border)] hover:border-[var(--asb-border2)] rounded p-3 text-xs transition-colors">
                       <div className="text-white font-semibold truncate">
                         {c.name || `cliente ${c.ares_pessoa_id}`}
                         <span className="text-slate-200 text-[10px] font-normal ml-2">{c.city ?? "—"}</span>
@@ -148,10 +154,10 @@ export default async function ChurnPage() {
         ))}
       </div>
 
-      <div className="text-[10px] text-gray-600 text-center mt-4">
+      <p style={{ ...S.muted, fontSize: 10, textAlign: "center", marginTop: 4 }}>
         Régua absoluta (dias sem comprar): risco 15–21 · pré-churn 22–30 · churn comercial 31–59 · inativo ≥60.
         Carteira real ARES (faturados); "recuperado" volta na Fase A.2.
-      </div>
+      </p>
     </div>
   );
 }

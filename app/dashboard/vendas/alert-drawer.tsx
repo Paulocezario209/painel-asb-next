@@ -107,7 +107,7 @@ export function AlertDrawer<T extends Record<string, unknown>>({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{ width: "min(620px, 94vw)", height: "100%", background: "#1a1a1a", borderLeft: "1px solid #2a2a2a", padding: "20px 22px", overflowY: "auto", display: "flex", flexDirection: "column", gap: 14 }}
+        style={{ width: "min(620px, 94vw)", height: "100%", background: "var(--asb-card)", borderLeft: "1px solid var(--asb-border)", padding: "20px 22px", overflowY: "auto", display: "flex", flexDirection: "column", gap: 14 }}
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
           <div>
@@ -122,7 +122,7 @@ export function AlertDrawer<T extends Record<string, unknown>>({
         ) : (
           <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: theme.font.num, fontSize: 11 }}>
             <thead>
-              <tr style={{ borderBottom: "1px solid #2a2a2a" }}>
+              <tr style={{ borderBottom: "1px solid var(--asb-border)" }}>
                 {columns.map((c) => (
                   <th key={c.key} style={{ textAlign: c.align ?? "left", padding: "6px 8px", color: "#e4e9f0", fontSize: 9, textTransform: "uppercase", letterSpacing: ".1em", fontWeight: 700 }}>{c.label}</th>
                 ))}

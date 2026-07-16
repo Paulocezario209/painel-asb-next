@@ -114,7 +114,7 @@ export default async function ClientePage({
       </Link>
 
       {/* Header */}
-      <div className="bg-gradient-to-r from-[#193264] to-[#0F1F40] border-b-2 border-[#BA1717] rounded-lg p-5">
+      <div className="asb-card p-5" style={{ borderTop: "2px solid #C8102E" }}>
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
             <h1 className="text-2xl font-bold text-white truncate">
@@ -147,7 +147,7 @@ export default async function ClientePage({
 
       <div className="grid grid-cols-3 gap-4">
         {/* Data card */}
-        <div className="col-span-2 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4">
+        <div className="col-span-2 asb-card p-4">
           <h2 className="text-xs font-bold uppercase tracking-wider text-slate-200 mb-3">Dados</h2>
           <dl className="grid grid-cols-[120px_1fr] gap-y-2 gap-x-4 text-sm">
             <dt className="text-slate-200 text-xs uppercase tracking-wide">Cidade</dt>
@@ -174,7 +174,7 @@ export default async function ClientePage({
         </div>
 
         {/* Actions (apenas se em carteira) */}
-        <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4">
+        <div className="asb-card p-4">
           <h2 className="text-xs font-bold uppercase tracking-wider text-slate-200 mb-3">Ações</h2>
           {inCarteira ? (
             <CustomerActions
@@ -195,7 +195,7 @@ export default async function ClientePage({
 
       {/* F3 — Métricas calculadas pelo worker */}
       {lifecycleState && (
-        <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4">
+        <div className="asb-card p-4">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-xs font-bold uppercase tracking-wider text-slate-200">
               Métricas da Carteira (worker daily 6h BRT)
@@ -205,11 +205,11 @@ export default async function ClientePage({
             </span>
           </div>
           <div className="grid grid-cols-4 gap-3">
-            <div className="bg-[#0f0f0f] border border-[#2a2a2a] rounded p-3">
+            <div className="bg-[var(--asb-card-hi)] border border-[var(--asb-border)] rounded p-3">
               <div className="text-[10px] uppercase tracking-wider text-slate-200 font-bold">Pedidos</div>
               <div className="text-2xl font-bold text-white mt-1">{lifecycleState.total_orders ?? 0}</div>
             </div>
-            <div className="bg-[#0f0f0f] border border-[#2a2a2a] rounded p-3">
+            <div className="bg-[var(--asb-card-hi)] border border-[var(--asb-border)] rounded p-3">
               <div className="text-[10px] uppercase tracking-wider text-slate-200 font-bold">Tier ABC</div>
               <div
                 className="text-2xl font-bold mt-1"
@@ -222,31 +222,31 @@ export default async function ClientePage({
                 {lifecycleState.customer_tier ?? "—"}
               </div>
             </div>
-            <div className="bg-[#0f0f0f] border border-[#2a2a2a] rounded p-3">
+            <div className="bg-[var(--asb-card-hi)] border border-[var(--asb-border)] rounded p-3">
               <div className="text-[10px] uppercase tracking-wider text-slate-200 font-bold">Receita BRL</div>
               <div className="text-xl font-bold text-white mt-1">
                 R$ {Number(lifecycleState.total_revenue_brl ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </div>
-            <div className="bg-[#0f0f0f] border border-[#2a2a2a] rounded p-3">
+            <div className="bg-[var(--asb-card-hi)] border border-[var(--asb-border)] rounded p-3">
               <div className="text-[10px] uppercase tracking-wider text-slate-200 font-bold">Ticket Médio</div>
               <div className="text-xl font-bold text-white mt-1">
                 R$ {Number(lifecycleState.avg_ticket_brl ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </div>
-            <div className="bg-[#0f0f0f] border border-[#2a2a2a] rounded p-3">
+            <div className="bg-[var(--asb-card-hi)] border border-[var(--asb-border)] rounded p-3">
               <div className="text-[10px] uppercase tracking-wider text-slate-200 font-bold">1º Pedido</div>
               <div className="text-sm font-semibold text-white mt-1">
                 {lifecycleState.first_order_at ? new Date(lifecycleState.first_order_at).toLocaleDateString("pt-BR") : "—"}
               </div>
             </div>
-            <div className="bg-[#0f0f0f] border border-[#2a2a2a] rounded p-3">
+            <div className="bg-[var(--asb-card-hi)] border border-[var(--asb-border)] rounded p-3">
               <div className="text-[10px] uppercase tracking-wider text-slate-200 font-bold">Último Pedido</div>
               <div className="text-sm font-semibold text-white mt-1">
                 {lifecycleState.last_order_at ? new Date(lifecycleState.last_order_at).toLocaleDateString("pt-BR") : "—"}
               </div>
             </div>
-            <div className="bg-[#0f0f0f] border border-[#2a2a2a] rounded p-3">
+            <div className="bg-[var(--asb-card-hi)] border border-[var(--asb-border)] rounded p-3">
               <div className="text-[10px] uppercase tracking-wider text-slate-200 font-bold">Dias Sem Comprar</div>
               <div
                 className="text-xl font-bold mt-1"
@@ -259,7 +259,7 @@ export default async function ClientePage({
                 {lifecycleState.days_since_last_order ?? "—"}d
               </div>
             </div>
-            <div className="bg-[#0f0f0f] border border-[#2a2a2a] rounded p-3">
+            <div className="bg-[var(--asb-card-hi)] border border-[var(--asb-border)] rounded p-3">
               <div className="text-[10px] uppercase tracking-wider text-slate-200 font-bold">Próxima Esperada</div>
               <div className="text-sm font-semibold text-white mt-1">
                 {lifecycleState.next_expected_order_at ? new Date(lifecycleState.next_expected_order_at).toLocaleDateString("pt-BR") : "—"}
@@ -283,7 +283,7 @@ export default async function ClientePage({
         <div className="grid grid-cols-2 gap-4">
           {upsellOp && (
             <div
-              className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4"
+              className="asb-card p-4"
               style={{ borderLeft: "3px solid #BA7517" }}
             >
               <div className="flex items-center gap-2 mb-3">
@@ -309,7 +309,7 @@ export default async function ClientePage({
                   <span className="text-slate-200">Gap:</span>{" "}
                   <span className="text-[#E0993A] font-bold">{upsellOp.gap_pct}% abaixo</span>
                 </div>
-                <div className="pt-2 mt-2 border-t border-[#2a2a2a]">
+                <div className="pt-2 mt-2 border-t border-[var(--asb-border)]">
                   <span className="text-slate-200">Potencial anual se subir pra média:</span>
                   <div className="text-[#22C55E] font-bold text-lg mt-1">
                     + R$ {Number(upsellOp.potencial_anual_brl).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -336,7 +336,7 @@ export default async function ClientePage({
 
           {downsellRisk && (
             <div
-              className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4"
+              className="asb-card p-4"
               style={{ borderLeft: "3px solid #BA1717" }}
             >
               <div className="flex items-center gap-2 mb-3">
@@ -362,7 +362,7 @@ export default async function ClientePage({
                   <span className="text-slate-200">Acima da média:</span>{" "}
                   <span className="text-[#E84545] font-bold">+{downsellRisk.excesso_pct}%</span>
                 </div>
-                <div className="pt-2 mt-2 border-t border-[#2a2a2a]">
+                <div className="pt-2 mt-2 border-t border-[var(--asb-border)]">
                   <span className="text-slate-200">Revenue em risco (se buscar alternativa mais barata):</span>
                   <div className="text-[#E84545] font-bold text-lg mt-1">
                     R$ {Number(downsellRisk.revenue_em_risco_brl).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -374,7 +374,7 @@ export default async function ClientePage({
 
           {tierUp && (
             <div
-              className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4"
+              className="asb-card p-4"
               style={{ borderLeft: `3px solid ${theme.colors.brandAsb}` }}
             >
               <div className="flex items-center gap-2 mb-3">
@@ -412,7 +412,7 @@ export default async function ClientePage({
                   <span className="text-slate-200">Razão:</span>{" "}
                   <span className="text-slate-200 text-[10px] font-mono">{tierUp.razao}</span>
                 </div>
-                <div className="pt-2 mt-2 border-t border-[#2a2a2a] text-[10px] text-slate-200">
+                <div className="pt-2 mt-2 border-t border-[var(--asb-border)] text-[10px] text-slate-200">
                   Reclassificação manual pelo gestor — worker calcula tier
                   automaticamente após first_order+30d baseado em weekly_volume_kg.
                 </div>
@@ -421,14 +421,14 @@ export default async function ClientePage({
           )}
         </div>
         ) : (
-          <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4 text-xs text-gray-600 italic">
+          <div className="asb-card p-4 text-xs text-gray-600 italic">
             Sem oportunidades identificadas no momento.
           </div>
         )}
       </div>
 
       {/* Timeline */}
-      <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4">
+      <div className="asb-card p-4">
         <h2 className="text-xs font-bold uppercase tracking-wider text-slate-200 mb-3">
           Timeline ({events?.length ?? 0} eventos)
         </h2>
@@ -454,7 +454,7 @@ export default async function ClientePage({
 
       {/* Reassign log */}
       {overrides && overrides.length > 0 && (
-        <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4">
+        <div className="asb-card p-4">
           <h2 className="text-xs font-bold uppercase tracking-wider text-slate-200 mb-3">
             Reassign log ({overrides.length})
           </h2>

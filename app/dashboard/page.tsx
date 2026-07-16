@@ -12,6 +12,7 @@ import { DashboardFilters } from "@/components/dashboard/dashboard-filters";
 import { theme } from "@/lib/theme";
 import { VENDOR_LABELS } from "@/lib/vendor-labels";
 import { S } from "./lib/dashboard-tokens";
+import { PageHead, SectionHead, Sparkline } from "./lib/ui";
 import { Users, BadgeCheck, PhoneCall, Trophy, XCircle, Target, Filter as FilterIcon, TrendingUp, BarChart3 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -56,32 +57,6 @@ function trendPct(s: number[]): number | null {
   if (a === 0) return b > 0 ? 100 : null;
   return Math.round(((b - a) / a) * 100);
 }
-function Sparkline({ data, color }: { data: number[]; color: string }) {
-  const max = Math.max(...data, 1), min = Math.min(...data);
-  const range = max - min || 1;
-  const pts = data.map((v, i) => `${(i / Math.max(data.length - 1, 1)) * 120},${28 - ((v - min) / range) * 24}`).join(" ");
-  return (
-    <svg viewBox="0 0 120 30" preserveAspectRatio="none" style={{ width: "100%", height: 30, display: "block", marginTop: 14 }}>
-      <polyline fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" points={pts} />
-    </svg>
-  );
-}
-
-// Cabeçalho de seção limpo (ícone chip + título sans + descrição)
-function SectionHead({ Icon, color, title, desc }: { Icon: React.ComponentType<{ size?: number }>; color: string; title: string; desc?: string }) {
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 18 }}>
-      <span style={{ width: 34, height: 34, borderRadius: 10, display: "grid", placeItems: "center", background: color + "22", color, flexShrink: 0 }}>
-        <Icon size={17} />
-      </span>
-      <div>
-        <div style={{ fontSize: 15.5, fontWeight: 750, color: "#fff", fontFamily: theme.font.label, letterSpacing: "-.01em" }}>{title}</div>
-        {desc ? <div style={{ fontSize: 12.5, color: "#aeb7cc", fontFamily: theme.font.label, marginTop: 1 }}>{desc}</div> : null}
-      </div>
-    </div>
-  );
-}
-
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const supabase = await createClient();
 
@@ -246,15 +221,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <div>
-        <h1 style={{ color: "var(--asb-page-ink)", fontSize: 20, fontWeight: 800, fontFamily: theme.font.label, letterSpacing: "-.01em", marginBottom: 4 }}>
-          Dashboard
-        </h1>
-        <p style={{ color: "var(--asb-page-ink2)", fontSize: 13, fontFamily: theme.font.label }}>
-          Visão geral do pipeline SDR
-          {mesParam ? ` · volume de ${mesParam}` : ""}{vend ? ` · vendedor filtrado` : ""}
-        </p>
-      </div>
+      <PageHead
+        title="Dashboard"
+        desc={`Visão geral do pipeline SDR${mesParam ? ` · volume de ${mesParam}` : ""}${vend ? ` · vendedor filtrado` : ""}`}
+      />
 
       {/* P2 — filtros mês (volume) + vendedor (tudo). Alertas permanecem "agora". */}
       <div style={{ ...S.card, padding: "12px 16px" }}>

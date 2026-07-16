@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback } from "react";
 import { theme } from "@/lib/theme";
+import { S } from "@/app/dashboard/lib/dashboard-tokens";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface LeadConfig {
@@ -70,18 +71,14 @@ const RAG_DOMAINS = [
 
 const ETAPAS = Array.from({ length: 10 }, (_, i) => i);
 
-// ── Design tokens ──────────────────────────────────────────────────────────────
-const S = {
-  card:    { background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 4, padding: "20px 24px" } as React.CSSProperties,
-  label:   { display: "block", fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase" as const, color: "#e4e9f0", fontFamily: theme.font.label, marginBottom: 6 },
-  section: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase" as const, color: "#c0c8d8", fontFamily: theme.font.label, marginBottom: 14 } as React.CSSProperties,
-  muted:   { color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label } as React.CSSProperties,
-  input:   {
-    width: "100%", background: "#080b14", border: "1px solid #2a2a2a", borderRadius: 3,
-    color: "#c8d8e8", fontSize: 11, fontFamily: theme.font.label,
-    padding: "7px 10px", outline: "none", boxSizing: "border-box" as const,
-  },
-};
+// ── Input style ──────────────────────────────────────────────────────────────────
+// A chave `input` NÃO existe no dashboard-tokens compartilhado (subset atual).
+// Mantida local até o token compartilhado ganhar a chave — ver blocker do handoff.
+const INPUT_STYLE = {
+  width: "100%", background: "var(--asb-card-hi)", border: "1px solid var(--asb-border)", borderRadius: 3,
+  color: "#c8d8e8", fontSize: 11, fontFamily: theme.font.label,
+  padding: "7px 10px", outline: "none", boxSizing: "border-box" as const,
+} as React.CSSProperties;
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 function QualBadge({ stage }: { stage: number | null }) {
@@ -101,7 +98,7 @@ function QualBadge({ stage }: { stage: number | null }) {
 function DomainBadge({ domain }: { domain: string }) {
   return (
     <span style={{
-      display: "inline-block", background: "rgba(27,42,107,.25)", border: "1px solid #2a2a2a",
+      display: "inline-block", background: "rgba(27,42,107,.25)", border: "1px solid var(--asb-border)",
       color: "#c0d0e0", fontSize: 9, fontFamily: theme.font.label,
       padding: "2px 8px", borderRadius: 3, letterSpacing: ".10em",
     }}>
@@ -192,10 +189,10 @@ export default function SimulatorPage() {
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {/* Header */}
       <div>
-        <h1 style={{ color: "var(--asb-page-ink)", fontSize: 20, fontWeight: 800, fontFamily: theme.font.label, letterSpacing: "-.01em", textTransform: "none", marginBottom: 4 }}>
+        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
           Simulador RAG
         </h1>
-        <p style={{ ...S.muted, color: "var(--asb-page-ink2)" }}>Teste o comportamento do SDR sem usar leads reais</p>
+        <p style={S.muted}>Teste o comportamento do SDR sem usar leads reais</p>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, alignItems: "start" }}>
@@ -204,60 +201,59 @@ export default function SimulatorPage() {
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
           {/* Bloco 1 — Config do lead */}
-          <div style={S.card}>
+          <div style={{ ...S.card, padding: "20px 24px" }}>
             <p style={S.section}>
-              <span style={{ color: "#C8102E", marginRight: 6 }}>▲</span>
-              Perfil do Lead Simulado
+Perfil do Lead Simulado
             </p>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
 
               <div>
-                <label style={S.label}>Segmento</label>
-                <select value={config.segment} onChange={e => set("segment", e.target.value)} style={S.input}>
+                <label style={{ ...S.label, display: "block", marginBottom: 6 }}>Segmento</label>
+                <select value={config.segment} onChange={e => set("segment", e.target.value)} style={INPUT_STYLE}>
                   {SEGMENTS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                 </select>
               </div>
 
               <div>
-                <label style={S.label}>Cidade</label>
+                <label style={{ ...S.label, display: "block", marginBottom: 6 }}>Cidade</label>
                 <input
                   type="text"
                   value={config.city}
                   placeholder="ex: São Paulo"
                   onChange={e => set("city", e.target.value)}
-                  style={S.input}
+                  style={INPUT_STYLE}
                 />
               </div>
 
               <div>
-                <label style={S.label}>Etapa atual (0–9)</label>
-                <select value={config.current_etapa} onChange={e => set("current_etapa", Number(e.target.value))} style={S.input}>
+                <label style={{ ...S.label, display: "block", marginBottom: 6 }}>Etapa atual (0–9)</label>
+                <select value={config.current_etapa} onChange={e => set("current_etapa", Number(e.target.value))} style={INPUT_STYLE}>
                   {ETAPAS.map(i => <option key={i} value={i}>Etapa {i}</option>)}
                 </select>
               </div>
 
               <div>
-                <label style={S.label}>Volume semanal (kg)</label>
+                <label style={{ ...S.label, display: "block", marginBottom: 6 }}>Volume semanal (kg)</label>
                 <input
                   type="number"
                   min={0}
                   value={config.weekly_volume_kg ?? ""}
                   placeholder="ex: 150"
                   onChange={e => set("weekly_volume_kg", e.target.value ? Number(e.target.value) : null)}
-                  style={S.input}
+                  style={INPUT_STYLE}
                 />
               </div>
 
               <div>
-                <label style={S.label}>Fornecedor atual</label>
-                <select value={config.current_supplier} onChange={e => set("current_supplier", e.target.value)} style={S.input}>
+                <label style={{ ...S.label, display: "block", marginBottom: 6 }}>Fornecedor atual</label>
+                <select value={config.current_supplier} onChange={e => set("current_supplier", e.target.value)} style={INPUT_STYLE}>
                   {SUPPLIERS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                 </select>
               </div>
 
               <div>
-                <label style={S.label}>Domínio RAG forçado</label>
-                <select value={config.rag_domain} onChange={e => set("rag_domain", e.target.value)} style={S.input}>
+                <label style={{ ...S.label, display: "block", marginBottom: 6 }}>Domínio RAG forçado</label>
+                <select value={config.rag_domain} onChange={e => set("rag_domain", e.target.value)} style={INPUT_STYLE}>
                   {RAG_DOMAINS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                 </select>
               </div>
@@ -266,10 +262,9 @@ export default function SimulatorPage() {
           </div>
 
           {/* Bloco 2 — Mensagem */}
-          <div style={S.card}>
+          <div style={{ ...S.card, padding: "20px 24px" }}>
             <p style={S.section}>
-              <span style={{ color: "#C8102E", marginRight: 6 }}>▲</span>
-              Mensagem do Lead
+Mensagem do Lead
             </p>
             <form onSubmit={handleSubmit}>
               <textarea
@@ -278,7 +273,7 @@ export default function SimulatorPage() {
                 onChange={e => setMessage(e.target.value)}
                 placeholder="Digite a mensagem simulada do lead…"
                 rows={5}
-                style={{ ...S.input, resize: "vertical", lineHeight: 1.6 }}
+                style={{ ...INPUT_STYLE, resize: "vertical", lineHeight: 1.6 }}
                 onKeyDown={e => {
                   if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleSubmit(e as unknown as React.FormEvent);
                 }}
@@ -298,7 +293,7 @@ export default function SimulatorPage() {
                     transition: "all .15s",
                   }}
                 >
-                  {loading ? "Processando…" : "▶ Simular"}
+                  {loading ? "Processando…" : "Simular"}
                 </button>
               </div>
             </form>
@@ -309,10 +304,9 @@ export default function SimulatorPage() {
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
           {/* Bloco 3 — Resposta */}
-          <div style={S.card}>
+          <div style={{ ...S.card, padding: "20px 24px" }}>
             <p style={S.section}>
-              <span style={{ color: "#C8102E", marginRight: 6 }}>▲</span>
-              Resposta do SDR
+Resposta do SDR
             </p>
 
             {loading && (
@@ -336,7 +330,7 @@ export default function SimulatorPage() {
                   <DomainBadge domain={lastResult.domain} />
                   {lastResult.intent && (
                     <span style={{
-                      display: "inline-block", background: "rgba(27,42,107,.2)", border: "1px solid #2a2a2a",
+                      display: "inline-block", background: "rgba(27,42,107,.2)", border: "1px solid var(--asb-border)",
                       color: "#c0d0e0", fontSize: 9, fontFamily: theme.font.label,
                       padding: "2px 8px", borderRadius: 3,
                     }}>
@@ -364,7 +358,7 @@ export default function SimulatorPage() {
                 ) : (
                   /* Response text */
                   <div style={{
-                    background: "#080b14", border: "1px solid rgba(27,42,107,.5)",
+                    background: "var(--asb-card-hi)", border: "1px solid rgba(27,42,107,.5)",
                     borderRadius: 3, padding: "14px 16px",
                   }}>
                     <p style={{
@@ -387,17 +381,16 @@ export default function SimulatorPage() {
           </div>
 
           {/* Bloco 4 — Histórico da sessão */}
-          <div style={S.card}>
+          <div style={{ ...S.card, padding: "20px 24px" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
               <p style={{ ...S.section, marginBottom: 0 }}>
-                <span style={{ color: "#C8102E", marginRight: 6 }}>▲</span>
-                Histórico da Sessão
+    Histórico da Sessão
               </p>
               {history.length > 0 && (
                 <button
                   onClick={() => { setHistory([]); setLastResult(null); }}
                   style={{
-                    background: "transparent", border: "1px solid #2a2a2a", color: "#e4e9f0",
+                    background: "transparent", border: "1px solid var(--asb-border)", color: "#e4e9f0",
                     fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".10em",
                     textTransform: "uppercase", padding: "3px 8px", borderRadius: 3, cursor: "pointer",
                   }}
