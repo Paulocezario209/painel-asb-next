@@ -48,18 +48,17 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* ASB Design System — "grafite sobre claro" (v2, 2026-07-16)
-   Frame claro (página/sidebar/header) · cards grafite escuros (texto branco) · cor só como sinal.
-   Regra: cards e conteúdo permanecem grafite → texto branco existente continua legível.
-   Só o FRAME (fundo de página, sidebar, header) e os TÍTULOS de nível de página ficam claros. */
+/* ASB Design System — "grafite total" (v3, 2026-07-16)
+   Painel inteiro dark: pagina + sidebar + header + cards em grafite, texto claro.
+   Cor so como sinal. Zero superficie clara -> zero risco de texto claro no claro. */
 :root {
-  /* superfície grafite dos cards (inalterada em espírito — conteúdo branco continua funcionando) */
-  --asb-bg:         #0f1117;   /* legado dark (usado por gráficos internos) */
-  --asb-surface:    #17181d;
-  --asb-card:        #17181d;   /* grafite do card */
-  --asb-card-hi:     #202127;
-  --asb-border:     rgba(255,255,255,.09);
-  --asb-border2:    rgba(255,255,255,.16);
+  /* superficie grafite dos cards */
+  --asb-bg:         #0e0f13;
+  --asb-surface:    #1b1c22;
+  --asb-card:        #1b1c22;   /* card (elevado da pagina) */
+  --asb-card-hi:     #24252c;
+  --asb-border:     rgba(255,255,255,.08);
+  --asb-border2:    rgba(255,255,255,.15);
   --asb-text:       #FFFFFF;
   --asb-text2:      #c8d8e8;
   --asb-muted:      #c0d0e0;
@@ -71,43 +70,43 @@
   --asb-success:    #22c55e;
   --asb-danger:     #C8102E;
 
-  /* FRAME CLARO — página e superfícies do shell */
-  --asb-page-1:     #FCFCFD;
-  --asb-page-2:     #EEF0F6;
-  --asb-page-ink:   #12131A;   /* texto de nível de página (títulos) */
-  --asb-page-ink2:  #565A6B;   /* subtítulo/legenda de página */
-  --asb-page-ink3:  #8B90A3;
-  --asb-shell:      #FFFFFF;   /* sidebar/header */
-  --asb-shell-2:    #F4F5F9;
-  --asb-shell-border: #E7E9F1;
+  /* FRAME GRAFITE — pagina e superficies do shell (tudo escuro) */
+  --asb-page-1:     #0e0f13;
+  --asb-page-2:     #141519;
+  --asb-page-ink:   #f4f4f8;   /* texto de nivel de pagina (titulos) — claro */
+  --asb-page-ink2:  #aeb7cc;   /* subtitulo/legenda */
+  --asb-page-ink3:  #83879a;
+  --asb-shell:      #16171d;   /* sidebar/header */
+  --asb-shell-2:    #23242c;
+  --asb-shell-border: rgba(255,255,255,.07);
 
-  /* shadcn tokens */
-  --background:   #F4F5F9;
-  --foreground:   #12131A;
-  --card:         #17181d;   /* grafite */
+  /* shadcn tokens (dark) */
+  --background:   #141519;
+  --foreground:   #f4f4f8;
+  --card:         #1b1c22;
   --card-foreground: #FFFFFF;
-  --popover:      #17181d;
+  --popover:      #1b1c22;
   --popover-foreground: #FFFFFF;
   --primary:      #C8102E;
   --primary-foreground: #FFFFFF;
-  --secondary:    #EEF0F6;
-  --secondary-foreground: #12131A;
-  --muted:        #EEF0F6;
-  --muted-foreground: #565A6B;
-  --accent:       #EEF0F6;
-  --accent-foreground: #12131A;
+  --secondary:    #23242c;
+  --secondary-foreground: #f4f4f8;
+  --muted:        #23242c;
+  --muted-foreground: #aeb7cc;
+  --accent:       #23242c;
+  --accent-foreground: #f4f4f8;
   --destructive:  #C8102E;
-  --border:       #E7E9F1;
-  --input:        #E1E4EE;
+  --border:       rgba(255,255,255,.08);
+  --input:        rgba(255,255,255,.12);
   --ring:         #C8102E;
   --radius:       0.75rem;
-  --sidebar:      #FFFFFF;
-  --sidebar-foreground: #2b2f3d;
+  --sidebar:      #15161c;
+  --sidebar-foreground: #9aa3ba;
   --sidebar-primary: #C8102E;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #17181d;
+  --sidebar-accent: #23242c;
   --sidebar-accent-foreground: #FFFFFF;
-  --sidebar-border: #E7E9F1;
+  --sidebar-border: rgba(255,255,255,.07);
   --sidebar-ring: #C8102E;
 
   --chart-1: #C8102E;
@@ -123,8 +122,8 @@
   }
   body {
     background:
-      radial-gradient(760px 460px at 88% -6%, rgba(200,16,46,.05), transparent 62%),
-      radial-gradient(720px 500px at 4% 2%, rgba(27,42,107,.06), transparent 60%),
+      radial-gradient(820px 520px at 88% -8%, rgba(200,16,46,.10), transparent 62%),
+      radial-gradient(760px 560px at 2% 4%, rgba(27,42,107,.16), transparent 60%),
       linear-gradient(160deg, var(--asb-page-1), var(--asb-page-2));
     background-attachment: fixed;
     color: var(--asb-page-ink);
