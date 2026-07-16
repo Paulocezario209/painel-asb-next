@@ -25,12 +25,12 @@ export default function LoginPage() {
   const inputStyle: React.CSSProperties = {
     width: "100%", background: "var(--asb-card-hi)", border: "1px solid rgba(255,255,255,.12)", borderRadius: 9,
     color: "#FFFFFF", fontSize: 12, padding: "10px 12px",
-    fontFamily: "'Courier New', monospace", outline: "none", boxSizing: "border-box", transition: "border-color .15s",
+    fontFamily: "var(--font-geist-sans), system-ui, sans-serif", outline: "none", boxSizing: "border-box", transition: "border-color .15s",
   };
 
   const labelStyle: React.CSSProperties = {
     fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase",
-    color: "#e4e9f0", fontFamily: "'Courier New', monospace", display: "block", marginBottom: 6,
+    color: "#e4e9f0", fontFamily: "var(--font-geist-sans), system-ui, sans-serif", display: "block", marginBottom: 6,
   };
 
   return (
@@ -52,7 +52,7 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/asb_logo.png" alt="American Steak Brasil" style={{ height: 100, width: "auto", margin: "0 auto 12px" }} />
-          <p style={{ color: "#e4e9f0", fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", fontFamily: "'Courier New', monospace" }}>
+          <p style={{ color: "#e4e9f0", fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", fontFamily: "var(--font-geist-sans), system-ui, sans-serif" }}>
             Painel de Vendas — acesso restrito
           </p>
         </div>
@@ -79,7 +79,7 @@ export default function LoginPage() {
             <div style={{
               background: "rgba(200,16,46,.08)", border: "1px solid rgba(200,16,46,.3)",
               borderRadius: 3, padding: "8px 12px", color: "#C8102E",
-              fontSize: 11, fontFamily: "'Courier New', monospace",
+              fontSize: 11, fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
             }}>{error}</div>
           )}
 
@@ -91,7 +91,7 @@ export default function LoginPage() {
               borderRadius: 9, color: "#FFFFFF",
               fontSize: 10, letterSpacing: ".15em", textTransform: "uppercase",
               padding: "11px 0", cursor: loading ? "not-allowed" : "pointer",
-              fontFamily: "'Courier New', monospace", fontWeight: 700, marginTop: 4, transition: "all .15s",
+              fontFamily: "var(--font-geist-sans), system-ui, sans-serif", fontWeight: 700, marginTop: 4, transition: "all .15s",
               opacity: loading ? 0.6 : 1,
             }}
             onMouseEnter={(e) => { if (!loading) (e.currentTarget as HTMLButtonElement).style.background = "#a00d24"; }}

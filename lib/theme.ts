@@ -35,10 +35,10 @@ export const theme = {
     gridLine:       "rgba(27,42,107,.35)",  // linha de grade dos charts
   },
   font: {
-    mono: "'Courier New', monospace",
+    mono: "var(--font-geist-sans), system-ui, sans-serif",
     sans: "inherit",
-    // Fase 1 tipografia (token-driven): número = mono Geist · label/texto = sans Geist.
-    num:   "var(--font-geist-mono), 'Courier New', monospace",
+    // Tipografia: número = mono Geist (tabular) · label/texto = sans Geist. Sem Courier.
+    num:   "var(--font-geist-mono), ui-monospace, monospace",
     label: "var(--font-geist-sans), system-ui, sans-serif",
   },
 } as const;

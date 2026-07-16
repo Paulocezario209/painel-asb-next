@@ -73,7 +73,7 @@ function TimeBadge({ handoffAt }: { handoffAt: string }) {
         className={pulse ? "pulse-red" : undefined}
         style={{
           display: "inline-block", background: bg, border: `1px solid ${border}`,
-          color, fontSize: 10, fontFamily: "'Courier New', monospace", fontWeight: 700,
+          color, fontSize: 10, fontFamily: "var(--font-geist-sans), system-ui, sans-serif", fontWeight: 700,
           padding: "3px 8px", borderRadius: 3, whiteSpace: "nowrap",
         }}
       >
@@ -85,9 +85,9 @@ function TimeBadge({ handoffAt }: { handoffAt: string }) {
 
 // ── Main component ─────────────────────────────────────────────────────────────
 const S = {
-  label: { fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase" as const, color: "#e4e9f0", fontFamily: "'Courier New', monospace" },
-  cell:  { color: "#c8d8e8", fontSize: 11, fontFamily: "'Courier New', monospace", padding: "10px 12px", verticalAlign: "top" as const },
-  muted: { color: "#c0d0e0", fontSize: 10, fontFamily: "'Courier New', monospace" },
+  label: { fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase" as const, color: "#e4e9f0", fontFamily: "var(--font-geist-sans), system-ui, sans-serif" },
+  cell:  { color: "#c8d8e8", fontSize: 11, fontFamily: "var(--font-geist-sans), system-ui, sans-serif", padding: "10px 12px", verticalAlign: "top" as const },
+  muted: { color: "#c0d0e0", fontSize: 10, fontFamily: "var(--font-geist-sans), system-ui, sans-serif" },
 };
 
 export function HandoffsTable({ initial, initialFilter }: { initial: Handoff[]; initialFilter?: "criticos" | "hoje" }) {
@@ -191,7 +191,7 @@ export function HandoffsTable({ initial, initialFilter }: { initial: Handoff[]; 
   const btnFilter = (active: boolean) => ({
     padding: "5px 12px", borderRadius: 3, cursor: "pointer",
     fontSize: 9, letterSpacing: ".12em", textTransform: "uppercase" as const,
-    fontFamily: "'Courier New', monospace", fontWeight: 600,
+    fontFamily: "var(--font-geist-sans), system-ui, sans-serif", fontWeight: 600,
     border: active ? "1px solid #C8102E" : "1px solid #2a2a2a",
     background: active ? "rgba(200,16,46,.12)" : "transparent",
     color: active ? "#C8102E" : "#c0d0e0",
@@ -225,7 +225,7 @@ export function HandoffsTable({ initial, initialFilter }: { initial: Handoff[]; 
         {live && (
           <span style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 6 }}>
             <style>{`@keyframes asb-live{0%,100%{opacity:1}50%{opacity:.3}}.asb-live-dot{animation:asb-live 1.4s ease-in-out infinite}`}</style>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, color: "#22c55e", fontSize: 9, letterSpacing: ".12em", textTransform: "uppercase", fontFamily: "'Courier New', monospace", fontWeight: 700 }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, color: "#22c55e", fontSize: 9, letterSpacing: ".12em", textTransform: "uppercase", fontFamily: "var(--font-geist-sans), system-ui, sans-serif", fontWeight: 700 }}>
               <span className="asb-live-dot" style={{ width: 7, height: 7, borderRadius: "50%", background: "#22c55e", display: "inline-block" }} />
               AO VIVO
             </span>
@@ -236,7 +236,7 @@ export function HandoffsTable({ initial, initialFilter }: { initial: Handoff[]; 
       {/* Empty state */}
       {filtered.length === 0 ? (
         <div style={{ padding: "32px 0", textAlign: "center" }}>
-          <p style={{ color: "#22c55e", fontSize: 12, fontFamily: "'Courier New', monospace" }}>
+          <p style={{ color: "#22c55e", fontSize: 12, fontFamily: "var(--font-geist-sans), system-ui, sans-serif" }}>
             ✅ Nenhum handoff pendente{urgentOnly ? " crítico" : ""}{vendorFilter !== "todos" ? ` para ${VENDOR_LABELS[vendorFilter]}` : ""}
           </p>
         </div>
@@ -314,7 +314,7 @@ export function HandoffsTable({ initial, initialFilter }: { initial: Handoff[]; 
                   <td style={{ ...S.cell, whiteSpace: "nowrap" }}>
                     <span style={{
                       border: "1px solid #2a2a2a", color: "#c0d0e0", fontSize: 9,
-                      padding: "2px 7px", borderRadius: 2, fontFamily: "'Courier New', monospace",
+                      padding: "2px 7px", borderRadius: 2, fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
                     }}>
                       {VENDOR_LABELS[r.routing_team ?? ""] ?? r.routing_team ?? "—"}
                     </span>
@@ -323,7 +323,7 @@ export function HandoffsTable({ initial, initialFilter }: { initial: Handoff[]; 
                   {/* Ação */}
                   <td style={{ ...S.cell, whiteSpace: "nowrap" }}>
                     {errors[r.phone] && (
-                      <p style={{ color: "#C8102E", fontSize: 9, fontFamily: "'Courier New', monospace", marginBottom: 4 }}>
+                      <p style={{ color: "#C8102E", fontSize: 9, fontFamily: "var(--font-geist-sans), system-ui, sans-serif", marginBottom: 4 }}>
                         {errors[r.phone]}
                       </p>
                     )}
@@ -333,7 +333,7 @@ export function HandoffsTable({ initial, initialFilter }: { initial: Handoff[]; 
                       style={{
                         padding: "5px 12px", borderRadius: 3, cursor: loading[r.phone] ? "not-allowed" : "pointer",
                         fontSize: 9, letterSpacing: ".12em", textTransform: "uppercase",
-                        fontFamily: "'Courier New', monospace", fontWeight: 700,
+                        fontFamily: "var(--font-geist-sans), system-ui, sans-serif", fontWeight: 700,
                         border: "1px solid rgba(34,197,94,.4)",
                         background: loading[r.phone] ? "rgba(34,197,94,.04)" : "rgba(34,197,94,.1)",
                         color: loading[r.phone] ? "#e4e9f0" : "#22c55e",

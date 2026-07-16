@@ -132,13 +132,13 @@ export function MetasCalendarioGerente() {
 
       {/* Toggle vendedor */}
       <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-        <span style={{ fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", color: "#e4e9f0", fontFamily: "'Courier New', monospace" }}>Vendedor</span>
+        <span style={{ fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", color: "#e4e9f0", fontFamily: "var(--font-geist-sans), system-ui, sans-serif" }}>Vendedor</span>
         {VENDORS.map(v => {
           const active = vendor === v.k;
           return (
             <button key={v.k} onClick={() => setVendor(v.k)} style={{
               padding: "6px 12px", fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase",
-              fontFamily: "'Courier New', monospace", fontWeight: 700,
+              fontFamily: "var(--font-geist-sans), system-ui, sans-serif", fontWeight: 700,
               background: active ? v.accent : "transparent", color: active ? "#FFFFFF" : "#c0c8d8",
               border: `1px solid ${active ? v.accent : "#2a2a2a"}`, borderRadius: 3, cursor: "pointer", transition: "all .15s",
             }}>{v.name}</button>
@@ -147,9 +147,9 @@ export function MetasCalendarioGerente() {
       </div>
 
       {loading ? (
-        <div style={{ padding: 32, textAlign: "center", color: "#c0d0e0", fontFamily: "'Courier New', monospace", fontSize: 12 }}>Carregando {mesLabel}…</div>
+        <div style={{ padding: 32, textAlign: "center", color: "#c0d0e0", fontFamily: "var(--font-geist-sans), system-ui, sans-serif", fontSize: 12 }}>Carregando {mesLabel}…</div>
       ) : erro ? (
-        <div style={{ padding: 16, color: "#C8102E", fontFamily: "'Courier New', monospace", fontSize: 12 }}>Erro: {erro}</div>
+        <div style={{ padding: 16, color: "#C8102E", fontFamily: "var(--font-geist-sans), system-ui, sans-serif", fontSize: 12 }}>Erro: {erro}</div>
       ) : (
         <>
           <MetaCalendarGrid
@@ -161,7 +161,7 @@ export function MetasCalendarioGerente() {
             corHex={corHex}
           />
 
-          <p style={{ fontSize: 10, color: "#e4e9f0", fontFamily: "'Courier New', monospace", textAlign: "center" }}>
+          <p style={{ fontSize: 10, color: "#e4e9f0", fontFamily: "var(--font-geist-sans), system-ui, sans-serif", textAlign: "center" }}>
             Clique num dia {temPassado ? "para ver pedidos, CNB e ausentes" : "(mês futuro: só meta)"}.
           </p>
         </>
@@ -187,7 +187,7 @@ export function MetasCalendarioGerente() {
       })()}
       {modalLoading && modalDia && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 999, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <p style={{ color: "#c0c8d8", fontFamily: "'Courier New', monospace" }}>Carregando...</p>
+          <p style={{ color: "#c0c8d8", fontFamily: "var(--font-geist-sans), system-ui, sans-serif" }}>Carregando...</p>
         </div>
       )}
     </div>
@@ -197,7 +197,7 @@ export function MetasCalendarioGerente() {
 function navBtn(active: boolean): React.CSSProperties {
   return {
     padding: "5px 10px", fontSize: 10, letterSpacing: ".08em", textTransform: "uppercase",
-    fontFamily: "'Courier New', monospace", fontWeight: 700,
+    fontFamily: "var(--font-geist-sans), system-ui, sans-serif", fontWeight: 700,
     background: active ? "#185FA5" : "transparent", color: active ? "#FFFFFF" : "#c0d0e0",
     border: `1px solid ${active ? "#185FA5" : "#2a2a2a"}`, borderRadius: 3, cursor: "pointer", transition: "all .15s",
   };

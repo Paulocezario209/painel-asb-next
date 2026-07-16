@@ -19,7 +19,7 @@ export type FunnelStage = {
 const tooltipStyle = {
   contentStyle: {
     background: "#1a1a1a", border: "1px solid #C8102E", borderRadius: 3,
-    fontSize: 11, fontFamily: "'Courier New', monospace", color: "#c8d8e8",
+    fontSize: 11, fontFamily: "var(--font-geist-sans), system-ui, sans-serif", color: "#c8d8e8",
     boxShadow: "0 4px 20px rgba(200,16,46,.15)",
   },
   itemStyle:  { color: "#c8d8e8" },
@@ -47,7 +47,7 @@ export function FunnelVisual({ data }: { data: FunnelStage[] }) {
             stroke="none"
             fill="#c8d8e8"
             fontSize={11}
-            fontFamily="'Courier New', monospace"
+            fontFamily="var(--font-geist-sans), system-ui, sans-serif"
           />
           <LabelList
             position="inside"
@@ -56,7 +56,7 @@ export function FunnelVisual({ data }: { data: FunnelStage[] }) {
             fill="#FFFFFF"
             fontSize={12}
             fontWeight={700}
-            fontFamily="'Courier New', monospace"
+            fontFamily="var(--font-geist-sans), system-ui, sans-serif"
           />
         </Funnel>
       </FunnelChart>

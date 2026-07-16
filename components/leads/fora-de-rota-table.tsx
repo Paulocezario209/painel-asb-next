@@ -22,7 +22,7 @@ const C = {
   bg: "#080b14", border: "#2a2a2a",
   text: "#FFFFFF", muted: "#c0d0e0", label: "#e4e9f0", red: "#C8102E",
 };
-const MONO: React.CSSProperties = { fontFamily: "'Courier New', monospace" };
+const MONO: React.CSSProperties = { fontFamily: "var(--font-geist-sans), system-ui, sans-serif" };
 
 function relativeTime(iso: string | null): string {
   if (!iso) return "—";

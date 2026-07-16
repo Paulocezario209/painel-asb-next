@@ -35,7 +35,7 @@ type AppliedResp = {
   nota_saldo_nao_encontrado: number;
 };
 
-const mono = "'Courier New', monospace";
+const mono = "var(--font-geist-sans), system-ui, sans-serif";
 
 export function AncoraUpload() {
   const router = useRouter();

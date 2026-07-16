@@ -45,7 +45,7 @@ const C = {
   blue:   "#60a5fa",
 };
 
-const MONO: React.CSSProperties = { fontFamily: "'Courier New', monospace" };
+const MONO: React.CSSProperties = { fontFamily: "var(--font-geist-sans), system-ui, sans-serif" };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 

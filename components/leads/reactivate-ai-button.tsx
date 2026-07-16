@@ -64,7 +64,7 @@ export function ReactivateAiButton({
           fontSize: 10,
           letterSpacing: ".10em",
           textTransform: "uppercase" as const,
-          fontFamily: "'Courier New', monospace",
+          fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
           cursor: "pointer",
         }}
       >
@@ -91,7 +91,7 @@ export function ReactivateAiButton({
           fontSize: 10,
           letterSpacing: ".12em",
           textTransform: "uppercase" as const,
-          fontFamily: "'Courier New', monospace",
+          fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
           fontWeight: 700,
         }}
       >
@@ -101,7 +101,7 @@ export function ReactivateAiButton({
         style={{
           color: "#8b949e",
           fontSize: 11,
-          fontFamily: "'Courier New', monospace",
+          fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
           lineHeight: 1.5,
         }}
       >
@@ -114,7 +114,7 @@ export function ReactivateAiButton({
           style={{
             color: "#f85149",
             fontSize: 10,
-            fontFamily: "'Courier New', monospace",
+            fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
           }}
         >
           {error}
@@ -134,7 +134,7 @@ export function ReactivateAiButton({
             border: "1px solid #30363d",
             color: "#8b949e",
             fontSize: 10,
-            fontFamily: "'Courier New', monospace",
+            fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
             cursor: "pointer",
           }}
         >
@@ -152,7 +152,7 @@ export function ReactivateAiButton({
             fontSize: 10,
             letterSpacing: ".08em",
             textTransform: "uppercase" as const,
-            fontFamily: "'Courier New', monospace",
+            fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
             cursor: saving ? "wait" : "pointer",
           }}
         >

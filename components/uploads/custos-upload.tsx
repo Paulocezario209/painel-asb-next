@@ -11,7 +11,7 @@ type RowErr = { aba: string; linha: number; motivo: string };
 type PreviewResp = { mode: "preview"; resumo: Resumo; total_ok: number; total_erros: number; erros: RowErr[] };
 type AppliedResp = { mode: "applied"; upload_id: number; resumo: Resumo; total_ok: number };
 
-const mono = "'Courier New', monospace";
+const mono = "var(--font-geist-sans), system-ui, sans-serif";
 const ENDPOINT = "/api/compras/custos/upload";
 
 export function CustosUpload() {

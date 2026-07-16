@@ -7,7 +7,7 @@ import { getUserContext } from "@/lib/auth/get-user-role";
 import { ConfirmMatchButton } from "./confirm-match-button";
 import { vendorLabel } from "@/lib/vendor-labels";
 
-const mono = "'Courier New', monospace";
+const mono = "var(--font-geist-sans), system-ui, sans-serif";
 const brl = (n: number) =>
   `R$ ${Number(n || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
