@@ -47,10 +47,18 @@ const NAV_GROUPS = [
   },
 ];
 
-// /dashboard/funil + /dashboard/cadencias LIBERADOS ao vendedor (Paulo 2026-07-14/15).
 const VENDOR_BLOCKED = new Set(["/dashboard/vendedores", "/dashboard/gerente", "/dashboard/insights", "/dashboard/simulator", "/dashboard/uploads", "/dashboard/churn", "/dashboard/up-sell", "/dashboard/remuneracao"]);
-// manager (Fernando): ganha Remuneracao (tela do time); perde Minha Comissao.
 const MANAGER_BLOCKED = new Set(["/dashboard/gerente", "/dashboard/simulator", "/dashboard/uploads", "/dashboard/minha-comissao"]);
+
+// Paleta grafite (caixa escura, mesmo padrão dos cards do painel)
+const SB = {
+  bg: "#15161c",
+  border: "rgba(255,255,255,.07)",
+  itemIdle: "#9aa3ba",
+  itemHover: "#23242c",
+  itemActive: "#23242c",
+  labelMuted: "#6b7488",
+};
 
 export function Sidebar({
   isOpen = false,
@@ -72,16 +80,16 @@ export function Sidebar({
   return (
     <aside
       className={`w-52 flex flex-col shrink-0 asb-sidebar-drawer ${isOpen ? "open" : ""}`}
-      style={{ background: "var(--asb-shell)", borderRight: "1px solid var(--asb-shell-border)", overflowY: "auto" }}
+      style={{ background: SB.bg, borderRight: `1px solid ${SB.border}`, overflowY: "auto" }}
     >
       {/* Logo — tile + wordmark; clique volta à frente institucional */}
-      <Link href="/inicio" title="Voltar à frente institucional" style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none", padding: "18px 14px 16px", borderBottom: "1px solid var(--asb-shell-border)" }}>
+      <Link href="/inicio" title="Voltar à frente institucional" style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none", padding: "18px 14px 16px", borderBottom: `1px solid ${SB.border}` }}>
         <div style={{ width: 42, height: 42, borderRadius: 12, flexShrink: 0, background: "linear-gradient(140deg, #E01235 0%, #C8102E 45%, #1B2A6B 100%)", display: "grid", placeItems: "center", color: "#fff", fontWeight: 850, fontSize: 15, letterSpacing: ".5px", boxShadow: "0 8px 18px -8px rgba(200,16,46,.55)" }}>
           ASB
         </div>
         <div style={{ lineHeight: 1.15 }}>
-          <div style={{ fontWeight: 750, fontSize: 15, color: "#12131A", fontFamily: SANS, letterSpacing: "-.01em" }}>American Steak</div>
-          <div style={{ fontSize: 10.5, color: "#8B90A3", fontWeight: 600, fontFamily: SANS, marginTop: 1 }}>SDR · Comercial</div>
+          <div style={{ fontWeight: 750, fontSize: 15, color: "#fff", fontFamily: SANS, letterSpacing: "-.01em" }}>American Steak</div>
+          <div style={{ fontSize: 10.5, color: "#8b93a7", fontWeight: 600, fontFamily: SANS, marginTop: 1 }}>SDR · Comercial</div>
         </div>
       </Link>
 
@@ -92,7 +100,7 @@ export function Sidebar({
           if (items.length === 0) return null;
           return (
             <div key={group.title}>
-              <div style={{ fontSize: 10, fontWeight: 750, letterSpacing: ".1em", textTransform: "uppercase", color: "#8B90A3", padding: "13px 12px 5px", fontFamily: SANS }}>
+              <div style={{ fontSize: 10, fontWeight: 750, letterSpacing: ".1em", textTransform: "uppercase", color: SB.labelMuted, padding: "13px 12px 5px", fontFamily: SANS }}>
                 {group.title}
               </div>
               {items.map(({ href, label, icon: Icon }) => {
@@ -105,24 +113,24 @@ export function Sidebar({
                     style={{
                       display: "flex", alignItems: "center", gap: 11,
                       padding: "8px 11px", borderRadius: 9, marginBottom: 1,
-                      borderLeft: isActive ? "3px solid #C8102E" : "3px solid transparent",
-                      background: isActive ? "var(--asb-card)" : "transparent",
-                      color: isActive ? "#FFFFFF" : "#565A6B",
+                      borderLeft: isActive ? "3px solid #FF3B57" : "3px solid transparent",
+                      background: isActive ? SB.itemActive : "transparent",
+                      color: isActive ? "#FFFFFF" : SB.itemIdle,
                       fontSize: 13, fontWeight: isActive ? 650 : 550,
                       fontFamily: SANS,
-                      boxShadow: isActive ? "0 6px 16px -8px rgba(20,22,40,.4)" : "none",
+                      boxShadow: isActive ? "0 6px 16px -10px rgba(0,0,0,.6)" : "none",
                       transition: "all .15s", textDecoration: "none",
                     }}
                     onMouseEnter={(e) => {
                       if (!isActive) {
-                        (e.currentTarget as HTMLAnchorElement).style.background = "var(--asb-shell-2)";
-                        (e.currentTarget as HTMLAnchorElement).style.color = "#12131A";
+                        (e.currentTarget as HTMLAnchorElement).style.background = SB.itemHover;
+                        (e.currentTarget as HTMLAnchorElement).style.color = "#fff";
                       }
                     }}
                     onMouseLeave={(e) => {
                       if (!isActive) {
                         (e.currentTarget as HTMLAnchorElement).style.background = "transparent";
-                        (e.currentTarget as HTMLAnchorElement).style.color = "#565A6B";
+                        (e.currentTarget as HTMLAnchorElement).style.color = SB.itemIdle;
                       }
                     }}
                   >
@@ -137,10 +145,10 @@ export function Sidebar({
       </nav>
 
       {/* Footer */}
-      <div className="px-4 py-3" style={{ borderTop: "1px solid var(--asb-shell-border)" }}>
+      <div className="px-4 py-3" style={{ borderTop: `1px solid ${SB.border}` }}>
         <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
           <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#22c55e", boxShadow: "0 0 0 3px rgba(34,197,94,.18)" }} />
-          <p style={{ color: "#8B90A3", fontSize: 10, letterSpacing: ".06em", fontWeight: 600, fontFamily: SANS }}>
+          <p style={{ color: "#8b93a7", fontSize: 10, letterSpacing: ".06em", fontWeight: 600, fontFamily: SANS }}>
             v1.0 · SDR System
           </p>
         </div>
