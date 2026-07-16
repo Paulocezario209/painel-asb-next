@@ -73,23 +73,24 @@ export function StoreSwitcher() {
         aria-label="Trocar de módulo"
         style={{
           display: "flex", alignItems: "center", gap: 8,
-          background: "transparent", border: "1px solid #1B2A6B",
-          borderRadius: 3, padding: "3px 8px", cursor: "pointer",
+          background: "var(--asb-shell)", border: "1px solid var(--asb-shell-border)",
+          borderRadius: 10, padding: "5px 10px", cursor: "pointer",
+          boxShadow: "0 1px 2px rgba(20,22,40,.05)",
           transition: "border-color .15s",
         }}
         onMouseEnter={(e) => (e.currentTarget.style.borderColor = active.color)}
-        onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#1B2A6B")}
+        onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--asb-shell-border)")}
       >
         <div
           style={{
-            width: 22, height: 22, background: active.color, borderRadius: 2,
+            width: 24, height: 24, background: active.color, borderRadius: 7,
             display: "flex", alignItems: "center", justifyContent: "center",
           }}
         >
           <active.Icon size={13} color="#08110a" />
         </div>
         <span
-          style={{ color: "#FFFFFF", fontSize: 12, fontWeight: 700, fontFamily: mono, letterSpacing: ".1em", textTransform: "uppercase" }}
+          style={{ color: "#12131A", fontSize: 12, fontWeight: 700, fontFamily: mono, letterSpacing: ".1em", textTransform: "uppercase" }}
           translate="no"
         >
           ASB
@@ -108,8 +109,8 @@ export function StoreSwitcher() {
           <div
             style={{
               position: "absolute", top: 40, left: 0, zIndex: 50,
-              width: 280, background: "#0f1428", border: "1px solid #1B2A6B",
-              borderRadius: 6, padding: 8, boxShadow: "0 8px 24px rgba(0,0,0,.5)",
+              width: 280, background: "#17181d", border: "1px solid rgba(255,255,255,.12)",
+              borderRadius: 12, padding: 8, boxShadow: "0 20px 44px -18px rgba(20,22,40,.6)",
               display: "flex", flexDirection: "column", gap: 6,
             }}
           >

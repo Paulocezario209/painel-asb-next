@@ -119,7 +119,7 @@ export default async function PipelinePage({ searchParams }: { searchParams: Pro
     <div style={{ display: "flex", flexDirection: "column", gap: 16, height: "100%" }}>
       {/* Header */}
       <div>
-        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
+        <h1 style={{ color: "var(--asb-page-ink)", fontSize: 20, fontWeight: 800, fontFamily: theme.font.label, letterSpacing: "-.01em", textTransform: "none", marginBottom: 4 }}>
           Pipeline {ctx.isVendedor && ctx.routing_team ? `· ${VENDOR_LABELS[ctx.routing_team] ?? ctx.routing_team}` : ""}
           {mesParam ? ` · ${mesParam}` : ""}
         </h1>

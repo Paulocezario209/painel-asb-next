@@ -186,10 +186,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div>
-        <h1 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 4 }}>
+        <h1 style={{ color: "var(--asb-page-ink)", fontSize: 20, fontWeight: 800, fontFamily: theme.font.label, letterSpacing: "-.01em", marginBottom: 4 }}>
           Dashboard
         </h1>
-        <p style={S.muted}>
+        <p style={{ color: "var(--asb-page-ink2)", fontSize: 13, fontFamily: theme.font.label }}>
           Visão geral do pipeline SDR
           {mesParam ? ` · volume de ${mesParam}` : ""}{vend ? ` · vendedor filtrado` : ""}
         </p>

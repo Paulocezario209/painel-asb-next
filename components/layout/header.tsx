@@ -25,13 +25,13 @@ export function Header({
   return (
     <header
       className="h-12 flex items-center justify-between px-4 shrink-0"
-      style={{ background: "#080b14", borderBottom: "1px solid #1B2A6B" }}
+      style={{ background: "color-mix(in srgb, var(--asb-page-1) 78%, transparent)", backdropFilter: "blur(12px)", borderBottom: "1px solid var(--asb-shell-border)" }}
     >
       <div className="flex items-center gap-3">
         <button
           onClick={onMenuToggle}
           className="sm:hidden"
-          style={{ background: "transparent", border: "none", color: "#c0d0e0", cursor: "pointer", padding: 4, display: "flex", alignItems: "center" }}
+          style={{ background: "transparent", border: "none", color: "#565A6B", cursor: "pointer", padding: 4, display: "flex", alignItems: "center" }}
           aria-label="Menu"
         >
           <Menu size={18} />
@@ -41,18 +41,18 @@ export function Header({
 
       <div className="flex items-center gap-3">
         <ManualTelaButton />
-        <span className="hidden sm:inline" style={{ color: "#c0d0e0", fontSize: 11, fontFamily: "'Courier New', monospace" }}>
+        <span className="hidden sm:inline" style={{ color: "#565A6B", fontSize: 11, fontFamily: "'Courier New', monospace" }}>
           <span style={{ color: "#C8102E" }}>›</span> {email}
         </span>
-        <span className="sm:hidden" style={{ color: "#c0d0e0", fontSize: 10, fontFamily: "'Courier New', monospace", maxWidth: 130, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        <span className="sm:hidden" style={{ color: "#565A6B", fontSize: 10, fontFamily: "'Courier New', monospace", maxWidth: 130, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {email.split("@")[0]}
         </span>
         <button
           onClick={handleLogout}
           style={{
-            background: "transparent", border: "1px solid #1B2A6B", color: "#c0d0e0",
+            background: "var(--asb-shell)", border: "1px solid var(--asb-shell-border)", color: "#565A6B",
             fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase",
-            padding: "4px 10px", borderRadius: 2, cursor: "pointer",
+            padding: "4px 10px", borderRadius: 8, cursor: "pointer",
             fontFamily: "'Courier New', monospace", transition: "all .15s",
           }}
           onMouseEnter={(e) => {
@@ -60,8 +60,8 @@ export function Header({
             (e.currentTarget as HTMLButtonElement).style.color = "#C8102E";
           }}
           onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.borderColor = "#1B2A6B";
-            (e.currentTarget as HTMLButtonElement).style.color = "#c0d0e0";
+            (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--asb-shell-border)";
+            (e.currentTarget as HTMLButtonElement).style.color = "#565A6B";
           }}
         >
           logout

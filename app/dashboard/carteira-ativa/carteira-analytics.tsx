@@ -21,7 +21,7 @@ const tooltipStyle = {
 // Tokens do design-system (padrão Inteligência) + camada de glow tech sutil.
 const S = {
   card: { background: "#16161c", border: "1px solid #2a2a35", borderRadius: 8 } as CSSProperties, // camada INTELIGÊNCIA (levemente elevada)
-  h2: { color: "#FFFFFF", fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase" } as CSSProperties,
+  h2: { color: "var(--asb-page-ink)", fontSize: 20, fontWeight: 800, fontFamily: theme.font.label, letterSpacing: "-.01em", textTransform: "none" } as CSSProperties,
   section: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", color: "#c0c8d8", fontFamily: theme.font.label } as CSSProperties,
   label: { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", color: "#e4e9f0", fontFamily: theme.font.label } as CSSProperties,
   value: { fontSize: 28, fontWeight: 700, color: "#FFFFFF", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" as const, lineHeight: 1 } as CSSProperties,

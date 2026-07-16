@@ -229,16 +229,16 @@ export default async function ResultadosPage({
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <h1
         style={{
-          color: "#FFFFFF",
-          fontSize: 16,
-          fontWeight: 700,
+          color: "var(--asb-page-ink)",
+          fontSize: 20,
+          fontWeight: 800,
           fontFamily: theme.font.label,
-          letterSpacing: ".1em",
-          textTransform: "uppercase",
+          letterSpacing: "-.01em",
+          textTransform: "none",
         }}
       >
         Resultado de {MESES_PT[mesSel]}/{anoSel}{" "}
-        <span style={{ color: "#e4e9f0", fontSize: 11 }}>
+        <span style={{ color: "var(--asb-page-ink2)", fontSize: 12 }}>
           {isMesCorrente ? `(em andamento · ${duDecorridos}/${duTotal} dias úteis)` : "(mês fechado)"}
         </span>
       </h1>
