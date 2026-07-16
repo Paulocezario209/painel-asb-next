@@ -4,6 +4,7 @@ import { OverviewClient, type CacMensalRow, type RankRow, type AlertaRow } from 
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
 
 // FIX freeze (2026-07-15): consultas DIRETAS por request (eram unstable_cache revalidate 300, que
 // congelavam no self-hosted standalone). A página é force-dynamic → CAC e alertas refletem a view na hora.

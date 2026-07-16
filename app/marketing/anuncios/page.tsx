@@ -4,6 +4,7 @@ import { AnunciosClient, type RankRow, type SparkRow } from "./anuncios-client";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
 
 // FIX freeze (2026-07-15): consulta DIRETA por request (era unstable_cache revalidate 300, que
 // congelava no self-hosted standalone). A página é force-dynamic → ranking reflete a view na hora.
