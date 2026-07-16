@@ -102,12 +102,12 @@ export function DashboardFilters({ showMonth = true, showVendedor = true, showSe
                 key={v || "todos"}
                 onClick={() => update("vendedor", v)}
                 style={{
-                  background: active ? `rgba(46,160,67,.16)` : "transparent",
-                  border: `1px solid ${active ? GREEN : "rgba(255,255,255,.14)"}`,
-                  borderRadius: 5, padding: "5px 11px",
+                  background: active ? "#C8102E" : "transparent",
+                  border: `1px solid ${active ? "#C8102E" : "rgba(255,255,255,.14)"}`,
+                  borderRadius: 8, padding: "6px 13px",
                   color: active ? "#fff" : "#c0d0e0",
-                  fontSize: 10, fontFamily: mono, letterSpacing: ".06em", cursor: "pointer",
-                  fontWeight: active ? 700 : 400,
+                  fontSize: 12, fontFamily: mono, cursor: "pointer",
+                  fontWeight: active ? 700 : 500,
                 }}
               >
                 {label}

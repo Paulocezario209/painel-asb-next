@@ -35,6 +35,38 @@ const PRODUCT_LABELS: Record<string, string> = {
   molhos: "Molhos", defumados: "Defumados", paes: "Pães", embalagens: "Embalagens",
 };
 
+// ── Sparkline: série semanal REAL (últimas 8 semanas) ────────────────────────
+const SPARK_WEEKS = 8;
+function weeklySeries<T extends Record<string, unknown>>(items: T[], field: keyof T): number[] {
+  const now = Date.now();
+  const wk = 7 * 24 * 3600 * 1000;
+  const buckets = new Array(SPARK_WEEKS).fill(0);
+  for (const it of items) {
+    const raw = it[field] as string | null;
+    if (!raw) continue;
+    const diff = Math.floor((now - new Date(raw).getTime()) / wk);
+    if (diff >= 0 && diff < SPARK_WEEKS) buckets[SPARK_WEEKS - 1 - diff]++;
+  }
+  return buckets;
+}
+function trendPct(s: number[]): number | null {
+  const h = Math.floor(s.length / 2);
+  const a = s.slice(0, h).reduce((x, y) => x + y, 0);
+  const b = s.slice(h).reduce((x, y) => x + y, 0);
+  if (a === 0) return b > 0 ? 100 : null;
+  return Math.round(((b - a) / a) * 100);
+}
+function Sparkline({ data, color }: { data: number[]; color: string }) {
+  const max = Math.max(...data, 1), min = Math.min(...data);
+  const range = max - min || 1;
+  const pts = data.map((v, i) => `${(i / Math.max(data.length - 1, 1)) * 120},${28 - ((v - min) / range) * 24}`).join(" ");
+  return (
+    <svg viewBox="0 0 120 30" preserveAspectRatio="none" style={{ width: "100%", height: 30, display: "block", marginTop: 14 }}>
+      <polyline fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" points={pts} />
+    </svg>
+  );
+}
+
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const supabase = await createClient();
 
@@ -61,7 +93,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   if (vend) qQual = qQual.eq("routing_team", vend);
   if (mesIni && mesFimEx) qQual = qQual.gte("created_at", mesIni).lt("created_at", mesFimEx);
   // LISTA — alertas/ABC/cidades (estado "agora", só vendedor)
-  let qLeads = supabase.from("ai_sdr_leads").select("id, phone, restaurant_name, qual_stage, first_order_at, routing_team, handoff_at, handoff_confirmed, weekly_volume_kg, city, product_groups, human_active, followup_eligible, next_followup_at").eq("is_test", false).or("routing_team.is.null,routing_team.neq.fora_de_rota");  // DEBT-167 4: ABC+topCities+urgentA+alertas
+  let qLeads = supabase.from("ai_sdr_leads").select("id, phone, restaurant_name, qual_stage, first_order_at, routing_team, handoff_at, handoff_confirmed, weekly_volume_kg, city, product_groups, human_active, followup_eligible, next_followup_at, created_at").eq("is_test", false).or("routing_team.is.null,routing_team.neq.fora_de_rota");  // DEBT-167 4: ABC+topCities+urgentA+alertas (+created_at p/ sparklines)
   if (vend) qLeads = qLeads.eq("routing_team", vend);
 
   const [
@@ -177,11 +209,24 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
   const convertidos = leads.filter(l => l.first_order_at).length;
 
+  // Sparklines — séries semanais REAIS (leads em escopo), % calculados de verdade
+  const sTotal   = weeklySeries(leads, "created_at");
+  const sQual    = weeklySeries(leads.filter(l => (l.qual_stage ?? 0) >= 7), "created_at");
+  const sHandoff = weeklySeries(leads.filter(l => l.handoff_at), "handoff_at");
+  const sConv    = weeklySeries(leads.filter(l => l.first_order_at), "first_order_at");
+  const trTotal  = trendPct(sTotal);
+  const qualPct  = totalLeads ? Math.round(((qualifiedLeads ?? 0) / totalLeads) * 100) : 0;
+  const convPct  = leads.length ? Math.round((convertidos / leads.length) * 100) : 0;
+
   const kpis = [
-    { label: "Total Leads",        value: totalLeads ?? 0,    accent: "#8bb4ff", Icon: Users,      href: "/dashboard/leads" },
-    { label: "Qualificados",       value: qualifiedLeads ?? 0, accent: "#C8102E", Icon: BadgeCheck, href: "/dashboard/hot-leads" },
-    { label: "Handoffs Pendentes", value: handoffPending ?? 0, accent: "#f59e0b", Icon: PhoneCall,  href: "/dashboard/handoffs" },
-    { label: "Convertidos",        value: convertidos,          accent: "#22c55e", Icon: Trophy,     href: "/dashboard/leads?status=converted" },
+    { label: "Total de leads", value: totalLeads ?? 0, num: "#FFFFFF", accent: "#8bb4ff", Icon: Users, href: "/dashboard/leads",
+      chip: trTotal === null ? "no período" : `${trTotal >= 0 ? "+" : ""}${trTotal}%`, chipUp: trTotal === null ? null : trTotal >= 0, note: "vs. período anterior", series: sTotal },
+    { label: "Qualificados", value: qualifiedLeads ?? 0, num: "#5B8DEF", accent: "#5B8DEF", Icon: BadgeCheck, href: "/dashboard/hot-leads",
+      chip: `${qualPct}%`, chipUp: true, note: "do total", series: sQual },
+    { label: "Handoffs pendentes", value: handoffPending ?? 0, num: "#f59e0b", accent: "#f59e0b", Icon: PhoneCall, href: "/dashboard/handoffs",
+      chip: "a distribuir", chipUp: null as boolean | null, note: "SLA < 2h", series: sHandoff },
+    { label: "Convertidos", value: convertidos, num: "#22c55e", accent: "#22c55e", Icon: Trophy, href: "/dashboard/leads?status=converted",
+      chip: `${convPct}%`, chipUp: true, note: "taxa de conversão", series: sConv },
   ];
 
   return (
@@ -203,10 +248,11 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
       {/* ⚡ Alertas Operacionais */}
       <div style={{ ...S.card, padding: "20px 24px", borderTop: totalAlerts > 0 ? "2px solid #C8102E" : "2px solid #22c55e" }}>
-        <p style={{ ...S.section, marginBottom: totalAlerts > 0 ? 14 : 0 }}>
-          <span style={{ marginRight: 6 }}>⚡</span>
-          Atenção Agora
-        </p>
+        <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: totalAlerts > 0 ? 14 : 0 }}>
+          <span style={{ width: 34, height: 34, borderRadius: 10, display: "grid", placeItems: "center", flexShrink: 0, fontSize: 17,
+            background: totalAlerts > 0 ? "rgba(245,158,11,.16)" : "rgba(34,197,94,.16)", color: totalAlerts > 0 ? "#f59e0b" : "#22c55e" }}>⚡</span>
+          <span style={{ ...S.section, marginBottom: 0 }}>Atenção Agora</span>
+        </div>
 
         {totalAlerts === 0 ? (
           <p style={{ color: "#22c55e", fontSize: 11, fontFamily: theme.font.label }}>
@@ -307,20 +353,31 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         )}
       </div>
 
-      {/* KPI cards */}
+      {/* KPI cards — grandes, com trend chip + sparkline (dados reais) */}
       <div className="asb-grid-kpi">
-        {kpis.map(({ label, value, accent, Icon, href }) => (
-          <Link key={label} href={href} style={{ textDecoration: "none" }}>
-            <div style={{ ...S.card, padding: 18, borderTop: `3px solid ${accent}`, cursor: "pointer" }} className="asb-kpi-hover">
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-                <span style={{ width: 34, height: 34, borderRadius: 10, display: "grid", placeItems: "center", background: accent + "22", color: accent, flexShrink: 0 }}>
-                  <Icon size={18} />
+        {kpis.map((k) => (
+          <Link key={k.label} href={k.href} style={{ textDecoration: "none" }}>
+            <div className="asb-kpi-hover" style={{ ...S.card, padding: 22, borderTop: `3px solid ${k.accent}`, cursor: "pointer", overflow: "hidden" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 16 }}>
+                <span style={{ width: 38, height: 38, borderRadius: 11, display: "grid", placeItems: "center", background: k.accent + "22", color: k.accent, flexShrink: 0 }}>
+                  <k.Icon size={20} />
                 </span>
-                <span style={{ fontSize: 12.5, fontWeight: 650, color: "#c8d2e6", fontFamily: theme.font.label }} translate="no">{label}</span>
+                <span style={{ fontSize: 13.5, fontWeight: 650, color: "#c8d2e6", fontFamily: theme.font.label }} translate="no">{k.label}</span>
               </div>
-              <div style={{ fontSize: 34, fontWeight: 850, letterSpacing: "-.03em", lineHeight: 1, color: accent, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" }}>
-                {value}
+              <div style={{ fontSize: 42, fontWeight: 850, letterSpacing: "-.03em", lineHeight: 1, color: k.num, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" }}>
+                {k.value}
               </div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 14, gap: 8 }}>
+                <span style={{
+                  display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, fontWeight: 750, padding: "3px 9px", borderRadius: 999,
+                  background: k.chipUp === null ? "rgba(255,255,255,.08)" : (k.chipUp ? "rgba(34,197,94,.16)" : "rgba(200,16,46,.16)"),
+                  color: k.chipUp === null ? "#aeb7cc" : (k.chipUp ? "#22c55e" : "#ff5a72"), fontFamily: theme.font.label,
+                }}>
+                  {k.chipUp !== null && <span style={{ fontSize: 13, lineHeight: 1 }}>{k.chipUp ? "↗" : "↘"}</span>}{k.chip}
+                </span>
+                <span style={{ fontSize: 11.5, color: "#83879a", fontFamily: theme.font.label }}>{k.note}</span>
+              </div>
+              <Sparkline data={k.series} color={k.accent} />
             </div>
           </Link>
         ))}
