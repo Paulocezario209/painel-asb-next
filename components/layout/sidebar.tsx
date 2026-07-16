@@ -57,15 +57,15 @@ export function Sidebar({
       className={`w-52 flex flex-col shrink-0 asb-sidebar-drawer ${isOpen ? "open" : ""}`}
       style={{ background: "var(--asb-shell)", borderRight: "1px solid var(--asb-shell-border)" }}
     >
-      {/* Logo */}
-      <div style={{ textAlign: "center", padding: "20px 12px 16px", borderBottom: "1px solid var(--asb-shell-border)" }}>
+      {/* Logo — clique volta para a frente institucional */}
+      <Link href="/inicio" title="Voltar à frente institucional" style={{ display: "block", textDecoration: "none", textAlign: "center", padding: "20px 12px 16px", borderBottom: "1px solid var(--asb-shell-border)" }}>
         <div style={{ display: "inline-flex", alignItems: "center", gap: 0 }}>
           <span style={{ fontFamily: "Georgia, serif", fontSize: 42, fontWeight: 900, color: "#1B2A6B", lineHeight: 1 }}>A</span>
           <span style={{ fontFamily: "Georgia, serif", fontSize: 42, fontWeight: 900, color: "#C8102E", lineHeight: 1 }}>S</span>
           <span style={{ fontFamily: "Georgia, serif", fontSize: 42, fontWeight: 900, color: "#12131A", lineHeight: 1 }}>B</span>
         </div>
         <div style={{ color: "#C8102E", fontSize: 11, letterSpacing: "4px", marginTop: 4 }}>★★★★★</div>
-      </div>
+      </Link>
 
       {/* Nav */}
       <nav className="flex-1 px-2 py-3 space-y-0.5">

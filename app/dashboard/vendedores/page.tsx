@@ -183,7 +183,7 @@ export default async function VendedoresPage() {
         <h1 style={{ color: "var(--asb-page-ink)", fontSize: 20, fontWeight: 800, fontFamily: theme.font.label, letterSpacing: "-.01em", textTransform: "none", marginBottom: 4 }}>
           Vendedores
         </h1>
-        <p style={S.muted}>
+        <p style={{ ...S.muted, color: "var(--asb-page-ink2)" }}>
           Metricas desde segunda 11/05 (8h BRT) — periodo de retomada operacional
         </p>
         <p style={{ ...S.muted, fontSize: 9, marginTop: 4 }}>

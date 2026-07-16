@@ -120,7 +120,7 @@ export default async function FollowupsPage({ searchParams }: { searchParams: Pr
         <h1 style={{ color: "var(--asb-page-ink)", fontSize: 20, fontWeight: 800, fontFamily: theme.font.label, letterSpacing: "-.01em", textTransform: "none", marginBottom: 4 }}>
           Follow-ups
         </h1>
-        <p style={S.muted}>Histórico de follow-ups automáticos</p>
+        <p style={{ ...S.muted, color: "var(--asb-page-ink2)" }}>Histórico de follow-ups automáticos</p>
       </div>
 
       {/* Alertas de saúde do sistema (se houver problema) */}

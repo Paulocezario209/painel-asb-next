@@ -31,8 +31,8 @@ export function MarketingSidebar({
       className={`w-52 flex flex-col shrink-0 asb-sidebar-drawer ${isOpen ? "open" : ""}`}
       style={{ background: "var(--asb-shell)", borderRight: "1px solid var(--asb-shell-border)" }}
     >
-      {/* Logo — vermelho para leitura instantânea de contexto */}
-      <div style={{ textAlign: "center", padding: "20px 12px 16px", borderBottom: "1px solid var(--asb-shell-border)" }}>
+      {/* Logo — vermelho para contexto; clique volta à frente institucional */}
+      <Link href="/inicio" title="Voltar à frente institucional" style={{ display: "block", textDecoration: "none", textAlign: "center", padding: "20px 12px 16px", borderBottom: "1px solid var(--asb-shell-border)" }}>
         <div style={{ display: "inline-flex", alignItems: "center", gap: 0 }}>
           <span style={{ fontFamily: "Georgia, serif", fontSize: 42, fontWeight: 900, color: "#1B2A6B", lineHeight: 1 }}>A</span>
           <span style={{ fontFamily: "Georgia, serif", fontSize: 42, fontWeight: 900, color: RED, lineHeight: 1 }}>S</span>
@@ -41,7 +41,7 @@ export function MarketingSidebar({
         <div style={{ color: RED, fontSize: 9, letterSpacing: "3px", marginTop: 6, fontFamily: theme.font.label, textTransform: "uppercase" }}>
           Marketing
         </div>
-      </div>
+      </Link>
 
       {/* Nav */}
       <nav className="flex-1 px-2 py-3 space-y-0.5">

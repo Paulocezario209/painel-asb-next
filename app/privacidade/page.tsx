@@ -22,7 +22,7 @@ export default function PrivacidadePage() {
       <h1 style={{ fontSize: "1.6rem", borderBottom: "2px solid #185FA5", paddingBottom: 8 }}>
         Política de Privacidade — American Steak Brasil
       </h1>
-      <p style={{ color: "#999", fontSize: ".9rem" }}>
+      <p style={{ color: "var(--asb-page-ink2)", fontSize: ".9rem" }}>
         Versão 1.0 · Vigência: 2026-07-08 · Controladora: American Steak Ltda., CNPJ 17.016.832/0001-07
       </p>
 

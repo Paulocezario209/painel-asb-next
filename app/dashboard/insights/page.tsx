@@ -178,7 +178,7 @@ export default async function InsightsPage() {
         <h1 style={{ color: "var(--asb-page-ink)", fontSize: 20, fontWeight: 800, fontFamily: theme.font.label, letterSpacing: "-.01em", textTransform: "none", marginBottom: 4 }}>
           Inteligência
         </h1>
-        <p style={S.muted}>Perfil da carteira · segmento · dores · fornecedores · geo</p>
+        <p style={{ ...S.muted, color: "var(--asb-page-ink2)" }}>Perfil da carteira · segmento · dores · fornecedores · geo</p>
       </div>
 
       {!hasData ? (

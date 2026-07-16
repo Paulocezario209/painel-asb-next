@@ -104,7 +104,7 @@ export default async function MinhaComissaoPage({
           <h1 style={{ color: "var(--asb-page-ink)", fontSize: 20, fontWeight: 800, fontFamily: theme.font.label, letterSpacing: "-.01em", textTransform: "none", marginBottom: 4 }}>
             Minha Comissao
           </h1>
-          <p style={S.muted}>{nome} &middot; base FATURADO &middot; so voce ve estes numeros</p>
+          <p style={{ ...S.muted, color: "var(--asb-page-ink2)" }}>{nome} &middot; base FATURADO &middot; so voce ve estes numeros</p>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <RegrasComissaoModal perfil="vendedor" />

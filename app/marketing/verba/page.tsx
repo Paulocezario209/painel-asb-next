@@ -23,7 +23,7 @@ export default async function VerbaPage() {
         <h1 style={{ color: "var(--asb-page-ink)", fontSize: 20, fontWeight: 800, fontFamily: theme.font.label, letterSpacing: "-.01em", textTransform: "none", marginBottom: 4 }}>
           Verba &amp; Gasto
         </h1>
-        <p style={{ color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label }}>
+        <p style={{ color: "var(--asb-page-ink2)", fontSize: 11, fontFamily: theme.font.label }}>
           Verba definida × gasto real por mês/canal · saldo · aporte a pedir no mês seguinte
         </p>
       </div>

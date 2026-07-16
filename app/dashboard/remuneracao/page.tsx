@@ -248,7 +248,7 @@ export default async function RemuneracaoPage({
           <h1 style={{ color: "var(--asb-page-ink)", fontSize: 20, fontWeight: 800, fontFamily: theme.font.label, letterSpacing: "-.01em", textTransform: "none", marginBottom: 4 }}>
             Remuneracao do Time
           </h1>
-          <p style={S.muted}>Comissao do time comercial &middot; base FATURADO &middot; privada (gestor)</p>
+          <p style={{ ...S.muted, color: "var(--asb-page-ink2)" }}>Comissao do time comercial &middot; base FATURADO &middot; privada (gestor)</p>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <RegrasComissaoModal perfil="ambos" />

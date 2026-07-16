@@ -123,7 +123,7 @@ export default async function PipelinePage({ searchParams }: { searchParams: Pro
           Pipeline {ctx.isVendedor && ctx.routing_team ? `· ${VENDOR_LABELS[ctx.routing_team] ?? ctx.routing_team}` : ""}
           {mesParam ? ` · ${mesParam}` : ""}
         </h1>
-        <p style={S.muted}>{leads.length} lead(s) no pipeline · clique no card para abrir · arraste para mover · clique no topo da coluna para a lista</p>
+        <p style={{ ...S.muted, color: "var(--asb-page-ink2)" }}>{leads.length} lead(s) no pipeline · clique no card para abrir · arraste para mover · clique no topo da coluna para a lista</p>
       </div>
 
       {/* KPIs de topo (3 cards, clicáveis → lista no modal) */}

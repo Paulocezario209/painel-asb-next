@@ -164,7 +164,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
           <h1 style={{ color: C.text2, fontSize: 18, fontWeight: 700, fontFamily: theme.font.label, marginBottom: 2 }}>
             {lead.restaurant_name || lead.name || "Lead sem nome"}
           </h1>
-          <p style={{ color: C.muted, fontSize: 11, fontFamily: theme.font.label }}>{lead.phone}</p>
+          <p style={{ color: "var(--asb-page-ink2)", fontSize: 11, fontFamily: theme.font.label }}>{lead.phone}</p>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           <FunnelStageBadge stage={lead.funnel_stage} />

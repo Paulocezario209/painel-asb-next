@@ -195,7 +195,7 @@ export default function SimulatorPage() {
         <h1 style={{ color: "var(--asb-page-ink)", fontSize: 20, fontWeight: 800, fontFamily: theme.font.label, letterSpacing: "-.01em", textTransform: "none", marginBottom: 4 }}>
           Simulador RAG
         </h1>
-        <p style={S.muted}>Teste o comportamento do SDR sem usar leads reais</p>
+        <p style={{ ...S.muted, color: "var(--asb-page-ink2)" }}>Teste o comportamento do SDR sem usar leads reais</p>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, alignItems: "start" }}>

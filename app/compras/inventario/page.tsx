@@ -54,7 +54,7 @@ export default async function InventarioPage() {
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <div>
         <h1 style={{ color: "var(--asb-page-ink)", fontSize: 20, fontWeight: 800, fontFamily: theme.font.label, letterSpacing: "-.01em", textTransform: "none", marginBottom: 4 }}>Mapa do Inventário</h1>
-        <p style={{ color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label }}>
+        <p style={{ color: "var(--asb-page-ink2)", fontSize: 11, fontFamily: theme.font.label }}>
           Saúde da contagem: última contagem (física ou acerto 16/17), há quantos dias, cobertura por grupo, divergências.
         </p>
       </div>

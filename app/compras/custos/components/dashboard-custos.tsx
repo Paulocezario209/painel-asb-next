@@ -153,7 +153,7 @@ export function DashboardCustos() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
         <div>
           <h1 style={{ color: C.branco, fontSize: 16, fontWeight: 700, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase" }}>Custo de Produção</h1>
-          <p style={{ color: C.mut, fontSize: 11, fontFamily: theme.font.label }}>Dashboard ASB 2026 · realizado, projeção, alertas, relatório e controle estatístico</p>
+          <p style={{ color: "var(--asb-page-ink2)", fontSize: 11, fontFamily: theme.font.label }}>Dashboard ASB 2026 · realizado, projeção, alertas, relatório e controle estatístico</p>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <button onClick={() => acao("ares", () => api.aresSync())} disabled={!!busy} style={btnGhost}><Database size={14} /> {busy === "ares" ? "Sync..." : "Sync ARES"}</button>

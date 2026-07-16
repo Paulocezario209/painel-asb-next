@@ -167,6 +167,12 @@
   box-shadow: 0 4px 10px rgba(20,22,40,.08), 0 26px 50px -24px rgba(20,22,40,.4);
 }
 
+.asb-hub-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255,255,255,.26) !important;
+  box-shadow: 0 30px 60px -22px rgba(0,0,0,.8) !important;
+}
+
 .asb-badge {
   font-size: 9px;
   letter-spacing: .10em;

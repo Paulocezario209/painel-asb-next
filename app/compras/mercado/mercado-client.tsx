@@ -118,7 +118,7 @@ export default function MercadoClient({
           <h1 style={{ color: "var(--asb-page-ink)", fontSize: 20, fontWeight: 800, fontFamily: theme.font.label, letterSpacing: "-.01em", textTransform: "none", marginBottom: 4 }}>
             Inteligência de Mercado
           </h1>
-          <p style={{ color: C_MUTED, fontSize: 11, fontFamily: theme.font.label }}>
+          <p style={{ color: "var(--asb-page-ink2)", fontSize: 11, fontFamily: theme.font.label }}>
             Cotações de proteínas (indicador CEPEA) + notícias + análise IA · timing de compra.
           </p>
         </div>
