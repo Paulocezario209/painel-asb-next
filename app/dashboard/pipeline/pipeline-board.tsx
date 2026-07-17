@@ -36,7 +36,7 @@ export type PipelineCtx = { isGestor: boolean; routing_team: string | null; canM
 // Cores: fonte única STAGE_COLORS (DEBT-157).
 const COL_LABEL: Record<string, string> = {
   handoff: "Agendamento", lead_em_andamento: "Em Andamento", negociacao: "Negociação",
-  proposta_enviada: "Proposta", pedido_teste: "Pedido Teste",
+  proposta_enviada: "Proposta", cadastro_cliente: "Cadastro do Cliente",
   pedido_fechado: "Convertido", lead_perdido: "Perdido",
 };
 const STAGE_COL: Record<string, { label: string; cor: string }> = Object.fromEntries(

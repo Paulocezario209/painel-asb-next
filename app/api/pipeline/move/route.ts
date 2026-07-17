@@ -57,8 +57,11 @@ export async function POST(req: NextRequest) {
       rpcName = "mark_lead_em_andamento"; params = { p_lead_id: lead_id, p_actor: ctx.email }; break;
     case "negociacao":
       rpcName = "mark_negociacao"; params = { p_lead_id: lead_id, p_actor: ctx.email }; break;
-    case "pedido_teste":
-      rpcName = "mark_lead_pedido_teste"; params = { p_lead_id: lead_id, p_actor: ctx.email }; break;
+    case "cadastro_cliente":
+      // Funil v3 (2026-07-16): SÓ seta a etapa (pré-pedido). NÃO converte — a conversão
+      // fica 100% no ARES (trigger set_converted_on_first_order). Substitui a antiga
+      // "pedido_teste" (mark_lead_pedido_teste, que convertia na hora — deprecada).
+      rpcName = "mark_cadastro_cliente"; params = { p_lead_id: lead_id, p_actor: ctx.email }; break;
     case "pedido_fechado":
       rpcName = "mark_lead_converted"; params = { p_lead_id: lead_id, p_actor: ctx.email }; break;
     case "proposta_enviada":

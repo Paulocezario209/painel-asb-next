@@ -17,7 +17,7 @@ function startTodayUtc(): string {
   const d = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
   return new Date(`${d}T00:00:00-03:00`).toISOString();
 }
-const PIPELINE_STAGES = ["handoff", "lead_em_andamento", "vendedor_assumiu", "negociacao", "proposta_enviada", "pedido_teste"];
+const PIPELINE_STAGES = ["handoff", "lead_em_andamento", "vendedor_assumiu", "negociacao", "proposta_enviada", "cadastro_cliente", "pedido_teste"];
 
 export default async function ComercialPage() {
   const supabase = await createClient();
@@ -53,7 +53,7 @@ export default async function ComercialPage() {
   const FLUXO: FlowStep[] = [
     { cat: "SDR",       cor: "#6390f5", titulo: "Lead novo → Qualificado", sub: "lead_novo · atendido_sdr · qualif · lead_qualificado (qs7)", href: "/dashboard/leads" },
     { cat: "SDR→VEND",  cor: "#6390f5", titulo: "Agendamento",                 sub: "passa pro vendedor (handoff_at)", href: "/dashboard/handoffs" },
-    { cat: "VENDEDOR",  cor: "#e8b923", titulo: "Pipeline",                sub: "em_andamento · negociação · proposta · pedido_teste", href: "/dashboard/pipeline" },
+    { cat: "VENDEDOR",  cor: "#e8b923", titulo: "Pipeline",                sub: "em_andamento · negociação · proposta · cadastro", href: "/dashboard/pipeline" },
     { cat: "FRONTEIRA", cor: "#22c55e", titulo: "Convertido",              sub: "pedido_fechado · 1º pedido ARES (first_order_at)", href: "/dashboard/clientes" },
     { cat: "CLIENTE",   cor: "#2dd4bf", titulo: "Ativo → Recorrente",      sub: "carteira real · recência + frequência", href: "/dashboard/clientes" },
     { cat: "SAÍDA",     cor: "#C8102E", titulo: "Risco → Churn",           sub: "15→21→30→60 dias sem comprar", href: "/dashboard/carteira-ativa" },

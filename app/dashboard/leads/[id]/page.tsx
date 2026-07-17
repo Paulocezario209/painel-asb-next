@@ -185,7 +185,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
           INBOUND_SEM_RESPOSTA: "Entrada (Inbound)", QUALIFICACAO_INTERROMPIDA: "Qualificação interrompida",
           QUALIFICADO_AGUARDANDO_VENDEDOR: "Qualificado · aguard. vendedor", HANDOFF_SEM_CONTATO: "Agendamento sem contato",
           EM_ANDAMENTO: "Em andamento", NEGOCIACAO: "Negociação", PROPOSTA: "Proposta enviada",
-          PEDIDO_TESTE: "Pedido teste", GANHO: "Ganho (convertido)", PERDIDO_NURTURE: "Perdido · nutrição",
+          CADASTRO: "Cadastro do cliente", PEDIDO_TESTE: "Pedido teste", GANHO: "Ganho (convertido)", PERDIDO_NURTURE: "Perdido · nutrição",
         };
         const longa = orqRow.journey_state === "PERDIDO_NURTURE";
         const sh = orqRow.silencio_horas;

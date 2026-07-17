@@ -21,9 +21,14 @@ export const dynamic = "force-dynamic";
 const LEGACY_STAGES = [
   ...Object.keys(LEGACY_ALIAS),
   ...CONVERTIDO_STAGES.filter(s => s !== "pedido_fechado"),
+  "pedido_teste", // Funil v3: etapa deprecada (substituída por cadastro_cliente). Mantida no
+                  // fetch p/ um lead legado eventual aterrissar em "Convertido" via BOARD_ALIAS.
 ] as const;
 const BOARD_ALIAS: Record<string, string> = {
   ...LEGACY_ALIAS,
+  // Funil v3 (2026-07-16): "pedido_teste" era conversão manual imediata (→ cliente_em_ativacao).
+  // Deprecada. Qualquer lead legado ainda nela = já converteu → coluna "Convertido".
+  pedido_teste: "pedido_fechado",
   // Item 5 / MODELO OPERACIONAL (Paulo 2026-07-13): lead 'vendedor_assumiu' aterrissa
   // na coluna HANDOFF (não "Em Andamento"). Override board-specific — NÃO mexe no
   // LEGACY_ALIAS global (funil/timeline seguem vendo vendedor_assumiu→lead_em_andamento).
