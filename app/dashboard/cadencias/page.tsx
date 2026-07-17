@@ -194,12 +194,15 @@ function StateCard({ e, row, active, carry }: { e: Estado; row: MapaRow | undefi
 }
 
 // Card de degrau da cadência LONGA (mesmo molde do StateCard, cor âmbar/nutrição p/ distinguir da CURTA).
-function LongaCard({ label, value }: { label: string; value: number }) {
+// Clicável: filtra a Fila pelo degrau (v_cadencia_lead), igual aos cards da CURTA e da situação.
+function LongaCard({ label, value, href, active }: { label: string; value: number; href: string; active: boolean }) {
   return (
-    <div style={{ ...cardStyle(TOK.pausado), flex: "1 1 128px", minWidth: 128, borderColor: `${TOK.pausado}55`, background: `${TOK.pausado}0d` }}>
-      <p style={{ ...tc(12, { color: TOK.pausado }) }}>{label}</p>
-      <p style={{ fontFamily: MONO, fontSize: 26, fontWeight: 700, color: TOK.fg, lineHeight: 1, marginTop: 8, fontVariantNumeric: "tabular-nums" }}>{value}</p>
-    </div>
+    <Link href={href} style={{ textDecoration: "none", flex: "1 1 128px", minWidth: 128 }}>
+      <div style={{ ...cardStyle(TOK.pausado), height: "100%", borderColor: active ? TOK.pausado : `${TOK.pausado}55`, background: active ? TOK.card : `${TOK.pausado}0d`, boxShadow: active ? `0 0 0 1px ${TOK.pausado}` : "none" }}>
+        <p style={{ ...tc(12, { color: TOK.pausado }) }}>{label}</p>
+        <p style={{ fontFamily: MONO, fontSize: 26, fontWeight: 700, color: TOK.fg, lineHeight: 1, marginTop: 8, fontVariantNumeric: "tabular-nums" }}>{value}</p>
+      </div>
+    </Link>
   );
 }
 
@@ -241,6 +244,9 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
   const estadoSel = sp?.estado && LABEL[sp.estado] ? sp.estado : null;
   const FILTROS = ["todos", "atrasado", "hoje", "humano", "negociacao"] as const;
   const filtroSel = (FILTROS as readonly string[]).includes(sp?.filtro ?? "") ? (sp!.filtro as string) : "todos";
+  // Degrau da cadência LONGA (D+30…recorrência) — clique no card da Longa filtra a Fila por degrau.
+  const DEGRAUS = [...TEMPO_BUCKETS, "recorrência"] as const;
+  const degrauSel = sp?.degrau && (DEGRAUS as readonly string[]).includes(sp.degrau) ? (sp!.degrau as string) : null;
 
   // Escopo por SETOR — SEGURANÇA (crítico): as views são lidas via SERVICE-ROLE (bypassa RLS), então
   // o filtro do vendedor é aplicado AQUI, no servidor, a partir do usuário autenticado. O vendedor é
@@ -309,14 +315,23 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
     saude = (saudeRaw ?? null) as SaudeRow | null;
   }
 
-  // Longa por TEMPO (buckets de degrau)
+  // Longa por TEMPO (buckets de degrau) — scoped ao setor (mesma régua da Fila), senão os cards
+  // clicáveis não bateriam com a lista que abrem. Sem escopo → global (cache).
+  let tempoRows = tempoRaw as { degrau: string | null }[];
+  if (isSetor || isNone || isNada) {
+    let tq = svc().from("v_cadencia_lead").select("degrau").eq("cadencia", "LONGA").limit(5000);
+    if (isSetor) tq = tq.eq("routing_team", effVend);
+    else if (isNone) tq = tq.or("routing_team.is.null,routing_team.eq.");
+    else tq = tq.eq("routing_team", "__no_match__");
+    tempoRows = ((await tq).data ?? []) as { degrau: string | null }[];
+  }
   const tempoCount: Record<string, number> = {};
-  for (const r of tempoRaw as { degrau: string | null }[]) {
+  for (const r of tempoRows) {
     const d = (r.degrau ?? "").trim();
     if (TEMPO_BUCKETS.includes(d)) tempoCount[d] = (tempoCount[d] ?? 0) + 1;
     else if (d) tempoCount["recorrência"] = (tempoCount["recorrência"] ?? 0) + 1;
   }
-  const tempoMax = Math.max(1, ...Object.values(tempoCount));
+  const tempoTotal = Object.values(tempoCount).reduce((a, b) => a + b, 0);
 
   // "Pergunta que quebra" (qual_stage dos QUALIFICACAO_INTERROMPIDA) — scoped ao setor
   let quebraQ = svc().from("v_orquestracao_leads").select("qual_stage").eq("journey_state", "QUALIFICACAO_INTERROMPIDA").limit(1000);
@@ -342,6 +357,11 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
   else if (filtroSel === "hoje") filaQ = filaQ.eq("eh_hoje", true);
   else if (filtroSel === "humano") filaQ = filaQ.in("journey_state", HUMANO_ST);
   else if (filtroSel === "negociacao") filaQ = filaQ.in("journey_state", NEGOCIA_ST);
+  if (degrauSel) {
+    filaQ = filaQ.eq("cadencia", "LONGA");
+    if (degrauSel === "recorrência") filaQ = filaQ.not("degrau", "in", `(${TEMPO_BUCKETS.map(b => `"${b}"`).join(",")})`);
+    else filaQ = filaQ.eq("degrau", degrauSel);
+  }
   if (isSetor) filaQ = filaQ.eq("routing_team", effVend);
   else if (isNone) filaQ = filaQ.or("routing_team.is.null,routing_team.eq.");
   else if (isNada) filaQ = filaQ.eq("routing_team", "__no_match__");
@@ -524,11 +544,14 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
       </Section>
 
       {/* CADÊNCIA LONGA (cards de degrau — cor âmbar, separada da curta) */}
-      <Section Icon={Hourglass} color={TOK.pausado} title="Cadência Longa — nutrição / recuperação" sub={`${longaTot} leads · cascata por tempo de silêncio (D+30 → D+360 → recorrência)`}>
+      <Section Icon={Hourglass} color={TOK.pausado} title="Cadência Longa — nutrição / recuperação" sub={`${tempoTotal} leads (motor) · cascata por tempo de silêncio (D+30 → D+360 → recorrência) · clique num degrau p/ listar`}>
         <div style={{ ...cardStyle(TOK.pausado) }}>
           <p style={{ ...mono(9, { letterSpacing: ".15em" }), color: TOK.pausado, marginBottom: 12 }}>Por tempo — cascata de nutrição</p>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            {[...TEMPO_BUCKETS, "recorrência"].filter(b => tempoCount[b]).map(b => <LongaCard key={b} label={b} value={tempoCount[b]} />)}
+            {[...TEMPO_BUCKETS, "recorrência"].filter(b => tempoCount[b]).map(b => {
+              const href = `/dashboard/cadencias?${new URLSearchParams({ ...carry, degrau: b }).toString()}#fila`;
+              return <LongaCard key={b} label={b} value={tempoCount[b]} href={href} active={degrauSel === b} />;
+            })}
             {Object.keys(tempoCount).length === 0 && <p style={{ fontFamily: SANS, fontSize: 11, color: TOK.fgDim }}>Sem leads em cadência longa.</p>}
           </div>
         </div>
@@ -547,7 +570,7 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
       </Section>
 
       {/* FILA */}
-      <Section Icon={ListOrdered} color={TOK.f2} title="Fila" id="fila" sub={`${fila.length} lead(s)${fila.length >= 200 ? " (200 mais urgentes)" : ""}${estadoSel ? ` · ${LABEL[estadoSel]}` : ""} · Próxima ação = motor F3`}>
+      <Section Icon={ListOrdered} color={TOK.f2} title="Fila" id="fila" sub={`${fila.length} lead(s)${fila.length >= 200 ? " (200 mais urgentes)" : ""}${estadoSel ? ` · ${LABEL[estadoSel]}` : ""}${degrauSel ? ` · ${degrauSel}` : ""} · Próxima ação = motor F3`}>
         {/* cards de situação — clicáveis (reusam os filtros existentes; contagens do Mapa em escopo) */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(140px,1fr))", gap: 10 }}>
           {[
@@ -558,7 +581,7 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
             { key: "negociacao", label: "Negociação", n: NEGOCIA_ST.reduce((a, k) => a + (byState.get(k)?.total ?? 0), 0), c: TOK.negocia },
           ].map(card => {
             const on = filtroSel === card.key;
-            const href = `/dashboard/cadencias?${new URLSearchParams({ ...carry, ...(estadoSel ? { estado: estadoSel } : {}), ...(card.key !== "todos" ? { filtro: card.key } : {}) }).toString()}#fila`;
+            const href = `/dashboard/cadencias?${new URLSearchParams({ ...carry, ...(estadoSel ? { estado: estadoSel } : {}), ...(degrauSel ? { degrau: degrauSel } : {}), ...(card.key !== "todos" ? { filtro: card.key } : {}) }).toString()}#fila`;
             return (
               <Link key={card.key} href={href} style={{ textDecoration: "none" }}>
                 <div style={{ ...cardStyle(on ? card.c : undefined), background: on ? TOK.card : TOK.cardAlt, borderColor: on ? card.c : TOK.border, boxShadow: on ? `0 0 0 1px ${card.c}` : "none", height: "100%" }}>
@@ -570,10 +593,10 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
           })}
         </div>
 
-        {/* lista: só quando há filtro/estado ativo → tela limpa por padrão */}
-        {(filtroSel !== "todos" || estadoSel) ? (<>
+        {/* lista: só quando há filtro/estado/degrau ativo → tela limpa por padrão */}
+        {(filtroSel !== "todos" || estadoSel || degrauSel) ? (<>
         <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-          <span style={{ fontFamily: SANS, fontSize: 12, color: TOK.fgMuted }}>{fila.length} lead(s){fila.length >= 200 ? " (200 mais urgentes)" : ""}{estadoSel ? ` · ${LABEL[estadoSel]}` : ""}{filtroSel !== "todos" ? ` · ${filtroSel === "negociacao" ? "negociação" : filtroSel}` : ""}</span>
+          <span style={{ fontFamily: SANS, fontSize: 12, color: TOK.fgMuted }}>{fila.length} lead(s){fila.length >= 200 ? " (200 mais urgentes)" : ""}{estadoSel ? ` · ${LABEL[estadoSel]}` : ""}{degrauSel ? ` · ${degrauSel}` : ""}{filtroSel !== "todos" ? ` · ${filtroSel === "negociacao" ? "negociação" : filtroSel}` : ""}</span>
           <Link href={`/dashboard/cadencias?${new URLSearchParams({ ...carry }).toString()}#fila`} style={{ ...mono(9), textDecoration: "none", color: TOK.fgDim }}>× limpar</Link>
         </div>
         <div style={{ ...cardStyle(), padding: 0, overflow: "hidden" }}>
@@ -590,7 +613,7 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
             const situ = situacaoLead(l);
             const acao = l.phone ? acaoMap.get(l.phone) : undefined;
             const sel = l.phone === leadSel;
-            const href = `/dashboard/cadencias?${new URLSearchParams({ ...carry, ...(estadoSel ? { estado: estadoSel } : {}), ...(filtroSel !== "todos" ? { filtro: filtroSel } : {}), ...(l.phone ? { lead: l.phone } : {}) }).toString()}#dossie`;
+            const href = `/dashboard/cadencias?${new URLSearchParams({ ...carry, ...(estadoSel ? { estado: estadoSel } : {}), ...(degrauSel ? { degrau: degrauSel } : {}), ...(filtroSel !== "todos" ? { filtro: filtroSel } : {}), ...(l.phone ? { lead: l.phone } : {}) }).toString()}#dossie`;
             return (
               <Link key={(l.phone ?? "x") + i} href={href} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 16px", textDecoration: "none", borderTop: i > 0 ? `1px solid ${TOK.borderSoft}` : "none", background: sel ? `${TOK.humano}12` : "transparent" }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -611,7 +634,7 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
         </div>
         </>) : (
           <div style={{ ...cardStyle(), textAlign: "center", padding: "24px" }}>
-            <p style={{ fontFamily: SANS, fontSize: 12.5, color: TOK.fgMuted }}>Clique num card acima (ou num estado do Mapa) para listar os leads.</p>
+            <p style={{ fontFamily: SANS, fontSize: 12.5, color: TOK.fgMuted }}>Clique num card acima — situação, estado do Mapa (Curta) ou degrau da Longa (D+30…) — para listar os leads.</p>
           </div>
         )}
       </Section>
