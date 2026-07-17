@@ -57,9 +57,10 @@ export async function POST(req: NextRequest) {
   if (error || !lead) return NextResponse.json({ error: "lead nao encontrado" }, { status: 404 });
   if (lead.is_test) return NextResponse.json({ error: "lead de teste" }, { status: 400 });
 
-  // Trava de etapa: orçamento só na etapa Em Negociação (igual à visibilidade do botão).
-  if (lead.funnel_stage !== "negociacao") {
-    return NextResponse.json({ error: "orçamento só na etapa Em Negociação" }, { status: 400 });
+  // Trava de etapa: orçamento só na etapa Proposta (igual à visibilidade do botão).
+  // Negociação = vendedor absorve as infos; Proposta = envia a proposta/orçamento ao lead.
+  if (lead.funnel_stage !== "proposta_enviada") {
+    return NextResponse.json({ error: "orçamento só na etapa Proposta" }, { status: 400 });
   }
   // AUTH: gestor envia qualquer; vendedor só os do seu routing_team.
   if (!ctx.isGestor && ctx.routing_team !== lead.routing_team) {
