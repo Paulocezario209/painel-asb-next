@@ -739,7 +739,8 @@ function ModalOrcamento({ lead, onClose, catalogo }:
                 ] as [string, string, (v: string) => void, number][]).map(([lab, val, on, w]) => (
                   <label key={lab} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                     <span style={{ color: "#8a93a5", fontSize: 8.5, fontFamily: theme.font.label, letterSpacing: ".04em", textTransform: "uppercase" }}>{lab}</span>
-                    <input value={val} onChange={e => on(e.target.value)} inputMode="decimal"
+                    {/* só número: recusa letra (a máscara evita "h" no preço e o botão travado) */}
+                    <input value={val} onChange={e => on(e.target.value.replace(/[^\d.,]/g, ""))} inputMode="decimal"
                       style={{ width: w, background: "#0e0e0e", border: "1px solid #2e2e2e", borderRadius: 4, padding: "5px 7px", color: "#fff", fontSize: 11, fontFamily: theme.font.num }} />
                   </label>
                 ))}
