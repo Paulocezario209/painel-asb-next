@@ -139,6 +139,30 @@ export const LOST_REASONS = [
   "Sem orcamento", "Comprou concorrente", "Sem interesse", "Sem retorno", "Outro",
 ];
 
+// ── Trava sequencial da Pipeline (Paulo 2026-07-17) ──────────────────────────
+// Vendedor move MANUAL, mas só 1 passo por vez (sem PULAR e sem VOLTAR). Marcar
+// "Perdido" é sempre permitido (saída de qualquer etapa, com motivo). GESTOR move
+// livre (frente/trás/pula) — é o override. Fonte ÚNICA: usada no board E na API route.
+export const PROXIMA_ETAPA: Record<string, string> = {
+  handoff: "lead_em_andamento",
+  lead_em_andamento: "negociacao",
+  negociacao: "proposta_enviada",
+  proposta_enviada: "cadastro_cliente",
+  cadastro_cliente: "pedido_fechado",
+};
+// Alias de etapas legadas → etapa do board (mesma régua que o BOARD_ALIAS do pipeline).
+const _SEQ_ALIAS: Record<string, string> = {
+  vendedor_assumiu: "handoff",
+  diagnostico_comercial: "lead_em_andamento",
+  pedido_teste: "pedido_fechado",
+};
+/** Vendedor pode mover de `from` → `to`? (trava sequencial; gestor NÃO passa por aqui). */
+export function vendedorPodeMover(fromStage: string | null | undefined, toStage: string): boolean {
+  if (toStage === "lead_perdido") return true;                 // perdido: saída sempre liberada (com motivo)
+  const from = _SEQ_ALIAS[fromStage ?? ""] ?? fromStage ?? "handoff";
+  return PROXIMA_ETAPA[from] === toStage;                       // só o PRÓXIMO passo
+}
+
 // ── Funil (cone de 4 fases — agrega funnel_stage CRU, cobre legados) ─────────
 export const FASES = [
   { key: "qualificacao", label: "Em qualificação", fill: "#185FA5",

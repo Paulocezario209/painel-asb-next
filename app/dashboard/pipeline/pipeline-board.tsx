@@ -4,7 +4,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { MOVIVEIS, LOST_REASONS, STAGE_COLORS } from "@/lib/funnel/stages";
+import { MOVIVEIS, LOST_REASONS, STAGE_COLORS, vendedorPodeMover } from "@/lib/funnel/stages";
 import { fichaCadastro, fichaOrcamento, pesoTotalKg, type OrcamentoItem } from "@/lib/fichas";
 import { theme } from "@/lib/theme";
 import { StatTile } from "@/app/dashboard/lib/ui";
@@ -136,6 +136,11 @@ export function PipelineBoard({
     if (!from || !id || from === to || !MOVIVEIS.has(to)) { setDragId(null); setDragFrom(null); return; }
     const lead = (board[from] ?? []).find((l) => l.id === id);
     if (!lead || !podeMover(lead)) { setErro("Sem permissão para mover este lead."); setDragId(null); setDragFrom(null); return; }
+    // TRAVA SEQUENCIAL: vendedor move só 1 passo por vez (sem pular/voltar); gestor livre.
+    if (!ctx.canMoveAll && !vendedorPodeMover(from, to)) {
+      setErro("Trava de etapa: mova um passo por vez, sem pular nem voltar. Só o gestor libera etapas fora de ordem.");
+      setDragId(null); setDragFrom(null); return;
+    }
     // Transições com input → modal; demais → direto.
     // Proposta v3 (Paulo 2026-07-17): mover pra Proposta é DIRETO (sem "Registrar Proposta") —
     // a proposta é o formulário 🧾 (orçamento) dentro da coluna.

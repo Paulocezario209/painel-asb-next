@@ -62,7 +62,7 @@ export const MANUAIS: Record<string, ManualTela> = {
     ],
     comoUsar: [
       "Arrastar um card grava a transição no banco (com motivo, quando perdido). Mover pra Proposta é direto — a proposta é o formulário 🧾 (orçamento) dentro da coluna, não um valor forçado.",
-      "Vendedor move só os próprios leads; gestor move todos.",
+      "Vendedor move só os próprios leads; gestor move todos. TRAVA SEQUENCIAL: o vendedor avança 1 etapa por vez (sem pular e sem voltar) — marcar 'Perdido' pode de qualquer etapa. Só o GESTOR move fora de ordem (pular/voltar).",
       "“Parados >7d” = sem transição há mais de 7 dias — priorize-os.",
       "📋 Enviar ficha (só na etapa Cadastro do Cliente): abre o preview da ficha PF/PJ e envia ao lead pelo SEU WhatsApp (instância Evolution do vendedor). Você revê o texto antes; o lead recebe na mesma conversa. A IA nunca envia — só você. O cadastro no ARES continua manual.",
       "🧾 Montar orçamento (só na etapa Proposta — na Negociação você absorve as infos, na Proposta envia): abre a ficha de orçamento — você busca os produtos no CATÁLOGO COMPLETO (todo produto já vendido: blends, linguiças, molhos, espetos…) ou digita à mão, e informa unidades/caixa e o PREÇO (o sistema nunca sugere preço). Gramatura e unidades/caixa são puxadas do nome quando existem (ex.: 80G, CX 48 UN) — editáveis; o peso total é calculado. O preview mostra exatamente o texto que sai, e o envio vai pelo SEU WhatsApp. A IA nunca envia — só você.",
