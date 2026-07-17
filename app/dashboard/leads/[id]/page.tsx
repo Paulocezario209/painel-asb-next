@@ -137,6 +137,16 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
     .eq("phone", phone)
     .maybeSingle();
 
+  // Cadência REAL do motor (fn_next_cadence_step via v_cadencia_lead) — FONTE ÚNICA.
+  // NÃO derivar de journey_state: o motor marca LONGA sempre que silêncio ≥ 30d em
+  // QUALQUER estado (não só PERDIDO_NURTURE). Sem essa fonte, 25 leads mostravam "Curta"
+  // errado (fix 2026-07-17). GANHO não tem linha na view (graduou p/ cadência de cliente).
+  const { data: cadRow } = await svc
+    .from("v_cadencia_lead")
+    .select("cadencia, degrau")
+    .eq("phone", phone)
+    .maybeSingle();
+
   const events = (eventsById ?? []) as { id: string; event_type: string; payload: Record<string, unknown>; created_at: string }[];
   const transitions = (fseById ?? []) as { id: string; from_stage: string | null; to_stage: string; actor: string; metadata: Record<string, unknown>; created_at: string }[];
   const vendorMsgs = (vmRows ?? []) as { direction: string; content: string | null; media_type: string | null; sent_at: string }[];
@@ -187,7 +197,12 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
           EM_ANDAMENTO: "Em andamento", NEGOCIACAO: "Negociação", PROPOSTA: "Proposta enviada",
           CADASTRO: "Cadastro do cliente", PEDIDO_TESTE: "Pedido teste", GANHO: "Ganho (convertido)", PERDIDO_NURTURE: "Perdido · nutrição",
         };
-        const longa = orqRow.journey_state === "PERDIDO_NURTURE";
+        // Cadência REAL do motor (não derivar de journey_state). cadRow null = GANHO (graduou).
+        const cadLabel = !cadRow
+          ? "Graduada (cliente)"
+          : cadRow.cadencia === "LONGA"
+          ? `Longa · nutrição${cadRow.degrau ? ` · ${cadRow.degrau}` : ""}`
+          : "Curta · atendimento";
         const sh = orqRow.silencio_horas;
         const sil = sh == null ? "—" : sh >= 24 ? `${Math.floor(sh / 24)}d` : `${sh}h`;
         const sitCor = orqRow.atrasado ? "#e0435c" : orqRow.eh_hoje ? "#e0a92a" : "#2fbf6b";
@@ -207,7 +222,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
           <div style={{ ...S.card, padding: "13px 18px", borderLeft: `3px solid ${sitCor}`, display: "flex", flexWrap: "wrap", gap: "10px 26px", alignItems: "center" }}>
             <p style={{ fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase", color: "#8b949e", fontFamily: theme.font.label, marginRight: 4 }}>Orquestração</p>
             {cell("Estado", OLBL[orqRow.journey_state] ?? orqRow.journey_state, "#c8d8e8")}
-            {cell("Cadência", longa ? "Longa (nutrição)" : "Curta")}
+            {cell("Cadência", cadLabel)}
             {cell("Silêncio", sil)}
             {cell("Situação", sitTxt, sitCor)}
             {cell("Próximo follow-up", prox)}
