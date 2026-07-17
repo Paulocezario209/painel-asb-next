@@ -240,8 +240,9 @@ export function PipelineBoard({
                             style={{ background: "transparent", border: "1px solid #2e2e2e", borderRadius: 4, cursor: "pointer", fontSize: 10, lineHeight: 1, padding: "3px 5px", color: "#e4e9f0" }}
                           >📋</button>
                         )}
-                        {/* Onda 4b — botão "Orçamento" só na etapa Em Negociação */}
-                        {stage === "negociacao" && (
+                        {/* Onda 4b — botão "Orçamento" só na etapa Proposta (Negociação = absorve
+                            info; Proposta = envia a proposta/orçamento ao lead) */}
+                        {stage === "proposta_enviada" && (
                           <button
                             onClick={(e) => { e.stopPropagation(); setModal({ tipo: "orcamento", lead }); }}
                             title="Montar e enviar o orçamento ao lead (pelo seu WhatsApp)"
