@@ -10,7 +10,7 @@ import { theme } from "@/lib/theme";
 import { VENDOR_LABELS } from "@/lib/vendor-labels";
 import { S } from "@/app/dashboard/lib/dashboard-tokens";
 import { PageHead, SectionHead } from "@/app/dashboard/lib/ui";
-import { Layers, Map as MapIcon, ListOrdered, FileText, FileCheck2, GitBranch } from "lucide-react";
+import { Layers, Map as MapIcon, ListOrdered, FileText, FileCheck2, GitBranch, Hourglass } from "lucide-react";
 import { getUserContext, canAccess } from "@/lib/auth/get-user-role";
 import { DashboardFilters } from "@/components/dashboard/dashboard-filters";
 import { unstable_cache } from "next/cache";
@@ -190,6 +190,16 @@ function StateCard({ e, row, active, carry }: { e: Estado; row: MapaRow | undefi
         </div>
       </div>
     </Link>
+  );
+}
+
+// Card de degrau da cadência LONGA (mesmo molde do StateCard, cor âmbar/nutrição p/ distinguir da CURTA).
+function LongaCard({ label, value }: { label: string; value: number }) {
+  return (
+    <div style={{ ...cardStyle(TOK.pausado), flex: "1 1 128px", minWidth: 128, borderColor: `${TOK.pausado}55`, background: `${TOK.pausado}0d` }}>
+      <p style={{ ...tc(12, { color: TOK.pausado }) }}>{label}</p>
+      <p style={{ fontFamily: MONO, fontSize: 26, fontWeight: 700, color: TOK.fg, lineHeight: 1, marginTop: 8, fontVariantNumeric: "tabular-nums" }}>{value}</p>
+    </div>
   );
 }
 
@@ -491,67 +501,81 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
         </div>
       </Section>
 
-      {/* MAPA */}
-      <Section Icon={MapIcon} color={TOK.f1} title="Mapa" id="mapa" sub={`curta ${curtaTot} · longa ${longaTot} · ganho ${ganho} · borda-topo = situação operacional`}>
+      {/* MAPA — CADÊNCIA CURTA (cards de etapa) */}
+      <Section Icon={MapIcon} color={TOK.f1} title="Cadência Curta — atendimento (até 30 dias)" id="mapa" sub={`${curtaTot} leads ativos · ${ganho} graduados (ganho) · borda-topo = situação operacional`}>
         <div style={{ ...cardStyle() }}>
-          <p style={{ ...mono(9, { letterSpacing: ".15em" }), color: TOK.respondeu, marginBottom: 10 }}>Cadência Curta — até 30 dias</p>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             {ESTADOS.filter(e => e.band === "curta" || e.band === "ganho").map(e => <StateCard key={e.key} e={e} row={byState.get(e.key)} active={estadoSel === e.key} carry={carry} />)}
           </div>
-          {Object.keys(quebra).length > 0 && (
-            <div style={{ marginTop: 16, background: TOK.cardAlt, border: `1px dashed ${TOK.border}`, borderRadius: 8, padding: "12px 14px" }}>
-              <p style={{ ...mono(9), color: TOK.fgDim, marginBottom: 10 }}>em qual pergunta a qualificação quebra</p>
-              <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-                {[1, 2, 3, 4, 5, 6].filter(q => quebra[q]).map(q => (
-                  <div key={q} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 12 }}>
-                    <span style={{ width: 130, color: TOK.fgMuted, fontFamily: SANS, fontSize: 11, flexShrink: 0 }}>{q} · {QS_LABEL[q]}</span>
-                    <Bar frac={quebra[q] / quebraMax} w={26} value={quebra[q]} />
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
-
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          <div style={{ ...cardStyle(TOK.pausado) }}>
-            <p style={{ ...mono(9, { letterSpacing: ".15em" }), color: TOK.pausado, marginBottom: 12 }}>Longa — por TEMPO (cascata de nutrição)</p>
+        {Object.keys(quebra).length > 0 && (
+          <div style={{ ...cardStyle() }}>
+            <p style={{ ...mono(9, { letterSpacing: ".15em" }), color: TOK.fgDim, marginBottom: 10 }}>Em qual pergunta a qualificação quebra</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-              {[...TEMPO_BUCKETS, "recorrência"].filter(b => tempoCount[b]).map(b => (
-                <div key={b} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 12 }}>
-                  <span style={{ width: 96, color: TOK.fgMuted, fontFamily: SANS, fontSize: 11, flexShrink: 0 }}>{b}</span>
-                  <Bar frac={tempoCount[b] / tempoMax} value={tempoCount[b]} />
+              {[1, 2, 3, 4, 5, 6].filter(q => quebra[q]).map(q => (
+                <div key={q} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 12 }}>
+                  <span style={{ width: 130, color: TOK.fgMuted, fontFamily: SANS, fontSize: 11, flexShrink: 0 }}>{q} · {QS_LABEL[q]}</span>
+                  <Bar frac={quebra[q] / quebraMax} w={26} value={quebra[q]} />
                 </div>
               ))}
-              {Object.keys(tempoCount).length === 0 && <p style={{ fontFamily: SANS, fontSize: 11, color: TOK.fgDim }}>Sem leads em cadência longa.</p>}
             </div>
           </div>
-          <div style={{ ...cardStyle(TOK.atrasado) }}>
-            <p style={{ ...mono(9, { letterSpacing: ".15em" }), color: TOK.atrasado, marginBottom: 12 }}>Longa — por MOTIVO de perda</p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-              {motivos.slice(0, 8).map((m: { motivo: string; total: number }) => (
-                <div key={m.motivo} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 12 }}>
-                  <span style={{ width: 150, color: TOK.fgMuted, fontFamily: SANS, fontSize: 11, flexShrink: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={m.motivo}>{m.motivo}</span>
-                  <Bar frac={m.total / motMax} value={m.total} />
-                </div>
-              ))}
-              {motivos.length === 0 && <p style={{ fontFamily: SANS, fontSize: 11, color: TOK.fgDim }}>Sem motivos registrados.</p>}
-            </div>
+        )}
+      </Section>
+
+      {/* CADÊNCIA LONGA (cards de degrau — cor âmbar, separada da curta) */}
+      <Section Icon={Hourglass} color={TOK.pausado} title="Cadência Longa — nutrição / recuperação" sub={`${longaTot} leads · cascata por tempo de silêncio (D+30 → D+360 → recorrência)`}>
+        <div style={{ ...cardStyle(TOK.pausado) }}>
+          <p style={{ ...mono(9, { letterSpacing: ".15em" }), color: TOK.pausado, marginBottom: 12 }}>Por tempo — cascata de nutrição</p>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            {[...TEMPO_BUCKETS, "recorrência"].filter(b => tempoCount[b]).map(b => <LongaCard key={b} label={b} value={tempoCount[b]} />)}
+            {Object.keys(tempoCount).length === 0 && <p style={{ fontFamily: SANS, fontSize: 11, color: TOK.fgDim }}>Sem leads em cadência longa.</p>}
+          </div>
+        </div>
+        <div style={{ ...cardStyle(TOK.atrasado) }}>
+          <p style={{ ...mono(9, { letterSpacing: ".15em" }), color: TOK.atrasado, marginBottom: 12 }}>Por motivo de perda</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+            {motivos.slice(0, 8).map((m: { motivo: string; total: number }) => (
+              <div key={m.motivo} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 12 }}>
+                <span style={{ width: 150, color: TOK.fgMuted, fontFamily: SANS, fontSize: 11, flexShrink: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={m.motivo}>{m.motivo}</span>
+                <Bar frac={m.total / motMax} value={m.total} />
+              </div>
+            ))}
+            {motivos.length === 0 && <p style={{ fontFamily: SANS, fontSize: 11, color: TOK.fgDim }}>Sem motivos registrados.</p>}
           </div>
         </div>
       </Section>
 
       {/* FILA */}
       <Section Icon={ListOrdered} color={TOK.f2} title="Fila" id="fila" sub={`${fila.length} lead(s)${fila.length >= 200 ? " (200 mais urgentes)" : ""}${estadoSel ? ` · ${LABEL[estadoSel]}` : ""} · Próxima ação = motor F3`}>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-          {FILTROS.map(f => {
-            const on = filtroSel === f;
-            const href = `/dashboard/cadencias?${new URLSearchParams({ ...carry, ...(estadoSel ? { estado: estadoSel } : {}), ...(f !== "todos" ? { filtro: f } : {}) }).toString()}#fila`;
-            return <Link key={f} href={href} style={{ ...mono(9, { letterSpacing: ".12em" }), textDecoration: "none", padding: "5px 11px", borderRadius: 6, color: on ? TOK.fg : TOK.fgMuted, background: on ? TOK.card : "transparent", border: `1px solid ${on ? TOK.humano : TOK.border}` }}>{f === "negociacao" ? "negociação" : f}</Link>;
+        {/* cards de situação — clicáveis (reusam os filtros existentes; contagens do Mapa em escopo) */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(140px,1fr))", gap: 10 }}>
+          {[
+            { key: "todos", label: "Todos", n: curtaTot + longaTot, c: TOK.fg },
+            { key: "atrasado", label: "Atrasado", n: mapa.reduce((a, r) => a + r.atrasados, 0), c: TOK.atrasado },
+            { key: "hoje", label: "Hoje", n: mapa.reduce((a, r) => a + r.hoje, 0), c: TOK.hoje },
+            { key: "humano", label: "Precisa humano", n: HUMANO_ST.reduce((a, k) => a + (byState.get(k)?.total ?? 0), 0), c: TOK.humano },
+            { key: "negociacao", label: "Negociação", n: NEGOCIA_ST.reduce((a, k) => a + (byState.get(k)?.total ?? 0), 0), c: TOK.negocia },
+          ].map(card => {
+            const on = filtroSel === card.key;
+            const href = `/dashboard/cadencias?${new URLSearchParams({ ...carry, ...(estadoSel ? { estado: estadoSel } : {}), ...(card.key !== "todos" ? { filtro: card.key } : {}) }).toString()}#fila`;
+            return (
+              <Link key={card.key} href={href} style={{ textDecoration: "none" }}>
+                <div style={{ ...cardStyle(on ? card.c : undefined), background: on ? TOK.card : TOK.cardAlt, borderColor: on ? card.c : TOK.border, boxShadow: on ? `0 0 0 1px ${card.c}` : "none", height: "100%" }}>
+                  <p style={{ ...tc(12, { color: card.c }) }}>{card.label}</p>
+                  <p style={{ fontFamily: MONO, fontSize: 24, fontWeight: 700, color: TOK.fg, lineHeight: 1, marginTop: 6, fontVariantNumeric: "tabular-nums" }}>{card.n}</p>
+                </div>
+              </Link>
+            );
           })}
-          {estadoSel && <Link href={`/dashboard/cadencias?${new URLSearchParams({ ...carry }).toString()}#fila`} style={{ ...mono(9), textDecoration: "none", color: TOK.fgDim, marginLeft: 4 }}>× limpar estado</Link>}
         </div>
 
+        {/* lista: só quando há filtro/estado ativo → tela limpa por padrão */}
+        {(filtroSel !== "todos" || estadoSel) ? (<>
+        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+          <span style={{ fontFamily: SANS, fontSize: 12, color: TOK.fgMuted }}>{fila.length} lead(s){fila.length >= 200 ? " (200 mais urgentes)" : ""}{estadoSel ? ` · ${LABEL[estadoSel]}` : ""}{filtroSel !== "todos" ? ` · ${filtroSel === "negociacao" ? "negociação" : filtroSel}` : ""}</span>
+          <Link href={`/dashboard/cadencias?${new URLSearchParams({ ...carry }).toString()}#fila`} style={{ ...mono(9), textDecoration: "none", color: TOK.fgDim }}>× limpar</Link>
+        </div>
         <div style={{ ...cardStyle(), padding: 0, overflow: "hidden" }}>
           <div style={{ display: "flex", gap: 10, padding: "10px 16px", borderBottom: `1px solid ${TOK.border}`, ...mono(8.5), color: TOK.fgDim }}>
             <span style={{ flex: 1, minWidth: 0 }}>Empresa</span>
@@ -585,6 +609,11 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
             );
           })}
         </div>
+        </>) : (
+          <div style={{ ...cardStyle(), textAlign: "center", padding: "24px" }}>
+            <p style={{ fontFamily: SANS, fontSize: 12.5, color: TOK.fgMuted }}>Clique num card acima (ou num estado do Mapa) para listar os leads.</p>
+          </div>
+        )}
       </Section>
 
       {/* DOSSIÊ */}
