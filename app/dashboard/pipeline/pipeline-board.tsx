@@ -661,7 +661,39 @@ function ModalOrcamento({ lead, onClose, catalogo }:
   const [rows, setRows] = useState<OrcRow[]>([{ ...ROW_VAZIA }]);
   const [enviando, setEnviando] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; msg: string } | null>(null);
+  const [sug, setSug] = useState<{ estado: "carregando" | "pronto" | "off"; n: number }>({ estado: "carregando", n: 0 });
   const listId = "orc-sug-" + lead.id;
+
+  // Fase B — ao abrir, a IA lê a conversa da negociação e sugere a lista de produtos (casada
+  // com o catálogo). Preço fica em branco (manual). Erro/nada → abre vazio, sem regressão.
+  useEffect(() => {
+    let cancel = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/pipeline/orcamento-sugestao", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ lead_id: lead.id }),
+        });
+        const j = await res.json();
+        if (cancel) return;
+        const its = (j?.itens ?? []) as { nome: string; gramatura_g?: number | null; unidades_caixa?: number | null }[];
+        if (its.length) {
+          setRows([...its.map((it) => {
+            const p = parseFromNome(it.nome ?? "");
+            const g = it.gramatura_g ?? p.gramatura;
+            const u = it.unidades_caixa ?? p.unidades;
+            return { nome: it.nome ?? "", gramatura: g != null ? String(g) : "", unidades: u != null ? String(u) : "", vunit: "", vcaixa: "" };
+          }), { ...ROW_VAZIA }]);
+          setSug({ estado: "pronto", n: its.length });
+        } else {
+          setSug({ estado: "off", n: 0 });
+        }
+      } catch {
+        if (!cancel) setSug({ estado: "off", n: 0 });
+      }
+    })();
+    return () => { cancel = true; };
+  }, [lead.id]);
 
   const set = (i: number, patch: Partial<OrcRow>) =>
     setRows(prev => prev.map((r, j) => (j === i ? { ...r, ...patch } : r)));
@@ -710,9 +742,15 @@ function ModalOrcamento({ lead, onClose, catalogo }:
       <p style={{ color: "#fff", fontSize: 14, fontFamily: theme.font.label, fontWeight: 750, letterSpacing: "-.01em", marginBottom: 4 }}>
         🧾 Montar orçamento
       </p>
-      <p style={{ color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label, marginBottom: 12 }}>
+      <p style={{ color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label, marginBottom: sug.estado === "off" ? 12 : 8 }}>
         {lead.restaurant_name || "Lead"}{lead.city ? ` · ${lead.city}` : ""} · preço é você quem digita · sai pelo SEU WhatsApp
       </p>
+      {sug.estado === "carregando" && (
+        <p style={{ color: "#a78bfa", fontSize: 11, fontFamily: theme.font.label, marginBottom: 12 }}>🔎 IA lendo a conversa da negociação…</p>
+      )}
+      {sug.estado === "pronto" && (
+        <p style={{ color: "#a78bfa", fontSize: 11, fontFamily: theme.font.label, marginBottom: 12 }}>✨ {sug.n} produto(s) sugerido(s) pela conversa — confira, ajuste e digite o preço</p>
+      )}
 
       {/* Catálogo COMPLETO (todo produto já vendido) — datalist de busca do campo nome */}
       <datalist id={listId}>
