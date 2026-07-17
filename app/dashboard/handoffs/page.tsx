@@ -3,9 +3,25 @@ import { HandoffsTable, type Handoff } from "@/components/handoffs/handoffs-tabl
 import { getLeadScoreMap } from "@/lib/get-lead-scores";
 import { computeLeadScore, tierOf } from "@/lib/lead-score";
 import { S } from "@/app/dashboard/lib/dashboard-tokens";
+import { theme } from "@/lib/theme";
 import { PageHead, SectionHead, KpiCard } from "@/app/dashboard/lib/ui";
 import { handoffSituacao } from "@/lib/handoff-status";
-import { PhoneCall, AlertTriangle, CalendarClock, Inbox } from "lucide-react";
+import { VENDOR_LABELS } from "@/lib/vendor-labels";
+import { PhoneCall, AlertTriangle, CalendarClock, Inbox, Gauge } from "lucide-react";
+
+// Onda 4 — formata minutos em h/d p/ o "tempo médio até confirmar"
+function fmtMinEfic(m: number | null): string {
+  if (m == null) return "—";
+  if (m < 60) return `${m}min`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h`;
+  return `${Math.floor(h / 24)}d`;
+}
+type EficVendedor = {
+  routing_team: string; vendor_name: string | null;
+  agendamentos: number; confirmados: number; pct_confirmados: number | null;
+  min_medio_confirmar: number | null; com_horario: number; no_horario: number; pct_no_horario: number | null;
+};
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +38,7 @@ export default async function HandoffsPage({ searchParams }: { searchParams?: Pr
   const startBrtUtc = new Date(Date.UTC(nowBrt.getUTCFullYear(), nowBrt.getUTCMonth(), nowBrt.getUTCDate(), 0, 0, 0) + BRT_OFFSET_MS);
   const endBrtUtc   = new Date(startBrtUtc.getTime() + 24 * 60 * 60 * 1000);
 
-  const [{ data: raw, error }, scoreMap, { count: agendadosHoje }] = await Promise.all([
+  const [{ data: raw, error }, scoreMap, { count: agendadosHoje }, { data: eficRaw }] = await Promise.all([
     // DEBT-208: fila lê a definição CANÔNICA (v_handoff_pendentes, security_invoker
     // preserva RLS por vendedor). Resolver por qualquer via (confirmar / resposta do
     // vendedor / funnel_stage) remove daqui, do card e do detector do CP juntos.
@@ -43,6 +59,10 @@ export default async function HandoffsPage({ searchParams }: { searchParams?: Pr
       .eq("is_test", false)
       .gte("scheduled_at", startBrtUtc.toISOString())
       .lt("scheduled_at", endBrtUtc.toISOString()),
+    // Onda 4 — eficiência por vendedor (RLS via security_invoker: vendedor vê o seu, gestor todos)
+    supabase
+      .from("v_eficiencia_agendamento_vendedor")
+      .select("routing_team, vendor_name, agendamentos, confirmados, pct_confirmados, min_medio_confirmar, com_horario, no_horario, pct_no_horario"),
   ]);
 
   if (error) throw new Error(error.message);
@@ -86,6 +106,9 @@ export default async function HandoffsPage({ searchParams }: { searchParams?: Pr
     { label: "Agendados hoje",  value: todayCount,   Icon: CalendarClock, accent: "#22c55e", num: "#22c55e", note: "com horário p/ hoje (todos, não só a fila) · clique p/ ver os pendentes", href: "/dashboard/handoffs?f=hoje" },
   ];
 
+  // Onda 4 — eficiência por vendedor (RLS já aplicada pela view security_invoker)
+  const efic = (eficRaw ?? []) as EficVendedor[];
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <PageHead title="Agendamentos" desc="Leads agendados aguardando confirmação do vendedor" />
@@ -96,6 +119,38 @@ export default async function HandoffsPage({ searchParams }: { searchParams?: Pr
           <KpiCard key={k.label} {...k} />
         ))}
       </div>
+
+      {/* Onda 4 — Eficiência do Atendimento (âncora: botão Confirmar). Vendedor vê o seu; gestor todos. */}
+      {efic.length > 0 && (
+        <div style={{ ...S.card, padding: "20px 24px" }}>
+          <SectionHead Icon={Gauge} color="#8bb4ff" title="Eficiência do Atendimento"
+            desc="Como o vendedor assume os agendamentos — medido pelo botão Confirmar" />
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 12, marginTop: 4 }}>
+            {efic.map((e) => {
+              const nome = e.vendor_name ?? VENDOR_LABELS[e.routing_team] ?? e.routing_team;
+              const pc = e.pct_confirmados ?? 0;
+              const confCor = pc >= 90 ? "#22c55e" : pc >= 70 ? "#f59e0b" : "#C8102E";
+              const stat = (label: string, value: string, cor: string, sub?: string) => (
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ color: cor, fontSize: 18, fontFamily: theme.font.num, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{value}</div>
+                  <div style={{ color: "#c0d0e0", fontSize: 9, fontFamily: theme.font.label, marginTop: 1 }}>{label}</div>
+                  {sub ? <div style={{ color: "#6b7688", fontSize: 8, fontFamily: theme.font.label }}>{sub}</div> : null}
+                </div>
+              );
+              return (
+                <div key={e.routing_team} style={{ background: "var(--asb-card-hi)", border: "1px solid var(--asb-border)", borderRadius: 10, padding: "12px 14px" }}>
+                  <div style={{ color: "#e4e9f0", fontSize: 11, fontFamily: theme.font.label, fontWeight: 700, marginBottom: 10 }}>{nome}</div>
+                  <div style={{ display: "flex", gap: 10 }}>
+                    {stat("Confirmados", `${pc}%`, confCor, `${e.confirmados}/${e.agendamentos}`)}
+                    {stat("Até confirmar", fmtMinEfic(e.min_medio_confirmar), "#e4e9f0", "média")}
+                    {stat("No horário", e.com_horario > 0 ? `${e.pct_no_horario ?? 0}%` : "—", "#8bb4ff", e.com_horario > 0 ? `de ${e.com_horario} c/ hora` : "sem horário ainda")}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Table */}
       <div style={{ ...S.card, padding: "20px 24px" }}>

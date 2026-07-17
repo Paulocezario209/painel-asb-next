@@ -163,10 +163,11 @@ export const MANUAIS: Record<string, ManualTela> = {
       "Coluna “Situação”: ancorada no horário AGENDADO — Agendado (azul, no futuro) → No horário (âmbar, até 30min depois) → Atrasado / Vencido (vermelho, só DEPOIS do horário passar). Agendado pro futuro NUNCA aparece como vencido.",
       "Vencidos: leads que JÁ passaram do horário agendado (não é mais “esperando há X horas desde a criação”).",
       "Agendados Hoje: lead marcou horário com o especialista para hoje.",
+      "Eficiência do Atendimento (por vendedor): mede como o vendedor assume os agendamentos, ancorado no botão Confirmar — Confirmados (% que ele confirmou / total, com o número bruto), Até confirmar (tempo médio entre o lead cair e o vendedor confirmar) e No horário (% que confirmou até 30min do horário agendado, mostrando “de N com hora” porque o agendamento com horário ainda é recente e a cobertura cresce). Vendedor vê o seu; gestor vê todos (RLS).",
     ],
     comoUsar: [
       "Ordem = por horário AGENDADO (mais cedo primeiro) = prioridade de atendimento; quem não tem agenda vai pro fim. Entre os sem agenda, os já vencidos e maior score sobem.",
-      "“Confirmar” marca que o vendedor assumiu (para o relógio do SLA).",
+      "“Confirmar” marca que o vendedor assumiu (para o relógio do SLA) — e alimenta a Eficiência do Atendimento (% confirmados, tempo até confirmar, % no horário).",
       "Volume ≥300kg é conta CUIT — atenção redobrada.",
     ],
   },
