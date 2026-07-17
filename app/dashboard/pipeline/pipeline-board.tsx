@@ -5,6 +5,7 @@
 
 import { useEffect, useState } from "react";
 import { MOVIVEIS, LOST_REASONS, STAGE_COLORS } from "@/lib/funnel/stages";
+import { fichaCadastro } from "@/lib/fichas";
 import { theme } from "@/lib/theme";
 import { StatTile } from "@/app/dashboard/lib/ui";
 import { useRouter } from "next/navigation";
@@ -59,6 +60,7 @@ type ModalState =
   | { tipo: "fechar"; lead: PipelineLead; from: string }
   | { tipo: "lista"; stage: string }
   | { tipo: "sugestao"; lead: PipelineLead; stage: string }
+  | { tipo: "ficha"; lead: PipelineLead }
   | null;
 
 export function PipelineBoard({
@@ -208,6 +210,14 @@ export function PipelineBoard({
                           title="Sugestão do estrategista para esta etapa"
                           style={{ background: "transparent", border: "1px solid #2e2e2e", borderRadius: 4, cursor: "pointer", fontSize: 10, lineHeight: 1, padding: "3px 5px", color: "#e4e9f0" }}
                         >💡</button>
+                        {/* Onda 3 — botão "Enviar ficha" só na etapa Cadastro do Cliente */}
+                        {stage === "cadastro_cliente" && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setModal({ tipo: "ficha", lead }); }}
+                            title="Enviar a ficha de cadastro ao lead (pelo seu WhatsApp)"
+                            style={{ background: "transparent", border: "1px solid #2e2e2e", borderRadius: 4, cursor: "pointer", fontSize: 10, lineHeight: 1, padding: "3px 5px", color: "#e4e9f0" }}
+                          >📋</button>
+                        )}
                       </div>
                       <div style={{ display: "flex", gap: 8, color: "#c0d0e0", fontSize: 9, fontFamily: theme.font.label, flexWrap: "wrap" }}>
                         {lead.weekly_volume_kg ? <span>{lead.weekly_volume_kg}kg</span> : null}
@@ -273,6 +283,9 @@ export function PipelineBoard({
       {/* Modal sugestão do estrategista (Fase A: gerar + copiar) */}
       {modal?.tipo === "sugestao" && (
         <ModalSugestao lead={modal.lead} stage={modal.stage} onClose={() => setModal(null)} />
+      )}
+      {modal?.tipo === "ficha" && (
+        <ModalFicha lead={modal.lead} onClose={() => setModal(null)} />
       )}
       {/* Modal lista da etapa (só leitura; linhas abrem o lead) */}
       {modal?.tipo === "lista" && (
@@ -530,6 +543,59 @@ function ModalSugestao({ lead, stage, onClose }: { lead: PipelineLead; stage: st
         <button onClick={copiar} disabled={!data?.mensagem_whatsapp}
           style={{ background: copiado ? "#238636" : "#185FA5", border: "none", borderRadius: 6, padding: "8px 16px", color: "#fff", fontSize: 11, fontFamily: theme.font.label, fontWeight: 700, cursor: data?.mensagem_whatsapp ? "pointer" : "not-allowed", opacity: data?.mensagem_whatsapp ? 1 : 0.5 }}>
           {copiado ? "✓ Copiado" : "Copiar mensagem"}
+        </button>
+      </div>
+    </Backdrop>
+  );
+}
+
+// Onda 3 — preview + envio da ficha de cadastro ao lead (pela Evolution do vendedor).
+// O texto vem de lib/fichas.ts (mesma fonte que o servidor usa → preview == enviado).
+function ModalFicha({ lead, onClose }: { lead: PipelineLead; onClose: () => void }) {
+  const [enviando, setEnviando] = useState(false);
+  const [result, setResult] = useState<{ ok: boolean; msg: string } | null>(null);
+  const texto = fichaCadastro({ restaurant_name: lead.restaurant_name, city: lead.city });
+
+  const enviar = async () => {
+    setEnviando(true); setResult(null);
+    try {
+      const res = await fetch("/api/pipeline/send-ficha", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lead_id: lead.id }),
+      });
+      const j = await res.json();
+      if (!res.ok) { setResult({ ok: false, msg: j?.error ?? "falha ao enviar" }); return; }
+      if (j.sent && j.sent_to === "lead") setResult({ ok: true, msg: "Ficha enviada ao lead ✓" });
+      else if (j.sent && j.sent_to === "test") setResult({ ok: true, msg: "Modo teste: enviada ao número de teste (não ao lead) ✓" });
+      else if (j.reason === "modo_teste_sem_FICHA_TEST_PHONE") setResult({ ok: false, msg: "Modo teste sem número configurado — avise o gestor." });
+      else setResult({ ok: false, msg: `não enviada (${j.reason ?? "erro"})` });
+    } catch {
+      setResult({ ok: false, msg: "falha de conexão" });
+    } finally {
+      setEnviando(false);
+    }
+  };
+
+  return (
+    <Backdrop>
+      <p style={{ color: "#fff", fontSize: 14, fontFamily: theme.font.label, fontWeight: 750, letterSpacing: "-.01em", marginBottom: 4 }}>
+        📋 Enviar ficha de cadastro
+      </p>
+      <p style={{ color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label, marginBottom: 12 }}>
+        {lead.restaurant_name || "Lead"}{lead.city ? ` · ${lead.city}` : ""} · sai pelo SEU WhatsApp (o lead recebe como se você tivesse digitado)
+      </p>
+      <div style={{ maxHeight: "45vh", overflowY: "auto", background: "var(--asb-card)", border: "1px solid #2e2e2e", borderRadius: 6, padding: "10px 12px", marginBottom: 12 }}>
+        <p style={{ color: "#fff", fontSize: 11, fontFamily: theme.font.label, lineHeight: 1.55, whiteSpace: "pre-wrap" }}>{texto}</p>
+      </div>
+      {result && (
+        <p style={{ color: result.ok ? "#2fbf6b" : "#f85149", fontSize: 11, fontFamily: theme.font.label, marginBottom: 8 }}>{result.msg}</p>
+      )}
+      <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+        <BtnCancel onClick={onClose} />
+        <button onClick={enviar} disabled={enviando || result?.ok}
+          style={{ background: result?.ok ? "#238636" : "#185FA5", border: "none", borderRadius: 6, padding: "8px 16px", color: "#fff", fontSize: 11, fontFamily: theme.font.label, fontWeight: 700, cursor: enviando || result?.ok ? "default" : "pointer", opacity: enviando ? 0.6 : 1 }}>
+          {enviando ? "Enviando…" : result?.ok ? "✓ Enviada" : "Enviar pelo meu WhatsApp"}
         </button>
       </div>
     </Backdrop>
