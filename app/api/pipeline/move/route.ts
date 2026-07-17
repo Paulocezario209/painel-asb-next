@@ -65,12 +65,11 @@ export async function POST(req: NextRequest) {
     case "pedido_fechado":
       rpcName = "mark_lead_converted"; params = { p_lead_id: lead_id, p_actor: ctx.email }; break;
     case "proposta_enviada":
-      if (body.proposal_value == null) {
-        return NextResponse.json({ error: "proposta exige valor (proposal_value)" }, { status: 400 });
-      }
+      // Funil v3 (2026-07-17, Paulo): mover pra Proposta NÃO exige mais valor — a proposta é o
+      // formulário 🧾 (orçamento) dentro da coluna. O RPC aceita valor null (DEFAULT NULL).
       rpcName = "mark_proposal_sent";
       params = {
-        p_lead_id: lead_id, p_proposal_value: body.proposal_value,
+        p_lead_id: lead_id, p_proposal_value: body.proposal_value ?? null,
         p_proposal_notes: body.proposal_notes ?? null, p_actor: ctx.email, p_actor_role: ctx.role,
       };
       break;

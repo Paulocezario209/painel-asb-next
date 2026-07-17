@@ -76,7 +76,6 @@ function diasDesde(iso: string | null): number | null {
 }
 
 type ModalState =
-  | { tipo: "proposta"; lead: PipelineLead; from: string }
   | { tipo: "perdido"; lead: PipelineLead; from: string }
   | { tipo: "fechar"; lead: PipelineLead; from: string }
   | { tipo: "lista"; stage: string }
@@ -137,8 +136,9 @@ export function PipelineBoard({
     if (!from || !id || from === to || !MOVIVEIS.has(to)) { setDragId(null); setDragFrom(null); return; }
     const lead = (board[from] ?? []).find((l) => l.id === id);
     if (!lead || !podeMover(lead)) { setErro("Sem permissão para mover este lead."); setDragId(null); setDragFrom(null); return; }
-    // Transições com input → modal; demais → direto
-    if (to === "proposta_enviada") { setModal({ tipo: "proposta", lead, from }); return; }
+    // Transições com input → modal; demais → direto.
+    // Proposta v3 (Paulo 2026-07-17): mover pra Proposta é DIRETO (sem "Registrar Proposta") —
+    // a proposta é o formulário 🧾 (orçamento) dentro da coluna.
     if (to === "lead_perdido") { setModal({ tipo: "perdido", lead, from }); return; }
     if (to === "pedido_fechado") { setModal({ tipo: "fechar", lead, from }); return; } // confirma (seta first_order_at)
     persistir(lead, from, to, {});
@@ -296,11 +296,6 @@ export function PipelineBoard({
 
       {moving && <div style={{ color: "#2ea043", fontSize: 10, fontFamily: theme.font.label }}>movendo…</div>}
 
-      {/* Modal proposta (valor) */}
-      {modal?.tipo === "proposta" && (
-        <ModalProposta lead={modal.lead} onCancel={() => setModal(null)}
-          onConfirm={(value, notes) => persistir(modal.lead, modal.from, "proposta_enviada", { proposal_value: value, proposal_notes: notes })} />
-      )}
       {/* Modal perdido (motivo + confirmação destrutiva) */}
       {modal?.tipo === "perdido" && (
         <ModalPerdido lead={modal.lead} onCancel={() => setModal(null)}
@@ -339,32 +334,6 @@ function Backdrop({ children }: { children: React.ReactNode }) {
         {children}
       </div>
     </div>
-  );
-}
-
-function ModalProposta({ lead, onConfirm, onCancel }: { lead: PipelineLead; onConfirm: (v: number, n: string | null) => void; onCancel: () => void }) {
-  const [valor, setValor] = useState("");
-  const [notas, setNotas] = useState("");
-  const v = parseFloat(valor.replace(",", "."));
-  const valido = !isNaN(v) && v > 0;
-  return (
-    <Backdrop>
-      <p style={{ color: "#fff", fontSize: 14, fontFamily: theme.font.label, fontWeight: 750, letterSpacing: "-.01em", marginBottom: 4 }}>Registrar Proposta</p>
-      <p style={{ color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label, marginBottom: 14 }}>{lead.restaurant_name || "Lead"} → Proposta Enviada</p>
-      <label style={{ color: "#c0d0e0", fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase" }}>Valor da proposta (R$)</label>
-      <input value={valor} onChange={(e) => setValor(e.target.value)} placeholder="0,00" autoFocus
-        style={{ width: "100%", marginTop: 4, marginBottom: 12, background: "var(--asb-card)", border: "1px solid #2e2e2e", borderRadius: 6, padding: "8px 10px", color: "#fff", fontSize: 12, fontFamily: theme.font.label, outline: "none" }} />
-      <label style={{ color: "#c0d0e0", fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase" }}>Notas (opcional)</label>
-      <input value={notas} onChange={(e) => setNotas(e.target.value)}
-        style={{ width: "100%", marginTop: 4, marginBottom: 16, background: "var(--asb-card)", border: "1px solid #2e2e2e", borderRadius: 6, padding: "8px 10px", color: "#fff", fontSize: 12, fontFamily: theme.font.label, outline: "none" }} />
-      <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
-        <BtnCancel onClick={onCancel} />
-        <button disabled={!valido} onClick={() => onConfirm(v, notas.trim() || null)}
-          style={{ background: valido ? "#8b5cf6" : "#2e2e2e", border: "none", borderRadius: 6, padding: "8px 16px", color: "#fff", fontSize: 11, fontFamily: theme.font.label, fontWeight: 700, cursor: valido ? "pointer" : "default" }}>
-          Registrar
-        </button>
-      </div>
-    </Backdrop>
   );
 }
 
