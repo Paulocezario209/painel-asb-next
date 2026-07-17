@@ -57,6 +57,7 @@ export const MANUAIS: Record<string, ManualTela> = {
       "Cards: leads reais com etapa de pipeline (agendamento → em andamento → negociação → proposta → cadastro do cliente → convertido/perdido).",
       "Cadastro do Cliente: etapa PRÉ-pedido — o lead topou a proposta e vai fazer o 1º pedido; aqui o vendedor coleta a documentação padrão ASB (CNPJ ou CPF). NÃO é a conversão: a conversão vem sozinha do ARES quando o 1º pedido é faturado (o card ganha o selo ✓ ARES e vai pra Convertido).",
       "Selo ✓ ARES: o lead já faturou na carteira real (v_carteira_360).",
+      "💡 Nudge de sugestão (a IA sinaliza, NUNCA move): no Agendamento, se o vendedor já respondeu o lead (seller_first_reply_at) → sugere Em Andamento; na Proposta, se o CNPJ/cadastro ARES foi captado → sugere Cadastro. É só um lembrete no card — quem move é sempre o vendedor.",
       "Valor estimado: volume semanal (kg) × R$/kg médio definido pela gestão.",
     ],
     comoUsar: [

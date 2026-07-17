@@ -27,6 +27,10 @@ export type PipelineLead = {
   // Redesenho 2026-07-09: true = lead faturou no ARES (v_carteira_360.lead_id) —
   // conversão CONFIRMADA, independe do arraste manual do vendedor.
   ares_confirmado?: boolean;
+  // Funil v3 Onda 2 (badges de sugestão): sinais que a IA usa p/ SUGERIR etapa
+  // (nunca move — só nudge no card; o vendedor decide).
+  cnpj: string | null;
+  ares_pessoa_id: string | number | null;
 };
 export type PipelineCtx = { isGestor: boolean; routing_team: string | null; canMoveAll: boolean };
 
@@ -167,6 +171,15 @@ export function PipelineBoard({
                 {leads.map((lead) => {
                   const movable = podeMover(lead);
                   const dias = diasDesde(lead.handoff_at);
+                  // Onda 2 — badge de SUGESTÃO (a IA sinaliza pela etapa-alvo, NUNCA move):
+                  //  · Agendamento + vendedor já respondeu → sugere Em Andamento
+                  //  · Proposta + CNPJ/cadastro ARES capturado → sugere Cadastro do Cliente
+                  const sugestao =
+                    stage === "handoff" && lead.seller_first_reply_at
+                      ? { txt: "respondeu → Em Andamento", cor: "#eab308" }
+                      : stage === "proposta_enviada" && (lead.cnpj || lead.ares_pessoa_id)
+                      ? { txt: "cadastro captado → Cadastro", cor: "#3b82f6" }
+                      : null;
                   return (
                     <div
                       key={lead.id}
@@ -201,6 +214,15 @@ export function PipelineBoard({
                         {lead.city ? <span>· {lead.city}</span> : null}
                         {dias != null ? <span style={{ color: dias > 7 ? "#f59e0b" : "#e4e9f0" }}>· {dias}d</span> : null}
                       </div>
+                      {/* Onda 2 — nudge de sugestão de etapa (a IA sinaliza; só o vendedor move) */}
+                      {sugestao && (
+                        <div style={{ marginTop: 5 }}>
+                          <span title="Sugestão da IA — os dados indicam esta etapa. Arraste o card se concordar (a IA nunca move sozinha)."
+                            style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 8, fontFamily: theme.font.label, fontWeight: 600, color: sugestao.cor, border: `1px dashed ${sugestao.cor}`, background: `${sugestao.cor}14`, borderRadius: 3, padding: "1px 5px" }}>
+                            💡 {sugestao.txt}
+                          </span>
+                        </div>
+                      )}
                       {/* Chips de contexto da qualificação (G1-G3) — mudam a abordagem do vendedor */}
                       {(lead.ares_confirmado || lead.motivo_handoff === "insistencia_preco" || lead.interesse_preco || lead.pediu_catalogo) && (
                         <div style={{ display: "flex", gap: 4, marginTop: 5, flexWrap: "wrap" }}>
