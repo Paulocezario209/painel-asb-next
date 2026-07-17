@@ -34,12 +34,26 @@ export type PipelineLead = {
   ares_pessoa_id: string | number | null;
 };
 export type PipelineCtx = { isGestor: boolean; routing_team: string | null; canMoveAll: boolean };
-export type TopProduto = { routing_team: string | null; descricao_produto: string | null; rank: number };
+export type CatalogoProduto = { descricao_produto: string | null; grupo_nome: string | null };
 
-// Gramatura = número final do nome do produto (100–220 g; siglas 100/110/…/220). Heurística leve.
-function parseGramatura(nome: string): number | null {
-  const nums = (nome.match(/\d{2,3}/g) ?? []).map(Number).filter((n) => n >= 50 && n <= 300);
-  return nums.length ? nums[nums.length - 1] : null;
+// Extrai do NOME do produto (ARES não guarda estruturado): gramatura, unidades/caixa.
+// Gramatura = "80G" (sufixo G) ou número final 50–300 (siglas 100/110/…/220), ignorando o que
+// for parte de "KG"/"UN"/"CX"/"CM". Unidades = "CX 48 UN" / "48 UN".
+function parseFromNome(nome: string): { gramatura: number | null; unidades: number | null } {
+  const s = ` ${(nome || "").toUpperCase()} `;
+  // unidades: "CX 48 UN" ou "48 UN"
+  const un = s.match(/(\d+)\s*UN\b/);
+  const unidades = un ? Number(un[1]) : null;
+  // gramatura: sufixo "80G" (não "KG")
+  let gramatura: number | null = null;
+  const gSuffix = s.match(/(?<![A-Z])(\d{2,3})\s*G(?![A-Z])/);
+  if (gSuffix) gramatura = Number(gSuffix[1]);
+  else {
+    // número final 50–300 que não seja seguido de KG/UN/CM/MM (evita "5KG", "48 UN", "11MM")
+    const cand = [...s.matchAll(/(\d{2,3})(?!\s*(?:KG|UN|CM|MM|ML))/g)].map((m) => Number(m[1])).filter((n) => n >= 50 && n <= 300);
+    if (cand.length) gramatura = cand[cand.length - 1];
+  }
+  return { gramatura, unidades };
 }
 
 
@@ -72,8 +86,8 @@ type ModalState =
   | null;
 
 export function PipelineBoard({
-  byStage, stages, ctx, topProdutos = [],
-}: { byStage: Record<string, PipelineLead[]>; stages: string[]; ctx: PipelineCtx; topProdutos?: TopProduto[] }) {
+  byStage, stages, ctx, produtos = [],
+}: { byStage: Record<string, PipelineLead[]>; stages: string[]; ctx: PipelineCtx; produtos?: CatalogoProduto[] }) {
   const router = useRouter();
   const [board, setBoard] = useState(byStage);
   const [dragId, setDragId] = useState<string | null>(null);
@@ -304,8 +318,7 @@ export function PipelineBoard({
         <ModalFicha lead={modal.lead} onClose={() => setModal(null)} />
       )}
       {modal?.tipo === "orcamento" && (
-        <ModalOrcamento lead={modal.lead} onClose={() => setModal(null)}
-          sugestoes={topProdutos.filter(p => p.routing_team === modal.lead.routing_team)} />
+        <ModalOrcamento lead={modal.lead} onClose={() => setModal(null)} catalogo={produtos} />
       )}
       {/* Modal lista da etapa (só leitura; linhas abrem o lead) */}
       {modal?.tipo === "lista" && (
@@ -642,8 +655,8 @@ function rowToItem(r: OrcRow): OrcamentoItem {
     valor_caixa: parseNum(r.vcaixa),
   };
 }
-function ModalOrcamento({ lead, onClose, sugestoes }:
-  { lead: PipelineLead; onClose: () => void; sugestoes: TopProduto[] }) {
+function ModalOrcamento({ lead, onClose, catalogo }:
+  { lead: PipelineLead; onClose: () => void; catalogo: CatalogoProduto[] }) {
   const [rows, setRows] = useState<OrcRow[]>([{ ...ROW_VAZIA }]);
   const [enviando, setEnviando] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; msg: string } | null>(null);
@@ -651,12 +664,17 @@ function ModalOrcamento({ lead, onClose, sugestoes }:
 
   const set = (i: number, patch: Partial<OrcRow>) =>
     setRows(prev => prev.map((r, j) => (j === i ? { ...r, ...patch } : r)));
-  // Ao digitar/escolher o nome, preenche a gramatura pelo número do nome se ainda estiver vazia.
+  // Ao digitar/escolher o nome, puxa gramatura E unidades do próprio nome (CX 48 UN, 80G…)
+  // se o campo ainda estiver vazio — nunca sobrescreve o que o vendedor já digitou.
   const setNome = (i: number, nome: string) =>
     setRows(prev => prev.map((r, j) => {
       if (j !== i) return r;
-      const g = r.gramatura.trim() === "" ? parseGramatura(nome) : null;
-      return { ...r, nome, gramatura: g != null ? String(g) : r.gramatura };
+      const p = parseFromNome(nome);
+      return {
+        ...r, nome,
+        gramatura: r.gramatura.trim() === "" && p.gramatura != null ? String(p.gramatura) : r.gramatura,
+        unidades: r.unidades.trim() === "" && p.unidades != null ? String(p.unidades) : r.unidades,
+      };
     }));
   const addRow = () => setRows(prev => [...prev, { ...ROW_VAZIA }]);
   const rmRow = (i: number) => setRows(prev => (prev.length > 1 ? prev.filter((_, j) => j !== i) : prev));
@@ -686,11 +704,6 @@ function ModalOrcamento({ lead, onClose, sugestoes }:
     }
   };
 
-  const inp = (val: string, on: (v: string) => void, ph: string, w: number | string, mono = false) => (
-    <input value={val} placeholder={ph} onChange={e => on(e.target.value)} inputMode={mono ? "decimal" : "text"}
-      style={{ width: w, minWidth: 0, background: "#0e0e0e", border: "1px solid #2e2e2e", borderRadius: 4, padding: "5px 7px", color: "#fff", fontSize: 11, fontFamily: mono ? theme.font.num : theme.font.label }} />
-  );
-
   return (
     <Backdrop>
       <p style={{ color: "#fff", fontSize: 14, fontFamily: theme.font.label, fontWeight: 750, letterSpacing: "-.01em", marginBottom: 4 }}>
@@ -700,9 +713,10 @@ function ModalOrcamento({ lead, onClose, sugestoes }:
         {lead.restaurant_name || "Lead"}{lead.city ? ` · ${lead.city}` : ""} · preço é você quem digita · sai pelo SEU WhatsApp
       </p>
 
-      {/* Sugestões do setor (top movimentados) — vira datalist do campo nome */}
+      {/* Catálogo COMPLETO (todo produto já vendido) — datalist de busca do campo nome */}
       <datalist id={listId}>
-        {sugestoes.map((s, i) => <option key={i} value={(s.descricao_produto ?? "").trim()} />)}
+        {Array.from(new Set(catalogo.map(s => (s.descricao_produto ?? "").trim()).filter(Boolean)))
+          .map((v, i) => <option key={i} value={v} />)}
       </datalist>
 
       <div style={{ maxHeight: "34vh", overflowY: "auto", display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
@@ -716,13 +730,21 @@ function ModalOrcamento({ lead, onClose, sugestoes }:
                 <button onClick={() => rmRow(i)} title="Remover produto" disabled={rows.length <= 1}
                   style={{ background: "transparent", border: "1px solid #2e2e2e", borderRadius: 4, color: "#c0d0e0", fontSize: 12, lineHeight: 1, padding: "4px 7px", cursor: rows.length <= 1 ? "default" : "pointer", opacity: rows.length <= 1 ? 0.4 : 1 }}>✕</button>
               </div>
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
-                {inp(r.gramatura, v => set(i, { gramatura: v }), "g", 58, true)}
-                {inp(r.unidades, v => set(i, { unidades: v }), "un/cx", 66, true)}
-                {inp(r.vunit, v => set(i, { vunit: v }), "R$ un", 78, true)}
-                {inp(r.vcaixa, v => set(i, { vcaixa: v }), "R$ caixa", 88, true)}
-                <span style={{ color: "#8a93a5", fontSize: 10, fontFamily: theme.font.label }}>
-                  {peso != null ? `peso ${peso.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg` : "peso —"}
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end" }}>
+                {([
+                  ["Gramatura (g)", r.gramatura, (v: string) => set(i, { gramatura: v }), 66],
+                  ["Un / caixa", r.unidades, (v: string) => set(i, { unidades: v }), 66],
+                  ["R$ unitário", r.vunit, (v: string) => set(i, { vunit: v }), 84],
+                  ["R$ caixa", r.vcaixa, (v: string) => set(i, { vcaixa: v }), 92],
+                ] as [string, string, (v: string) => void, number][]).map(([lab, val, on, w]) => (
+                  <label key={lab} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                    <span style={{ color: "#8a93a5", fontSize: 8.5, fontFamily: theme.font.label, letterSpacing: ".04em", textTransform: "uppercase" }}>{lab}</span>
+                    <input value={val} onChange={e => on(e.target.value)} inputMode="decimal"
+                      style={{ width: w, background: "#0e0e0e", border: "1px solid #2e2e2e", borderRadius: 4, padding: "5px 7px", color: "#fff", fontSize: 11, fontFamily: theme.font.num }} />
+                  </label>
+                ))}
+                <span style={{ color: "#8a93a5", fontSize: 10, fontFamily: theme.font.label, paddingBottom: 5 }}>
+                  {peso != null ? `= ${peso.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg` : "peso —"}
                 </span>
               </div>
             </div>

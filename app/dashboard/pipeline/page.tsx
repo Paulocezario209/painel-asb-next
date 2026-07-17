@@ -85,8 +85,9 @@ export default async function PipelinePage({ searchParams }: { searchParams: Pro
   const [{ data: rawLeads }, { data: rawPonte }, { data: rawTop }] = await Promise.all([
     q,
     supabase.from("v_carteira_360").select("lead_id").not("lead_id", "is", null),
-    // Onda 4b — sugestões de produto pro orçamento (top-10 movimentados por setor, do espelho).
-    supabase.from("v_produtos_top").select("routing_team, descricao_produto, rank").order("rank"),
+    // Onda 4b A.2 — catálogo COMPLETO de produtos pro orçamento (todos já vendidos, do espelho),
+    // ordenado por mais vendido. "Quem puxa 10 puxa tudo" — mesma fonte, sem o corte de top-10.
+    supabase.from("v_produtos_catalogo").select("descricao_produto, grupo_nome").order("valor_total", { ascending: false }),
   ]);
   const aresLeadIds = new Set(((rawPonte ?? []) as { lead_id: string }[]).map((r) => r.lead_id));
   const leads = ((rawLeads ?? []) as PipelineLead[]).map((l) => ({
@@ -138,7 +139,7 @@ export default async function PipelinePage({ searchParams }: { searchParams: Pro
       <PipelineBoard
         key={`${vendFiltro ?? "todos"}|${mesParam ?? ""}|${qSafe}`}
         byStage={byStage} stages={PIPELINE_STAGES as unknown as string[]} ctx={boardCtx}
-        topProdutos={(rawTop ?? []) as { routing_team: string | null; descricao_produto: string | null; rank: number }[]}
+        produtos={(rawTop ?? []) as { descricao_produto: string | null; grupo_nome: string | null }[]}
       />
     </div>
   );
