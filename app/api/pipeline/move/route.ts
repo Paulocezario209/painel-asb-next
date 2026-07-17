@@ -4,7 +4,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getUserContext } from "@/lib/auth/get-user-role";
-import { MOVIVEIS } from "@/lib/funnel/stages";
+import { MOVIVEIS, vendedorPodeMover } from "@/lib/funnel/stages";
 
 
 export async function POST(req: NextRequest) {
@@ -47,6 +47,14 @@ export async function POST(req: NextRequest) {
   // AUTH: gestor move qualquer; vendedor so os leads do seu routing_team
   if (!ctx.isGestor && ctx.routing_team !== lead.routing_team) {
     return NextResponse.json({ error: "sem permissao para mover este lead" }, { status: 403 });
+  }
+  // TRAVA SEQUENCIAL (Paulo 2026-07-17): vendedor move só 1 passo por vez (sem pular/voltar);
+  // "perdido" sempre liberado. Gestor move livre (override). Verdade no servidor.
+  if (!ctx.isGestor && !vendedorPodeMover(lead.funnel_stage, to_stage)) {
+    return NextResponse.json(
+      { error: "Trava de etapa: mova um passo por vez, sem pular nem voltar. Só o gestor libera etapas fora de ordem." },
+      { status: 403 },
+    );
   }
 
   // Mapeia to_stage -> RPC + params (mesmas RPCs dos botoes existentes)
