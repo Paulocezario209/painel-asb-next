@@ -61,7 +61,7 @@ export const MANUAIS: Record<string, ManualTela> = {
       "Valor estimado: volume semanal (kg) × R$/kg médio definido pela gestão.",
     ],
     comoUsar: [
-      "Arrastar um card grava a transição no banco (com motivo, quando perdido; valor, quando proposta).",
+      "Arrastar um card grava a transição no banco (com motivo, quando perdido). Mover pra Proposta é direto — a proposta é o formulário 🧾 (orçamento) dentro da coluna, não um valor forçado.",
       "Vendedor move só os próprios leads; gestor move todos.",
       "“Parados >7d” = sem transição há mais de 7 dias — priorize-os.",
       "📋 Enviar ficha (só na etapa Cadastro do Cliente): abre o preview da ficha PF/PJ e envia ao lead pelo SEU WhatsApp (instância Evolution do vendedor). Você revê o texto antes; o lead recebe na mesma conversa. A IA nunca envia — só você. O cadastro no ARES continua manual.",
