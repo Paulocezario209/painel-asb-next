@@ -24,7 +24,8 @@ export const STAGE_ORDER = [
   "lead_em_andamento",
   "negociacao",
   "proposta_enviada",
-  "pedido_teste",
+  "cadastro_cliente",   // Funil v3 (2026-07-16): substitui "pedido_teste" na etapa 5 (pré-pedido,
+                        // documentação padrão ASB). NÃO converte — conversão fica 100% no ARES.
   // Camada CLIENTE (carteira)
   "cliente_em_ativacao",
   "cliente_ativo",
@@ -79,7 +80,8 @@ export const STAGE_LABELS: Record<string, string> = {
   lead_em_andamento:      "Lead em Andamento",
   negociacao:             "Negociacao",
   proposta_enviada:       "Proposta Enviada",
-  pedido_teste:           "Pedido Teste",
+  cadastro_cliente:       "Cadastro do Cliente",   // Funil v3 (etapa 5, pré-pedido)
+  pedido_teste:           "Pedido Teste",          // legacy/deprecado → só timeline histórica + rollback
   pedido_fechado:         "Pedido Fechado",        // projeção: conta em CONVERTIDO
   cliente_em_ativacao:    "Cliente em Ativacao",
   cliente_ativo:          "Cliente Ativo",
@@ -105,7 +107,8 @@ export const STAGE_COLORS: Record<string, string> = {
   lead_em_andamento:     "#eab308",
   negociacao:            "#a855f7",
   proposta_enviada:      "#8b5cf6",
-  pedido_teste:          "#3b82f6",
+  cadastro_cliente:      "#3b82f6",   // Funil v3 — ocupa a posição/cor da antiga "pedido_teste"
+  pedido_teste:          "#3b82f6",   // legacy (timeline)
   pedido_fechado:        "#22c55e",
   cliente_em_ativacao:   "#22c55e",
   cliente_ativo:         "#22c55e",
@@ -117,18 +120,19 @@ export const STAGE_COLORS: Record<string, string> = {
 // Colunas na ordem do fluxo. agendamento = origem (não-destino de drag).
 export const PIPELINE_STAGES = [
   "handoff", "lead_em_andamento", "negociacao", "proposta_enviada",
-  "pedido_teste", "pedido_fechado", "lead_perdido",
+  "cadastro_cliente", "pedido_fechado", "lead_perdido",
 ] as const;
 
 // Destinos válidos de drag (cada um → 1 RPC). Compartilhado board ↔ API route.
 export const MOVIVEIS = new Set([
-  "lead_em_andamento", "negociacao", "proposta_enviada", "pedido_teste",
+  "lead_em_andamento", "negociacao", "proposta_enviada", "cadastro_cliente",
   "pedido_fechado", "lead_perdido",
 ]);
 
 // Etapas "em aberto" do pipeline (base dos KPIs de ativos).
+// Cadastro é PRÉ-pedido → ainda ativo (o lead não converteu; conversão vem do ARES).
 export const PIPELINE_ATIVOS = new Set([
-  "handoff", "lead_em_andamento", "negociacao", "proposta_enviada", "pedido_teste",
+  "handoff", "lead_em_andamento", "negociacao", "proposta_enviada", "cadastro_cliente",
 ]);
 
 export const LOST_REASONS = [
@@ -142,7 +146,7 @@ export const FASES = [
   { key: "qualificado",  label: "Qualificado",     fill: "#185FA5",
     stages: ["lead_qualificado"] },
   { key: "com_vendedor", label: "Com vendedor",    fill: "#D4A017",
-    stages: ["handoff", "lead_em_andamento", "vendedor_assumiu", "diagnostico_comercial", "negociacao", "proposta_enviada", "pedido_teste"] },
+    stages: ["handoff", "lead_em_andamento", "vendedor_assumiu", "diagnostico_comercial", "negociacao", "proposta_enviada", "cadastro_cliente", "pedido_teste"] },
   { key: "convertido",   label: "Convertido (1ª compra)", fill: "#22c55e",
     stages: [...CONVERTIDO_STAGES] },
 ] as const;

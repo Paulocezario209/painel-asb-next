@@ -54,7 +54,8 @@ export const MANUAIS: Record<string, ManualTela> = {
     titulo: "Pipeline",
     oQueE: "O quadro Kanban do vendedor pós-handoff: arraste o lead pelas colunas conforme a negociação avança. Termina na conversão (1ª compra).",
     fontes: [
-      "Cards: leads reais com etapa de pipeline (handoff → em andamento → negociação → proposta → pedido teste → convertido/perdido).",
+      "Cards: leads reais com etapa de pipeline (agendamento → em andamento → negociação → proposta → cadastro do cliente → convertido/perdido).",
+      "Cadastro do Cliente: etapa PRÉ-pedido — o lead topou a proposta e vai fazer o 1º pedido; aqui o vendedor coleta a documentação padrão ASB (CNPJ ou CPF). NÃO é a conversão: a conversão vem sozinha do ARES quando o 1º pedido é faturado (o card ganha o selo ✓ ARES e vai pra Convertido).",
       "Selo ✓ ARES: o lead já faturou na carteira real (v_carteira_360).",
       "Valor estimado: volume semanal (kg) × R$/kg médio definido pela gestão.",
     ],
@@ -126,7 +127,7 @@ export const MANUAIS: Record<string, ManualTela> = {
     titulo: "Comercial",
     oQueE: "Uma porta só para a camada comercial — a jornada de ponta a ponta em cards. Aquisição (Leads SDR · Parados · Perdidos · Pipeline) e Carteira (Clientes · Carteira Ativa). Cada card mostra o total vivo e abre a tela que já existe.",
     fontes: [
-      "Leads SDR: entraram hoje (ai_sdr_leads created_at BRT). Parados: v_leads_parados (1–30d). Perdidos: lead_perdido nos últimos 180d. Pipeline: leads em aberto com o vendedor (handoff→pedido_teste).",
+      "Leads SDR: entraram hoje (ai_sdr_leads created_at BRT). Parados: v_leads_parados (1–30d). Perdidos: lead_perdido nos últimos 180d. Pipeline: leads em aberto com o vendedor (agendamento→cadastro do cliente).",
       "Clientes: v_carteira_360 viva (ativo + atenção). Carteira Ativa: recompra devida (risco + pré-churn).",
     ],
     comoUsar: [

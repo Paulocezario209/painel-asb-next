@@ -66,7 +66,7 @@ const SITU_LABEL: Record<Situ, string> = {
   humano: "precisa humano", negocia: "negociação", pausado: "pausado",
 };
 const HUMANO_ST = ["HANDOFF_SEM_CONTATO", "QUALIFICADO_AGUARDANDO_VENDEDOR"];
-const NEGOCIA_ST = ["NEGOCIACAO", "PROPOSTA", "PEDIDO_TESTE"];
+const NEGOCIA_ST = ["NEGOCIACAO", "PROPOSTA", "CADASTRO", "PEDIDO_TESTE"];
 function situacaoEstado(state: string, atrasados: number, hoje: number): Situ {
   if (NEGOCIA_ST.includes(state)) return "negocia";
   if (HUMANO_ST.includes(state)) return "humano";
@@ -93,6 +93,7 @@ const ESTADOS: Estado[] = [
   { key: "EM_ANDAMENTO", label: "Em andamento", band: "curta" },
   { key: "NEGOCIACAO", label: "Negociação", band: "curta" },
   { key: "PROPOSTA", label: "Proposta enviada", band: "curta" },
+  { key: "CADASTRO", label: "Cadastro do cliente", band: "curta" },
   { key: "PEDIDO_TESTE", label: "Pedido teste", band: "curta" },
   { key: "GANHO", label: "Ganho (convertido)", band: "ganho" },
   { key: "PERDIDO_NURTURE", label: "Perdido · nutrição", band: "longa" },
