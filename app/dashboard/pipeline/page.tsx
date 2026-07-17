@@ -71,7 +71,7 @@ export default async function PipelinePage({ searchParams }: { searchParams: Pro
 
   let q = supabase
     .from("ai_sdr_leads")
-    .select("id, phone, restaurant_name, city, weekly_volume_kg, funnel_stage, routing_team, handoff_at, seller_first_reply_at, created_at, motivo_handoff, interesse_preco, pediu_catalogo")
+    .select("id, phone, restaurant_name, city, weekly_volume_kg, funnel_stage, routing_team, handoff_at, seller_first_reply_at, created_at, motivo_handoff, interesse_preco, pediu_catalogo, cnpj, ares_pessoa_id")
     .eq("is_test", false)
     .in("funnel_stage", [...PIPELINE_STAGES, ...LEGACY_STAGES] as unknown as string[])
     .order("handoff_at", { ascending: false, nullsFirst: false })
