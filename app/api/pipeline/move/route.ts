@@ -4,7 +4,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getUserContext } from "@/lib/auth/get-user-role";
-import { MOVIVEIS, vendedorPodeMover } from "@/lib/funnel/stages";
+import { MOVIVEIS, vendedorPodeMover, ehRetrocesso } from "@/lib/funnel/stages";
 
 
 export async function POST(req: NextRequest) {
@@ -55,6 +55,20 @@ export async function POST(req: NextRequest) {
       { error: "Trava de etapa: mova um passo por vez, sem pular nem voltar. Só o gestor libera etapas fora de ordem." },
       { status: 403 },
     );
+  }
+
+  // RETROCESSO do gestor (Paulo 2026-07-17): as RPCs de avanco sao forward-only (guardam a from-stage),
+  // entao arrastar pra tras por elas falha ("Lead deve estar em X. Atual: Y"). O gestor volta pela RPC
+  // propria mark_lead_voltar_etapa (gestor-only via auth.uid(), aceita qualquer etapa anterior + grava
+  // evento). Vendedor nunca cai aqui — a trava sequencial acima ja barrou. Nada do avanco muda.
+  if (ctx.isGestor && ehRetrocesso(lead.funnel_stage, to_stage)) {
+    const { data, error: errVoltar } = await supabase.rpc("mark_lead_voltar_etapa", {
+      p_lead_id: lead_id, p_to_stage: to_stage, p_actor: ctx.email,
+    });
+    if (errVoltar) {
+      return NextResponse.json({ error: errVoltar.message, rpc: "mark_lead_voltar_etapa" }, { status: 400 });
+    }
+    return NextResponse.json({ ok: true, lead_id, from: lead.funnel_stage, to: to_stage, ...(data as Record<string, unknown>) });
   }
 
   // Mapeia to_stage -> RPC + params (mesmas RPCs dos botoes existentes)

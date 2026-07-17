@@ -163,6 +163,17 @@ export function vendedorPodeMover(fromStage: string | null | undefined, toStage:
   return PROXIMA_ETAPA[from] === toStage;                       // só o PRÓXIMO passo
 }
 
+// Ordem linear do pipeline (p/ detectar RETROCESSO). lead_perdido não entra (é saída).
+const _SEQ_ORDER = ["handoff", "lead_em_andamento", "negociacao", "proposta_enviada", "cadastro_cliente", "pedido_fechado"];
+/** É movimento pra TRÁS? (gestor volta via RPC própria — as de avanço são forward-only). */
+export function ehRetrocesso(fromStage: string | null | undefined, toStage: string): boolean {
+  if (toStage === "lead_perdido") return false;
+  const from = _SEQ_ALIAS[fromStage ?? ""] ?? fromStage ?? "";
+  const to = _SEQ_ALIAS[toStage] ?? toStage;
+  const i = _SEQ_ORDER.indexOf(from), j = _SEQ_ORDER.indexOf(to);
+  return i >= 0 && j >= 0 && j < i;
+}
+
 // ── Funil (cone de 4 fases — agrega funnel_stage CRU, cobre legados) ─────────
 export const FASES = [
   { key: "qualificacao", label: "Em qualificação", fill: "#185FA5",
