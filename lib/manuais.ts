@@ -65,6 +65,7 @@ export const MANUAIS: Record<string, ManualTela> = {
       "Vendedor move só os próprios leads; gestor move todos.",
       "“Parados >7d” = sem transição há mais de 7 dias — priorize-os.",
       "📋 Enviar ficha (só na etapa Cadastro do Cliente): abre o preview da ficha PF/PJ e envia ao lead pelo SEU WhatsApp (instância Evolution do vendedor). Você revê o texto antes; o lead recebe na mesma conversa. A IA nunca envia — só você. O cadastro no ARES continua manual.",
+      "🧾 Montar orçamento (só na etapa Em Negociação): abre a ficha de orçamento — você adiciona os produtos (com sugestões do top-10 do seu setor) e digita unidades/caixa e o PREÇO (o sistema nunca sugere preço). A gramatura vem do nome; o peso total é calculado. O preview mostra exatamente o texto que sai, e o envio vai pelo SEU WhatsApp. A IA nunca envia — só você.",
     ],
   },
   "/dashboard/vendas": {

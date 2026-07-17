@@ -82,9 +82,11 @@ export default async function PipelinePage({ searchParams }: { searchParams: Pro
 
   // Ponte lead→ARES (redesenho 2026-07-09): lead presente em v_carteira_360 já FATUROU →
   // conversão CONFIRMADA. Agrupa em "Convertido" mesmo sem o vendedor arrastar o card.
-  const [{ data: rawLeads }, { data: rawPonte }] = await Promise.all([
+  const [{ data: rawLeads }, { data: rawPonte }, { data: rawTop }] = await Promise.all([
     q,
     supabase.from("v_carteira_360").select("lead_id").not("lead_id", "is", null),
+    // Onda 4b — sugestões de produto pro orçamento (top-10 movimentados por setor, do espelho).
+    supabase.from("v_produtos_top").select("routing_team, descricao_produto, rank").order("rank"),
   ]);
   const aresLeadIds = new Set(((rawPonte ?? []) as { lead_id: string }[]).map((r) => r.lead_id));
   const leads = ((rawLeads ?? []) as PipelineLead[]).map((l) => ({
@@ -136,6 +138,7 @@ export default async function PipelinePage({ searchParams }: { searchParams: Pro
       <PipelineBoard
         key={`${vendFiltro ?? "todos"}|${mesParam ?? ""}|${qSafe}`}
         byStage={byStage} stages={PIPELINE_STAGES as unknown as string[]} ctx={boardCtx}
+        topProdutos={(rawTop ?? []) as { routing_team: string | null; descricao_produto: string | null; rank: number }[]}
       />
     </div>
   );

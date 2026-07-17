@@ -5,7 +5,7 @@
 
 import { useEffect, useState } from "react";
 import { MOVIVEIS, LOST_REASONS, STAGE_COLORS } from "@/lib/funnel/stages";
-import { fichaCadastro } from "@/lib/fichas";
+import { fichaCadastro, fichaOrcamento, pesoTotalKg, type OrcamentoItem } from "@/lib/fichas";
 import { theme } from "@/lib/theme";
 import { StatTile } from "@/app/dashboard/lib/ui";
 import { useRouter } from "next/navigation";
@@ -34,6 +34,13 @@ export type PipelineLead = {
   ares_pessoa_id: string | number | null;
 };
 export type PipelineCtx = { isGestor: boolean; routing_team: string | null; canMoveAll: boolean };
+export type TopProduto = { routing_team: string | null; descricao_produto: string | null; rank: number };
+
+// Gramatura = número final do nome do produto (100–220 g; siglas 100/110/…/220). Heurística leve.
+function parseGramatura(nome: string): number | null {
+  const nums = (nome.match(/\d{2,3}/g) ?? []).map(Number).filter((n) => n >= 50 && n <= 300);
+  return nums.length ? nums[nums.length - 1] : null;
+}
 
 
 // Cores semânticas por etapa (asb-dashboard-elite — cor com propósito, não decorativa).
@@ -61,11 +68,12 @@ type ModalState =
   | { tipo: "lista"; stage: string }
   | { tipo: "sugestao"; lead: PipelineLead; stage: string }
   | { tipo: "ficha"; lead: PipelineLead }
+  | { tipo: "orcamento"; lead: PipelineLead }
   | null;
 
 export function PipelineBoard({
-  byStage, stages, ctx,
-}: { byStage: Record<string, PipelineLead[]>; stages: string[]; ctx: PipelineCtx }) {
+  byStage, stages, ctx, topProdutos = [],
+}: { byStage: Record<string, PipelineLead[]>; stages: string[]; ctx: PipelineCtx; topProdutos?: TopProduto[] }) {
   const router = useRouter();
   const [board, setBoard] = useState(byStage);
   const [dragId, setDragId] = useState<string | null>(null);
@@ -218,6 +226,14 @@ export function PipelineBoard({
                             style={{ background: "transparent", border: "1px solid #2e2e2e", borderRadius: 4, cursor: "pointer", fontSize: 10, lineHeight: 1, padding: "3px 5px", color: "#e4e9f0" }}
                           >📋</button>
                         )}
+                        {/* Onda 4b — botão "Orçamento" só na etapa Em Negociação */}
+                        {stage === "negociacao" && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setModal({ tipo: "orcamento", lead }); }}
+                            title="Montar e enviar o orçamento ao lead (pelo seu WhatsApp)"
+                            style={{ background: "transparent", border: "1px solid #2e2e2e", borderRadius: 4, cursor: "pointer", fontSize: 10, lineHeight: 1, padding: "3px 5px", color: "#e4e9f0" }}
+                          >🧾</button>
+                        )}
                       </div>
                       <div style={{ display: "flex", gap: 8, color: "#c0d0e0", fontSize: 9, fontFamily: theme.font.label, flexWrap: "wrap" }}>
                         {lead.weekly_volume_kg ? <span>{lead.weekly_volume_kg}kg</span> : null}
@@ -286,6 +302,10 @@ export function PipelineBoard({
       )}
       {modal?.tipo === "ficha" && (
         <ModalFicha lead={modal.lead} onClose={() => setModal(null)} />
+      )}
+      {modal?.tipo === "orcamento" && (
+        <ModalOrcamento lead={modal.lead} onClose={() => setModal(null)}
+          sugestoes={topProdutos.filter(p => p.routing_team === modal.lead.routing_team)} />
       )}
       {/* Modal lista da etapa (só leitura; linhas abrem o lead) */}
       {modal?.tipo === "lista" && (
@@ -596,6 +616,136 @@ function ModalFicha({ lead, onClose }: { lead: PipelineLead; onClose: () => void
         <button onClick={enviar} disabled={enviando || result?.ok}
           style={{ background: result?.ok ? "#238636" : "#185FA5", border: "none", borderRadius: 6, padding: "8px 16px", color: "#fff", fontSize: 11, fontFamily: theme.font.label, fontWeight: 700, cursor: enviando || result?.ok ? "default" : "pointer", opacity: enviando ? 0.6 : 1 }}>
           {enviando ? "Enviando…" : result?.ok ? "✓ Enviada" : "Enviar pelo meu WhatsApp"}
+        </button>
+      </div>
+    </Backdrop>
+  );
+}
+
+// Onda 4b — montar + enviar a ficha de ORÇAMENTO ao lead (pela Evolution do vendedor).
+// Produtos: sugestões do setor (v_produtos_top) + digitação livre. Gramatura auto do nome
+// (editável). Unidades/caixa e preço = MANUAIS. Peso total = unidades × gramatura. O preview
+// é montado com a MESMA lib do server (fichaOrcamento) → preview == enviado. Preço nunca sai do ARES.
+type OrcRow = { nome: string; gramatura: string; unidades: string; vunit: string; vcaixa: string };
+const ROW_VAZIA: OrcRow = { nome: "", gramatura: "", unidades: "", vunit: "", vcaixa: "" };
+function parseNum(s: string): number | null {
+  const v = Number((s || "").replace(",", "."));
+  return s.trim() !== "" && isFinite(v) && v >= 0 ? v : null;
+}
+function rowToItem(r: OrcRow): OrcamentoItem {
+  return {
+    nome: r.nome.trim(),
+    gramatura_g: parseNum(r.gramatura),
+    unidades_caixa: parseNum(r.unidades),
+    peso_kg: null,
+    valor_unitario: parseNum(r.vunit),
+    valor_caixa: parseNum(r.vcaixa),
+  };
+}
+function ModalOrcamento({ lead, onClose, sugestoes }:
+  { lead: PipelineLead; onClose: () => void; sugestoes: TopProduto[] }) {
+  const [rows, setRows] = useState<OrcRow[]>([{ ...ROW_VAZIA }]);
+  const [enviando, setEnviando] = useState(false);
+  const [result, setResult] = useState<{ ok: boolean; msg: string } | null>(null);
+  const listId = "orc-sug-" + lead.id;
+
+  const set = (i: number, patch: Partial<OrcRow>) =>
+    setRows(prev => prev.map((r, j) => (j === i ? { ...r, ...patch } : r)));
+  // Ao digitar/escolher o nome, preenche a gramatura pelo número do nome se ainda estiver vazia.
+  const setNome = (i: number, nome: string) =>
+    setRows(prev => prev.map((r, j) => {
+      if (j !== i) return r;
+      const g = r.gramatura.trim() === "" ? parseGramatura(nome) : null;
+      return { ...r, nome, gramatura: g != null ? String(g) : r.gramatura };
+    }));
+  const addRow = () => setRows(prev => [...prev, { ...ROW_VAZIA }]);
+  const rmRow = (i: number) => setRows(prev => (prev.length > 1 ? prev.filter((_, j) => j !== i) : prev));
+
+  const itens: OrcamentoItem[] = rows.filter(r => r.nome.trim()).map(rowToItem);
+  const podeEnviar = itens.length > 0 && itens.every(it => it.valor_unitario != null || it.valor_caixa != null);
+  const texto = fichaOrcamento(itens);
+
+  const enviar = async () => {
+    setEnviando(true); setResult(null);
+    try {
+      const res = await fetch("/api/pipeline/send-orcamento", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lead_id: lead.id, itens }),
+      });
+      const j = await res.json();
+      if (!res.ok) { setResult({ ok: false, msg: j?.error ?? "falha ao enviar" }); return; }
+      if (j.sent && j.sent_to === "lead") setResult({ ok: true, msg: "Orçamento enviado ao lead ✓" });
+      else if (j.sent && j.sent_to === "test") setResult({ ok: true, msg: "Modo teste: enviado ao número de teste (não ao lead) ✓" });
+      else if (j.reason === "modo_teste_sem_FICHA_TEST_PHONE") setResult({ ok: false, msg: "Modo teste sem número configurado — avise o gestor." });
+      else setResult({ ok: false, msg: `não enviado (${j.reason ?? "erro"})` });
+    } catch {
+      setResult({ ok: false, msg: "falha de conexão" });
+    } finally {
+      setEnviando(false);
+    }
+  };
+
+  const inp = (val: string, on: (v: string) => void, ph: string, w: number | string, mono = false) => (
+    <input value={val} placeholder={ph} onChange={e => on(e.target.value)} inputMode={mono ? "decimal" : "text"}
+      style={{ width: w, minWidth: 0, background: "#0e0e0e", border: "1px solid #2e2e2e", borderRadius: 4, padding: "5px 7px", color: "#fff", fontSize: 11, fontFamily: mono ? theme.font.num : theme.font.label }} />
+  );
+
+  return (
+    <Backdrop>
+      <p style={{ color: "#fff", fontSize: 14, fontFamily: theme.font.label, fontWeight: 750, letterSpacing: "-.01em", marginBottom: 4 }}>
+        🧾 Montar orçamento
+      </p>
+      <p style={{ color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label, marginBottom: 12 }}>
+        {lead.restaurant_name || "Lead"}{lead.city ? ` · ${lead.city}` : ""} · preço é você quem digita · sai pelo SEU WhatsApp
+      </p>
+
+      {/* Sugestões do setor (top movimentados) — vira datalist do campo nome */}
+      <datalist id={listId}>
+        {sugestoes.map((s, i) => <option key={i} value={(s.descricao_produto ?? "").trim()} />)}
+      </datalist>
+
+      <div style={{ maxHeight: "34vh", overflowY: "auto", display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
+        {rows.map((r, i) => {
+          const peso = pesoTotalKg(rowToItem(r));
+          return (
+            <div key={i} style={{ border: "1px solid #242424", borderRadius: 6, padding: "8px 9px", display: "flex", flexDirection: "column", gap: 6 }}>
+              <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                <input list={listId} value={r.nome} placeholder="Produto (busque ou digite)" onChange={e => setNome(i, e.target.value)}
+                  style={{ flex: 1, minWidth: 0, background: "#0e0e0e", border: "1px solid #2e2e2e", borderRadius: 4, padding: "5px 7px", color: "#fff", fontSize: 11, fontFamily: theme.font.label }} />
+                <button onClick={() => rmRow(i)} title="Remover produto" disabled={rows.length <= 1}
+                  style={{ background: "transparent", border: "1px solid #2e2e2e", borderRadius: 4, color: "#c0d0e0", fontSize: 12, lineHeight: 1, padding: "4px 7px", cursor: rows.length <= 1 ? "default" : "pointer", opacity: rows.length <= 1 ? 0.4 : 1 }}>✕</button>
+              </div>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+                {inp(r.gramatura, v => set(i, { gramatura: v }), "g", 58, true)}
+                {inp(r.unidades, v => set(i, { unidades: v }), "un/cx", 66, true)}
+                {inp(r.vunit, v => set(i, { vunit: v }), "R$ un", 78, true)}
+                {inp(r.vcaixa, v => set(i, { vcaixa: v }), "R$ caixa", 88, true)}
+                <span style={{ color: "#8a93a5", fontSize: 10, fontFamily: theme.font.label }}>
+                  {peso != null ? `peso ${peso.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg` : "peso —"}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <button onClick={addRow} style={{ alignSelf: "flex-start", background: "transparent", border: "1px dashed #2e2e2e", borderRadius: 6, color: "#e4e9f0", fontSize: 11, fontFamily: theme.font.label, padding: "5px 10px", cursor: "pointer", marginBottom: 10 }}>＋ adicionar produto</button>
+
+      {/* Preview do texto (== enviado) */}
+      {texto && (
+        <div style={{ maxHeight: "26vh", overflowY: "auto", background: "var(--asb-card)", border: "1px solid #2e2e2e", borderRadius: 6, padding: "10px 12px", marginBottom: 12 }}>
+          <p style={{ color: "#fff", fontSize: 11, fontFamily: theme.font.label, lineHeight: 1.55, whiteSpace: "pre-wrap" }}>{texto}</p>
+        </div>
+      )}
+      {result && (
+        <p style={{ color: result.ok ? "#2fbf6b" : "#f85149", fontSize: 11, fontFamily: theme.font.label, marginBottom: 8 }}>{result.msg}</p>
+      )}
+      <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", alignItems: "center" }}>
+        {!podeEnviar && itens.length > 0 && <span style={{ color: "#8a93a5", fontSize: 10, fontFamily: theme.font.label }}>preencha o preço (unitário ou caixa)</span>}
+        <BtnCancel onClick={onClose} />
+        <button onClick={enviar} disabled={enviando || result?.ok || !podeEnviar}
+          style={{ background: result?.ok ? "#238636" : "#185FA5", border: "none", borderRadius: 6, padding: "8px 16px", color: "#fff", fontSize: 11, fontFamily: theme.font.label, fontWeight: 700, cursor: enviando || result?.ok || !podeEnviar ? "default" : "pointer", opacity: enviando || !podeEnviar ? 0.6 : 1 }}>
+          {enviando ? "Enviando…" : result?.ok ? "✓ Enviado" : "Enviar pelo meu WhatsApp"}
         </button>
       </div>
     </Backdrop>
