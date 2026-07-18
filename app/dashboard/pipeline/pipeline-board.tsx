@@ -82,6 +82,7 @@ type ModalState =
   | { tipo: "sugestao"; lead: PipelineLead; stage: string }
   | { tipo: "ficha"; lead: PipelineLead }
   | { tipo: "orcamento"; lead: PipelineLead }
+  | { tipo: "dealdesk"; lead: PipelineLead }
   | null;
 
 export function PipelineBoard({
@@ -245,6 +246,15 @@ export function PipelineBoard({
                             style={{ background: "transparent", border: "1px solid #2e2e2e", borderRadius: 4, cursor: "pointer", fontSize: 10, lineHeight: 1, padding: "3px 5px", color: "#e4e9f0" }}
                           >📋</button>
                         )}
+                        {/* Setor Negociação — agente Deal Desk (Voss): lê a conversa, detecta a
+                            objeção e devolve a virada. Só na Negociação (onde a objeção aparece). */}
+                        {stage === "negociacao" && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setModal({ tipo: "dealdesk", lead }); }}
+                            title="Deal Desk: virada da objeção em tempo real (lê a conversa)"
+                            style={{ background: "transparent", border: "1px solid #2e2e2e", borderRadius: 4, cursor: "pointer", fontSize: 10, lineHeight: 1, padding: "3px 5px", color: "#e4e9f0" }}
+                          >🎧</button>
+                        )}
                         {/* Onda 4b — botão "Orçamento" só na etapa Proposta (Negociação = absorve
                             info; Proposta = envia a proposta/orçamento ao lead) */}
                         {stage === "proposta_enviada" && (
@@ -320,6 +330,9 @@ export function PipelineBoard({
       )}
       {modal?.tipo === "orcamento" && (
         <ModalOrcamento lead={modal.lead} onClose={() => setModal(null)} catalogo={produtos} />
+      )}
+      {modal?.tipo === "dealdesk" && (
+        <ModalDealDesk lead={modal.lead} onClose={() => setModal(null)} />
       )}
       {/* Modal lista da etapa (só leitura; linhas abrem o lead) */}
       {modal?.tipo === "lista" && (
@@ -550,6 +563,108 @@ function ModalSugestao({ lead, stage, onClose }: { lead: PipelineLead; stage: st
         <BtnCancel onClick={onClose} />
         <button onClick={copiar} disabled={!data?.mensagem_whatsapp}
           style={{ background: copiado ? "#238636" : "#185FA5", border: "none", borderRadius: 6, padding: "8px 16px", color: "#fff", fontSize: 11, fontFamily: theme.font.label, fontWeight: 700, cursor: data?.mensagem_whatsapp ? "pointer" : "not-allowed", opacity: data?.mensagem_whatsapp ? 1 : 0.5 }}>
+          {copiado ? "✓ Copiado" : "Copiar mensagem"}
+        </button>
+      </div>
+    </Backdrop>
+  );
+}
+
+// ── Modal Deal Desk (agente Voss · Setor Negociação) ────────────────────────
+// Lê a conversa real (vendor_messages + conversas_sdr) via /api/pipeline/deal-desk →
+// CP /internal/deal-desk/assist, detecta a OBJEÇÃO e devolve a virada (tática Voss +
+// mensagem pronta + próximo passo). READ-ONLY: o clique do vendedor no WhatsApp é a ação.
+// Dark launch: fonte="off" enquanto DEAL_DESK_LIVE=false.
+type DealDesk = { objecao: string; leitura: string; tatica: string; mensagem: string; proximo_passo: string; alerta: string; fonte: string };
+const OBJ_LABEL: Record<string, string> = { preco: "Preço", concorrente: "Concorrente", prazo: "Prazo", confianca: "Confiança", nenhuma: "Sem objeção clara" };
+
+function ModalDealDesk({ lead, onClose }: { lead: PipelineLead; onClose: () => void }) {
+  const [data, setData] = useState<DealDesk | null>(null);
+  const [erro, setErro] = useState<string | null>(null);
+  const [copiado, setCopiado] = useState(false);
+
+  useEffect(() => {
+    let vivo = true;
+    (async () => {
+      try {
+        const res = await fetch("/api/pipeline/deal-desk", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ lead_id: lead.id }),
+        });
+        const j = await res.json();
+        if (!vivo) return;
+        if (!res.ok) { setErro(j?.error ?? "falha ao consultar o Deal Desk"); return; }
+        setData(j as DealDesk);
+      } catch {
+        if (vivo) setErro("falha de conexão");
+      }
+    })();
+    return () => { vivo = false; };
+  }, [lead.id]);
+
+  const copiar = async () => {
+    if (!data?.mensagem) return;
+    try {
+      await navigator.clipboard.writeText(data.mensagem);
+      setCopiado(true);
+      setTimeout(() => setCopiado(false), 2000);
+    } catch { /* clipboard bloqueado — usuário seleciona manualmente */ }
+  };
+
+  const bloco = (titulo: string, texto: string) => (texto ? (
+    <div style={{ marginBottom: 10 }}>
+      <p style={{ color: "#e4e9f0", fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".12em", textTransform: "uppercase", marginBottom: 3 }}>{titulo}</p>
+      <p style={{ color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label, lineHeight: 1.5, whiteSpace: "pre-wrap" }}>{texto}</p>
+    </div>
+  ) : null);
+
+  const off = data?.fonte === "off";
+  const vazio = data?.fonte === "vazio";
+
+  return (
+    <Backdrop>
+      <p style={{ color: "#fff", fontSize: 14, fontFamily: theme.font.label, fontWeight: 750, letterSpacing: "-.01em", marginBottom: 4 }}>
+        🎧 Deal Desk · Negociação
+      </p>
+      <p style={{ color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label, marginBottom: 14 }}>
+        {lead.restaurant_name || "Lead"}{lead.city ? ` · ${lead.city}` : ""}
+      </p>
+
+      {!data && !erro && (
+        <p style={{ color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label, padding: "12px 0" }}>lendo a conversa…</p>
+      )}
+      {erro && (
+        <p style={{ color: "#f85149", fontSize: 11, fontFamily: theme.font.label, padding: "8px 0" }}>{erro}</p>
+      )}
+      {off && (
+        <p style={{ color: "#e3b341", fontSize: 11, fontFamily: theme.font.label, padding: "8px 0" }}>Agente Deal Desk desligado. Ligue <code>DEAL_DESK_LIVE=true</code> no control-plane para ativar.</p>
+      )}
+      {vazio && (
+        <p style={{ color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label, padding: "8px 0" }}>Sem conversa suficiente pra ler a objeção ainda.</p>
+      )}
+      {data && data.fonte === "ia" && (
+        <div style={{ maxHeight: "50vh", overflowY: "auto", paddingRight: 4 }}>
+          <div style={{ display: "inline-block", background: "#1c2a3a", border: "1px solid #2e4258", borderRadius: 6, padding: "3px 9px", marginBottom: 10 }}>
+            <span style={{ color: "#e4e9f0", fontSize: 10, fontFamily: theme.font.label, fontWeight: 700 }}>Objeção: {OBJ_LABEL[data.objecao] ?? data.objecao}</span>
+          </div>
+          {bloco("Leitura", data.leitura)}
+          {bloco("Tática", data.tatica)}
+          <div style={{ marginBottom: 10, background: "var(--asb-card)", border: "1px solid #2e2e2e", borderRadius: 6, padding: "10px 12px" }}>
+            <p style={{ color: "#e4e9f0", fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".12em", textTransform: "uppercase", marginBottom: 4 }}>Mensagem sugerida (edite ao colar)</p>
+            <p style={{ color: "#fff", fontSize: 11, fontFamily: theme.font.label, lineHeight: 1.55, whiteSpace: "pre-wrap" }}>{data.mensagem}</p>
+          </div>
+          {bloco("Próximo passo", data.proximo_passo)}
+          {data.alerta ? (
+            <p style={{ color: "#e3b341", fontSize: 10, fontFamily: theme.font.label, lineHeight: 1.5 }}>⚠︎ {data.alerta}</p>
+          ) : null}
+        </div>
+      )}
+
+      <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 14 }}>
+        <BtnCancel onClick={onClose} />
+        <button onClick={copiar} disabled={!data?.mensagem}
+          style={{ background: copiado ? "#238636" : "#185FA5", border: "none", borderRadius: 6, padding: "8px 16px", color: "#fff", fontSize: 11, fontFamily: theme.font.label, fontWeight: 700, cursor: data?.mensagem ? "pointer" : "not-allowed", opacity: data?.mensagem ? 1 : 0.5 }}>
           {copiado ? "✓ Copiado" : "Copiar mensagem"}
         </button>
       </div>
