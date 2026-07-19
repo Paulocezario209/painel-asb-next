@@ -412,7 +412,7 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
       const leadId = (d.id as string) ?? null;
       const [conv, vmsg, evt, cx] = await Promise.all([
         svc().from("conversas_sdr").select("message_text,response,created_at").eq("phone", leadSel).order("created_at", { ascending: false }).limit(5),
-        svc().from("vendor_messages").select("content,direction,created_at").eq("lead_phone", leadSel).order("created_at", { ascending: false }).limit(5),
+        svc().from("v_vendor_conversa_limpa").select("content,direction,created_at").eq("lead_phone", leadSel).order("created_at", { ascending: false }).limit(5),
         leadId ? svc().from("funnel_stage_events").select("from_stage,to_stage,created_at").eq("lead_id", leadId).order("created_at", { ascending: false }).limit(5) : Promise.resolve({ data: [] }),
         svc().from("v_orquestracao_leads").select("contexto_resumo,contexto_objecao,contexto_produto,contexto_gramatura,contexto_recompra_dias,contexto_extraido_em").eq("phone", leadSel).maybeSingle(),
       ]);

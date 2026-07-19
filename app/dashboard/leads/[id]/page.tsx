@@ -86,13 +86,16 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
       .order("created_at", { ascending: true })
       .limit(100),
     supabase
-      .from("vendor_messages")
+      // FIX A (2026-07-19): conversa LIMPA vendedor↔lead — remove os 544 números
+      // internos, rascunhos de script (*ETAPA*/CÓDIGO/{nome}) e ping de handoff.
+      // Fonte: view read-only v_vendor_conversa_limpa (vendor_messages intacta).
+      .from("v_vendor_conversa_limpa")
       .select("direction, content, media_type, sent_at")
       .eq("lead_phone", phone)
       .order("sent_at", { ascending: true })
       .limit(50),
     supabase
-      .from("vendor_messages")
+      .from("v_vendor_conversa_limpa")
       .select("id", { count: "exact", head: true })
       .eq("lead_phone", phone),
   ]);
