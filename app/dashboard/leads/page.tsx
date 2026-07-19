@@ -3,6 +3,7 @@ import Link from "next/link";
 import { LeadsTable } from "@/components/leads/leads-table";
 import { PerdidosList, type LostLead } from "@/components/leads/perdidos-list";
 import { ForaDeRotaTable, type ForaRotaLead } from "@/components/leads/fora-de-rota-table";
+import { EsgotadaTable, type EsgotadaLead } from "@/components/leads/esgotada-table";
 import { ParadosList, type ParadoLead } from "@/components/leads/parados-list";
 import { NAO_ATIVO_STAGES, STAGE_ORDER, STAGE_LABELS, CONVERTIDO_SET, rawStagesFor } from "@/lib/funnel/stages";
 import { CADENCIA_PHASES } from "@/lib/followup/cadencia";
@@ -20,6 +21,7 @@ const VIEWS = [
   { key: "parados", label: "Parados" },
   { key: "perdidos", label: "Perdidos" },
   { key: "fora_de_rota", label: "Fora de Rota" },
+  { key: "esgotada", label: "Esgotada" },   // DEBT-318: cadência desistiu (falha envio/leak 3×)
 ] as const;
 
 // Modo COORTE (link das linhas de "Conversão da coorte" do /dashboard/funil):
@@ -34,7 +36,7 @@ const MARCOS_COORTE: Record<string, string> = {
 
 export default async function LeadsPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const sp = await searchParams;
-  const view = sp.view === "perdidos" ? "perdidos" : sp.view === "fora_de_rota" ? "fora_de_rota" : sp.view === "parados" ? "parados" : "ativos";
+  const view = sp.view === "perdidos" ? "perdidos" : sp.view === "fora_de_rota" ? "fora_de_rota" : sp.view === "esgotada" ? "esgotada" : sp.view === "parados" ? "parados" : "ativos";
   const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
@@ -164,12 +166,23 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
     paradosLeads = (data ?? []) as ParadoLead[];
   }
 
+  // DEBT-318: aba ESGOTADA — v_cadencia_esgotada (leads que a cadência desistiu: falha envio/leak 3×).
+  let esgotadaLeads: EsgotadaLead[] = [];
+  if (view === "esgotada") {
+    const { data } = await supabase
+      .from("v_cadencia_esgotada")
+      .select("phone, name, restaurant_name, city, routing_team, funnel_stage, followup_fail_count, leak_retry_count, last_followup_at, contexto_resumo, motivo_esgotamento")
+      .order("last_followup_at", { ascending: false, nullsFirst: false })
+      .limit(200);
+    esgotadaLeads = (data ?? []) as EsgotadaLead[];
+  }
+
   // Fase 1.2 (DEBT-286): contagens das 4 abas p/ os cards de resumo (head:true = só count).
   // Ativos usa o MESMO filtro da lista (convertido já fora); Parados lê a MESMA fonte da aba
   // (v_leads_parados) → card e aba nunca divergem.
   const since180 = new Date(Date.now() - 180 * 86400000).toISOString();
   const naoAtivoInList = `(${NAO_ATIVO_STAGES.join(",")})`;
-  const [cAtivos, cParados, cPerdidos, cFora] = await Promise.all([
+  const [cAtivos, cParados, cPerdidos, cFora, cEsgotada] = await Promise.all([
     supabase.from("ai_sdr_leads").select("phone", { count: "exact", head: true })
       .eq("is_test", false).or("routing_team.is.null,routing_team.neq.fora_de_rota")
       .is("first_order_at", null).not("funnel_stage", "in", naoAtivoInList)
@@ -180,12 +193,14 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
       .eq("is_test", false).eq("funnel_stage", "lead_perdido").gte("lost_at", since180),
     supabase.from("ai_sdr_leads").select("phone", { count: "exact", head: true })
       .eq("is_test", false).eq("routing_team", "fora_de_rota"),
+    supabase.from("v_cadencia_esgotada").select("phone", { count: "exact", head: true }),
   ]);
   const cardCounts = {
     ativos: cAtivos.count ?? 0,
     parados: cParados.count ?? 0,
     perdidos: cPerdidos.count ?? 0,
     fora_de_rota: cFora.count ?? 0,
+    esgotada: cEsgotada.count ?? 0,
   };
 
   return (
@@ -198,6 +213,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
               : view === "ativos" ? `${leads.length} leads que entraram hoje — a caixa de entrada do SDR (virou o dia → Parados)`
               : view === "parados" ? "No funil há 1–30 dias — o vendedor deve resolver (fechar ou marcar perdido com motivo) até o dia 30"
               : view === "perdidos" ? "Fila de recuperação — perdidos nos últimos 180 dias"
+              : view === "esgotada" ? "Cadência esgotada — o envio falhou 3× (ou placeholder leak): a IA desistiu, o gestor decide o destino"
               : "Fora de cobertura — registrados para expansão futura"
           }
         />
@@ -254,6 +270,8 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
         <ParadosList leads={paradosLeads} />
       ) : view === "fora_de_rota" ? (
         <ForaDeRotaTable leads={foraRotaLeads} />
+      ) : view === "esgotada" ? (
+        <EsgotadaTable leads={esgotadaLeads} />
       ) : (
         <>
           <LeadsTable leads={leads ?? []} userEmail={user?.email ?? ""} initialStatus={sp.status ?? "all"} initialQ={sp.q ?? ""} />

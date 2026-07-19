@@ -5,7 +5,7 @@ import { theme } from "@/lib/theme";
 // Linha do tempo por idade no SDR (Paulo 2026-07-14): Leads SDR (entrou hoje) → Parados (1-30d)
 // → Perdidos. Sem cross-percentuais (quebravam com o volume diário pequeno de "hoje").
 
-type Counts = { ativos: number; parados: number; perdidos: number; fora_de_rota: number };
+type Counts = { ativos: number; parados: number; perdidos: number; fora_de_rota: number; esgotada: number };
 
 const C = { line: "#22304a", panel: "#0f1826", txt: "#fff", muted: "#c0d0e0", dim: "#7f8ea8" };
 // Tipografia padrão do painel (commit 112f221): label/texto = Geist Sans · número = Geist Mono.
@@ -18,10 +18,11 @@ export function LeadsCards({ counts, active }: { counts: Counts; active: string 
     { key: "parados", label: "Parados", n: counts.parados, sub: "1–30 dias no funil", edge: "#f59e0b" },
     { key: "perdidos", label: "Perdidos", n: counts.perdidos, sub: "últimos 180 dias", edge: "#C8102E" },
     { key: "fora_de_rota", label: "Fora de Rota", n: counts.fora_de_rota, sub: "sem cobertura", edge: "#38bdf8" },
+    { key: "esgotada", label: "Esgotada", n: counts.esgotada, sub: "cadência desistiu", edge: "#a855f7" },
   ];
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12 }}>
       {cards.map((c) => {
         const on = active === c.key;
         return (
