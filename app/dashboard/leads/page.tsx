@@ -71,11 +71,12 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
     .eq("is_test", false);
 
   if (coorteAtiva) {
-    // recorte da coorte: janela do mês + critério do marco (SEM excluir fora_de_rota — espelha a RPC)
+    // recorte da coorte: janela do mês + critério do marco (EM ROTA — espelha a RPC get_funil_marcos; DEBT-167, 2026-07-19)
     const [y, m] = mesCoorte!.split("-").map(Number);
     const ini = `${mesCoorte}-01`;
     const fim = `${m === 12 ? y + 1 : y}-${String(m === 12 ? 1 : m + 1).padStart(2, "0")}-01`;
-    leadsQuery = leadsQuery.gte("created_at", ini).lt("created_at", fim);
+    leadsQuery = leadsQuery.gte("created_at", ini).lt("created_at", fim)
+      .or("routing_team.is.null,routing_team.neq.fora_de_rota");   // fora-de-rota tem aba própria (view=fora_de_rota)
     if (vendCoorte) leadsQuery = leadsQuery.eq("routing_team", vendCoorte);
     if (marcoCoorte === "qualificados") leadsQuery = leadsQuery.gte("qual_stage", 7);
     if (marcoCoorte === "handoff") leadsQuery = leadsQuery.not("handoff_at", "is", null);
