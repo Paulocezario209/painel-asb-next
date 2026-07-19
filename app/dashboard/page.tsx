@@ -36,6 +36,9 @@ const PRODUCT_LABELS: Record<string, string> = {
   molhos: "Molhos", defumados: "Defumados", paes: "Pães", embalagens: "Embalagens",
 };
 
+const MESES_PT = ["janeiro", "fevereiro", "março", "abril", "maio", "junho",
+  "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
+
 // ── Sparkline: série semanal REAL (últimas 8 semanas) ────────────────────────
 const SPARK_WEEKS = 8;
 function weeklySeries<T extends Record<string, unknown>>(items: T[], field: keyof T): number[] {
@@ -63,13 +66,17 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   // P2 — filtros: ?vendedor=SETOR_* (afeta tudo) + ?mes=YYYY-MM (afeta só KPIs de volume; alertas ficam "agora")
   const sp = await searchParams;
   const vend = sp?.vendedor && /^SETOR_[A-Z_]+$/.test(sp.vendedor) ? sp.vendedor : null;
-  // Default = mês corrente (abre filtrado no mês atual; usuário troca pelo seletor)
-  const _hoje = new Date();
-  const mesCorrente = `${_hoje.getFullYear()}-${String(_hoje.getMonth() + 1).padStart(2, "0")}`;
+  // Default = mês corrente pelo calendário BRT (America/Sao_Paulo = UTC-3): vira o mês
+  // pela meia-noite de Brasília, não pela UTC (senão adianta o mês ~3h antes na virada).
+  const _hojeBRT = new Date(Date.now() - 3 * 3600 * 1000);
+  const mesCorrente = `${_hojeBRT.getUTCFullYear()}-${String(_hojeBRT.getUTCMonth() + 1).padStart(2, "0")}`;
   const mesParam = sp?.mes && /^\d{4}-(0[1-9]|1[0-2])$/.test(sp.mes) ? sp.mes : mesCorrente;
   const [_my, _mm] = mesParam.split("-").map(Number);
   const mesIni = `${mesParam}-01`;
   const mesFimEx = `${_mm === 12 ? _my + 1 : _my}-${String(_mm === 12 ? 1 : _mm + 1).padStart(2, "0")}-01`;
+  // Nome do mês por extenso (segue o mês selecionado no filtro; vira sozinho a cada mês)
+  const mesNomeCurto = MESES_PT[_mm - 1];            // ex.: "julho"
+  const mesNome = `${mesNomeCurto} de ${_my}`;       // ex.: "julho de 2026"
   // KPI VOLUME — criados (mês + vendedor)
   let qTotal = supabase.from("ai_sdr_leads").select("*", { count: "exact", head: true }).eq("is_test", false).or("routing_team.is.null,routing_team.neq.fora_de_rota");  // DEBT-167 4
   if (vend) qTotal = qTotal.eq("routing_team", vend);
@@ -82,6 +89,11 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   let qQual = supabase.from("ai_sdr_leads").select("*", { count: "exact", head: true }).eq("is_test", false).gte("qual_stage", 7).or("routing_team.is.null,routing_team.neq.fora_de_rota");  // DEBT-167 4
   if (vend) qQual = qQual.eq("routing_team", vend);
   if (mesIni && mesFimEx) qQual = qQual.gte("created_at", mesIni).lt("created_at", mesFimEx);
+  // KPI VOLUME — convertidos (SAFRA do mês: criados no mês + já com 1º pedido).
+  // Padroniza o card com Total/Qualificados (mesma coorte) — antes contava all-time (misturava períodos).
+  let qConv = supabase.from("ai_sdr_leads").select("*", { count: "exact", head: true }).eq("is_test", false).not("first_order_at", "is", null).or("routing_team.is.null,routing_team.neq.fora_de_rota");
+  if (vend) qConv = qConv.eq("routing_team", vend);
+  if (mesIni && mesFimEx) qConv = qConv.gte("created_at", mesIni).lt("created_at", mesFimEx);
   // LISTA — alertas/ABC/cidades (estado "agora", só vendedor)
   let qLeads = supabase.from("ai_sdr_leads").select("id, phone, restaurant_name, qual_stage, first_order_at, routing_team, handoff_at, handoff_confirmed, weekly_volume_kg, city, product_groups, human_active, followup_eligible, next_followup_at, created_at").eq("is_test", false).or("routing_team.is.null,routing_team.neq.fora_de_rota");  // DEBT-167 4: ABC+topCities+urgentA+alertas (+created_at p/ sparklines)
   if (vend) qLeads = qLeads.eq("routing_team", vend);
@@ -90,10 +102,11 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     { count: totalLeads },
     { data: pendRaw },
     { count: qualifiedLeads },
+    { count: convertidosMes },
     { data: allLeads },
     { data: motivosPerda },
   ] = await Promise.all([
-    qTotal, qHandoff, qQual, qLeads,
+    qTotal, qHandoff, qQual, qConv, qLeads,
     // P3: motivos de perda agregados (view Postgres — agregação server-side, asb-supabase-ops §7)
     supabase.from("v_motivos_perda").select("*"),
   ]);
@@ -197,7 +210,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   }
   const vendorData = Object.entries(vendorMap).map(([key, vals]) => ({ label: VENDOR_LABELS[key], ...vals }));
 
-  const convertidos = leads.filter(l => l.first_order_at).length;
+  const convertidos = convertidosMes ?? 0;   // safra do mês (coerente com Total/Qualificados)
 
   // Sparklines — séries semanais REAIS (leads em escopo), % calculados de verdade
   const sTotal   = weeklySeries(leads, "created_at");
@@ -206,24 +219,24 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const sConv    = weeklySeries(leads.filter(l => l.first_order_at), "first_order_at");
   const trTotal  = trendPct(sTotal);
   const qualPct  = totalLeads ? Math.round(((qualifiedLeads ?? 0) / totalLeads) * 100) : 0;
-  const convPct  = leads.length ? Math.round((convertidos / leads.length) * 100) : 0;
+  const convPct  = totalLeads ? Math.round((convertidos / totalLeads) * 100) : 0;   // % da safra do mês
 
   const kpis = [
     { label: "Total de leads", value: totalLeads ?? 0, num: "#FFFFFF", accent: "#8bb4ff", Icon: Users, href: "/dashboard/leads",
-      chip: trTotal === null ? "no período" : `${trTotal >= 0 ? "+" : ""}${trTotal}%`, chipUp: trTotal === null ? null : trTotal >= 0, note: "vs. período anterior", series: sTotal },
+      chip: trTotal === null ? "no período" : `${trTotal >= 0 ? "+" : ""}${trTotal}%`, chipUp: trTotal === null ? null : trTotal >= 0, note: `criados em ${mesNomeCurto}`, series: sTotal },
     { label: "Qualificados", value: qualifiedLeads ?? 0, num: "#5B8DEF", accent: "#5B8DEF", Icon: BadgeCheck, href: "/dashboard/hot-leads",
-      chip: `${qualPct}%`, chipUp: true, note: "do total", series: sQual },
+      chip: `${qualPct}%`, chipUp: true, note: `do total de ${mesNomeCurto}`, series: sQual },
     { label: "Agendamentos pendentes", value: handoffPending ?? 0, num: "#f59e0b", accent: "#f59e0b", Icon: PhoneCall, href: "/dashboard/handoffs",
-      chip: "a distribuir", chipUp: null as boolean | null, note: "SLA < 2h", series: sHandoff },
+      chip: "a distribuir", chipUp: null as boolean | null, note: "agora · SLA < 2h", series: sHandoff },
     { label: "Convertidos", value: convertidos, num: "#22c55e", accent: "#22c55e", Icon: Trophy, href: "/dashboard/leads?status=converted",
-      chip: `${convPct}%`, chipUp: true, note: "taxa de conversão", series: sConv },
+      chip: `${convPct}%`, chipUp: true, note: `convertidos em ${mesNomeCurto}`, series: sConv },
   ];
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <PageHead
         title="Dashboard"
-        desc={`Visão geral do pipeline SDR${mesParam ? ` · volume de ${mesParam}` : ""}${vend ? ` · vendedor filtrado` : ""}`}
+        desc={`Visão geral do pipeline SDR · ${mesNome}${vend ? ` · vendedor filtrado` : ""}`}
       />
 
       {/* P2 — filtros mês (volume) + vendedor (tudo). Alertas permanecem "agora". */}
