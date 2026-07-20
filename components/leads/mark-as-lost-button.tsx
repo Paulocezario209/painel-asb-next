@@ -2,26 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-
-// Labels gravados crus em lost_reason (RPC mark_lead_lost não normaliza).
-// perdidos-list reconhece estes mesmos labels para cor/reabordagem.
-// DEBT-318 (SDR): +motivos do padrão ENCOSTO (perdido-quente) → dirigem o ângulo de reconquista.
-const REASONS = [
-  "Preço",
-  "Pagamento / prazo",
-  "Sabor / produto",
-  "Comprou concorrente",
-  "Lealdade / incumbente",
-  "Logística",
-  "Sem orcamento",
-  "Sem interesse",
-  "Sem retorno",
-  "Fora de rota",
-  "Outro",
-];
-
-// Motivos que quase sempre são ENCOSTO (perdido mas quente): sugerem manter como backup.
-const ENCOSTO_SUGERIDO = new Set(["Sabor / produto", "Comprou concorrente", "Lealdade / incumbente", "Pagamento / prazo"]);
+// Fonte única da taxonomia de motivo + sugestão de encosto (ficha E pipeline).
+import { LOST_REASONS as REASONS, ENCOSTO_SUGERIDO } from "@/lib/funnel/stages";
 
 export function MarkAsLostButton({ leadId, currentStage }: { leadId: string; currentStage: string | null }) {
   const [open, setOpen] = useState(false);

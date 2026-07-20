@@ -135,9 +135,16 @@ export const PIPELINE_ATIVOS = new Set([
   "handoff", "lead_em_andamento", "negociacao", "proposta_enviada", "cadastro_cliente",
 ]);
 
+// DEBT-318 (SDR): taxonomia única de motivo (ficha + pipeline). Os "quentes" (sabor,
+// concorrente, lealdade, pagamento) auto-sugerem ENCOSTO no modal de encerramento.
 export const LOST_REASONS = [
-  "Sem orcamento", "Comprou concorrente", "Sem interesse", "Sem retorno", "Outro",
+  "Preço", "Pagamento / prazo", "Sabor / produto", "Comprou concorrente",
+  "Lealdade / incumbente", "Logística", "Sem orcamento", "Sem interesse",
+  "Sem retorno", "Fora de rota", "Outro",
 ];
+export const ENCOSTO_SUGERIDO = new Set([
+  "Sabor / produto", "Comprou concorrente", "Lealdade / incumbente", "Pagamento / prazo",
+]);
 
 // ── Trava sequencial da Pipeline (Paulo 2026-07-17) ──────────────────────────
 // Vendedor move MANUAL, mas só 1 passo por vez (sem PULAR e sem VOLTAR). Marcar

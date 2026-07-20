@@ -12,6 +12,7 @@ export async function POST(req: NextRequest) {
     lead_id?: string; to_stage?: string;
     proposal_value?: number | null; proposal_notes?: string | null;
     reason?: string | null; detail?: string | null;
+    is_encosto?: boolean; // DEBT-318: marca encosto (perdido-quente) já no arrastar
   };
   try {
     body = await req.json();
@@ -100,7 +101,11 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "perdido exige motivo (reason)" }, { status: 400 });
       }
       rpcName = "mark_lead_lost";
-      params = { p_lead_id: lead_id, p_reason: body.reason, p_detail: body.detail ?? null, p_actor: ctx.email };
+      params = {
+        p_lead_id: lead_id, p_reason: body.reason, p_detail: body.detail ?? null, p_actor: ctx.email,
+        p_is_encosto: body.is_encosto === true,                     // DEBT-318
+        p_next_followup_days: body.is_encosto ? 45 : null,          // reengaja em 45d se encosto
+      };
       break;
     default:
       return NextResponse.json({ error: "etapa invalida" }, { status: 400 });
