@@ -92,10 +92,12 @@ export default async function GerentePage() {
     supabase
       .from("painel_dia_vendedor")
       .select("vendedor_routing_team, realizado_parcial_brl").gte("dia", primeiroDiaMes).lte("dia", ultimoDiaMes),
-    // COMPARATIVO mês anterior — eixo ENTREGA (mesmo do oficial)
+    // COMPARATIVO mês anterior — MESMA régua §5 do mês atual (v_realizado_faturamento_dia = faturamento
+    // oficial NF+Recibo). Antes usava v_faturado_diario.realizado_parcial_brl (~13% acima do §5) → comparava
+    // mês atual (§5, 529-532k) contra mês anterior (régua inflada, ~603k). Agora ambos no eixo §5.
     supabase
-      .from("v_faturado_diario")
-      .select("vendedor_routing_team, realizado_parcial_brl").gte("dia", primeiroMesAnterior).lte("dia", limiteAnteriorISO),
+      .from("v_realizado_faturamento_dia")
+      .select("vendedor_routing_team, faturado_brl").gte("dia", primeiroMesAnterior).lte("dia", limiteAnteriorISO),
   ]);
 
   const resumo = (rawResumo ?? []) as unknown as { vendedor_routing_team: string; realizado_mes_brl: number; meta_total_mes_brl: number; pct_atingido_mes: number | null }[];
@@ -146,8 +148,8 @@ export default async function GerentePage() {
 
   // ── B2 Comparativo mes anterior (eixo ENTREGA, mesmo do oficial) ──────────
   const aggAnterior: Record<string, number> = {};
-  for (const r of (rawComp ?? []) as unknown as { vendedor_routing_team: string; realizado_parcial_brl: number }[]) {
-    aggAnterior[r.vendedor_routing_team] = (aggAnterior[r.vendedor_routing_team] ?? 0) + (r.realizado_parcial_brl ?? 0);
+  for (const r of (rawComp ?? []) as unknown as { vendedor_routing_team: string; faturado_brl: number }[]) {
+    aggAnterior[r.vendedor_routing_team] = (aggAnterior[r.vendedor_routing_team] ?? 0) + (r.faturado_brl ?? 0);
   }
   const totalRealizado = VENDOR_ORDER.reduce((s, rt) => s + agg[rt].realizado, 0);
   const totalEmissao = VENDOR_ORDER.reduce((s, rt) => s + agg[rt].emissao, 0);
