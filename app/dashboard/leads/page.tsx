@@ -136,6 +136,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
       .select("phone, restaurant_name, name, city, segment, weekly_volume_kg, lost_reason, lost_at, routing_team")
       .eq("funnel_stage", "lead_perdido")
       .eq("is_test", false)
+      .eq("is_encosto", false)  // DEBT-321: encosto tem fila própria (Contas de Encosto). Aqui = ghosts p/ reativação.
       .gte("lost_at", since)
       .order("weekly_volume_kg", { ascending: false, nullsFirst: false })
       .limit(50);
@@ -191,7 +192,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
       .gte("created_at", startTodayUtc),  // DEBT-290: Leads SDR = entrou hoje
     supabase.from("v_leads_parados").select("id", { count: "exact", head: true }),
     supabase.from("ai_sdr_leads").select("phone", { count: "exact", head: true })
-      .eq("is_test", false).eq("funnel_stage", "lead_perdido").gte("lost_at", since180),
+      .eq("is_test", false).eq("funnel_stage", "lead_perdido").eq("is_encosto", false).gte("lost_at", since180),
     supabase.from("ai_sdr_leads").select("phone", { count: "exact", head: true })
       .eq("is_test", false).eq("routing_team", "fora_de_rota"),
     supabase.from("v_cadencia_esgotada").select("phone", { count: "exact", head: true }),
