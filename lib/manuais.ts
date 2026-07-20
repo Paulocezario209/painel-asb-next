@@ -445,6 +445,21 @@ export const MANUAIS: Record<string, ManualTela> = {
       "Compare a coluna Gasto com a fatura da plataforma/agência — divergência persistente = dinheiro repassado que não virou mídia (caso Cránium jan-jun/2026).",
     ],
   },
+  "/marketing/atribuicao": {
+    titulo: "Marketing · Atribuição",
+    oQueE: "Atribuição completa de campanhas Meta/Google por campanha, conjunto e anúncio — gasto, funil (leads → qualificados → agendamentos → propostas → convertidos), receita e as réguas CPL/CPQL/CAC/ROAS/taxa. Mais o tratamento de gasto sem retorno e a classificação canal/jornada.",
+    fontes: [
+      "Por campanha/anúncio: v_cac_campanha_full / v_cac_anuncio_full (gasto de paid_media_daily; funil de ai_sdr_leads — qualificado=qual_stage≥7, agendamento=vendedor respondeu, proposta=funil≥proposta, convertido=1º pedido).",
+      "Réguas: CPL=gasto÷leads · CPQL=gasto÷qualificados · CAC=gasto÷convertidos · ROAS=receita÷gasto (receita aprox. do lead, DEBT-256).",
+      "Gasto sem retorno (2 baldes SEPARADOS): v_gasto_sem_retorno = anúncio com gasto e 0 lead; v_leads_nao_atribuidos = lead de canal pago sem ad_id. Nunca somar os dois.",
+      "Canal/Jornada: v_lead_canal_jornada — channel (Meta/Google/Organic/Referral/Direct) × journey (CTWA Direct / LP to WhatsApp / Direct). 'Site LP' nunca é canal isolado quando há origem paga.",
+    ],
+    comoUsar: [
+      "Ache o anúncio de ROAS < 1× (vermelho): gasta mais do que retorna — candidato a pausar ou revisar criativo.",
+      "Bloco 'Anúncios com gasto e 0 lead' = dinheiro sem qualquer retorno; 'Leads sem anúncio identificado' = tem lead, mas faltou o código (tag na LP), não a campanha.",
+      "CPQL alto com CPL baixo = atrai lead barato mas não qualifica; o vazamento está no meio do funil.",
+    ],
+  },
   "/marketing/funil-cac": {
     titulo: "Marketing · Funil & CAC",
     oQueE: "O funil por canal (lead → qualificado → agendamento → convertido) com gasto, CAC por lead e custo por conversão de cada canal.",

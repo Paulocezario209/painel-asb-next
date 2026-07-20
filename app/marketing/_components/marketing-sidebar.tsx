@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, CalendarDays, Radar, Megaphone, DollarSign, Wallet } from "lucide-react";
+import { LayoutDashboard, CalendarDays, Radar, Megaphone, DollarSign, Wallet, Crosshair } from "lucide-react";
 
 const SANS = "var(--font-geist-sans), system-ui, sans-serif";
 const RED = "#FF3B57";
@@ -13,6 +13,7 @@ const navItems = [
   { href: "/marketing/calendario", label: "Calendário",       icon: CalendarDays },
   { href: "/marketing/origem",     label: "Origem dos Leads", icon: Radar },
   { href: "/marketing/anuncios",   label: "Anúncios",         icon: Megaphone },
+  { href: "/marketing/atribuicao", label: "Atribuição",       icon: Crosshair },
   { href: "/marketing/funil-cac",  label: "Funil CAC",        icon: DollarSign },
   { href: "/marketing/verba",      label: "Verba & Gasto",    icon: Wallet },
 ];
