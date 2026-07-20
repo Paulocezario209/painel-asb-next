@@ -226,7 +226,7 @@ export const MANUAIS: Record<string, ManualTela> = {
     ],
     comoUsar: [
       "Win rate = convertidos ÷ agendamentos — compare vendedores no mesmo período.",
-      "“Aguardando resposta” é a fila de cobrança: lead esperando o vendedor falar.",
+      "“Aguardando resposta” é a fila de cobrança: lead ATIVO esperando o vendedor falar. NÃO entram: fora_de_rota (vive só no card Fora de Rota), convertidos (o vendedor já fechou — muitas vezes pelo WhatsApp dele, sem a 1ª resposta capturada; contam como respondidos, não como não-atendidos) e perdidos (fechados).",
     ],
   },
   "/dashboard/hot-leads": {
