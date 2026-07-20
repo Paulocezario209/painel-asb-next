@@ -39,6 +39,18 @@ const BOARD_ALIAS: Record<string, string> = {
 };
 const aliasStage = (s: string | null) => (s && BOARD_ALIAS[s]) || s || "handoff";
 
+// Início do mês corrente em BRT (São Paulo) — régua da GRADUAÇÃO (DEBT-325):
+// "Convertido" no board = convertidos DO MÊS (evento), NÃO recorrência (estado).
+// Cliente que faturou 1ª vez em mês ANTERIOR já é conta madura da carteira real
+// (v_carteira_360) — gradua pra Carteira e SOME do Pipeline. Fonte única = carteira;
+// o board só BEBE dela, não re-decide (LEI ÚNICA / ANATOMIA_ASB).
+function monthStartBRT(): string {
+  const p = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit" }).formatToParts(new Date());
+  const y = p.find((x) => x.type === "year")!.value;
+  const m = p.find((x) => x.type === "month")!.value;
+  return `${y}-${m}-01`;
+}
+
 // Ativos = em aberto (exclui fechado/perdido). Base dos KPIs.
 const ATIVOS = PIPELINE_ATIVOS;
 
@@ -84,15 +96,22 @@ export default async function PipelinePage({ searchParams }: { searchParams: Pro
   // conversão CONFIRMADA. Agrupa em "Convertido" mesmo sem o vendedor arrastar o card.
   const [{ data: rawLeads }, { data: rawPonte }, { data: rawTop }] = await Promise.all([
     q,
-    supabase.from("v_carteira_360").select("lead_id").not("lead_id", "is", null),
+    // Ponte lead→ARES: lead_id + first_order_at (data da 1ª compra na carteira real).
+    // first_order_at decide a GRADUAÇÃO (convertido do mês fica × recorrente antigo sai).
+    supabase.from("v_carteira_360").select("lead_id, first_order_at").not("lead_id", "is", null),
     // Onda 4b A.2 — catálogo COMPLETO de produtos pro orçamento (todos já vendidos, do espelho),
     // ordenado por mais vendido. "Quem puxa 10 puxa tudo" — mesma fonte, sem o corte de top-10.
     supabase.from("v_produtos_catalogo").select("descricao_produto, grupo_nome").order("valor_total", { ascending: false }),
   ]);
-  const aresLeadIds = new Set(((rawPonte ?? []) as { lead_id: string }[]).map((r) => r.lead_id));
-  const leads = ((rawLeads ?? []) as PipelineLead[]).map((l) => ({
-    ...l, ares_confirmado: aresLeadIds.has(l.id),
-  }));
+  const ponte = (rawPonte ?? []) as { lead_id: string; first_order_at: string | null }[];
+  const aresLeadIds = new Set(ponte.map((r) => r.lead_id));
+  // GRADUAÇÃO (DEBT-325): quem faturou 1ª vez ANTES do mês corrente é conta madura →
+  // sai do Pipeline (vive na Carteira). Convertido do mês permanece na coluna "Convertido".
+  const mesStart = monthStartBRT();
+  const graduados = new Set(ponte.filter((r) => r.first_order_at && r.first_order_at < mesStart).map((r) => r.lead_id));
+  const leads = ((rawLeads ?? []) as PipelineLead[])
+    .filter((l) => !graduados.has(l.id))
+    .map((l) => ({ ...l, ares_confirmado: aresLeadIds.has(l.id) }));
 
   // Etapa efetiva: ARES vence o funnel_stage manual (badge ✓ ARES no card).
   const stageEfetiva = (l: PipelineLead) => (l.ares_confirmado ? "pedido_fechado" : aliasStage(l.funnel_stage));
