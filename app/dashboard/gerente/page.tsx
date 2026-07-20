@@ -300,7 +300,7 @@ export default async function GerentePage() {
 
       {/* ── B1 PRIORIDADES DO DIA (ranking pior em cima) ──────────────────── */}
       <div style={{ ...S.card, padding: "20px 24px" }}>
-        <SectionHead Icon={Flame} color={theme.colors.critical} title="Prioridades do Dia" desc="Ranking por % atingido \u2014 pior em cima" />
+        <SectionHead Icon={Flame} color={theme.colors.critical} title="Prioridades do Dia" desc="Ranking por % atingido — pior em cima" />
         <p style={{ ...S.muted, fontSize: 9, marginBottom: 16 }}>
           Ordenado por % atingido (pior em cima) &middot; realizado/meta OFICIAL por <b style={{ color: "#c0d0e0" }}>faturamento</b> NF+Recibo (§5, = /vendas); &ldquo;prévia emissão&rdquo; = tempo real, não-oficial
         </p>
@@ -339,19 +339,19 @@ export default async function GerentePage() {
                   }} />
                 </div>
 
-                {/* Bottom row: realizado (entrega, oficial) / meta / faltante / pr\u00e9via (emiss\u00e3o) */}
+                {/* Bottom row: realizado (entrega, oficial) / meta / faltante / prévia (emissão) */}
                 <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
                   <span style={{ ...S.muted, fontSize: 10 }}>
                     Realizado <span style={{ color: "#c8d8e8", fontWeight: 700 }}>{fmtBRL(v.realizado)}</span>
                   </span>
                   <span style={{ ...S.muted, fontSize: 10 }}>
-                    Meta <span style={{ color: "#c8d8e8", fontWeight: 700 }}>{v.meta > 0 ? fmtBRL(v.meta) : "\u2014"}</span>
+                    Meta <span style={{ color: "#c8d8e8", fontWeight: 700 }}>{v.meta > 0 ? fmtBRL(v.meta) : "—"}</span>
                   </span>
                   <span style={{ ...S.muted, fontSize: 10 }}>
                     Faltante <span style={{ color: v.faltante > 0 ? theme.colors.critical : theme.colors.success, fontWeight: 700 }}>{fmtBRL(v.faltante)}</span>
                   </span>
-                  <span style={{ ...S.muted, fontSize: 10 }} title="Pr\u00e9via em tempo real por data de emiss\u00e3o (n\u00e3o-oficial). Oficial = por entrega.">
-                    Pr\u00e9via emiss\u00e3o <span style={{ color: "#6a7a8a", fontWeight: 700 }}>{fmtBRL(v.emissao)}</span>
+                  <span style={{ ...S.muted, fontSize: 10 }} title="Prévia em tempo real por data de emissão (não-oficial). Oficial = por entrega.">
+                    Prévia emissão <span style={{ color: "#6a7a8a", fontWeight: 700 }}>{fmtBRL(v.emissao)}</span>
                   </span>
                 </div>
               </div>
@@ -362,14 +362,14 @@ export default async function GerentePage() {
 
       {/* ── B2 COMPARATIVO MES ANTERIOR ──────────────────────────────────── */}
       <div style={{ ...S.card, padding: "20px 24px" }}>
-        <SectionHead Icon={GitCompareArrows} color="#8bb4ff" title="Comparativo M\u00EAs Anterior" desc={`${MESES_LABEL[month]} (${diasDecorridos} dias \u00FAteis) vs ${MESES_LABEL[mesAnterior]} (mesmos ${diasDecorridos} dias \u00FAteis)`} />
+        <SectionHead Icon={GitCompareArrows} color="#8bb4ff" title="Comparativo Mês Anterior" desc={`${MESES_LABEL[month]} (${diasDecorridos} dias úteis) vs ${MESES_LABEL[mesAnterior]} (mesmos ${diasDecorridos} dias úteis)`} />
 
         <div className="asb-grid-kpi">
           {[
             { label: "Total", atual: totalRealizado, anterior: totalAnterior, deltaPct: totalDeltaPct },
             ...comparativo.map(c => ({ label: c.name, atual: c.atual, anterior: c.anterior, deltaPct: c.deltaPct })),
           ].map(({ label, atual, anterior, deltaPct }) => {
-            const arrow = deltaPct === null ? "" : deltaPct > 0 ? "\u2191" : deltaPct < 0 ? "\u2193" : "\u2192";
+            const arrow = deltaPct === null ? "" : deltaPct > 0 ? "↑" : deltaPct < 0 ? "↓" : "→";
             const color = deltaPct === null ? theme.colors.neutral : deltaPct > 5 ? theme.colors.success : deltaPct < -5 ? theme.colors.critical : "#c8d8e8";
             return (
               <StatTile
@@ -380,7 +380,7 @@ export default async function GerentePage() {
                 sub={`vs ${fmtBRL(anterior)}`}
                 badges={
                   <span style={{ color, fontSize: 13, fontWeight: 700, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" }}>
-                    {deltaPct !== null ? `${arrow} ${deltaPct >= 0 ? "+" : ""}${deltaPct.toFixed(1)}%` : "\u2014"}
+                    {deltaPct !== null ? `${arrow} ${deltaPct >= 0 ? "+" : ""}${deltaPct.toFixed(1)}%` : "—"}
                   </span>
                 }
               />
@@ -391,15 +391,15 @@ export default async function GerentePage() {
 
       {/* ── B6 PROJECAO FIM DE MES ────────────────────────────────────────── */}
       <div style={{ ...S.card, padding: "20px 24px" }}>
-        <SectionHead Icon={LineChart} color="#f59e0b" title="Proje\u00E7\u00E3o Fim de M\u00EAs" desc={`Run rate: realizado \u00F7 ${diasDecorridos} dias decorridos \u00D7 ${totalDiasUteis} dias \u00FAteis no m\u00EAs`} />
+        <SectionHead Icon={LineChart} color="#f59e0b" title="Projeção Fim de Mês" desc={`Run rate: realizado ÷ ${diasDecorridos} dias decorridos × ${totalDiasUteis} dias úteis no mês`} />
 
         {/* KPI cards */}
         <div className="asb-grid-kpi" style={{ marginBottom: 20 }}>
           {[
             { label: "Dias Decorridos", value: `${diasDecorridos}/${totalDiasUteis}`, accent: theme.colors.brandAsb },
-            { label: "Proje\u00e7\u00e3o Total", value: fmtBRL(projecaoTotal), accent: projColor(projecaoVsMeta) },
-            { label: "vs Meta", value: totalMeta > 0 ? `${projecaoVsMeta.toFixed(1)}%` : "\u2014", accent: projColor(projecaoVsMeta) },
-            { label: "Delta", value: totalMeta > 0 ? `${deltaTotal >= 0 ? "+" : ""}${fmtBRL(deltaTotal)}` : "\u2014", accent: deltaTotal >= 0 ? theme.colors.success : theme.colors.critical },
+            { label: "Projeção Total", value: fmtBRL(projecaoTotal), accent: projColor(projecaoVsMeta) },
+            { label: "vs Meta", value: totalMeta > 0 ? `${projecaoVsMeta.toFixed(1)}%` : "—", accent: projColor(projecaoVsMeta) },
+            { label: "Delta", value: totalMeta > 0 ? `${deltaTotal >= 0 ? "+" : ""}${fmtBRL(deltaTotal)}` : "—", accent: deltaTotal >= 0 ? theme.colors.success : theme.colors.critical },
           ].map(({ label, value, accent }) => (
             <StatTile key={label} label={label} value={value} accent={accent} />
           ))}
@@ -422,11 +422,11 @@ export default async function GerentePage() {
                   <td style={{ color: accent, fontSize: 11, fontFamily: theme.font.label, padding: "7px 0", fontWeight: 700 }}>{v.name}</td>
                   <td style={{ color: "#c8d8e8", fontSize: 11, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right", padding: "7px 0" }}>{fmtBRL(v.realizado)}</td>
                   <td style={{ color: "#FFFFFF", fontSize: 11, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right", padding: "7px 0", fontWeight: 700 }}>{fmtBRL(v.proj)}</td>
-                  <td style={{ color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right", padding: "7px 0" }}>{v.meta > 0 ? fmtBRL(v.meta) : "\u2014"}</td>
+                  <td style={{ color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right", padding: "7px 0" }}>{v.meta > 0 ? fmtBRL(v.meta) : "—"}</td>
                   <td style={{
                     color: projColor(v.projPct),
                     fontSize: 11, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right", padding: "7px 0", fontWeight: 700,
-                  }}>{v.meta > 0 ? `${v.projPct.toFixed(1)}%` : "\u2014"}</td>
+                  }}>{v.meta > 0 ? `${v.projPct.toFixed(1)}%` : "—"}</td>
                 </tr>
               );
             })}
@@ -434,11 +434,11 @@ export default async function GerentePage() {
               <td style={{ color: "#FFFFFF", fontSize: 11, fontFamily: theme.font.label, padding: "7px 0", fontWeight: 700 }}>TOTAL</td>
               <td style={{ color: "#c8d8e8", fontSize: 11, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right", padding: "7px 0" }}>{fmtBRL(totalRealizado)}</td>
               <td style={{ color: "#FFFFFF", fontSize: 11, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right", padding: "7px 0", fontWeight: 700 }}>{fmtBRL(projecaoTotal)}</td>
-              <td style={{ color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right", padding: "7px 0" }}>{totalMeta > 0 ? fmtBRL(totalMeta) : "\u2014"}</td>
+              <td style={{ color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right", padding: "7px 0" }}>{totalMeta > 0 ? fmtBRL(totalMeta) : "—"}</td>
               <td style={{
                 color: projColor(projecaoVsMeta),
                 fontSize: 11, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums", textAlign: "right", padding: "7px 0", fontWeight: 700,
-              }}>{totalMeta > 0 ? `${projecaoVsMeta.toFixed(1)}%` : "\u2014"}</td>
+              }}>{totalMeta > 0 ? `${projecaoVsMeta.toFixed(1)}%` : "—"}</td>
             </tr>
           </tbody>
         </table>
