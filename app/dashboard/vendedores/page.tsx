@@ -72,7 +72,8 @@ export default async function VendedoresPage() {
       .from("ai_sdr_leads")
       .select("phone, restaurant_name, city, routing_team, funnel_stage, handoff_at, seller_first_reply_at, first_order_at, weekly_volume_kg, created_at, is_test")
       .eq("is_test", false)
-      .not("routing_team", "is", null),
+      .not("routing_team", "is", null)
+      .neq("routing_team", "fora_de_rota"),  // Saneamento (Paulo 2026-07-20): fora_de_rota é terminal (só no card "Fora de Rota"), nunca na tela do vendedor. Antes só sobrevivia por acidente da whitelist VENDOR_ORDER — agora explícito.
     getLeadScoreMap(),  // ETAPA 4: score por phone (v_lead_score via service role)
   ]);
 
@@ -135,13 +136,20 @@ export default async function VendedoresPage() {
     }
 
     // Metricas de resposta (filtradas pos-11/05)
+    // Saneamento (Paulo 2026-07-20): CONVERTIDO (first_order_at) = o vendedor já fechou — muitas
+    // vezes pelo WhatsApp dele, sem seller_first_reply_at capturado. Contar como "não respondeu"
+    // é falso negativo (derruba o % respondeu e polui "Aguardando Resposta"). Convertido conta como
+    // RESPONDIDO (engajou/fechou). PERDIDO = fechado → sai da fila de aguardando (mas segue no denominador).
     if (l.handoff_at && l.handoff_at >= METRICS_CUTOFF) {
       m.handoffs++;
-      if (l.seller_first_reply_at) {
+      const convertido = l.first_order_at != null;
+      if (l.seller_first_reply_at || convertido) {
         m.responded++;
-        const delta = (new Date(l.seller_first_reply_at).getTime() - new Date(l.handoff_at).getTime()) / 3600000;
-        if (delta > 0) m.hoursArr.push(delta);
-      } else {
+        if (l.seller_first_reply_at) {
+          const delta = (new Date(l.seller_first_reply_at).getTime() - new Date(l.handoff_at).getTime()) / 3600000;
+          if (delta > 0) m.hoursArr.push(delta);
+        }
+      } else if (l.funnel_stage !== "lead_perdido") {
         const hrs = (now - new Date(l.handoff_at).getTime()) / 3600000;
         waiting.push({
           phone: l.phone,
