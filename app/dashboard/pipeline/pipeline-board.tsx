@@ -360,7 +360,20 @@ function ModalPerdido({ lead, onConfirm, onCancel }: { lead: PipelineLead; onCon
   const [detail, setDetail] = useState("");
   const [isEncosto, setIsEncosto] = useState(false);
   const [touchedEncosto, setTouchedEncosto] = useState(false);
-  const onReasonChange = (r: string) => { setReason(r); if (!touchedEncosto) setIsEncosto(ENCOSTO_SUGERIDO.has(r)); };
+  const [verdict, setVerdict] = useState<{ engajamento: string; justificativa: string } | null>(null);
+  const [checking, setChecking] = useState(false);
+  async function runCheck() {
+    setChecking(true); setVerdict(null);
+    try {
+      const r = await fetch("/api/lead/encosto-classify", {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ lead_id: lead.id }),
+      });
+      const j = await r.json();
+      setVerdict({ engajamento: j.engajamento ?? "indefinido", justificativa: j.justificativa ?? "" });
+    } catch { setVerdict(null); } finally { setChecking(false); }
+  }
+  const setEncosto = (v: boolean, touched = true) => { setIsEncosto(v); if (touched) setTouchedEncosto(true); if (v) runCheck(); else setVerdict(null); };
+  const onReasonChange = (r: string) => { setReason(r); if (!touchedEncosto) setEncosto(ENCOSTO_SUGERIDO.has(r), false); };
   return (
     <Backdrop>
       <p style={{ color: "#C8102E", fontSize: 14, fontFamily: theme.font.label, fontWeight: 750, letterSpacing: "-.01em", marginBottom: 4 }}>Encerrar Atendimento · Diagnóstico Final</p>
@@ -380,12 +393,23 @@ function ModalPerdido({ lead, onConfirm, onCancel }: { lead: PipelineLead; onCon
       {/* DEBT-318: manter como ENCOSTO (perdido-quente/backup ativo) */}
       <label style={{ display: "flex", alignItems: "flex-start", gap: 8, cursor: "pointer", margin: "0 0 14px" }}>
         <input type="checkbox" checked={isEncosto}
-          onChange={(e) => { setIsEncosto(e.target.checked); setTouchedEncosto(true); }}
+          onChange={(e) => setEncosto(e.target.checked)}
           style={{ marginTop: 2, accentColor: "#FF7A45", cursor: "pointer" }} />
         <span style={{ fontSize: 11, lineHeight: 1.4, color: "#c0d0e0", fontFamily: theme.font.label }}>
           <span style={{ color: "#FF7A45", fontWeight: 700 }}>🔥 Manter como encosto</span> — backup ativo, reengaja em 45d. Use quando a amostra foi aprovada e a relação é boa.
         </span>
       </label>
+      {isEncosto && (checking ? (
+        <p style={{ fontSize: 10, color: "#8b949e", fontFamily: theme.font.label, margin: "-8px 0 12px 24px" }}>analisando a conversa…</p>
+      ) : verdict?.engajamento === "silencio" ? (
+        <p style={{ fontSize: 10, color: "#f59e0b", fontFamily: theme.font.label, margin: "-8px 0 12px 24px", lineHeight: 1.4 }}>
+          ⚠ Esse lead parece ter sumido (não declinou) — encosto é pra quem respondeu e disse não. {verdict.justificativa} Marcar mesmo assim?
+        </p>
+      ) : verdict?.engajamento === "consciente" ? (
+        <p style={{ fontSize: 10, color: "#22c55e", fontFamily: theme.font.label, margin: "-8px 0 12px 24px", lineHeight: 1.4 }}>
+          ✓ Engajou e declinou — encosto confere. {verdict.justificativa}
+        </p>
+      ) : null)}
       <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
         <BtnCancel onClick={onCancel} />
         <button disabled={!reason} onClick={() => onConfirm(reason, detail.trim() || null, isEncosto)}

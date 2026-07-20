@@ -11,6 +11,8 @@ export function MarkAsLostButton({ leadId, currentStage }: { leadId: string; cur
   const [detail, setDetail] = useState("");
   const [isEncosto, setIsEncosto] = useState(false);
   const [touchedEncosto, setTouchedEncosto] = useState(false);
+  const [verdict, setVerdict] = useState<{ engajamento: string; justificativa: string } | null>(null);
+  const [checking, setChecking] = useState(false);
   const [saving, setSaving] = useState(false);
   const router = useRouter();
 
@@ -18,10 +20,28 @@ export function MarkAsLostButton({ leadId, currentStage }: { leadId: string; cur
     return null;
   }
 
+  // Porteiro: pergunta ao LLM se o lead engajou+declinou (encosto) ou sumiu (ghost).
+  async function runCheck() {
+    setChecking(true); setVerdict(null);
+    try {
+      const r = await fetch("/api/lead/encosto-classify", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lead_id: leadId }),
+      });
+      const j = await r.json();
+      setVerdict({ engajamento: j.engajamento ?? "indefinido", justificativa: j.justificativa ?? "" });
+    } catch { setVerdict(null); } finally { setChecking(false); }
+  }
+
+  function setEncosto(v: boolean, touched = true) {
+    setIsEncosto(v); if (touched) setTouchedEncosto(true);
+    if (v) runCheck(); else setVerdict(null);
+  }
+
   // Ao escolher um motivo "quente", sugere encosto (só até o usuário mexer no checkbox).
   function onReasonChange(r: string) {
     setReason(r);
-    if (!touchedEncosto) setIsEncosto(ENCOSTO_SUGERIDO.has(r));
+    if (!touchedEncosto) setEncosto(ENCOSTO_SUGERIDO.has(r), false);
   }
 
   async function handleConfirm() {
@@ -101,13 +121,26 @@ export function MarkAsLostButton({ leadId, currentStage }: { leadId: string; cur
         <input
           type="checkbox"
           checked={isEncosto}
-          onChange={e => { setIsEncosto(e.target.checked); setTouchedEncosto(true); }}
+          onChange={e => setEncosto(e.target.checked)}
           style={{ marginTop: 2, accentColor: "#FF7A45", cursor: "pointer" }}
         />
         <span style={{ fontSize: 11, lineHeight: 1.35, color: "#c9d1d9", fontFamily: "var(--font-geist-sans), system-ui, sans-serif" }}>
           <span style={{ color: "#FF7A45", fontWeight: 700 }}>🔥 Manter como encosto</span> — backup ativo. A conta segue viva na cadência e reengaja em <strong>45 dias</strong> (ou quando o concorrente tropeçar). Use quando a amostra foi aprovada e a relação é boa.
         </span>
       </label>
+
+      {/* Veredito do porteiro (LLM leu a conversa) */}
+      {isEncosto && (checking ? (
+        <p style={{ fontSize: 10.5, color: "#8b949e", fontFamily: "var(--font-geist-sans), system-ui, sans-serif", margin: "-6px 0 6px 24px" }}>analisando a conversa…</p>
+      ) : verdict && verdict.engajamento === "silencio" ? (
+        <p style={{ fontSize: 10.5, color: "#f59e0b", fontFamily: "var(--font-geist-sans), system-ui, sans-serif", margin: "-6px 0 6px 24px", lineHeight: 1.4 }}>
+          ⚠ Esse lead parece ter <strong>sumido</strong> (não declinou) — encosto é pra quem respondeu e disse não. {verdict.justificativa} Marcar mesmo assim?
+        </p>
+      ) : verdict && verdict.engajamento === "consciente" ? (
+        <p style={{ fontSize: 10.5, color: "#22c55e", fontFamily: "var(--font-geist-sans), system-ui, sans-serif", margin: "-6px 0 6px 24px", lineHeight: 1.4 }}>
+          ✓ Engajou e declinou — encosto confere. {verdict.justificativa}
+        </p>
+      ) : null)}
 
       <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
         <button
