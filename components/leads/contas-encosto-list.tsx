@@ -1,11 +1,12 @@
-"use client";
-
+import { KpiCard, SectionHead } from "@/app/dashboard/lib/ui";
+import { S } from "@/app/dashboard/lib/dashboard-tokens";
 import { theme } from "@/lib/theme";
 import { PRECO_KG } from "@/lib/pricing";
+import { Anchor, CalendarClock, Wallet } from "lucide-react";
 
 // DEBT-318 (SDR): Contas de ENCOSTO (perdido-quente / backup ativo).
-// Fonte: view v_contas_encosto. Presentacional (server-renderable): wa.me é <a>.
-// O encosto NÃO é lead morto — é backup que reengaja no gatilho certo (data / concorrente).
+// Fonte: view v_contas_encosto. Presentacional (server-renderable).
+// DESIGN: compõe com o KIT grafite (KpiCard/SectionHead/tokens S) — sem desenho na mão.
 
 export type ContaEncosto = {
   phone: string;
@@ -19,6 +20,8 @@ export type ContaEncosto = {
   dias_desde_perda: number | null;
   next_followup_at: string | null;
 };
+
+const EMBER = "#FF7A45";
 
 const SEG_LABELS: Record<string, string> = {
   hamburgueria: "Hamburgueria", restaurante: "Restaurante", bar: "Bar",
@@ -45,10 +48,9 @@ function diasAte(iso: string | null): number | null {
 function Pill({ label, color }: { label: string; color: string }) {
   return (
     <span style={{
-      display: "inline-block", padding: "2px 7px", borderRadius: 3,
-      fontSize: 9, letterSpacing: ".08em", textTransform: "uppercase",
-      fontFamily: theme.font.mono, fontWeight: 700,
-      color, background: `${color}1a`, border: `1px solid ${color}66`, whiteSpace: "nowrap",
+      display: "inline-block", padding: "2px 8px", borderRadius: 999,
+      fontSize: 10.5, fontWeight: 700, fontFamily: theme.font.label,
+      color, background: `${color}1a`, border: `1px solid ${color}55`, whiteSpace: "nowrap",
     }}>{label}</span>
   );
 }
@@ -58,37 +60,23 @@ export function ContasEncostoList({ contas }: { contas: ContaEncosto[] }) {
   const valorPotencial = contas.reduce((acc, c) => acc + Number(c.weekly_volume_kg ?? 0) * PRECO_KG, 0);
   const reengajaAgora = contas.filter(c => { const d = diasAte(c.next_followup_at); return d !== null && d <= 15; }).length;
 
-  const card: React.CSSProperties = { background: theme.colors.bgCard, border: `1px solid ${theme.colors.borderDefault}`, borderRadius: 8 };
-  const label: React.CSSProperties = { fontSize: 9, letterSpacing: ".15em", textTransform: "uppercase", color: theme.colors.neutral, fontFamily: theme.font.mono };
-  const ember = "#FF7A45";
-
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      {/* KPIs */}
+      {/* KPIs — KIT canônico */}
       <div className="asb-grid-kpi">
-        <div style={{ ...card, padding: 20, borderTop: `2px solid ${ember}` }}>
-          <p style={{ ...label, color: ember }}>🔥 Contas de Encosto</p>
-          <p style={{ fontSize: 26, fontWeight: 700, color: "#fff", marginTop: 10 }}>{total}</p>
-          <p style={{ ...label, marginTop: 6, fontSize: 10 }}>backups vivos · não são leads mortos</p>
-        </div>
-        <div style={{ ...card, padding: 20, borderTop: `2px solid ${theme.colors.success}` }}>
-          <p style={{ ...label, color: theme.colors.success }}>Reengajar ≤ 15 dias</p>
-          <p style={{ fontSize: 26, fontWeight: 700, color: "#fff", marginTop: 10 }}>{reengajaAgora}</p>
-          <p style={{ ...label, marginTop: 6, fontSize: 10 }}>data de volta chegando</p>
-        </div>
-        <div style={{ ...card, padding: 20, borderTop: `2px solid ${theme.colors.brandAsb}` }}>
-          <p style={{ ...label, color: theme.colors.brandAsb }}>Pipeline em Espera</p>
-          <p style={{ fontSize: 22, fontWeight: 700, color: "#fff", marginTop: 10, fontFamily: theme.font.mono }}>
-            R$ {Math.round(valorPotencial).toLocaleString("pt-BR")}
-          </p>
-          <p style={{ ...label, marginTop: 6, fontSize: 10 }}>Σ volume × R$ {PRECO_KG}/kg</p>
-        </div>
+        <KpiCard label="Contas de Encosto" value={String(total)} Icon={Anchor} accent={EMBER} num={EMBER}
+                 note="backups vivos · não são leads mortos" />
+        <KpiCard label="Reengajar em 15 Dias" value={String(reengajaAgora)} Icon={CalendarClock} accent="#22c55e" num="#22c55e"
+                 note="data de volta chegando" />
+        <KpiCard label="Pipeline em Espera" value={`R$ ${Math.round(valorPotencial).toLocaleString("pt-BR")}`} Icon={Wallet} accent="#185FA5"
+                 note={`Σ volume × R$ ${PRECO_KG}/kg`} />
       </div>
 
       {/* Lista */}
-      <div style={{ ...card, padding: "16px 20px" }}>
+      <div style={{ ...S.card, padding: "18px 20px" }}>
+        <SectionHead Icon={Anchor} color={EMBER} title="Backups ativos" desc="Ordenados pela data de reengajamento" />
         {total === 0 ? (
-          <p style={{ color: theme.colors.neutral, fontSize: 12, fontFamily: theme.font.mono, textAlign: "center", padding: "24px 0" }}>
+          <p style={{ ...S.muted, textAlign: "center", padding: "24px 0" }}>
             Nenhuma conta de encosto ainda. Ao encerrar um atendimento com amostra aprovada, marque “🔥 Manter como encosto”.
           </p>
         ) : (
@@ -100,55 +88,50 @@ export function ContasEncostoList({ contas }: { contas: ContaEncosto[] }) {
               const reengaja = c.next_followup_at
                 ? new Date(c.next_followup_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })
                 : "—";
-              const waText = encodeURIComponent(`Olá! Aqui é da American Steak 🥩`);
+              const waText = encodeURIComponent("Olá! Aqui é da American Steak 🥩");
               return (
                 <div key={c.phone} style={{
                   display: "flex", flexDirection: "column", gap: 6,
-                  padding: "12px 14px", borderRadius: 6,
-                  background: "rgba(255,255,255,.015)", border: `1px solid ${theme.colors.borderDefault}`,
-                  borderLeft: `3px solid ${venceu ? theme.colors.success : ember}`,
+                  padding: "12px 14px", borderRadius: 10,
+                  background: "var(--asb-card-hi)", border: "1px solid var(--asb-border)",
+                  borderLeft: `3px solid ${venceu ? "#22c55e" : EMBER}`,
                 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10, flexWrap: "wrap" }}>
                     <div>
-                      <p style={{ fontSize: 13, fontWeight: 650, color: "#fff", fontFamily: "var(--font-geist-sans), system-ui, sans-serif" }}>
+                      <p style={{ fontSize: 13.5, fontWeight: 700, color: "#fff", fontFamily: theme.font.label }}>
                         {c.restaurant_name || "—"}
                       </p>
-                      <p style={{ ...label, marginTop: 2, fontSize: 10, textTransform: "none", letterSpacing: 0 }}>
+                      <p style={{ ...S.muted, marginTop: 2 }}>
                         {c.city || "—"} · {SEG_LABELS[c.segment ?? ""] || c.segment || "—"} · {c.weekly_volume_kg ? `${c.weekly_volume_kg} kg/sem` : "vol. —"}
                       </p>
                     </div>
                     <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
-                      {c.motivo_categoria && <Pill label={c.motivo_categoria} color={ember} />}
+                      {c.motivo_categoria && <Pill label={c.motivo_categoria} color={EMBER} />}
                       {venceu
-                        ? <Pill label="REENGAJAR AGORA" color={theme.colors.success} />
+                        ? <Pill label="REENGAJAR AGORA" color="#22c55e" />
                         : proximo
-                          ? <Pill label={`EM ${dAte}D`} color={theme.colors.warning} />
-                          : <Pill label={`VOLTA ${reengaja}`} color={theme.colors.neutral} />}
+                          ? <Pill label={`EM ${dAte}D`} color="#f59e0b" />
+                          : <Pill label={`VOLTA ${reengaja}`} color="#83879a" />}
                     </div>
                   </div>
 
                   {c.motivo_detalhe && (
-                    <p style={{ fontSize: 11, color: "#9aa3ba", fontFamily: "var(--font-geist-sans), system-ui, sans-serif", lineHeight: 1.4 }}>
-                      {c.motivo_detalhe}
-                    </p>
+                    <p style={{ ...S.text, lineHeight: 1.4 }}>{c.motivo_detalhe}</p>
                   )}
 
-                  <p style={{ fontSize: 10.5, color: ember, fontFamily: "var(--font-geist-sans), system-ui, sans-serif" }}>
+                  <p style={{ fontSize: 12, color: EMBER, fontFamily: theme.font.label }}>
                     ↳ {anguloPorMotivo(c.motivo_categoria)}
                   </p>
 
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-                    <span style={{ ...label, fontSize: 9.5 }}>
-                      perdido há {c.dias_desde_perda ?? 0}d · reengaja {reengaja}
-                    </span>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginTop: 2 }}>
+                    <span style={S.label}>perdido há {c.dias_desde_perda ?? 0}d · reengaja {reengaja}</span>
                     <a
                       href={`https://wa.me/${c.phone}?text=${waText}`}
                       target="_blank" rel="noopener noreferrer"
                       style={{
-                        padding: "4px 12px", borderRadius: 4, textDecoration: "none",
-                        background: `${theme.colors.success}1a`, border: `1px solid ${theme.colors.success}66`,
-                        color: theme.colors.success, fontSize: 10, letterSpacing: ".06em", textTransform: "uppercase",
-                        fontFamily: theme.font.mono, fontWeight: 700,
+                        padding: "5px 13px", borderRadius: 999, textDecoration: "none",
+                        background: "rgba(34,197,94,.16)", border: "1px solid rgba(34,197,94,.4)",
+                        color: "#22c55e", fontSize: 11, fontWeight: 700, fontFamily: theme.font.label,
                       }}
                     >WhatsApp</a>
                   </div>
