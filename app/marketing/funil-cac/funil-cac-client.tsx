@@ -13,7 +13,7 @@ import { GREEN, YELLOW, MUT, GRID, fmtBRLc, fmtMes, tooltipStyle, axisStyle, th,
 
 export type FunilRow = {
   canal: string;
-  leads_total: number; qualificados_real: number; handoffs: number; convertidos: number;
+  leads_total: number; qualificados_real: number; agendamentos: number; convertidos: number;
   pct_qualificacao_real: number | null; pct_handoff: number | null; pct_conversao: number | null;
 };
 export type ConvMensalRow = { mes: string; leads: number; convertidos: number };
@@ -29,17 +29,17 @@ export function FunilCacClient({ funil, mensal, cac }: { funil: FunilRow[]; mens
     (a, f) => ({
       leads: a.leads + Number(f.leads_total),
       qualificados: a.qualificados + Number(f.qualificados_real),  // gate real qual_stage>=7 (não a tautológica)
-      handoffs: a.handoffs + Number(f.handoffs),
+      agendamentos: a.agendamentos + Number(f.agendamentos),
       convertidos: a.convertidos + Number(f.convertidos),
     }),
-    { leads: 0, qualificados: 0, handoffs: 0, convertidos: 0 },
+    { leads: 0, qualificados: 0, agendamentos: 0, convertidos: 0 },
   ), [funil]);
   // FIX2: estágios do funil p/ Recharts FunnelChart (afunila por funnelWidth; pct vs etapa anterior)
   const funnelStages: FunnelStage[] = useMemo(() => {
     const base = [
       { label: "Leads", count: agg.leads },
       { label: "Qualificados", count: agg.qualificados },
-      { label: "Agendamentos", count: agg.handoffs },
+      { label: "Agendamentos", count: agg.agendamentos },
       { label: "Convertidos", count: agg.convertidos },
     ];
     const N = base.length;
@@ -70,7 +70,7 @@ export function FunilCacClient({ funil, mensal, cac }: { funil: FunilRow[]; mens
       <div className="asb-grid-kpi">
         <StatTile label="Leads" value={agg.leads} accent="#8bb4ff" num="#8bb4ff" sub="Total atribuído" />
         <StatTile label="Qualificados" value={agg.qualificados} accent={theme.colors.chartNavyLight} num={theme.colors.chartNavyLight} sub="qual_stage ≥ 7" />
-        <StatTile label="Agendamentos" value={agg.handoffs} accent={YELLOW} num={YELLOW} sub="Entregues ao vendedor" />
+        <StatTile label="Agendamentos" value={agg.agendamentos} accent={YELLOW} num={YELLOW} sub="Entregues ao vendedor" />
         <StatTile label="Convertidos" value={agg.convertidos} accent={GREEN} num={GREEN} sub="Primeiro pedido" />
       </div>
 
@@ -121,7 +121,7 @@ export function FunilCacClient({ funil, mensal, cac }: { funil: FunilRow[]; mens
                   <td style={{ ...td, color: "#FFFFFF", fontFamily: theme.font.label, textTransform: "uppercase" }}>{f.canal}</td>
                   <td style={{ ...td, textAlign: "center" }}>{f.leads_total}</td>
                   <td style={{ ...td, textAlign: "center", color: theme.colors.chartNavyLight }}>{f.qualificados_real}</td>
-                  <td style={{ ...td, textAlign: "center", color: YELLOW }}>{f.handoffs}</td>
+                  <td style={{ ...td, textAlign: "center", color: YELLOW }}>{f.agendamentos}</td>
                   <td style={{ ...td, textAlign: "center", color: GREEN }}>{f.convertidos}</td>
                   <td style={{ ...td, textAlign: "center", color: "#c0d0e0" }}>{pctFmt(f.pct_qualificacao_real)}</td>
                   <td style={{ ...td, textAlign: "center", color: "#c0d0e0" }}>{pctFmt(f.pct_handoff)}</td>
