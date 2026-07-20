@@ -58,9 +58,10 @@ export default async function GerentePage() {
   if (!ctx || ctx.role !== "gestor") redirect("/dashboard");
 
   // ── Data boundaries ───────────────────────────────────────────────────────
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth() + 1;
+  // BRT (America/Sao_Paulo, UTC-3): vira o mês pelo calendário de Brasília, não pela UTC do servidor.
+  const now = new Date(Date.now() - 3 * 3600 * 1000);
+  const year = now.getUTCFullYear();
+  const month = now.getUTCMonth() + 1;
   const mesAtual = `${year}-${String(month).padStart(2, "0")}`;
   const primeiroDiaMes = `${mesAtual}-01`;
   const ultimoDiaMes = new Date(year, month, 0).toISOString().slice(0, 10);
@@ -110,15 +111,6 @@ export default async function GerentePage() {
   // Linha "não-atribuído" = card total − Σ faturado por vendedor. AO VIVO (encolhe c/ cobertura).
   const somaFatVendedores = resumo.reduce((s, r) => s + Number(r.realizado_mes_brl ?? 0), 0);
   const naoAtribuido = Math.max(0, totalFaturadoReal - somaFatVendedores);
-
-  // ── Indicador Up-sell / Risco da carteira (visibilidade; sem aliquota nova) ──────
-  const [{ data: upsellG }, { data: downsellG }] = await Promise.all([
-    supabase.from("v_upsell_oportunidades").select("potencial_anual_brl"),
-    supabase.from("v_downsell_risco_queda").select("ares_pessoa_id"),
-  ]);
-  const upsellN = (upsellG ?? []).length;
-  const upsellPot = (upsellG ?? []).reduce((s, r) => s + Number((r as { potencial_anual_brl: number | null }).potencial_anual_brl ?? 0), 0);
-  const riscoN = (downsellG ?? []).length;
 
   // ── Aggregate per vendor (realizado OFICIAL = faturamento §5; emissao = prévia) ───
   type VendorAgg = { realizado: number; emissao: number; meta: number };
@@ -217,18 +209,6 @@ export default async function GerentePage() {
           note={`MTD · por vendedor ${fmtBRL(somaFatVendedores)}${naoAtribuido > 0 ? ` + não-atribuído ${fmtBRL(naoAtribuido)}` : ""}`}
         />
       </div>
-
-      {/* ── Up-sell / Risco da carteira (visibilidade; resultado pago pelo balde Crescimento) ── */}
-      <Link href="/dashboard/up-sell" style={{ textDecoration: "none" }}>
-        <div style={{ maxWidth: 420 }}>
-          <StatTile
-            label="Up-sell / Risco (carteira)"
-            value={`${upsellN} up-sell · ${fmtBRL(upsellPot)} · ${riscoN} risco`}
-            accent="#f97316"
-            sub="oportunidades da carteira · resultado pago pelo balde Crescimento (0,6%)"
-          />
-        </div>
-      </Link>
 
       {/* ── E3 Sprint Fernando: Órfãos de atendimento (worklist gestor) ────── */}
       <div style={{ ...S.card, padding: "20px 24px", borderTop: orfaos.length > 0 ? "2px solid #ef4444" : `2px solid ${theme.colors.success}` }}>
