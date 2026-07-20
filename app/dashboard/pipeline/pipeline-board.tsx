@@ -4,7 +4,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { MOVIVEIS, LOST_REASONS, STAGE_COLORS, vendedorPodeMover } from "@/lib/funnel/stages";
+import { MOVIVEIS, LOST_REASONS, ENCOSTO_SUGERIDO, STAGE_COLORS, vendedorPodeMover } from "@/lib/funnel/stages";
 import { fichaCadastro, fichaOrcamento, pesoTotalKg, type OrcamentoItem } from "@/lib/fichas";
 import { theme } from "@/lib/theme";
 import { StatTile } from "@/app/dashboard/lib/ui";
@@ -314,7 +314,7 @@ export function PipelineBoard({
       {/* Modal perdido (motivo + confirmação destrutiva) */}
       {modal?.tipo === "perdido" && (
         <ModalPerdido lead={modal.lead} onCancel={() => setModal(null)}
-          onConfirm={(reason, detail) => persistir(modal.lead, modal.from, "lead_perdido", { reason, detail })} />
+          onConfirm={(reason, detail, isEncosto) => persistir(modal.lead, modal.from, "lead_perdido", { reason, detail, is_encosto: isEncosto })} />
       )}
       {/* Modal fechar (confirmação simples — seta first_order_at) */}
       {modal?.tipo === "fechar" && (
@@ -355,18 +355,21 @@ function Backdrop({ children }: { children: React.ReactNode }) {
   );
 }
 
-function ModalPerdido({ lead, onConfirm, onCancel }: { lead: PipelineLead; onConfirm: (reason: string, detail: string | null) => void; onCancel: () => void }) {
+function ModalPerdido({ lead, onConfirm, onCancel }: { lead: PipelineLead; onConfirm: (reason: string, detail: string | null, isEncosto: boolean) => void; onCancel: () => void }) {
   const [reason, setReason] = useState("");
   const [detail, setDetail] = useState("");
+  const [isEncosto, setIsEncosto] = useState(false);
+  const [touchedEncosto, setTouchedEncosto] = useState(false);
+  const onReasonChange = (r: string) => { setReason(r); if (!touchedEncosto) setIsEncosto(ENCOSTO_SUGERIDO.has(r)); };
   return (
     <Backdrop>
-      <p style={{ color: "#C8102E", fontSize: 14, fontFamily: theme.font.label, fontWeight: 750, letterSpacing: "-.01em", marginBottom: 4 }}>Marcar como Perdido</p>
+      <p style={{ color: "#C8102E", fontSize: 14, fontFamily: theme.font.label, fontWeight: 750, letterSpacing: "-.01em", marginBottom: 4 }}>Encerrar Atendimento · Diagnóstico Final</p>
       <p style={{ color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label, marginBottom: 6 }}>{lead.restaurant_name || "Lead"} → Perdido</p>
       <p style={{ color: "#f59e0b", fontSize: 10, fontFamily: theme.font.label, marginBottom: 14, lineHeight: 1.5 }}>
         ⚠ Ação destrutiva: encerra o atendimento (human_active=false, lost_at). Confirme o motivo.
       </p>
       <label style={{ color: "#c0d0e0", fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase" }}>Motivo</label>
-      <select value={reason} onChange={(e) => setReason(e.target.value)} autoFocus
+      <select value={reason} onChange={(e) => onReasonChange(e.target.value)} autoFocus
         style={{ width: "100%", marginTop: 4, marginBottom: 12, background: "var(--asb-card)", border: "1px solid #2e2e2e", borderRadius: 6, padding: "8px 10px", color: "#fff", fontSize: 12, fontFamily: theme.font.label, outline: "none" }}>
         <option value="">Selecione…</option>
         {LOST_REASONS.map((r) => <option key={r} value={r}>{r}</option>)}
@@ -374,11 +377,20 @@ function ModalPerdido({ lead, onConfirm, onCancel }: { lead: PipelineLead; onCon
       <label style={{ color: "#c0d0e0", fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".1em", textTransform: "uppercase" }}>Detalhe (opcional)</label>
       <input value={detail} onChange={(e) => setDetail(e.target.value)}
         style={{ width: "100%", marginTop: 4, marginBottom: 16, background: "var(--asb-card)", border: "1px solid #2e2e2e", borderRadius: 6, padding: "8px 10px", color: "#fff", fontSize: 12, fontFamily: theme.font.label, outline: "none" }} />
+      {/* DEBT-318: manter como ENCOSTO (perdido-quente/backup ativo) */}
+      <label style={{ display: "flex", alignItems: "flex-start", gap: 8, cursor: "pointer", margin: "0 0 14px" }}>
+        <input type="checkbox" checked={isEncosto}
+          onChange={(e) => { setIsEncosto(e.target.checked); setTouchedEncosto(true); }}
+          style={{ marginTop: 2, accentColor: "#FF7A45", cursor: "pointer" }} />
+        <span style={{ fontSize: 11, lineHeight: 1.4, color: "#c0d0e0", fontFamily: theme.font.label }}>
+          <span style={{ color: "#FF7A45", fontWeight: 700 }}>🔥 Manter como encosto</span> — backup ativo, reengaja em 45d. Use quando a amostra foi aprovada e a relação é boa.
+        </span>
+      </label>
       <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
         <BtnCancel onClick={onCancel} />
-        <button disabled={!reason} onClick={() => onConfirm(reason, detail.trim() || null)}
+        <button disabled={!reason} onClick={() => onConfirm(reason, detail.trim() || null, isEncosto)}
           style={{ background: reason ? "#C8102E" : "#2e2e2e", border: "none", borderRadius: 6, padding: "8px 16px", color: "#fff", fontSize: 11, fontFamily: theme.font.label, fontWeight: 700, cursor: reason ? "pointer" : "default" }}>
-          Confirmar perda
+          {isEncosto ? "Encerrar · Encosto" : "Encerrar"}
         </button>
       </div>
     </Backdrop>
