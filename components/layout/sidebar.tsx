@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, BarChart2, PhoneCall, FlaskConical, Upload, Flame, Filter, UserCheck, DollarSign, Target, Briefcase, Columns3, Wallet, Banknote, Coins, LayoutGrid, Network } from "lucide-react";
+import { LayoutDashboard, Users, BarChart2, PhoneCall, FlaskConical, Upload, Flame, Filter, UserCheck, DollarSign, Target, Briefcase, Columns3, Wallet, Banknote, Coins, LayoutGrid, Network, Anchor } from "lucide-react";
 
 const SANS = "var(--font-geist-sans), system-ui, sans-serif";
 
@@ -34,6 +34,7 @@ const NAV_GROUPS = [
       { href: "/dashboard/carteira-ativa", label: "Carteira ativa", icon: Wallet },
       { href: "/dashboard/handoffs",       label: "Agendamentos",   icon: PhoneCall },
       { href: "/dashboard/cadencias",      label: "Cadências",      icon: Network },
+      { href: "/dashboard/contas-encosto", label: "Contas de Encosto", icon: Anchor },
     ],
   },
   {

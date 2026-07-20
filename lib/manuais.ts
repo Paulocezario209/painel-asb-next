@@ -15,6 +15,22 @@ export type ManualTela = {
 };
 
 export const MANUAIS: Record<string, ManualTela> = {
+  "/dashboard/contas-encosto": {
+    titulo: "Contas de Encosto",
+    oQueE: "Leads perdidos mas QUENTES (backup ativo): a amostra foi aprovada, a relação é boa, mas ficou com o fornecedor atual. Não são leads mortos — são contas em que a ASB fica de segundo fornecedor de encosto, prontas pra reengajar no gatilho certo (a data de volta, ou quando o concorrente tropeçar).",
+    fontes: [
+      "Lista e KPIs: view v_contas_encosto — leads com is_encosto=true (marcado no encerramento do atendimento), sem testes.",
+      "Motivo (badge): lost_reason gravado no encerramento (Sabor/produto, Lealdade/incumbente, Pagamento, Logística...). Dirige o ângulo de reconquista sugerido em cada card.",
+      "‘Reengaja em’: next_followup_at — o RPC de encerramento agenda 45 dias por padrão quando a conta é marcada como encosto; a cadência LONGA (motor F3) mantém a conta viva até lá.",
+      "Pipeline em Espera: Σ volume semanal × preço/kg — o valor que volta a jogo se o encosto converter.",
+    ],
+    comoUsar: [
+      "Uma conta vira encosto na ficha do lead → Ações → ‘Encerrar Atendimento’ → marcar ‘🔥 Manter como encosto’. Motivos quentes (sabor, concorrente, prazo) já sugerem o encosto automaticamente.",
+      "Priorize os cards ‘REENGAJAR AGORA’ (data de volta venceu) e ‘EM Nd’ (chegando) — são os que pedem toque.",
+      "O ângulo (linha laranja ↳) é o que dizer quando voltar, por motivo: sabor → blend sob medida; concorrente → encosto sem exclusividade; pagamento → prazo com contrapartida.",
+      "Se a conta reativar (responder/fazer pedido), ela sai automaticamente do encosto (o marcador zera na reativação).",
+    ],
+  },
   "/dashboard/funil": {
     titulo: "Funil",
     oQueE: "A jornada completa do lead: da chegada no SDR até virar cliente (1ª compra). Mostra onde cada lead está AGORA e a conversão da coorte do mês.",
