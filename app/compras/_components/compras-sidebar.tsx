@@ -9,7 +9,7 @@ const SANS = "var(--font-geist-sans), system-ui, sans-serif";
 const GREEN = "#2ea043";
 
 const navItems = [
-  { href: "/compras/resultados", label: "Resultados",  icon: BarChart2 },
+  { href: "/compras/resultados", label: "Compras (MTD)",  icon: BarChart2 },
   { href: "/compras/estoque",    label: "Estoque",     icon: Boxes },
   { href: "/compras/previsao",   label: "Previsão",    icon: LineChart },
   { href: "/compras/inventario", label: "Inventário",  icon: ClipboardList },

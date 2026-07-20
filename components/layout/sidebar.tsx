@@ -11,8 +11,8 @@ const NAV_GROUPS = [
     title: "Visão geral",
     items: [
       { href: "/dashboard",           label: "Dashboard", icon: LayoutDashboard },
-      { href: "/dashboard/comercial", label: "Comercial", icon: LayoutGrid },
-      { href: "/dashboard/funil",     label: "Funil",     icon: Filter },
+      { href: "/dashboard/comercial", label: "Panorama Comercial", icon: LayoutGrid },
+      { href: "/dashboard/funil",     label: "Funil de Vendas",    icon: Filter },
       { href: "/dashboard/pipeline",  label: "Pipeline",  icon: Columns3 },
     ],
   },

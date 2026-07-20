@@ -72,7 +72,7 @@ export default async function ComercialPage() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-      <PageHead title="Comercial" desc="A jornada de ponta a ponta — clique numa etapa para abrir a tela." />
+      <PageHead title="Panorama Comercial" desc="A jornada de ponta a ponta — clique numa etapa para abrir a tela." />
 
       {/* O FLUXO — a jornada como cards conectados por setas */}
       <div>
