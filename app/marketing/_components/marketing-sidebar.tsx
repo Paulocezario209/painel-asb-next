@@ -9,7 +9,7 @@ const SANS = "var(--font-geist-sans), system-ui, sans-serif";
 const RED = "#FF3B57";
 
 const navItems = [
-  { href: "/marketing/overview",   label: "Overview",         icon: LayoutDashboard },
+  { href: "/marketing/overview",   label: "Visão Geral",      icon: LayoutDashboard },
   { href: "/marketing/calendario", label: "Calendário",       icon: CalendarDays },
   { href: "/marketing/origem",     label: "Origem dos Leads", icon: Radar },
   { href: "/marketing/anuncios",   label: "Anúncios",         icon: Megaphone },

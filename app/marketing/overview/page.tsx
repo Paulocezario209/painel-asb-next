@@ -59,7 +59,7 @@ export default async function OverviewPage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <PageHead
-        title="Overview"
+        title="Visão Geral"
         desc="Investimento · CAC · ROAS · funil · ranking de criativos (Meta Ads)"
       />
 
