@@ -10,7 +10,7 @@ export default async function ContasEncostoPage() {
 
   const { data } = await supabase
     .from("v_contas_encosto")
-    .select("phone, restaurant_name, city, segment, weekly_volume_kg, motivo_categoria, motivo_detalhe, lost_at, dias_desde_perda, next_followup_at")
+    .select("phone, restaurant_name, city, segment, weekly_volume_kg, motivo_categoria, motivo_detalhe, lost_at, dias_desde_perda, next_followup_at, fase_teste")
     .order("next_followup_at", { ascending: true, nullsFirst: false });
 
   const contas = (data ?? []) as ContaEncosto[];

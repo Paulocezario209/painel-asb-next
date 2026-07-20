@@ -23,6 +23,7 @@ export const MANUAIS: Record<string, ManualTela> = {
       "Motivo (badge): lost_reason gravado no encerramento (Sabor/produto, Lealdade/incumbente, Pagamento, Logística...). Dirige o ângulo de reconquista sugerido em cada card.",
       "‘Reengaja em’: next_followup_at — o RPC de encerramento agenda 45 dias por padrão quando a conta é marcada como encosto; a cadência LONGA (motor F3) mantém a conta viva até lá.",
       "Pipeline em Espera: Σ volume semanal × preço/kg — o valor que volta a jogo se o encosto converter.",
+      "Fase (badge 🧪 pós-teste / 🍽️ pré-teste): fase_teste da view — pós-teste = já fez pedido/amostra (retorno de experiência); pré-teste = declinou sem provar (convite ao teste). Régua: first_order_at OU está na carteira ARES.",
     ],
     comoUsar: [
       "Uma conta vira encosto na ficha do lead → Ações → ‘Encerrar Atendimento’ → marcar ‘🔥 Manter como encosto’. Motivos quentes (sabor, concorrente, prazo) já sugerem o encosto automaticamente.",

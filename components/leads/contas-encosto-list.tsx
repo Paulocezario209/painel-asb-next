@@ -19,7 +19,30 @@ export type ContaEncosto = {
   lost_at: string | null;
   dias_desde_perda: number | null;
   next_followup_at: string | null;
+  fase_teste: string | null;   // pos_teste | pre_teste
 };
+
+// Fase do encosto — o PROCESSO comercial certo, por ter provado ou não (§11).
+function faseInfo(fase: string | null): { badge: string; color: string; processo: string } {
+  return fase === "pos_teste"
+    ? { badge: "🧪 pós-teste", color: "#5eb3e6", processo: "Retorno de experiência" }
+    : { badge: "🍽️ pré-teste", color: "#c99a3c", processo: "Convite ao teste" };
+}
+
+// Ângulo de reconquista = fase (provou/não provou) + motivo.
+function anguloEncosto(motivo: string | null, fase: string | null): string {
+  const m = (motivo ?? "").toLowerCase();
+  if (fase !== "pos_teste") {
+    return "Ele ainda NÃO provou — mandar amostra sob medida e transformar o 'não' num teste";
+  }
+  // pós-teste: já provou → ajustar o que travou na experiência real
+  if (/sabor|produto/.test(m)) return "Já provou — blend sob medida no ponto do paladar dele (a amostra foi padrão)";
+  if (/lealdade|incumbente|concorrente/.test(m)) return "Já provou — encosto sem exclusividade: no dia que o atual falhar, é você";
+  if (/pagamento|prazo/.test(m)) return "Já provou — prazo estruturado com contrapartida (recorrência/volume)";
+  if (/pre[çc]o/.test(m)) return "Já provou — custo oculto da inconsistência (não defender preço seco)";
+  if (/log[íi]stica/.test(m)) return "Já provou — rota fixa + acesso pré-organizado do nosso lado";
+  return "Já provou — retorno sobre a experiência: o que faltou pra avançar?";
+}
 
 const EMBER = "#FF7A45";
 
@@ -29,16 +52,6 @@ const SEG_LABELS: Record<string, string> = {
   food_truck: "Food Truck", dark_kitchen: "Dark Kitchen", acougue: "Açougue",
 };
 
-// Ângulo de reconquista por motivo — o "o que dizer quando voltar" (§11 CADENCIA_INTELIGENTE).
-function anguloPorMotivo(m: string | null): string {
-  const r = (m ?? "").toLowerCase();
-  if (/sabor|produto/.test(r)) return "Blend sob medida — a amostra foi padrão, não calibrada ao paladar dele";
-  if (/lealdade|incumbente|concorrente/.test(r)) return "Encosto sem exclusividade — no dia que faltar, me chama";
-  if (/pagamento|prazo/.test(r)) return "Prazo estruturado com contrapartida (recorrência/volume)";
-  if (/pre[çc]o/.test(r)) return "Custo oculto da inconsistência — nunca defender preço seco";
-  if (/log[íi]stica/.test(r)) return "Rota fixa + acesso pré-organizado do nosso lado";
-  return "Nutrição de disponibilidade mental (LONGA)";
-}
 
 function diasAte(iso: string | null): number | null {
   if (!iso) return null;
@@ -89,6 +102,7 @@ export function ContasEncostoList({ contas }: { contas: ContaEncosto[] }) {
                 ? new Date(c.next_followup_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })
                 : "—";
               const waText = encodeURIComponent("Olá! Aqui é da American Steak 🥩");
+              const fase = faseInfo(c.fase_teste);
               return (
                 <div key={c.phone} style={{
                   display: "flex", flexDirection: "column", gap: 6,
@@ -106,6 +120,7 @@ export function ContasEncostoList({ contas }: { contas: ContaEncosto[] }) {
                       </p>
                     </div>
                     <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+                      <Pill label={fase.badge} color={fase.color} />
                       {c.motivo_categoria && <Pill label={c.motivo_categoria} color={EMBER} />}
                       {venceu
                         ? <Pill label="REENGAJAR AGORA" color="#22c55e" />
@@ -119,8 +134,8 @@ export function ContasEncostoList({ contas }: { contas: ContaEncosto[] }) {
                     <p style={{ ...S.text, lineHeight: 1.4 }}>{c.motivo_detalhe}</p>
                   )}
 
-                  <p style={{ fontSize: 12, color: EMBER, fontFamily: theme.font.label }}>
-                    ↳ {anguloPorMotivo(c.motivo_categoria)}
+                  <p style={{ fontSize: 12, color: EMBER, fontFamily: theme.font.label, lineHeight: 1.4 }}>
+                    ↳ <strong style={{ color: fase.color }}>{fase.processo}:</strong> {anguloEncosto(c.motivo_categoria, c.fase_teste)}
                   </p>
 
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginTop: 2 }}>
