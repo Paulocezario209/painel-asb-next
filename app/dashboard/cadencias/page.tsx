@@ -10,7 +10,7 @@ import { theme } from "@/lib/theme";
 import { VENDOR_LABELS } from "@/lib/vendor-labels";
 import { S } from "@/app/dashboard/lib/dashboard-tokens";
 import { PageHead, SectionHead } from "@/app/dashboard/lib/ui";
-import { Layers, Map as MapIcon, ListOrdered, FileText, FileCheck2, GitBranch, Hourglass } from "lucide-react";
+import { Layers, Map as MapIcon, ListOrdered, FileText, Hourglass } from "lucide-react";
 import { getUserContext, canAccess } from "@/lib/auth/get-user-role";
 import { DashboardFilters } from "@/components/dashboard/dashboard-filters";
 import { unstable_cache } from "next/cache";
@@ -177,7 +177,11 @@ function StateCard({ e, row, active, carry }: { e: Estado; row: MapaRow | undefi
   const total = row?.total ?? 0, atr = row?.atrasados ?? 0, hj = row?.hoje ?? 0;
   const situ = situacaoEstado(e.key, atr, hj);
   const cor = SITU_COR[situ];
-  const href = `/dashboard/cadencias?${new URLSearchParams({ ...carry, estado: e.key }).toString()}#fila`;
+  // GANHO graduou pro ciclo de cliente (fora da cadência): a Fila (v_cadencia_lead) EXCLUI GANHO,
+  // então pinar estado=GANHO abriria uma Fila vazia. O card leva pra carteira de clientes (destino real).
+  const href = e.band === "ganho"
+    ? "/dashboard/clientes"
+    : `/dashboard/cadencias?${new URLSearchParams({ ...carry, estado: e.key }).toString()}#fila`;
   return (
     <Link href={href} style={{ textDecoration: "none", flex: "1 1 150px", minWidth: 150 }}>
       <div style={{ ...cardStyle(cor), background: active ? TOK.card : TOK.cardAlt, borderColor: active ? cor : TOK.border, boxShadow: active ? `0 0 0 1px ${cor}` : "none", height: "100%" }}>
@@ -571,17 +575,20 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
 
       {/* FILA */}
       <Section Icon={ListOrdered} color={TOK.f2} title="Fila" id="fila" sub={`${fila.length} lead(s)${fila.length >= 200 ? " (200 mais urgentes)" : ""}${estadoSel ? ` · ${LABEL[estadoSel]}` : ""}${degrauSel ? ` · ${degrauSel}` : ""} · Próxima ação = motor F3`}>
-        {/* cards de situação — clicáveis (reusam os filtros existentes; contagens do Mapa em escopo) */}
+        {/* cards de situação — LENTE ÚNICA sobre a Fila. Contagem == lista por construção:
+            a Fila lê v_cadencia_lead (= v_orquestracao_leads menos GANHO), então as contagens
+            EXCLUEM GANHO (todos/humano/negociação já excluem por faixa; atrasado/hoje excluem no reduce).
+            Clicar RESETA estado/degrau (as outras lentes) — senão intersecta e zera a lista. */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(140px,1fr))", gap: 10 }}>
           {[
             { key: "todos", label: "Todos", n: curtaTot + longaTot, c: TOK.fg },
-            { key: "atrasado", label: "Atrasado", n: mapa.reduce((a, r) => a + r.atrasados, 0), c: TOK.atrasado },
-            { key: "hoje", label: "Hoje", n: mapa.reduce((a, r) => a + r.hoje, 0), c: TOK.hoje },
+            { key: "atrasado", label: "Atrasado", n: mapa.reduce((a, r) => a + (r.journey_state === "GANHO" ? 0 : r.atrasados), 0), c: TOK.atrasado },
+            { key: "hoje", label: "Hoje", n: mapa.reduce((a, r) => a + (r.journey_state === "GANHO" ? 0 : r.hoje), 0), c: TOK.hoje },
             { key: "humano", label: "Precisa humano", n: HUMANO_ST.reduce((a, k) => a + (byState.get(k)?.total ?? 0), 0), c: TOK.humano },
             { key: "negociacao", label: "Negociação", n: NEGOCIA_ST.reduce((a, k) => a + (byState.get(k)?.total ?? 0), 0), c: TOK.negocia },
           ].map(card => {
-            const on = filtroSel === card.key;
-            const href = `/dashboard/cadencias?${new URLSearchParams({ ...carry, ...(estadoSel ? { estado: estadoSel } : {}), ...(degrauSel ? { degrau: degrauSel } : {}), ...(card.key !== "todos" ? { filtro: card.key } : {}) }).toString()}#fila`;
+            const on = !estadoSel && !degrauSel && filtroSel === card.key;  // lente ativa é a situação só quando estado/degrau não estão pinados
+            const href = `/dashboard/cadencias?${new URLSearchParams({ ...carry, ...(card.key !== "todos" ? { filtro: card.key } : {}) }).toString()}#fila`;
             return (
               <Link key={card.key} href={href} style={{ textDecoration: "none" }}>
                 <div style={{ ...cardStyle(on ? card.c : undefined), background: on ? TOK.card : TOK.cardAlt, borderColor: on ? card.c : TOK.border, boxShadow: on ? `0 0 0 1px ${card.c}` : "none", height: "100%" }}>
@@ -700,43 +707,6 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
         )}
       </Section>
 
-      {/* CONTRATO DE DADOS */}
-      <Section Icon={FileCheck2} color={TOK.respondeu} title="Contrato de dados" sub="verde = já existe (reusa) · roxo = novo (Fase 2)">
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          <div style={{ ...cardStyle(TOK.f1) }}>
-            <p style={{ ...mono(9, { letterSpacing: ".15em" }), color: TOK.f1, marginBottom: 10 }}>Real hoje — F1/F3 ✓</p>
-            <ul style={{ margin: 0, paddingLeft: 16, display: "flex", flexDirection: "column", gap: 5 }}>
-              {["Mapa por estado (v_orquestracao_mapa)", "Pergunta que quebra (qual_stage)", "Longa por motivo (v_motivos_perda)", "Fila: silêncio + degrau (v_cadencia_lead)", "PRÓXIMA AÇÃO + ângulo (v_lead_proxima_acao)", "Não-repetição (angulos_usados)", "Dossiê: cabeçalho + timeline", "Contexto extraído: objeção (v_orquestracao_leads)", "Contexto extraído: gramatura (v_orquestracao_leads)", "Contexto extraído: produto (v_orquestracao_leads)"].map(x =>
-                <li key={x} style={{ fontFamily: SANS, fontSize: 11.5, color: TOK.fgMuted, lineHeight: 1.5 }}>{x}</li>)}
-            </ul>
-          </div>
-          <div style={{ ...cardStyle(TOK.f2) }}>
-            <p style={{ ...mono(9, { letterSpacing: ".15em" }), color: TOK.f2, marginBottom: 10 }}>Fase 2 — placeholder (sem dado)</p>
-            <ul style={{ margin: 0, paddingLeft: 16, display: "flex", flexDirection: "column", gap: 5 }}>
-              {["last_lead_signal_at (último sinal) — DEBT-291, ainda não existe"].map(x =>
-                <li key={x} style={{ fontFamily: SANS, fontSize: 11.5, color: TOK.fgDim, lineHeight: 1.5 }}>{x}</li>)}
-            </ul>
-            <p style={{ fontFamily: SANS, fontSize: 10, color: TOK.fgDim, marginTop: 12 }}>views consumidas: v_orquestracao_mapa · v_orquestracao_leads · v_cadencia_saude · v_cadencia_lead · v_lead_proxima_acao · v_motivos_perda</p>
-          </div>
-        </div>
-      </Section>
-
-      {/* PLANO POR FASES */}
-      <Section Icon={GitBranch} color={TOK.negocia} title="Plano por fases">
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 12 }}>
-          {[
-            { f: "F1" as const, t: "Mapa & Fila no ar", d: "estados, atrasados, silêncio, degrau, motivo de perda — tudo lendo as views de orquestração." },
-            { f: "F2" as const, t: "Contexto extraído (schema)", d: "objeção, gramagem, produto-alvo e último sinal — campos a serem escritos pelo motor de extração." },
-            { f: "F3" as const, t: "Motor de cadência no ar", d: "próxima ação, próximo ângulo e não-repetição já calculados por lead (v_lead_proxima_acao)." },
-          ].map(p => (
-            <div key={p.f} style={{ ...cardStyle(p.f === "F1" ? TOK.f1 : p.f === "F2" ? TOK.f2 : TOK.f3) }}>
-              <FaseBadge f={p.f} />
-              <p style={{ fontFamily: SANS, fontSize: 13, fontWeight: 600, color: TOK.fg, marginTop: 8 }}>{p.t}</p>
-              <p style={{ fontFamily: SANS, fontSize: 11, color: TOK.fgMuted, marginTop: 6, lineHeight: 1.55 }}>{p.d}</p>
-            </div>
-          ))}
-        </div>
-      </Section>
     </div>
   );
 }
