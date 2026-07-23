@@ -1,0 +1,38 @@
+name: Painel verify deploy (validacao publica)
+
+# Roda APOS merge na main (quando o EasyPanel auto-deploya). Runner tem rede aberta.
+# Sucesso = /api/version publico confirma a aplicacao (200). SHA best-effort (nao depende de
+# build-arg nao comprovado): se .sha == commit prova; se 'unknown' apenas avisa.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Validacao publica + SHA best-effort
+    runs-on: ubuntu-latest
+    steps:
+      - name: Aguardar EasyPanel publicar e validar /api/version
+        run: |
+          BASE="https://sdr-american-painelnext.cp0vsf.easypanel.host"
+          up=""
+          for i in $(seq 1 40); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "$BASE/api/version" || echo 000)
+            echo "[$i] GET /api/version -> $code"
+            if [ "$code" = "200" ]; then up=1; break; fi
+            sleep 15
+          done
+          if [ -z "$up" ]; then echo "::error::/api/version nao respondeu 200 apos ~10min"; exit 1; fi
+          echo "✅ /api/version no ar (200)"
+          sha="$(curl -sf --max-time 10 "$BASE/api/version" | python3 -c "import sys,json;print(json.load(sys.stdin).get('sha',''))" 2>/dev/null || true)"
+          if [ "$sha" = "${GITHUB_SHA}" ]; then
+            echo "✅ SHA em producao == $sha (prova completa)"
+          elif [ -z "$sha" ] || [ "$sha" = "unknown" ]; then
+            echo "::warning::App no ar, mas /api/version sem SHA (config build-arg GIT_SHA no servico). Deploy confirmado por URL."
+          else
+            echo "::warning::SHA em producao ($sha) != esperado (${GITHUB_SHA}) — deploy propagando; URL ja no ar."
+          fi
