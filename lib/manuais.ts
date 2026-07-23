@@ -270,11 +270,13 @@ export const MANUAIS: Record<string, ManualTela> = {
       "Tudo vem do faturado real do ARES (pedidos faturados, sem cancelados/excluídos). CNB não entra aqui.",
       "Saúde: régua única por dias sem comprar — ativo ≤7 · atenção 8-14 · risco 15-21 · pré-churn 22-30 · churn 31-59 · inativo ≥60.",
       "Movimento de Carteira: comparação mês × mês anterior (quem entrou, quem deixou de faturar). No mês corrente, “deixou de faturar” encolhe até o fechamento.",
+      "Novos clientes (eixo = 1º faturamento no mês, carteira ARES inteira): quebrado em CP (campanha — cliente com lead SDR de anúncio/ad_id) e ORG (orgânico — cliente sem lead OU lead sem anúncio + walk-in captado direto pelo vendedor). CP + ORG = total. ⚠️ é DIFERENTE do “Pedido fechado” do Funil de Vendas: lá o eixo é o mês de NASCIMENTO do lead (created_at), só EM ROTA e só quem virou lead no bot — por isso 19 novos clientes ≠ 11 do funil (os 10 walk-in + leads nascidos em meses anteriores entram só aqui).",
       "Recuperados: voltaram a comprar após 60+ dias parados.",
     ],
     comoUsar: [
       "Abas: Ativos (carteira viva) · Up-sell · Churn · Completa (todos, inclusive sem movimentação).",
       "Cards de status filtram a lista; clique no cliente para abrir o 360.",
+      "CP baixo × ORG alto no card de Novos = a maioria dos clientes novos veio orgânica (indicação/boca-a-boca/prospecção do vendedor), não da mídia paga.",
     ],
   },
   "/dashboard/carteira-ativa": {

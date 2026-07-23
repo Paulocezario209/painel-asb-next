@@ -59,7 +59,7 @@ async function DRECarteiraCard({ mes }: { mes?: string }) {
   const [movRes, recRes] = await Promise.all([
     supabase
       .from("v_carteira_movimento_mensal")
-      .select("entraram, receita_entrou, sairam, receita_saiu, saldo_clientes, saldo_receita, novos_clientes, receita_novos")
+      .select("entraram, receita_entrou, sairam, receita_saiu, saldo_clientes, saldo_receita, novos_clientes, receita_novos, novos_cp, novos_org")
       .eq("mes", `${mesYM}-01`)
       .maybeSingle(),
     supabase
@@ -80,6 +80,9 @@ async function DRECarteiraCard({ mes }: { mes?: string }) {
   // Novos = só first order no mês (recuperados fora) — coluna aditiva da view (variante B).
   const novosClientes = Number(data?.novos_clientes ?? 0);
   const receitaNovos = Number(data?.receita_novos ?? 0);
+  // Quebra CP (campanha/mídia paga) × ORG (orgânico: sem lead OU lead sem ad_id + walk-in) — DEBT-330.
+  const novosCp = Number(data?.novos_cp ?? 0);
+  const novosOrg = Number(data?.novos_org ?? 0);
   const sairam = Number(data?.sairam ?? 0);
   const receitaSaiu = Number(data?.receita_saiu ?? 0);
   const saldoCli = Number(data?.saldo_clientes ?? entraram - sairam);
@@ -117,8 +120,14 @@ async function DRECarteiraCard({ mes }: { mes?: string }) {
           value={novosClientes}
           accent="#22c55e"
           num="#22c55e"
-          badges={<span style={monoChip("#22c55e")}>{brl(receitaNovos)}</span>}
-          sub="convertidos no mês com pedido"
+          badges={
+            <span style={{ display: "inline-flex", gap: 6, alignItems: "center" }}>
+              <span style={monoChip("#22c55e")}>{brl(receitaNovos)}</span>
+              <span style={{ fontSize: 10, fontWeight: 800, fontFamily: theme.font.label, color: "#8bb4ff", background: "#8bb4ff1a", borderRadius: 3, padding: "1px 5px" }}>CP {novosCp}</span>
+              <span style={{ fontSize: 10, fontWeight: 800, fontFamily: theme.font.label, color: "#22c55e", background: "#22c55e1a", borderRadius: 3, padding: "1px 5px" }}>ORG {novosOrg}</span>
+            </span>
+          }
+          sub="CP campanha · ORG orgânico · 1º pedido no mês"
         />
         <StatTile
           label="Deixou de faturar"
