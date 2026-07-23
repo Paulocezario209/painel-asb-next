@@ -285,7 +285,7 @@ export function CalendarDashboard({
             )}
 
             <div>
-              <div style={{ ...lbl, marginBottom: 6 }}>Fornecedores do dia ({selFornec.length}) · detalhe por PEDIDO de compra (não por entrada) · produtos abaixo de cada um</div>
+              <div style={{ ...lbl, marginBottom: 6 }}>Fornecedores do dia ({selFornec.length}) · ENTRADA real (NF/Recibo entregue) · notas/recibos abaixo de cada um</div>
               {selFornec.length === 0 ? (
                 <div style={{ color: "#e4e9f0", fontSize: 11, fontFamily: theme.font.label }}>sem compras neste dia</div>
               ) : (
@@ -298,7 +298,7 @@ export function CalendarDashboard({
                     {(selItensByFornec[nome] || []).map((it, idx) => (
                       <div key={idx} style={{ display: "flex", justifyContent: "space-between", gap: 8, padding: "3px 0 3px 10px", fontSize: 10, fontFamily: theme.font.label, color: "#c0d0e0" }}>
                         <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 200 }}>
-                          {(it.produto_nome || "(produto)") + " · " + Number(it.quantidade) + "× " + brl(Number(it.preco_un))}
+                          {it.produto_nome || "(nota)"}
                         </span>
                         <span style={{ fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" }}>{brl(Number(it.valor_brl))}</span>
                       </div>
@@ -307,8 +307,10 @@ export function CalendarDashboard({
                 ))
               )}
               <div style={{ color: "#e4e9f0", fontSize: 9, fontFamily: theme.font.label, marginTop: 4 }}>
-                Drilldown por produto (v_compras_itens_dia). Total do fornecedor = valor do pedido (header,
-                c/ frete/desc.); itens = linhas. Lote/validade de fornecedor: DEBT-067 (não digitado no ARES).
+                Entrada real (v_compras_itens_dia = compras_entradas_espelho, NF/Recibo entregue). Total do
+                fornecedor = soma das entradas do dia — reconcilia CENTAVO com a célula do calendário. Pedido
+                pendente/aprovado/cancelado NÃO entra. Detalhe por produto na entrada: DEBT-296 (itens de
+                entrada não espelhados no ARES).
               </div>
             </div>
           </div>

@@ -98,7 +98,9 @@ export default async function ResultadosPage({
       .gte("dia", iso(inicioMes))
       .lte("dia", iso(fimJanela))
       .order("dia"),
-    // Fase 1.6 — drilldown produto por dia (não-cancelado), via v_compras_itens_dia
+    // Drawer "Fornecedores do dia" — ENTRADA real (NF/Recibo) via v_compras_itens_dia (entrada-based
+    // desde 2026-07-23, DEBT-296): reconcilia centavo com a célula; pendente/aprovado/cancelado/deletado
+    // não entram. produto_nome = "NF/Recibo <num>"; status_compra sempre 'entregue' (o .neq abaixo é no-op seguro).
     supabase
       .from("v_compras_itens_dia")
       .select("dia, data_emissao, fornecedor_nome, produto_nome, quantidade, preco_un, valor_brl")
