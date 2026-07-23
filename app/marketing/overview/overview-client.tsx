@@ -26,12 +26,14 @@ export type AlertaRow = {
   descricao: string; severidade: "info" | "warning" | "critical";
 };
 
+// KPIs somam v_cac_mensal_canal por MÊS de calendário — o rótulo reflete meses, não dias
+// corridos (antes dizia "30d/60d" mas a janela era 1/2 meses inteiros).
 const PERIODOS = [
-  { k: "30d", label: "30d", meses: 1 },
-  { k: "60d", label: "60d", meses: 2 },
-  { k: "90d", label: "90d", meses: 3 },
-  { k: "6m", label: "6m", meses: 6 },
-  { k: "12m", label: "12m", meses: 12 },
+  { k: "30d", label: "1 mês", meses: 1 },
+  { k: "60d", label: "2 meses", meses: 2 },
+  { k: "90d", label: "3 meses", meses: 3 },
+  { k: "6m", label: "6 meses", meses: 6 },
+  { k: "12m", label: "12 meses", meses: 12 },
 ] as const;
 type PeriodoK = typeof PERIODOS[number]["k"];
 
@@ -196,7 +198,7 @@ export function OverviewClient({ cac, rank, alertas }: { cac: CacMensalRow[]; ra
       </Card>
 
       <p style={{ color: MUT, fontSize: 9, fontFamily: theme.font.label }}>
-        Fontes: v_cac_mensal_canal (KPIs + gasto×CAC mês a mês) e v_ranking_criativo (top CPL 30d); funil vive em /marketing/funil-cac. Barras = gasto por canal (eixo esq.) · linha = CAC blendado (eixo dir.). Período dos KPIs ≈ últimos 1/3/6 meses. Leads atribuídos desde 02/06.
+        Fontes: v_cac_mensal_canal (KPIs + gasto×CAC mês a mês) e v_ranking_criativo (top CPL 30d); funil vive em /marketing/funil-cac. Barras = gasto por canal (eixo esq.) · linha = CAC blendado (eixo dir.). Período dos KPIs = últimos N meses de calendário conforme seleção. Leads atribuídos desde 02/06.
       </p>
     </div>
   );

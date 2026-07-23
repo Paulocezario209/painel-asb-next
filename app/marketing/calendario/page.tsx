@@ -10,7 +10,7 @@ export const fetchCache = "force-no-store";  // blindagem: nenhum fetch (supabas
 // FIX freeze (2026-07-15): consulta DIRETA por request. A página é force-dynamic; o unstable_cache
 // (revalidate 300) congelava no self-hosted standalone (EasyPanel) e a tela travava no dado do último
 // deploy (ex.: gasto só até 11/07 com a view já em 14/07). Sem cache → o calendário reflete a view na hora.
-async function getPerfDiaria(ano: string) {
+async function getPerfDiaria(ano: string): Promise<{ rows: DiaRow[]; error: string | null }> {
   const supabase = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -23,7 +23,7 @@ async function getPerfDiaria(ano: string) {
   const PAGE = 1000;
   const all: DiaRow[] = [];
   for (let from = 0; ; from += PAGE) {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("v_performance_diaria")
       .select("data, ad_id, ad_name, spend, leads, cpl")
       .gte("data", `${ano}-01-01`)
@@ -31,11 +31,12 @@ async function getPerfDiaria(ano: string) {
       .order("data", { ascending: true })
       .order("ad_id", { ascending: true })
       .range(from, from + PAGE - 1);
+    if (error) return { rows: all, error: error.message };  // antes o erro sumia → calendário vazio sem aviso
     const rows = (data ?? []) as unknown as DiaRow[];
     all.push(...rows);
     if (rows.length < PAGE) break;
   }
-  return all;
+  return { rows: all, error: null };
 }
 
 export default async function CalendarioPage({
@@ -51,7 +52,7 @@ export default async function CalendarioPage({
   // hidrata a sessão (view REVOKE anon / GRANT authenticated — DEBT-110)
   await supabase.auth.getUser();
 
-  const rows = await getPerfDiaria(ano);  // consulta direta (force-dynamic) — sem freeze de cache
+  const { rows, error: erro } = await getPerfDiaria(ano);  // consulta direta (force-dynamic) — sem freeze de cache
   // Última data lida NO SERVIDOR (rows vêm ordenados asc) — prova de frescor: se a tela mostrar a data
   // real da view (ex.: 14/07) o build está vivo; se travar numa data antiga, o deploy não pegou.
   const maxData = rows.length ? rows[rows.length - 1].data : null;
@@ -63,6 +64,12 @@ export default async function CalendarioPage({
         title="Calendário"
         desc="Gasto diário por mês · heatmap · KPIs do dia (Meta Ads)"
       />
+
+      {erro && (
+        <div style={{ border: "1px solid #C8102E", borderRadius: 6, padding: 16, color: "#C8102E", fontSize: 12, fontFamily: theme.font.label }}>
+          View <code>v_performance_diaria</code> indisponível — o calendário pode estar incompleto. {erro}
+        </div>
+      )}
 
       <CalendarioClient ano={Number(ano)} rows={rows} />
 

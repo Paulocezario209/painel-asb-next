@@ -32,7 +32,8 @@ export default async function AtribuicaoPage() {
     s.from("v_lead_canal_jornada").select("channel, journey").limit(5000),
   ]);
 
-  const erro = camp.error?.message || anun.error?.message || cj.error?.message || null;
+  const erro = camp.error?.message || anun.error?.message || cj.error?.message
+    || sem.error?.message || nao.error?.message || null;
 
   // agrega canal×jornada no server (client fica leve)
   const cjMap = new Map<string, number>();
@@ -63,7 +64,7 @@ export default async function AtribuicaoPage() {
         canalJornada={canalJornada}
       />
       <p style={{ color: "#e4e9f0", fontSize: 10, fontFamily: theme.font.label, textAlign: "right" }}>
-        Gasto Meta 06:10 · Google 06:15 BRT · funil real-time. Receita = aprox. lead (DEBT-256).
+        Gasto Meta 06:10 · Google 06:15 BRT · funil real-time. Receita atribuída ao lead de forma aproximada.
       </p>
     </div>
   );

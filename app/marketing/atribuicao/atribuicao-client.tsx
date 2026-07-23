@@ -1,6 +1,7 @@
 "use client";
 
 import { theme } from "@/lib/theme";
+import { RED, GREEN, YELLOW } from "@/lib/marketing/ui";
 import { S } from "@/app/dashboard/lib/dashboard-tokens";
 import { SectionHead, KpiCard } from "@/app/dashboard/lib/ui";
 import { Megaphone, Target, TriangleAlert, Route, DollarSign, Users } from "lucide-react";
@@ -27,8 +28,15 @@ const num = (n: number | null | undefined) => (n == null ? "—" : n.toLocaleStr
 const pct = (n: number | null | undefined) => (n == null ? "—" : (n * 100).toFixed(1).replace(".", ",") + "%");
 const roasFmt = (n: number | null | undefined) => (n == null ? "—" : n.toFixed(2).replace(".", ",") + "×");
 
+// cores alinhadas à paleta canônica do workspace (CANAL_COR de lib/marketing/ui):
+// Meta = vermelho · Google = navy-light · orgânico = verde · indicação/referral = amarelo.
+// (as chaves seguem os valores reais de v_lead_canal_jornada.channel, em inglês.)
 const CH_COLOR: Record<string, string> = {
-  "Meta Ads": "#4d7cff", "Google Ads": "#22c55e", Organic: "#a78bfa", Referral: "#f59e0b", Direct: "#83879a",
+  "Meta Ads": RED,
+  "Google Ads": theme.colors.chartNavyLight,
+  Organic: GREEN,
+  Referral: YELLOW,
+  Direct: "#83879a",
 };
 
 function Th({ children, right }: { children: React.ReactNode; right?: boolean }) {

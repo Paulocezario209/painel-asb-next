@@ -141,7 +141,7 @@ export function OrigemClient({ canais, mensal }: { canais: CanalConsolidado[]; m
 function Linha({ label, valor, cor, forte }: { label: string; valor: string; cor: string; forte?: boolean }) {
   return (
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "3px 0" }}>
-      <span style={{ color: MUT, fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".08em", textTransform: "uppercase" }}>{label}</span>
+      <span style={{ color: MUT, fontSize: 10, fontFamily: theme.font.label, letterSpacing: ".02em" }}>{label}</span>
       <span style={{ color: cor, fontSize: forte ? 15 : 12, fontWeight: forte ? 700 : 600, fontFamily: theme.font.num }}>{valor}</span>
     </div>
   );

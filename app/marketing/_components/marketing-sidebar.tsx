@@ -66,7 +66,7 @@ export function MarketingSidebar({ isOpen = false, onClose }: { isOpen?: boolean
       <div className="px-4 py-3" style={{ borderTop: `1px solid ${SB.border}` }}>
         <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
           <div style={{ width: 7, height: 7, borderRadius: "50%", background: RED, boxShadow: `0 0 0 3px rgba(255,59,87,.2)` }} />
-          <p style={{ color: "#8b93a7", fontSize: 10, letterSpacing: ".06em", fontWeight: 600, fontFamily: SANS }}>Marketing · F1·F2·F3</p>
+          <p style={{ color: "#8b93a7", fontSize: 10, letterSpacing: ".06em", fontWeight: 600, fontFamily: SANS }}>Marketing · CAC & Mídia</p>
         </div>
       </div>
     </aside>

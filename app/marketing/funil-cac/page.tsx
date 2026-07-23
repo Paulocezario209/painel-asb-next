@@ -32,7 +32,7 @@ export default async function FunilCacPage() {
   const funil = (funilRes.error ? [] : (funilRes.data ?? [])) as unknown as FunilRow[];
   const mensal = (mensalRes.error ? [] : (mensalRes.data ?? [])) as unknown as ConvMensalRow[];
   const cac = (cacRes.error ? [] : (cacRes.data ?? [])) as unknown as CacCanalRow[];
-  const erro = funilRes.error?.message || mensalRes.error?.message || null;
+  const erro = funilRes.error?.message || mensalRes.error?.message || cacRes.error?.message || null;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -43,7 +43,7 @@ export default async function FunilCacPage() {
 
       {erro && (
         <div style={{ ...S.card, border: "1px solid #C8102E", padding: 16, color: "#C8102E", fontSize: 12, fontFamily: theme.font.label }}>
-          View <code>v_funil_por_canal</code> indisponível. {erro}
+          Views de funil/CAC indisponíveis (v_funil_por_canal · v_cac_mensal_canal · v_cac_por_canal). {erro}
         </div>
       )}
 

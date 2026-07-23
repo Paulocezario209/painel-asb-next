@@ -81,8 +81,9 @@ export function AnunciosClient({ rank, spark }: { rank: RankRow[]; spark: SparkR
     });
   }, [rank, periodo, campanha, sortKey, sortDir]);
 
-  // DEBT-119: anúncios com gasto e ZERO lead atribuído — extraídos pra um bloco no topo,
+  // Anúncios com gasto e ZERO lead atribuído no período — extraídos pra um bloco no topo,
   // fora do CPL/CAC da tabela (senão somem com "—" e inflam a leitura de eficiência).
+  // São campanhas novas em aquecimento OU anúncios a revisar; migram pra tabela no 1º lead.
   const semRetorno = useMemo(
     () => linhas.filter(r => Number(r.spend ?? 0) > 0 && Number(r.leads ?? 0) === 0),
     [linhas],
@@ -143,18 +144,30 @@ export function AnunciosClient({ rank, spark }: { rank: RankRow[]; spark: SparkR
         ))}
       </div>
 
-      {/* Gasto sem retorno atribuído (DEBT-119) — destacado no topo */}
+      {/* Gasto sem retorno atribuído (ainda) — destacado no topo, com a lista NOMEADA
+          (nenhum anúncio, nem campanha nova, fica invisível dentro do agregado). */}
       {semRetorno.length > 0 && (
         <div style={{ ...S.card, background: "rgba(200,16,46,.10)", borderLeft: `3px solid ${RED}`, padding: "16px 20px" }}>
           <p style={{ color: RED, fontSize: 13.5, fontWeight: 750, fontFamily: theme.font.label, letterSpacing: "-.01em", marginBottom: 6 }}>
-            Gasto Sem Retorno Atribuído — DEBT-119
+            Gasto Sem Retorno Atribuído (ainda)
           </p>
-          <div style={{ display: "flex", gap: 24, alignItems: "baseline", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: 24, alignItems: "baseline", flexWrap: "wrap", marginBottom: 12 }}>
             <span style={{ color: YELLOW, fontSize: 20, fontWeight: 700, fontFamily: theme.font.num }}>{fmtBRLc(semRetornoTot)}</span>
-            <span style={{ color: "#c8d8e8", fontSize: 12, fontFamily: theme.font.label }}>{semRetorno.length} anúncio{semRetorno.length > 1 ? "s" : ""} · 0 leads atribuídos</span>
+            <span style={{ color: "#c8d8e8", fontSize: 12, fontFamily: theme.font.label }}>{semRetorno.length} anúncio{semRetorno.length > 1 ? "s" : ""} · 0 leads atribuídos no período</span>
           </div>
-          <p style={{ color: MUT, fontSize: 9, fontFamily: theme.font.label, marginTop: 8 }}>
-            Anúncios site/[LEAD]-SP com gasto e nenhum lead atribuível (botões wa.me genéricos — DEBT-119). Não entram no CPL/CAC da tabela abaixo.
+          <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+            {semRetorno.map(r => (
+              <div key={r.ad_id} style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", fontSize: 11, fontFamily: theme.font.label }}>
+                <StatusBadge status={r.status_meta} />
+                <span style={{ color: "#c8d8e8" }}>{r.campaign_name ?? "—"}</span>
+                <span style={{ color: MUT }}>·</span>
+                <span style={{ color: "#FFFFFF" }} title={`ad_id ${r.ad_id}`}>{r.ad_name ?? r.ad_id}</span>
+                <span style={{ color: YELLOW, fontFamily: theme.font.num, marginLeft: "auto" }}>{fmtBRLc(Number(r.spend ?? 0))}</span>
+              </div>
+            ))}
+          </div>
+          <p style={{ color: MUT, fontSize: 9, fontFamily: theme.font.label, marginTop: 10 }}>
+            Gasto com nenhum lead atribuído no período — campanhas novas em aquecimento ou anúncios a revisar. Não entram no CPL/CAC da tabela abaixo; migram pra ela no 1º lead atribuído.
           </p>
         </div>
       )}
@@ -185,13 +198,10 @@ export function AnunciosClient({ rank, spark }: { rank: RankRow[]; spark: SparkR
               {comRetorno.map(r => {
                 const cpl = r.cpl != null ? Number(r.cpl) : null;
                 const roas = r.roas != null ? Number(r.roas) : null;
-                const semLead = Number(r.spend ?? 0) > 0 && Number(r.leads ?? 0) === 0;
                 return (
-                  <tr key={r.ad_id} style={{ borderTop: "1px solid var(--asb-border)", background: semLead ? "rgba(200,16,46,.12)" : "transparent" }}
-                    title={semLead ? "Gasto sem nenhum lead atribuído — considere revisar/pausar" : undefined}>
+                  <tr key={r.ad_id} style={{ borderTop: "1px solid var(--asb-border)" }}>
                     <td style={{ ...td, color: "#c8d8e8" }}>{r.campaign_name ?? "—"}</td>
                     <td style={{ ...td, color: "#FFFFFF" }} title={`ad_id ${r.ad_id}`}>
-                      {semLead && <span style={{ color: RED, marginRight: 5 }}>⚠</span>}
                       {r.ad_name ?? <span style={{ color: MUT }}>{r.ad_id}</span>}
                     </td>
                     <td style={{ ...td, textAlign: "center" }}><StatusBadge status={r.status_meta} /></td>
@@ -204,7 +214,7 @@ export function AnunciosClient({ rank, spark }: { rank: RankRow[]; spark: SparkR
                 );
               })}
               <tr style={{ borderTop: "2px solid var(--asb-border2)" }}>
-                <td style={{ ...td, color: "#FFFFFF", fontWeight: 700 }} colSpan={3}>TOTAL com retorno ({comRetorno.length}) — CPL exclui o bloco DEBT-119</td>
+                <td style={{ ...td, color: "#FFFFFF", fontWeight: 700 }} colSpan={3}>TOTAL com retorno ({comRetorno.length}) — CPL exclui os anúncios sem retorno</td>
                 <td style={{ ...td, textAlign: "right", color: YELLOW, fontWeight: 700 }}>{fmtBRLc(tot.spend)}</td>
                 <td style={{ ...td, textAlign: "center", fontWeight: 700 }}>{tot.leads}</td>
                 <td style={{ ...td, textAlign: "right", color: cacTot != null ? "#FFFFFF" : MUT, fontWeight: 700 }}>{cacTot != null ? fmtBRLc(cacTot) : "—"}</td>
@@ -216,7 +226,7 @@ export function AnunciosClient({ rank, spark }: { rank: RankRow[]; spark: SparkR
         </div>
       </div>
       <p style={{ color: MUT, fontSize: 9, fontFamily: theme.font.label }}>
-        Fonte: v_ranking_criativo (CPL/ROAS por ad_id, janela {periodo}) + v_performance_diaria (sparkline gasto 7d). CPL = gasto ÷ leads · ROAS = receita ÷ gasto. Anúncios sem leads atribuíveis (site/[LEAD]-SP — DEBT-119) estão destacados no bloco acima.
+        Fonte: v_ranking_criativo (CPL/ROAS por ad_id, janela {periodo}) + v_performance_diaria (sparkline gasto 7d). CPL = gasto ÷ leads · ROAS = receita ÷ gasto. Anúncios com gasto e 0 lead atribuído no período estão listados no bloco acima.
       </p>
     </div>
   );

@@ -19,20 +19,20 @@ function svc() {
 }
 
 async function getCacMensal() {
-  const { data } = await svc()
+  const { data, error } = await svc()
     .from("v_cac_mensal_canal")
     .select("mes, canal, leads, convertidos, receita_brl, gasto_total, cac_por_lead, roas")
     .order("mes", { ascending: true })
     .limit(2000);
-  return (data ?? []) as unknown as CacMensalRow[];
+  return { rows: (data ?? []) as unknown as CacMensalRow[], error: error?.message ?? null };
 }
 
 async function getAlertas() {
-  const { data } = await svc()
+  const { data, error } = await svc()
     .from("v_marketing_alertas")
     .select("flag, ad_id, ad_name, campaign_name, canal, valor_atual, valor_referencia, descricao, severidade")
     .limit(200);
-  return (data ?? []) as unknown as AlertaRow[];
+  return { rows: (data ?? []) as unknown as AlertaRow[], error: error?.message ?? null };
 }
 
 export default async function OverviewPage() {
@@ -42,7 +42,7 @@ export default async function OverviewPage() {
 
   // cac + alertas + ranking: live (consulta direta por request).
   // Funil por canal foi REMOVIDO daqui (dedup) — vive só em /marketing/funil-cac.
-  const [cac, rankRes, alertas] = await Promise.all([
+  const [cacRes, rankRes, alertasRes] = await Promise.all([
     getCacMensal(),
     supabase
       .from("v_ranking_criativo")
@@ -52,9 +52,12 @@ export default async function OverviewPage() {
     getAlertas(),
   ]);
 
+  const cac = cacRes.rows;
+  const alertas = alertasRes.rows;
   const rank = (rankRes.error ? [] : (rankRes.data ?? [])) as unknown as RankRow[];
 
-  const erro = rankRes.error?.message || null;
+  // qualquer view indisponível vira banner (antes cac/alertas engoliam o erro em silêncio)
+  const erro = rankRes.error?.message || cacRes.error || alertasRes.error || null;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>

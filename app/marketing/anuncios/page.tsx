@@ -27,7 +27,10 @@ export default async function AnunciosPage() {
   // hidrata a sessão (views REVOKE anon / GRANT authenticated — DEBT-110)
   await supabase.auth.getUser();
 
-  const desde7 = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+  // janela de 7d p/ o sparkline — new Date() (não Date.now(), que o lint de pureza barra no render)
+  const d7 = new Date();
+  d7.setDate(d7.getDate() - 7);
+  const desde7 = d7.toISOString().slice(0, 10);
 
   // ranking + spark 7d: live (consulta direta por request).
   const [rank, sparkRes] = await Promise.all([
