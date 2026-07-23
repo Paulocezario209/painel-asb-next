@@ -309,18 +309,21 @@ export const MANUAIS: Record<string, ManualTela> = {
   // ── WORKSPACE COMPRAS & ESTOQUE (lei Paulo 2026-07-10: toda tela tem manual) ──
   "/compras/resultados": {
     titulo: "Compras · Resultados",
-    oQueE: "Compras × Faturamento do mês: quanto entrou, quanto foi comprado, se o gasto cabe no teto de 54% — e a projeção de fechamento.",
+    oQueE: "Compras × Faturamento do mês: quanto entrou, quanto foi comprado, se o gasto cabe no teto de 54% — e a projeção de fechamento. Tudo na janela dia 01 → hoje, atualiza a cada faturamento.",
     fontes: [
-      "Faturado MTD: faturado por EMISSÃO (data de faturamento). Compara com as compras pela ENTRADA de mercadoria (data de entrada) — bases próximas, não idênticas.",
-      "Compras MTD (headline e % do semáforo) = ENTRADA REAL de mercadoria (NF+Recibo que entrou no período, ARES compras_entradas), líquida de devolução. Substitui a régua antiga 'pedido entregue' (que subcontava o mês corrente — pedido pode receber sem virar 'entregue'). 'A chegar'/comprometido vive só na projeção, não no realizado.",
-      "Semáforo % Compras/Faturado: 🟢 ≤54% · 🟡 54–65% · 🔴 >65% (teto mantido; o painel fica mais amarelo porque a medição ficou correta — não é bug).",
-      "PROJEÇÃO (regra 10/07): Faturado proj = ritmo dos dias úteis COMPLETOS (até ontem) × dias úteis do mês; Compras proj = 54% desse faturado (ORÇAMENTO). Pedidos realizados NÃO projetam nada — PCP lança o mês de uma vez e criaria falso ritmo. 'Disponível' = orçamento − comprometido.",
-      "Cards do ano: v_resultado_mensal — mesma régua ÚNICA (entrada real por data de entrada, líquida de devolução); batem com o card do topo. Drilldown do dia (fornecedores/produtos) segue por PEDIDO de compra.",
+      "CARD 'Faturado MTD' = faturamento real do período (todos os pedidos faturados = NF+Recibo, líquido de frete, exclui cancelado/excluído/deletado), por data de faturamento, dia 01 → hoje. Atualiza sozinho conforme o dia fatura.",
+      "CARD 'Compras MTD' = ENTRADA REAL de mercadoria (NF+Recibo que ENTROU no período, ARES compras_entradas), líquida de devolução, dia 01 → hoje. É o realizado — pedido só conta quando a mercadoria entra. Chip 'A chegar' = comprometido − já recebido (informativo).",
+      "CARD '% Compras / Faturado' = Compras MTD ÷ Faturado MTD. Semáforo: 🟢 ≤54% · 🟡 54–65% · 🔴 >65% (teto 54% mantido). Amarelo aqui é a medição correta, não bug.",
+      "PROJEÇÃO — 'Faturado Projetado' = ritmo dos dias úteis COMPLETOS (até ontem) × dias úteis do mês. 'Orçamento Compras (54%)' = 54% desse faturado (teto). 'Comprometido Até Hoje' = pedidos cuja ENTREGA cai NESTE mês (previsão/entrega real no mês), ≠cancelado, não-deletado — pedido lançado agora pra entregar mês que vem NÃO conta aqui, conta no mês da entrega. 'Disponível' = Orçamento − Comprometido. '% Comprometido' e 'Ritmo da Meta' = indicadores.",
+      "TILES 'Ano 2026' = v_resultado_mensal, mesma régua ÚNICA (entrada real por data de entrada, líquida de devolução); batem com o card do topo.",
+      "GRÁFICOS — 'Faturado real × meta diária' (realizado vs meta por dia) · 'Margem dia a dia' (% compras/faturado por dia, compras = entrada real) · 'Faturado por tipo' (NF × Recibo do MTD).",
+      "CALENDÁRIO do mês = semáforo de margem por dia (compras = entrada real). Clique num dia abre 'Fornecedores do dia' = ENTRADA REAL (NF/Recibo entregue): reconcilia CENTAVO com a célula, NÃO lista pedido pendente/aprovado/cancelado/deletado. Detalhe por produto na entrada ainda não existe (só NF/Recibo por fornecedor).",
     ],
     comoUsar: [
-      "O 'Disponível p/ comprar' é a bússola do PCP: verde = ainda cabe; vermelho = comprometido já estourou o orçamento do ritmo atual.",
-      "A projeção oscila mais no início do mês (amostra pequena) e converge no fim — comportamento validado no backtest de junho (proj 879k × real 878k).",
-      "Clique num dia do calendário para ver os pedidos de compra e o % de margem daquele dia.",
+      "Os 3 cards do topo (Faturado/Compras/%) e a projeção usam a MESMA janela (01 → hoje) e a mesma régua NF+Recibo — batem entre si e travam no fim do dia após o faturamento.",
+      "'Disponível p/ comprar' é a bússola do PCP: verde = ainda cabe no teto; vermelho = comprometido (só entregas DESTE mês) já passou do orçamento do ritmo atual.",
+      "A projeção oscila mais no início do mês (amostra pequena) e converge no fim — validado no backtest de junho (proj 879k × real 878k).",
+      "Clique num dia do calendário para ver os fornecedores (por NF/Recibo entregue) e o % de margem daquele dia.",
     ],
   },
   "/compras/estoque": {
