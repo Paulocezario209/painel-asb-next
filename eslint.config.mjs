@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Testes mecanicos (node:test + tsx) — rodam via `npm test`, fora do lint do Next.
+    "tests/**",
   ]),
 ]);
 
