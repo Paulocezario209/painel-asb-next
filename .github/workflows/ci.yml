@@ -1,0 +1,33 @@
+name: Painel CI (gates)
+
+# Gates do painel. NAO deploya (EasyPanel faz via integracao GitHub apos merge na main).
+# Roda em PR para main + manual. NAO roda no push da feature branch.
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Lint + build (Next.js)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install
+        run: npm ci
+      - name: Lint (advisory)
+        continue-on-error: true
+        run: npm run lint
+      - name: Build (gate — placeholders NEXT_PUBLIC; GIT_SHA do commit)
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+          GIT_SHA: ${{ github.sha }}
+        run: npm run build

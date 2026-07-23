@@ -11,6 +11,9 @@ ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
 ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
 ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
 
+# Padrao do control-plane: SHA do build via ARG GIT_SHA (EasyPanel "Build Arguments"); default 'unknown'.
+ARG GIT_SHA=unknown
+
 RUN npm run build
 
 FROM node:20-alpine AS runner
@@ -18,6 +21,9 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
+# GIT_SHA no runtime para /api/version (mesmo padrao do CP)
+ARG GIT_SHA=unknown
+ENV GIT_SHA=${GIT_SHA}
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
