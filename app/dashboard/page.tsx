@@ -78,7 +78,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const mesNomeCurto = MESES_PT[_mm - 1];            // ex.: "julho"
   const mesNome = `${mesNomeCurto} de ${_my}`;       // ex.: "julho de 2026"
   // KPI VOLUME — criados (mês + vendedor)
-  let qTotal = supabase.from("ai_sdr_leads").select("*", { count: "exact", head: true }).eq("is_test", false).or("routing_team.is.null,routing_team.neq.fora_de_rota");  // DEBT-167 4
+  let qTotal = supabase.from("ai_sdr_leads").select("*", { count: "exact", head: true }).eq("is_test", false).or("routing_team.is.null,and(routing_team.neq.fora_de_rota,routing_team.neq.fornecedor)");  // DEBT-167 4
   if (vend) qTotal = qTotal.eq("routing_team", vend);
   if (mesIni && mesFimEx) qTotal = qTotal.gte("created_at", mesIni).lt("created_at", mesFimEx);
   // ALERTA — agendamento pendente (DEBT-208: definição CANÔNICA via v_handoff_pendentes;
@@ -86,16 +86,16 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   let qHandoff = supabase.from("v_handoff_pendentes").select("id, phone, restaurant_name, qual_stage, first_order_at, routing_team, handoff_at, handoff_confirmed, weekly_volume_kg, city, product_groups, human_active, followup_eligible, next_followup_at, horas_desde_handoff");
   if (vend) qHandoff = qHandoff.eq("routing_team", vend);
   // KPI VOLUME — qualificados (mês + vendedor)
-  let qQual = supabase.from("ai_sdr_leads").select("*", { count: "exact", head: true }).eq("is_test", false).gte("qual_stage", 7).or("routing_team.is.null,routing_team.neq.fora_de_rota");  // DEBT-167 4
+  let qQual = supabase.from("ai_sdr_leads").select("*", { count: "exact", head: true }).eq("is_test", false).gte("qual_stage", 7).or("routing_team.is.null,and(routing_team.neq.fora_de_rota,routing_team.neq.fornecedor)");  // DEBT-167 4
   if (vend) qQual = qQual.eq("routing_team", vend);
   if (mesIni && mesFimEx) qQual = qQual.gte("created_at", mesIni).lt("created_at", mesFimEx);
   // KPI VOLUME — convertidos (SAFRA do mês: criados no mês + já com 1º pedido).
   // Padroniza o card com Total/Qualificados (mesma coorte) — antes contava all-time (misturava períodos).
-  let qConv = supabase.from("ai_sdr_leads").select("*", { count: "exact", head: true }).eq("is_test", false).not("first_order_at", "is", null).or("routing_team.is.null,routing_team.neq.fora_de_rota");
+  let qConv = supabase.from("ai_sdr_leads").select("*", { count: "exact", head: true }).eq("is_test", false).not("first_order_at", "is", null).or("routing_team.is.null,and(routing_team.neq.fora_de_rota,routing_team.neq.fornecedor)");
   if (vend) qConv = qConv.eq("routing_team", vend);
   if (mesIni && mesFimEx) qConv = qConv.gte("created_at", mesIni).lt("created_at", mesFimEx);
   // LISTA — alertas/ABC/cidades (estado "agora", só vendedor)
-  let qLeads = supabase.from("ai_sdr_leads").select("id, phone, restaurant_name, qual_stage, first_order_at, routing_team, handoff_at, handoff_confirmed, weekly_volume_kg, city, product_groups, human_active, followup_eligible, next_followup_at, created_at").eq("is_test", false).or("routing_team.is.null,routing_team.neq.fora_de_rota");  // DEBT-167 4: ABC+topCities+urgentA+alertas (+created_at p/ sparklines)
+  let qLeads = supabase.from("ai_sdr_leads").select("id, phone, restaurant_name, qual_stage, first_order_at, routing_team, handoff_at, handoff_confirmed, weekly_volume_kg, city, product_groups, human_active, followup_eligible, next_followup_at, created_at").eq("is_test", false).or("routing_team.is.null,and(routing_team.neq.fora_de_rota,routing_team.neq.fornecedor)");  // DEBT-167 4: ABC+topCities+urgentA+alertas (+created_at p/ sparklines)
   if (vend) qLeads = qLeads.eq("routing_team", vend);
 
   const [

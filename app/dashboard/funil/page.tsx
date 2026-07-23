@@ -29,7 +29,7 @@ const getFunilContagem = unstable_cache(
       .from("ai_sdr_leads")
       .select("id, funnel_stage")   // id: cruza com v_carteira_360.lead_id (Convertido via ARES)
       .eq("is_test", false)
-      .or("routing_team.is.null,routing_team.neq.fora_de_rota");   // DEBT-167 4: Total Leads sem fora_de_rota (cone já excluía)
+      .or("routing_team.is.null,and(routing_team.neq.fora_de_rota,routing_team.neq.fornecedor)");   // DEBT-167 4: Total Leads sem fora_de_rota (cone já excluía)
     return data ?? [];
   },
   ["funil-contagem-etapas"],

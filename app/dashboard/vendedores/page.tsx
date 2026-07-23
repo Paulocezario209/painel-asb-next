@@ -73,7 +73,7 @@ export default async function VendedoresPage() {
       .select("phone, restaurant_name, city, routing_team, funnel_stage, handoff_at, seller_first_reply_at, first_order_at, weekly_volume_kg, created_at, is_test")
       .eq("is_test", false)
       .not("routing_team", "is", null)
-      .neq("routing_team", "fora_de_rota"),  // Saneamento (Paulo 2026-07-20): fora_de_rota é terminal (só no card "Fora de Rota"), nunca na tela do vendedor. Antes só sobrevivia por acidente da whitelist VENDOR_ORDER — agora explícito.
+      .neq("routing_team", "fora_de_rota").neq("routing_team", "fornecedor"),  // Saneamento (Paulo 2026-07-20): fora_de_rota é terminal (só no card "Fora de Rota"), nunca na tela do vendedor. Antes só sobrevivia por acidente da whitelist VENDOR_ORDER — agora explícito. DEBT-331: + fornecedor (terminal, desvio p/ gestor).
     getLeadScoreMap(),  // ETAPA 4: score por phone (v_lead_score via service role)
   ]);
 

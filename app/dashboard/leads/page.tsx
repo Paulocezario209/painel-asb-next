@@ -76,7 +76,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
     const ini = `${mesCoorte}-01`;
     const fim = `${m === 12 ? y + 1 : y}-${String(m === 12 ? 1 : m + 1).padStart(2, "0")}-01`;
     leadsQuery = leadsQuery.gte("created_at", ini).lt("created_at", fim)
-      .or("routing_team.is.null,routing_team.neq.fora_de_rota");   // fora-de-rota tem aba própria (view=fora_de_rota)
+      .or("routing_team.is.null,and(routing_team.neq.fora_de_rota,routing_team.neq.fornecedor)");   // fora-de-rota tem aba própria (view=fora_de_rota)
     if (vendCoorte) leadsQuery = leadsQuery.eq("routing_team", vendCoorte);
     if (marcoCoorte === "qualificados") leadsQuery = leadsQuery.gte("qual_stage", 7);
     if (marcoCoorte === "handoff") leadsQuery = leadsQuery.not("handoff_at", "is", null);
@@ -86,10 +86,10 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
     // Drill por etapa (posição atual): mesmos filtros do card do Funil (sem fora-de-rota),
     // filtrando pelos stages CRUS que projetam na etapa canônica (rawStagesFor) p/ o número bater.
     leadsQuery = leadsQuery
-      .or("routing_team.is.null,routing_team.neq.fora_de_rota")
+      .or("routing_team.is.null,and(routing_team.neq.fora_de_rota,routing_team.neq.fornecedor)")
       .in("funnel_stage", rawStagesFor(etapaCoorte!));
   } else {
-    leadsQuery = leadsQuery.or("routing_team.is.null,routing_team.neq.fora_de_rota");   // DEBT-167 4: ATIVOS não lista fora_de_rota (NULL-safe)
+    leadsQuery = leadsQuery.or("routing_team.is.null,and(routing_team.neq.fora_de_rota,routing_team.neq.fornecedor)");   // DEBT-167 4: ATIVOS não lista fora_de_rota (NULL-safe)
     // Fase 1 / DEBT-286/287: convertido E perdido NÃO são lead ativo. Convertido vive
     // na Carteira (v_carteira_360); perdido vive na aba Perdidos. Sem excluir os dois,
     // contam em Ativos por presença dupla (perdido inflava 143→268). NAO_ATIVO_STAGES =
@@ -186,7 +186,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
   const naoAtivoInList = `(${NAO_ATIVO_STAGES.join(",")})`;
   const [cAtivos, cParados, cPerdidos, cFora, cEsgotada] = await Promise.all([
     supabase.from("ai_sdr_leads").select("phone", { count: "exact", head: true })
-      .eq("is_test", false).or("routing_team.is.null,routing_team.neq.fora_de_rota")
+      .eq("is_test", false).or("routing_team.is.null,and(routing_team.neq.fora_de_rota,routing_team.neq.fornecedor)")
       .is("first_order_at", null).not("funnel_stage", "in", naoAtivoInList)
       .or(`next_followup_at.is.null,followup_phase.not.in.(${CADENCIA_PHASES.join(",")})`)  // DEBT-288: cadência vive no Follow-up
       .gte("created_at", startTodayUtc),  // DEBT-290: Leads SDR = entrou hoje

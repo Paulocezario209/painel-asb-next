@@ -28,7 +28,7 @@ export default async function ComercialPage() {
 
   const [cLeadsHoje, cParados, cPerdidos, cHandoff, cPipeline, cClientes, cRecompra] = await Promise.all([
     supabase.from("ai_sdr_leads").select("phone", { count: "exact", head: true })
-      .eq("is_test", false).or("routing_team.is.null,routing_team.neq.fora_de_rota")
+      .eq("is_test", false).or("routing_team.is.null,and(routing_team.neq.fora_de_rota,routing_team.neq.fornecedor)")
       .is("first_order_at", null).not("funnel_stage", "in", naoAtivo).or(cad).gte("created_at", hoje),
     supabase.from("v_leads_parados").select("id", { count: "exact", head: true }),
     supabase.from("ai_sdr_leads").select("phone", { count: "exact", head: true })
@@ -36,7 +36,7 @@ export default async function ComercialPage() {
     supabase.from("ai_sdr_leads").select("phone", { count: "exact", head: true })
       .eq("is_test", false).not("handoff_at", "is", null).is("handoff_confirmed", false),
     supabase.from("ai_sdr_leads").select("phone", { count: "exact", head: true })
-      .eq("is_test", false).or("routing_team.is.null,routing_team.neq.fora_de_rota")
+      .eq("is_test", false).or("routing_team.is.null,and(routing_team.neq.fora_de_rota,routing_team.neq.fornecedor)")
       .is("first_order_at", null).in("funnel_stage", PIPELINE_STAGES),
     supabase.from("v_carteira_360").select("ares_pessoa_id", { count: "exact", head: true })
       .in("customer_status", ["ativo", "atencao"]),

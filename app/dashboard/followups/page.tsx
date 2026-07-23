@@ -44,7 +44,7 @@ export default async function FollowupsPage({ searchParams }: { searchParams: Pr
       .eq("is_test", false)
       .eq("followup_eligible", true)
       .eq("human_active", false)
-      .or("routing_team.is.null,routing_team.neq.fora_de_rota")
+      .or("routing_team.is.null,and(routing_team.neq.fora_de_rota,routing_team.neq.fornecedor)")
       .lte("next_followup_at", new Date().toISOString()),
     // Alerta: elegíveis sem data (mesmos guards)
     supabase
@@ -53,7 +53,7 @@ export default async function FollowupsPage({ searchParams }: { searchParams: Pr
       .eq("is_test", false)
       .eq("followup_eligible", true)
       .eq("human_active", false)
-      .or("routing_team.is.null,routing_team.neq.fora_de_rota")
+      .or("routing_team.is.null,and(routing_team.neq.fora_de_rota,routing_team.neq.fornecedor)")
       .is("next_followup_at", null),
     // DEBT-288: board de cadência — leads que a automação nutre (mesmo conjunto que Ativos exclui).
     supabase
@@ -68,7 +68,7 @@ export default async function FollowupsPage({ searchParams }: { searchParams: Pr
   // followup_history não tem routing_team → filtra client-side via leadsMap.
   const rows = (followups ?? []).filter(r => {
     const rt = leadsMap[r.phone]?.routing_team;
-    return rt == null || rt !== "fora_de_rota";
+    return rt == null || (rt !== "fora_de_rota" && rt !== "fornecedor");  // DEBT-331: fornecedor é terminal (desvio p/ gestor)
   });
 
   // ── KPIs ──────────────────────────────────────────────────────────────────
