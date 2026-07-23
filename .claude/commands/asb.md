@@ -1,6 +1,6 @@
 ---
 description: Abre a sessão ASB — renderiza o briefing vivo (estado + realidade), carrega governança e reporta. Primeiro comando de toda sessão.
-allowed-tools: Bash(git fetch:*), Bash(timeout:*), Bash(echo:*), Bash(python3 scripts/asb_render_brief.py:*)
+allowed-tools: Bash(cd:*), Bash(git fetch:*), Bash(timeout:*), Bash(echo:*), Bash(python3 scripts/asb_render_brief.py:*)
 ---
 
 # /asb — Abertura de sessão ASB (briefing vivo + governança)
@@ -12,9 +12,9 @@ allowed-tools: Bash(git fetch:*), Bash(timeout:*), Bash(echo:*), Bash(python3 sc
 ## 1. Atualidade (read-only) + briefing vivo
 Atualiza as refs (sem pull/merge; falha de rede = `FETCH_STATUS=UNKNOWN`, nunca sucesso) e renderiza o estado real:
 
-!`GIT_TERMINAL_PROMPT=0 timeout 8 git fetch origin --prune --quiet >/dev/null 2>&1 && echo FETCH_STATUS=OK || echo FETCH_STATUS=UNKNOWN`
+!`cd "${CLAUDE_PROJECT_DIR:-.}" && GIT_TERMINAL_PROMPT=0 timeout 8 git fetch origin --prune --quiet >/dev/null 2>&1 && echo FETCH_STATUS=OK || echo FETCH_STATUS=UNKNOWN`
 
-!`python3 scripts/asb_render_brief.py`
+!`cd "${CLAUDE_PROJECT_DIR:-.}" && python3 scripts/asb_render_brief.py`
 
 ## 2. Governança (ALMA + guardiões)
 - O hook `SessionStart` já injetou LEI ÚNICA + GENESIS + 5 perguntas + Guardião 2b (sincronia). Honrar.
