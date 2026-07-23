@@ -447,15 +447,17 @@ export const MANUAIS: Record<string, ManualTela> = {
   },
   "/marketing/atribuicao": {
     titulo: "Marketing · Atribuição",
-    oQueE: "Atribuição completa de campanhas Meta/Google por campanha, conjunto e anúncio — gasto, funil (leads → qualificados → agendamentos → propostas → convertidos), receita e as réguas CPL/CPQL/CAC/ROAS/taxa. Mais o tratamento de gasto sem retorno e a classificação canal/jornada.",
+    oQueE: "Atribuição completa de campanhas Meta/Google por campanha, conjunto e anúncio — gasto, funil (leads → qualificados → agendamentos → propostas → convertidos), receita e as réguas CPL/CPQL/CAC/ROAS/taxa. Mais o card de Orgânico Direto (captado pelo vendedor), o tratamento de gasto sem retorno e a classificação canal/jornada.",
     fontes: [
       "Por campanha/anúncio: v_cac_campanha_full / v_cac_anuncio_full (gasto de paid_media_daily; funil de ai_sdr_leads — qualificado=qual_stage≥7, agendamento=vendedor respondeu, proposta=funil≥proposta, convertido=1º pedido).",
       "Réguas: CPL=gasto÷leads · CPQL=gasto÷qualificados · CAC=gasto÷convertidos · ROAS=receita÷gasto (receita aprox. do lead, DEBT-256).",
+      "Orgânico Direto (vendedor): v_organico_vendedor — cliente cujo 1º faturamento é do mês, SEM lead SDR (não veio pelo bot), que apareceu no inbound da instância WhatsApp do vendedor (vendor_messages) na janela [mês−3, fim do mês]. Régua 'virou cliente' = zero ruído, reconcilia com a carteira. NÃO escreve origem_* nem entra no funil do bot — superfície de leitura paralela (DEBT-329).",
       "Gasto sem retorno (2 baldes SEPARADOS): v_gasto_sem_retorno = anúncio com gasto e 0 lead; v_leads_nao_atribuidos = lead de canal pago sem ad_id. Nunca somar os dois.",
       "Canal/Jornada: v_lead_canal_jornada — channel (Meta/Google/Organic/Referral/Direct) × journey (CTWA Direct / LP to WhatsApp / Direct). 'Site LP' nunca é canal isolado quando há origem paga.",
     ],
     comoUsar: [
       "Ache o anúncio de ROAS < 1× (vermelho): gasta mais do que retorna — candidato a pausar ou revisar criativo.",
+      "Card 'Orgânico Direto' = cliente novo que fechou sem passar pelo bot (indicação/boca-a-boca/prospecção do vendedor). Explica a diferença entre os convertidos pagos e os clientes novos da carteira — é receita que a mídia paga não captura.",
       "Bloco 'Anúncios com gasto e 0 lead' = dinheiro sem qualquer retorno; 'Leads sem anúncio identificado' = tem lead, mas faltou o código (tag na LP), não a campanha.",
       "CPQL alto com CPL baixo = atrai lead barato mas não qualifica; o vazamento está no meio do funil.",
     ],

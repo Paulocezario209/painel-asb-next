@@ -4,7 +4,7 @@ import { theme } from "@/lib/theme";
 import { RED, GREEN, YELLOW } from "@/lib/marketing/ui";
 import { S } from "@/app/dashboard/lib/dashboard-tokens";
 import { SectionHead, KpiCard } from "@/app/dashboard/lib/ui";
-import { Megaphone, Target, TriangleAlert, Route, DollarSign, Users } from "lucide-react";
+import { Megaphone, Target, TriangleAlert, Route, DollarSign, Users, Store } from "lucide-react";
 
 export type CampanhaRow = {
   campaign_id: string; campaign_name: string; anuncios: number; gasto_total: number;
@@ -21,12 +21,20 @@ export type AnuncioRow = {
 export type SemRetornoRow = { ad_id: string; ad_name: string | null; campaign_name: string | null; gasto_total: number };
 export type NaoAtribRow = { origem_canal: string; leads_sem_ad: number; qualificados: number; convertidos: number };
 export type CanalJornadaCell = { channel: string; journey: string; count: number };
+export type OrganicoVendedorRow = {
+  ares_pessoa_id: number; fantasia: string | null; nome: string | null; mes: string;
+  receita: number | null; vendedor: string | null; evolution_instance: string | null;
+  primeiro_contato: string | null; canal: string;
+};
 
 const brl = (n: number | null | undefined) =>
   n == null ? "—" : "R$ " + Math.round(n).toLocaleString("pt-BR");
 const num = (n: number | null | undefined) => (n == null ? "—" : n.toLocaleString("pt-BR"));
 const pct = (n: number | null | undefined) => (n == null ? "—" : (n * 100).toFixed(1).replace(".", ",") + "%");
 const roasFmt = (n: number | null | undefined) => (n == null ? "—" : n.toFixed(2).replace(".", ",") + "×");
+const MES_PT = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+const mesLabel = (m: string | null) => { if (!m) return "—"; const d = m.split("-"); return `${MES_PT[+d[1] - 1]}/${d[0].slice(2)}`; };
+const diaMes = (s: string | null) => { if (!s) return "—"; const d = s.slice(0, 10).split("-"); return `${d[2]}/${d[1]}`; };
 
 // cores alinhadas à paleta canônica do workspace (CANAL_COR de lib/marketing/ui):
 // Meta = vermelho · Google = navy-light · orgânico = verde · indicação/referral = amarelo.
@@ -59,10 +67,10 @@ function ScrollX({ children }: { children: React.ReactNode }) {
 }
 
 export function AtribuicaoClient({
-  campanhas, anuncios, semRetorno, naoAtrib, canalJornada,
+  campanhas, anuncios, semRetorno, naoAtrib, canalJornada, organico,
 }: {
   campanhas: CampanhaRow[]; anuncios: AnuncioRow[]; semRetorno: SemRetornoRow[];
-  naoAtrib: NaoAtribRow[]; canalJornada: CanalJornadaCell[];
+  naoAtrib: NaoAtribRow[]; canalJornada: CanalJornadaCell[]; organico: OrganicoVendedorRow[];
 }) {
   const tot = campanhas.reduce(
     (a, c) => ({
@@ -74,15 +82,70 @@ export function AtribuicaoClient({
   const roasGeral = tot.gasto > 0 ? tot.receita / tot.gasto : null;
   const gastoSemRetorno = semRetorno.reduce((a, r) => a + (r.gasto_total || 0), 0);
 
+  // orgânico direto (vendedor) — DEBT-329. Régua: cliente novo faturado do mês, sem lead SDR,
+  // que apareceu no inbound da instância do vendedor. Mês atual = último mês presente na view.
+  const orgMeses = [...new Set(organico.map((r) => r.mes))].sort();
+  const orgMesAtual = orgMeses.length ? orgMeses[orgMeses.length - 1] : null;
+  const orgDoMes = organico
+    .filter((r) => r.mes === orgMesAtual)
+    .sort((a, b) => (b.receita || 0) - (a.receita || 0));
+  const orgCount = orgDoMes.length;
+  const orgReceita = orgDoMes.reduce((a, r) => a + (r.receita || 0), 0);
+  const orgTrend = orgMeses.map((m) => ({ m, n: organico.filter((r) => r.mes === m).length }));
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {/* KPIs herói */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: 14 }}>
         <KpiCard label="Gasto Atribuído" value={brl(tot.gasto)} Icon={DollarSign} accent="#4d7cff" />
         <KpiCard label="Leads" value={num(tot.leads)} Icon={Users} accent="#22c55e" />
-        <KpiCard label="Convertidos" value={num(tot.conv)} Icon={Target} accent="#a78bfa" note="1º pedido" />
+        <KpiCard label="Convertidos" value={num(tot.conv)} Icon={Target} accent="#a78bfa" note="1º pedido (pago)" />
         <KpiCard label="ROAS Geral" value={roasFmt(roasGeral)} Icon={Megaphone} accent="#f59e0b" note="receita ÷ gasto (aprox.)" />
+        <KpiCard label="Orgânico Direto" value={num(orgCount)} Icon={Store} accent="#22c55e" note="cliente novo via vendedor" />
       </div>
+
+      {/* Orgânico direto — captado na instância do vendedor (sem passar pelo bot) — DEBT-329 */}
+      <Card>
+        <SectionHead Icon={Store} color="#22c55e" title="Orgânico Direto — Captado pelo Vendedor"
+          desc="Cliente novo que chegou direto no WhatsApp do vendedor, sem passar pelo bot SDR" />
+        <div style={{ display: "flex", gap: 28, flexWrap: "wrap", alignItems: "baseline", marginBottom: 16 }}>
+          <div>
+            <div style={{ ...S.value, fontSize: 30 }}>{num(orgCount)}</div>
+            <div style={{ ...S.label }}>clientes novos · {mesLabel(orgMesAtual)}</div>
+          </div>
+          <div>
+            <div style={{ ...S.value, fontSize: 22, color: GREEN }}>{brl(orgReceita)}</div>
+            <div style={{ ...S.label }}>receita 1º pedido</div>
+          </div>
+          <div style={{ display: "flex", gap: 14, marginLeft: "auto" }}>
+            {orgTrend.map((t) => (
+              <div key={t.m} style={{ textAlign: "center" }}>
+                <div style={{ fontFamily: theme.font.num, fontSize: 17, color: t.m === orgMesAtual ? "#fff" : "#8b93a7" }}>{t.n}</div>
+                <div style={{ ...S.label, fontSize: 9 }}>{mesLabel(t.m)}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <ScrollX>
+          <table style={{ borderCollapse: "collapse", width: "100%", minWidth: 520 }}>
+            <thead><tr><Th>Estabelecimento</Th><Th>Vendedor</Th><Th>1º contato</Th><Th right>Receita</Th></tr></thead>
+            <tbody>
+              {orgDoMes.length === 0 && <tr><Td color="#83879a">Sem captação orgânica direta neste mês.</Td></tr>}
+              {orgDoMes.map((r) => (
+                <tr key={r.ares_pessoa_id}>
+                  <Td>{r.fantasia || r.nome || "—"}</Td>
+                  <Td>{r.vendedor || "—"}</Td>
+                  <Td>{diaMes(r.primeiro_contato)}</Td>
+                  <Td right mono color="#22c55e">{brl(r.receita)}</Td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </ScrollX>
+        <p style={{ ...S.muted, marginTop: 8, fontSize: 11 }}>
+          Régua: 1º faturamento do mês · sem lead SDR · apareceu no inbound da instância do vendedor. Não entra no funil do bot nem rebaixa atribuição paga.
+        </p>
+      </Card>
 
       {/* #10 — por campanha */}
       <Card>

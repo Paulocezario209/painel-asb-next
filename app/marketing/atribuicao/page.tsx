@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { PageHead } from "@/app/dashboard/lib/ui";
 import { theme } from "@/lib/theme";
-import { AtribuicaoClient, type CampanhaRow, type AnuncioRow, type SemRetornoRow, type NaoAtribRow, type CanalJornadaCell } from "./atribuicao-client";
+import { AtribuicaoClient, type CampanhaRow, type AnuncioRow, type SemRetornoRow, type NaoAtribRow, type CanalJornadaCell, type OrganicoVendedorRow } from "./atribuicao-client";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
@@ -24,16 +24,20 @@ export default async function AtribuicaoPage() {
   await supabase.auth.getUser(); // hidrata sessão (views GRANT authenticated)
 
   const s = await svc();
-  const [camp, anun, sem, nao, cj] = await Promise.all([
+  const [camp, anun, sem, nao, cj, org] = await Promise.all([
     s.from("v_cac_campanha_full").select("*").order("gasto_total", { ascending: false }).limit(200),
     s.from("v_cac_anuncio_full").select("*").order("gasto_total", { ascending: false }).limit(300),
     s.from("v_gasto_sem_retorno").select("*").order("gasto_total", { ascending: false }).limit(200),
     s.from("v_leads_nao_atribuidos").select("*").order("leads_sem_ad", { ascending: false }).limit(50),
     s.from("v_lead_canal_jornada").select("channel, journey").limit(5000),
+    // orgânico direto (captado na instância do vendedor, sem passar pelo bot) — DEBT-329
+    s.from("v_organico_vendedor")
+      .select("ares_pessoa_id, fantasia, nome, mes, receita, vendedor, evolution_instance, primeiro_contato, canal")
+      .order("mes", { ascending: true }).limit(2000),
   ]);
 
   const erro = camp.error?.message || anun.error?.message || cj.error?.message
-    || sem.error?.message || nao.error?.message || null;
+    || sem.error?.message || nao.error?.message || org.error?.message || null;
 
   // agrega canal×jornada no server (client fica leve)
   const cjMap = new Map<string, number>();
@@ -62,6 +66,7 @@ export default async function AtribuicaoPage() {
         semRetorno={(sem.data ?? []) as unknown as SemRetornoRow[]}
         naoAtrib={(nao.data ?? []) as unknown as NaoAtribRow[]}
         canalJornada={canalJornada}
+        organico={(org.data ?? []) as unknown as OrganicoVendedorRow[]}
       />
       <p style={{ color: "#e4e9f0", fontSize: 10, fontFamily: theme.font.label, textAlign: "right" }}>
         Gasto Meta 06:10 · Google 06:15 BRT · funil real-time. Receita atribuída ao lead de forma aproximada.
