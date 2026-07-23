@@ -200,7 +200,7 @@ export default async function ResultadosPage({
   const { data: projView } = isMesCorrente
     ? await supabase
         .from("v_projecao_fim_mes")
-        .select("proj_faturado, orcamento_compras, disponivel_compras, pct_comprometido")
+        .select("proj_faturado, orcamento_compras, disponivel_compras, pct_comprometido, compras_comprometido_mtd")
         .maybeSingle()
     : { data: null };
   let projFaturado: number;
@@ -227,6 +227,10 @@ export default async function ResultadosPage({
     pctComprometido = projFaturado > 0 ? Math.round((comprasMtd / projFaturado) * 1000) / 10 : 0;
   }
   const semProj = semaforoPct(pctComprometido);
+  // "Comprometido Até Hoje" = fonte ÚNICA = view v_projecao_fim_mes (régua ENTREGA-no-mês + is_deleted,
+  // DEBT-333). NÃO usar comprasMtd (compras_espelho por data_emissao) aqui, senão o tile diverge de
+  // Disponível/% (que já vêm da view). Fallback (view indisponível) = comprasMtd.
+  const comprometidoAteHoje = projView ? Number(projView.compras_comprometido_mtd) : comprasMtd;
 
   const labelS: React.CSSProperties = {
     fontSize: 9,
@@ -356,7 +360,7 @@ export default async function ResultadosPage({
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
             <StatTile label="Faturado Projetado" value={brl(projFaturado)} />
             <StatTile label="Orçamento Compras (54%)" value={brl(projCompras)} />
-            <StatTile label="Comprometido Até Hoje" value={brl(comprasMtd)} />
+            <StatTile label="Comprometido Até Hoje" value={brl(comprometidoAteHoje)} />
             <StatTile
               label="Disponível p/ Comprar"
               value={brl(disponivelCompras)}
