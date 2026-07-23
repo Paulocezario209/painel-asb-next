@@ -462,12 +462,13 @@ export const MANUAIS: Record<string, ManualTela> = {
   },
   "/marketing/funil-cac": {
     titulo: "Marketing · Funil & CAC",
-    oQueE: "O funil por canal (lead → qualificado → agendamento → convertido) com gasto, CAC por lead e custo por conversão de cada canal.",
+    oQueE: "O funil por canal (lead → qualificado → agendamento → convertido) com gasto, CAC por lead e custo por conversão de cada canal. O seletor de período define a JANELA (coorte por mês de atribuição): 'Acumulado' soma tudo desde 02/06; '1 mês' mostra só o mês corrente e reconcilia com a Visão Geral e com o funil do Comercial.",
     fontes: [
-      "Funil: v_funil_por_canal — qualificado = escada completa (qual_stage ≥ 7), agendamento = vendedor respondeu, convertido = 1º pedido.",
-      "Gasto/CAC/Custo por conversão: v_cac_por_canal. Conversão mensal: v_cac_mensal_canal.",
+      "Funil: v_funil_por_canal_mensal — coorte por mês de atribuição (bridge usa created_at); qualificado = qual_stage ≥ 7, agendamento = vendedor respondeu (seller_first_reply_at), convertido = 1º pedido. Gasto/CAC/conversão: v_cac_mensal_canal (mesma janela).",
+      "INCLUI fora-de-rota (você pagou por eles) — o funil do Comercial é só EM ROTA, então no '1 mês' os convertidos batem, mas o Marketing mostra alguns leads a mais.",
     ],
     comoUsar: [
+      "Escolha '1 mês' para comparar com o Comercial/Visão Geral; 'Acumulado' para o retrato de aquisição desde o início.",
       "Canal com CAC/lead baixo mas custo por conversão alto = funil vazando — veja em qual etapa ele perde.",
       "É o melhor lugar para decidir realocação de verba entre canais.",
     ],
