@@ -1,0 +1,54 @@
+name: Painel diag 401 (read-only, sem deploy)
+
+# Diagnostico READ-ONLY da origem do 401 do painel em producao.
+# Roda no PR (nao deploya, nao faz merge). Consulta a URL publica viva e imprime
+# SOMENTE cabecalhos seguros — NUNCA Authorization/Cookie/Set-Cookie/token/body/env.
+# Objetivo: comparar / (pagina) x /api/version (API) x /privacidade (publica) x
+# /api/health (API existente) para localizar de onde vem o 401.
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    name: HTTP probe (cabecalhos seguros)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sondar endpoints e imprimir so cabecalhos seguros
+        run: |
+          BASE="https://sdr-american-painelnext.cp0vsf.easypanel.host"
+          # Cabecalhos permitidos (whitelist). Tudo fora disso NAO e impresso.
+          SAFE='server|www-authenticate|location|content-type|x-powered-by|x-vercel|x-matched-path|x-nextjs|cache-control|via|cf-ray'
+          probe() {
+            local method="$1" path="$2"
+            echo "======================================================"
+            echo ">>> ${method} ${path}"
+            # -s silencioso, -o /dev/null descarta o BODY (nunca impresso),
+            # -D - manda so os headers para stdout; -X define o metodo.
+            # Filtramos por whitelist e cortamos qualquer valor apos os primeiros 120 chars.
+            code=$(curl -s -o /dev/null -D /tmp/h.txt -w '%{http_code}' \
+                     -X "${method}" --max-time 20 "${BASE}${path}" || echo "000")
+            echo "status: ${code}"
+            # status line + headers da whitelist, valores truncados; segredos jamais entram aqui
+            grep -iE "^(HTTP/|(${SAFE}):)" /tmp/h.txt | cut -c1-120 || true
+            rm -f /tmp/h.txt
+          }
+          # Pagina (espera redirect /login se sem sessao)
+          probe GET  /
+          probe HEAD /
+          # API de versao — ALVO do fix (deve virar 200 publico apos o deploy do fix)
+          probe GET  /api/version
+          probe HEAD /api/version
+          # Rota publica ja existente (controle: NAO deve exigir sessao)
+          probe GET  /privacidade
+          # Outra API existente (controle: deve ecoar o mesmo comportamento de /api/*)
+          probe GET  /api/health
+          echo "======================================================"
+          echo "Leitura: se / redireciona (3xx Location /login) e /api/* responde 401"
+          echo "com 'www-authenticate' AUSENTE + content-type application/json, a origem"
+          echo "e a APLICACAO (middleware proxy.ts), nao Basic Auth de infra (que traria"
+          echo "'www-authenticate: Basic'). Diagnostico, nunca fabrica sucesso."

@@ -2,6 +2,14 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function proxy(request: NextRequest) {
+  // /api/version: endpoint PUBLICO de deploy-health — retorna SOMENTE o SHA do build
+  // ({sha}), zero dado de negocio. Isento do guard de sessao/Supabase para que o
+  // verify-deploy (GitHub Actions) prove o SHA em producao sem auth. Mesma classe de
+  // excecao publica que /privacidade (LGPD) e o PDF de catalogo no matcher abaixo.
+  if (request.nextUrl.pathname === "/api/version") {
+    return NextResponse.next({ request });
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
