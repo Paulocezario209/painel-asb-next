@@ -38,9 +38,12 @@ export function FunilCacClient({ funilMensal, cacMensal }: { funilMensal: FunilM
   // default = Acumulado → mesmo número de sempre (zero regressão); mês reconcilia com Visão Geral/Comercial
   const [periodo, setPeriodo] = useState<PeriodoK>("all");
 
+  // UNIÃO dos meses de funil E de gasto — senão o "Acumulado" recorta o gasto aos meses
+  // com lead atribuído (SDR só atribui desde 02/06) e subconta o CAC. Ex.: instagram gastou
+  // jan-mar sem lead atribuído → gasto sumia e o CAC/lead vinha pela metade (bug vs Origem).
   const mesesOrdenados = useMemo(
-    () => Array.from(new Set(funilMensal.map(r => r.mes))).sort(),
-    [funilMensal],
+    () => Array.from(new Set([...funilMensal.map(r => r.mes), ...cacMensal.map(r => r.mes)])).sort(),
+    [funilMensal, cacMensal],
   );
   const janela = useMemo(() => {
     const nMeses = PERIODOS.find(p => p.k === periodo)!.meses;
