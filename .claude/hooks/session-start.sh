@@ -35,6 +35,23 @@ fi
 echo "AO ENCERRAR: varrer pendencias (deploy/merge/PRs/branches parados) e traze-las como PERGUNTA, nunca deixar mudas."
 echo "==============================================================================================="
 
+# ============ Consumidor do tripwire do SessionEnd (Design A, efemero) ============
+_FLAG="$(git rev-parse --git-path asb-session-end.flag 2>/dev/null || echo '')"
+if [ -n "${_FLAG}" ] && [ -f "${_FLAG}" ]; then
+  _TW="$(head -c 512 "${_FLAG}" 2>/dev/null)"
+  if printf '%s' "${_TW}" | grep -qE '^schema=1$' \
+     && _R=$(printf '%s\n' "${_TW}" | grep -m1 -oE '^reason=(clear|logout|prompt_input_exit|other|unknown)$' | cut -d= -f2) \
+     && _D=$(printf '%s\n' "${_TW}" | grep -m1 -oE '^dirty=[0-9]{1,9}$' | cut -d= -f2) \
+     && _U=$(printf '%s\n' "${_TW}" | grep -m1 -oE '^unpushed=[0-9]{1,9}$' | cut -d= -f2) \
+     && [ -n "${_R}" ] && [ -n "${_D}" ] && [ -n "${_U}" ]; then
+    echo "⚠️ FECHAMENTO ANTERIOR: dirty=${_D} · unpushed=${_U} · reason=${_R}. Reconcilie antes de iniciar trabalho novo."
+  else
+    echo "⚠️ TRIPWIRE_INVALID: flag de fechamento anterior malformado (descartado, conteudo nao exibido)."
+  fi
+  rm -f "${_FLAG}" 2>/dev/null || true
+  echo "-----------------------------------------------------------------------------------------------"
+fi
+
 # Bootstrap do Graphify (so REMOTO; e so se o script de build existir neste repo). Fail-open.
 if [ "${CLAUDE_CODE_REMOTE:-}" != "true" ]; then
   exit 0

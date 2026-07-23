@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "project": "Painel ASB (Next.js)",
+  "mission": "Superficie de leitura/gestao ASB: Comercial, Compras, Marketing sobre o espelho Supabase",
+  "origin": "Repo painel-asb-next (submodule do monorepo cursor-agentesdr-mcp); stack de governanca adotada do nucleo ASB",
+  "authority_source": "CLAUDE.md do painel + governanca ASB do monorepo sao SUPREMOS; este arquivo NUNCA os sobrepoe",
+  "global_prohibited_scope": [
+    "commitar .env ou segredo",
+    "deploy sem validacao visual (deploy do painel e manual no EasyPanel)",
+    "duplicar KPI/cabecalho a mao (usar o KIT app/dashboard/lib)"
+  ],
+  "autonomy_defaults": { "default_mode": "execute_and_report" },
+  "debt_log_ref": "docs/DEBT_LOG.md",
+  "updated_at": "2026-07-23T18:15:19+00:00"
+}

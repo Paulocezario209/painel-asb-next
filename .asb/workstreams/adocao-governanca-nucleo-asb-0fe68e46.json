@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "id": "adocao-governanca-nucleo-asb-0fe68e46",
+  "task_id": "adocao-governanca-nucleo-asb",
+  "branch": "main",
+  "status": "active",
+  "mission": "Adotar o nucleo de governanca ASB (guardioes, continuidade, briefing vivo, estado, autonomia) no painel sem sobrescrever os hooks proprios",
+  "origin": "Padronizacao aprovada por Paulo 2026-07-23; nucleo canonico vive em cursor-agentesdr-mcp",
+  "approved_scope": [
+    "Adicionar hooks genericos que faltavam: pre-compact.sh, session-end.sh, master-sync.sh",
+    "Adicionar scripts asb_probe.sh / asb_validate_state.py / asb_render_brief.py + .asb/schema",
+    "Consumidor do tripwire no session-start.sh proprio do painel (sem clobber)",
+    "Ligar PreCompact + SessionEnd + master-sync no settings.json",
+    "master-sync agnostico a branch default (painel = main)"
+  ],
+  "prohibited_scope": [
+    "sobrescrever os 3 hooks proprios do painel (session-start/preflight-gate/graphify-auto)",
+    "copiar o workstream continuidade-persistente do cursor como estado deste repo",
+    "deploy, migration ou alteracao funcional/visual do painel"
+  ],
+  "current_phase": "Nucleo de governanca instalado no painel; validacao e push",
+  "last_completed_step": "Hooks genericos + scripts + .asb + settings ligados; tripwire consumido no boot do painel",
+  "next_step": "Validar estado, testar hooks localmente e pushar na main do painel",
+  "completion_criteria": [
+    "asb_validate_state valida project.json e este workstream",
+    "renderer gera briefing vivo no painel",
+    "3 hooks proprios preservados byte a byte",
+    "master-sync FF-only detecta main como default"
+  ],
+  "decisions": [
+    {
+      "id": "D1",
+      "timestamp": "2026-07-23T19:27:52+00:00",
+      "decision": "Painel adota o nucleo generico ASB; alma (project.json/CLAUDE.md) permanece propria do painel",
+      "rationale": "padronizacao por nucleo comum, nunca copia cega; identidade por-repo preservada",
+      "authority": "paulo",
+      "evidence_refs": ["repo:cursor-agentesdr-mcp"]
+    }
+  ],
+  "execution_gate": {
+    "mode": "execute_and_report",
+    "reason": "Adocao de governanca autorizada por Paulo; reversivel e sem efeito funcional/deploy",
+    "approved_scope_only": true
+  },
+  "blockers": [],
+  "debts": [],
+  "evidence": [
+    { "type": "doc", "ref": "cursor-agentesdr-mcp/.claude/hooks", "note": "nucleo canonico da governanca ASB" }
+  ],
+  "updated_at": "2026-07-23T19:27:52+00:00"
+}
