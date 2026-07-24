@@ -15,7 +15,7 @@ Fonte de verdade dos dados é o **espelho** (sync do backend), não este repo.
 ## Limites de autonomia
 - Governança/estado (`.claude/`, `.asb/`, `scripts/asb_*`) = livre para manutenção técnica.
 - Tela/KPI/número: **nunca desenhar à mão** — compor com o KIT (`app/dashboard/lib/ui.tsx`).
-- **Deploy do painel é AUTOMÁTICO** (webhook GitHub do EasyPanel): `feature → PR → CI verde → merge main → auto-deploy`. Push na `main` **publica** (sem clique manual). Verificação por `/api/version` (navegador enquanto DEBT-334 aberto). Fonte: `docs/DEPLOY.md` + `docs/DEPLOY_AUTONOMY.md` do monorepo.
+- **Deploy do painel é AUTOMÁTICO** (webhook GitHub do EasyPanel): `feature → PR → CI verde → merge main → auto-deploy`. Push na `main` **publica** (sem clique manual). **Verificação AUTOMÁTICA** do SHA vivo pelo GitHub Actions no domínio custom `painel.americansteakbrasil.com/api/version` (DEBT-334 RESOLVIDA). Fonte: `docs/DEPLOY.md` + `docs/DEPLOY_AUTONOMY.md` do monorepo.
 
 ## Fontes canônicas
 - Governança/mecanismo: núcleo ASB herdado de `cursor-agentesdr-mcp` (guardiões, continuidade).

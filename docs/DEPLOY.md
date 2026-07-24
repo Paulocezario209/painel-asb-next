@@ -28,14 +28,17 @@ então o mecanismo é comprovado). Se o serviço não passar `GIT_SHA`, `/api/ve
 > `401 JSON` — o `matcher` cobria `/api/version`. **Não** era Basic Auth nem infra EasyPanel; era a
 > aplicação. Corrigido isentando **apenas** o path exato `/api/version`.
 
-## Validação pública (`.github/workflows/verify-deploy.yml`, roda no push da main)
-- **Sucesso obrigatório:** `GET /api/version` → **200** (aplicação no ar; endpoint público, sem auth).
-- **SHA best-effort:** compara `.sha` ao commit; `unknown`/mismatch → `::warning::`, nunca inventa sucesso.
+## Validação pública AUTOMÁTICA (`.github/workflows/verify-deploy.yml`, roda no push da main)
+Prova de SHA **automática** pelo **domínio custom** `https://painel.americansteakbrasil.com/api/version`
+(alcançável pelo GitHub Actions — **DEBT-334 RESOLVIDA**). Gate estrito, polling limitado + `timeout-minutes`:
+- **Sucesso obrigatório:** TLS válido · `GET /api/version?deploy_sha=<github.sha>` → **200** · JSON válido ·
+  **`sha` completo == `github.sha`**.
+- **Rejeita** (workflow vermelho): `unknown` · SHA antigo/abreviado · redirect(login) · `401/403/404` · timeout ·
+  `200` sem JSON válido. Falha → evidência sanitizada, **não** dispara novo deploy, aponta rollback (`git revert`).
+- Saída sanitizada: só status + comparação de SHA; nunca headers/cookies/token.
 
-> **⚠️ Limitação atual (DEBT — B6):** o runner do GitHub Actions **não alcança** `*.easypanel.host`
-> deste serviço (diag deu `curl 000`/timeout). Enquanto isso, a prova de SHA pós-deploy é **manual/navegador**
-> (a LPS prova via domínio custom Cloudflare `fornecedor.americansteakbrasil.com`). Débito aberto para
-> expor a verificação por um domínio alcançável pelo GitHub Actions — **sem** criar Basic Auth.
+> O domínio custom é **aditivo** (o `*.easypanel.host` segue no ar) e **agnóstico** para o app: a exceção
+> pública de `/api/version` no `proxy.ts` vale para qualquer host que aponte ao serviço `sdr-american-painelnext`.
 
 ## Rollback
 - **EasyPanel:** re-deploy da versão anterior (UI/API do serviço — login do Paulo).
