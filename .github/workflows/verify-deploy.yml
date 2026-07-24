@@ -1,8 +1,9 @@
-name: Painel verify deploy (validacao publica)
+name: Painel verify deploy (dominio custom)
 
-# Roda APOS merge na main (quando o EasyPanel auto-deploya). Runner tem rede aberta.
-# Sucesso = /api/version publico confirma a aplicacao (200). SHA best-effort (nao depende de
-# build-arg nao comprovado): se .sha == commit prova; se 'unknown' apenas avisa.
+# Roda APOS merge na main (o EasyPanel auto-deploya). Prova AUTOMATICA do SHA vivo pelo dominio
+# custom painel.americansteakbrasil.com (alcancavel pelo GitHub Actions; resolve DEBT-334).
+# Sucesso = /api/version publico responde 200 com JSON {"sha": <github.sha COMPLETO>}.
+# Falha => workflow VERMELHO, evidencia sanitizada, SEM disparar novo deploy, aponta rollback.
 on:
   push:
     branches: [main]
@@ -13,26 +14,49 @@ permissions:
 
 jobs:
   verify:
-    name: Validacao publica + SHA best-effort
+    name: SHA vivo == merge (dominio custom)
     runs-on: ubuntu-latest
+    timeout-minutes: 12          # timeout TOTAL explicito do job
     steps:
-      - name: Aguardar EasyPanel publicar e validar /api/version
+      - name: Provar SHA vivo pelo dominio custom (TLS valido, JSON, sha completo == github.sha)
+        env:
+          BASE: https://painel.americansteakbrasil.com
+          EXPECTED: ${{ github.sha }}
         run: |
-          BASE="https://sdr-american-painelnext.cp0vsf.easypanel.host"
-          up=""
-          for i in $(seq 1 40); do
-            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "$BASE/api/version" || echo 000)
-            echo "[$i] GET /api/version -> $code"
-            if [ "$code" = "200" ]; then up=1; break; fi
-            sleep 15
+          set -u
+          MAX=30; SLEEP=12       # polling LIMITADO: ~6-13 min ate o timeout do job
+          # cache-buster + endpoint publico (so o SHA). SEM -k: TLS invalido = falha.
+          url="${BASE}/api/version?deploy_sha=${EXPECTED}"
+          ok=""; last_code=""; last_sha=""
+          for i in $(seq 1 "$MAX"); do
+            # -o corpo (so {"sha":...}); -w codigo. NUNCA capturamos headers/cookies.
+            code=$(curl -sS -o /tmp/ver.json -w '%{http_code}' --max-time 15 "$url" 2>/dev/null || echo 000)
+            last_code="$code"
+            if [ "$code" = "200" ]; then
+              # exigir JSON valido + chave sha; imprime SOMENTE o sha (nunca o corpo cru)
+              sha=$(python3 -c "import json;print(json.load(open('/tmp/ver.json'))['sha'])" 2>/dev/null)
+              if [ $? -ne 0 ] || [ -z "$sha" ]; then
+                echo "[$i] 200 mas JSON invalido/sem sha -> aguardando"
+              else
+                last_sha="$sha"
+                if [ "$sha" = "$EXPECTED" ]; then ok=1; break; fi
+                # rejeita unknown / sha antigo / abreviado: so passa igualdade EXATA e COMPLETA
+                echo "[$i] sha vivo=${sha:0:12}... != esperado ${EXPECTED:0:12}... -> aguardando novo build"
+              fi
+            else
+              # 30x (redirect/login), 401/403/404, 000 (timeout/TLS) -> nunca sucesso; segue ate timeout
+              echo "[$i] HTTP $code -> aguardando"
+            fi
+            rm -f /tmp/ver.json
+            sleep "$SLEEP"
           done
-          if [ -z "$up" ]; then echo "::error::/api/version nao respondeu 200 apos ~10min"; exit 1; fi
-          echo "✅ /api/version no ar (200)"
-          sha="$(curl -sf --max-time 10 "$BASE/api/version" | python3 -c "import sys,json;print(json.load(sys.stdin).get('sha',''))" 2>/dev/null || true)"
-          if [ "$sha" = "${GITHUB_SHA}" ]; then
-            echo "✅ SHA em producao == $sha (prova completa)"
-          elif [ -z "$sha" ] || [ "$sha" = "unknown" ]; then
-            echo "::warning::App no ar, mas /api/version sem SHA (config build-arg GIT_SHA no servico). Deploy confirmado por URL."
-          else
-            echo "::warning::SHA em producao ($sha) != esperado (${GITHUB_SHA}) — deploy propagando; URL ja no ar."
+          if [ -z "$ok" ]; then
+            {
+              echo "verify FALHOU: /api/version nao confirmou sha==${EXPECTED} em ~$((MAX*SLEEP))s."
+              echo "ultimo HTTP=${last_code}; ultimo sha vivo=${last_sha:0:12}... (esperado ${EXPECTED:0:12}...)"
+              echo "Nao dispara novo deploy. Rollback: 'git revert ${EXPECTED}' na main -> auto-deploy da reversao."
+            } | tee /tmp/evidencia.txt
+            echo "::error::verify falhou — SHA vivo != merge (ver evidencia sanitizada acima)"
+            exit 1
           fi
+          echo "✅ SHA vivo == merge (${EXPECTED}) confirmado AUTOMATICAMENTE pelo dominio custom."
