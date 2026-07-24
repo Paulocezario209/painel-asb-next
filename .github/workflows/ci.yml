@@ -25,6 +25,8 @@ jobs:
       - name: Lint (advisory)
         continue-on-error: true
         run: npm run lint
+      - name: Test (gate — node:test/tsx; middleware + /api/version)
+        run: npm test
       - name: Build (gate — placeholders NEXT_PUBLIC; GIT_SHA do commit)
         env:
           NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co

@@ -1,7 +1,24 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+/**
+ * Rota publica EXATA, isenta do guard de sessao/Supabase: apenas `/api/version`
+ * (retorna SOMENTE o SHA do build). Match EXATO de proposito — `/api/version/<x>`
+ * NAO herda a isencao e nenhuma outra `/api/*` vira publica. Extraida para ser
+ * testavel sem mock de rede (ver tests/middleware.test.ts).
+ */
+export function isPublicVersionRoute(pathname: string): boolean {
+  return pathname === "/api/version";
+}
+
 export async function proxy(request: NextRequest) {
+  // /api/version: PUBLICO (so o SHA), resolvido ANTES de qualquer init/consulta Supabase —
+  // essa rota nao usa sessao, nao acessa banco, nao le cookie e nao expoe usuario. Mesma
+  // classe de excecao publica que /privacidade (LGPD) e o PDF de catalogo no matcher abaixo.
+  if (isPublicVersionRoute(request.nextUrl.pathname)) {
+    return NextResponse.next({ request });
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
