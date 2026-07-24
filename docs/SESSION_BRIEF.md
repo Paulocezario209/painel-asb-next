@@ -18,7 +18,7 @@ Rode **/asb**. Ele renderiza o BRIEFING VIVO (intenção + progresso + realidade
 | Identidade / missão | `.asb/project.json` |
 | Status computável | `scripts/asb_probe.sh` (AO VIVO) |
 | Governança/mecanismo | núcleo ASB herdado de `cursor-agentesdr-mcp` |
-| Deploy | **manual** no EasyPanel (push não publica) |
+| Deploy | **automático** (webhook EasyPanel): merge `main` com CI verde → publica. Ver `docs/DEPLOY.md` |
 
 ## Notas humanas de handoff
 _(Só o que NÃO cabe no estado estruturado. Curto. Sem status computável.)_

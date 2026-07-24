@@ -15,7 +15,7 @@ Fonte de verdade dos dados é o **espelho** (sync do backend), não este repo.
 ## Limites de autonomia
 - Governança/estado (`.claude/`, `.asb/`, `scripts/asb_*`) = livre para manutenção técnica.
 - Tela/KPI/número: **nunca desenhar à mão** — compor com o KIT (`app/dashboard/lib/ui.tsx`).
-- **Deploy do painel é MANUAL** (Paulo clica "Deploy" no EasyPanel). Push **não** publica.
+- **Deploy do painel é AUTOMÁTICO** (webhook GitHub do EasyPanel): `feature → PR → CI verde → merge main → auto-deploy`. Push na `main` **publica** (sem clique manual). Verificação por `/api/version` (navegador enquanto DEBT-334 aberto). Fonte: `docs/DEPLOY.md` + `docs/DEPLOY_AUTONOMY.md` do monorepo.
 
 ## Fontes canônicas
 - Governança/mecanismo: núcleo ASB herdado de `cursor-agentesdr-mcp` (guardiões, continuidade).
@@ -28,7 +28,7 @@ O guardião `PreToolUse` (`preflight-gate.sh`) trava isso antes do write.
 
 ## Guardiões (mecanismo, não memória)
 `SessionStart` (governança + sincronia) · `PreToolUse` (trava segredo) ·
-`Stop` (`graphify-auto` + `master-sync` FF-only na `main`) · `PreCompact` · `SessionEnd` (tripwire).
+`Stop` (`graphify-auto`) · `PreCompact` · `SessionEnd` (tripwire). *(master-sync DESATIVADO neste repo: push na `main` já dispara produção — integração só por PR com CI verde, ver `docs/DEPLOY.md`.)*
 
 ## Regra de verdade
 **Realidade vence narrativa.** Divergência nota × Git/probe → a realidade vence. UNKNOWN permanece UNKNOWN.
