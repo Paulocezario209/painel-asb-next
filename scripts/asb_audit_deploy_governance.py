@@ -1,18 +1,22 @@
 #!/usr/bin/env python3
 """asb_audit_deploy_governance — verificador READ-ONLY de coerencia da governanca de deploy.
 
-NUCLEO COMUM + CONFIG LOCAL. O script e identico entre repos; a configuracao das fontes vivas
-e da fonte canonica vem SEMPRE do proprio repositorio: `scripts/deploy_governance.config.json`.
-Escaneia APENAS o proprio repo (REPO_ROOT = dois niveis acima deste arquivo). NUNCA procura
-repositorios irmaos. NAO escreve, NAO commita, NAO instala, NAO acessa segredo.
+NUCLEO COMUM + CONFIG LOCAL. O script e identico entre repos; a configuracao das fontes vivas,
+da canonica e do verify-workflow vem SEMPRE do proprio repositorio:
+`scripts/deploy_governance.config.json`. Escaneia APENAS o proprio repo (REPO_ROOT = dois niveis
+acima). NUNCA procura repositorios irmaos. NAO escreve, NAO commita, NAO instala, NAO acessa segredo.
 
-Regras:
-  - Detecta em fontes VIVAS (prosa-regra do repo) expressoes de deploy JA SUPERADAS
-    (deploy manual, "Paulo clica Deploy", CP_LIVE_SHA=UNKNOWN, EASYPANEL_DEPLOY_URL, Basic Auth
-    afirmada, "push na main nao rebuilda"). Linha marcada como HISTORICA/negada e permitida.
-  - Valida asseroes POSITIVAS na fonte canonica local (config: canon_asserts).
-  - Historico explicito (sessoes/decisoes/roadmap/_archive/DEBT_LOG/workstreams) NAO entra
-    nas fontes vivas — e memoria, nao regra viva; a config lista so a prosa-regra viva.
+O que valida:
+  1. Fontes VIVAS (prosa-regra) sem expressoes de deploy JA SUPERADAS (deploy manual, "Paulo clica
+     Deploy", CP_LIVE_SHA=UNKNOWN, EASYPANEL_DEPLOY_URL, Basic Auth afirmada). Linha marcada como
+     HISTORICA/negada e permitida.
+  2. Asseroes POSITIVAS ESTAVEIS na canonica (config: canon_asserts) — NUNCA um SHA de deploy volatil.
+  3. (opcional) O verify-workflow do repo tem as PROPRIEDADES certas (config: verify_workflow):
+     consulta o dominio custom correto; exige 200; valida JSON; compara SHA DINAMICAMENTE com
+     github.sha; tem timeout/polling; NAO aceita 'unknown' como sucesso.
+
+Principio: status computavel (SHA de deploy) NAO e fonte canonica estatica. O auditor NUNCA exige
+que documentos vivos contenham um SHA de deploy.
 
 Saida: curta. exit 0 = coerente; exit 1 = contradicao OU config/fonte ausente/ilegivel (fail-closed).
 """
@@ -26,7 +30,6 @@ REPO_ROOT = os.path.dirname(HERE)
 CONFIG_REL = "scripts/deploy_governance.config.json"
 
 # --- NUCLEO COMUM: padroes universais (nao dependem de repo) ---------------------------------
-# (nome, regex, permite_negacao). permite_negacao=True: "sem/nao/nunca <x>" e legitimo.
 FORBIDDEN = [
     ("deploy_manual", re.compile(r"deploy\s+é\s+manual", re.I), False),
     ("paulo_clica_deploy", re.compile(r"paulo[^\n]{0,25}?clic\w*[^\n]{0,15}?deploy", re.I), False),
@@ -47,6 +50,8 @@ NEG_MARKERS = [
     "sem ", "não ", "nao ", "nunca", "jamais", "corrigido",
     "confirmou ausência", "confirmou ausencia", "removid", "hipotese", "hipótese",
 ]
+# Tokens que, se co-ocorrerem com 'unknown' numa linha do verify-workflow, indicam ACEITE de unknown.
+VERIFY_ACCEPT_TOKENS = ("ok=1", "::warning", "success", "best-effort", "prova completa")
 
 
 def read(path):
@@ -55,7 +60,6 @@ def read(path):
 
 
 def _normalize(line):
-    """minuscula + remove enfase markdown (* _ `) para marcadores casarem em texto em negrito."""
     return "".join(ch for ch in line.lower() if ch not in "*_`")
 
 
@@ -69,7 +73,6 @@ def line_allowed(line, allow_neg):
 
 
 def load_config():
-    """Config LOCAL obrigatoria. Ausente/invalida -> fail-closed (retorna None)."""
     p = os.path.join(REPO_ROOT, CONFIG_REL)
     if not os.path.exists(p):
         print(f"FAIL-CLOSED: config local ausente: {CONFIG_REL}")
@@ -85,6 +88,7 @@ def load_config():
     cfg.setdefault("live_rule_files", [])
     cfg.setdefault("live_rule_globs", [])
     cfg.setdefault("canon_asserts", [])
+    cfg.setdefault("verify_workflow", None)
     return cfg
 
 
@@ -103,16 +107,53 @@ def gather_files(cfg):
     return files
 
 
+SHA_RE = re.compile(r"\b[0-9a-f]{7,40}\b")
+
+
+def check_verify_workflow(cfg):
+    """Valida as PROPRIEDADES do verify-workflow (nao um SHA). Opcional (repos sem verify pulam)."""
+    vw = cfg.get("verify_workflow")
+    if not vw:
+        return [], []
+    viol, err = [], []
+    path, domain = vw.get("path"), vw.get("domain")
+    if not path or not domain:
+        return ["[verify] config.verify_workflow sem 'path'/'domain'"], []
+    p = os.path.join(REPO_ROOT, path)
+    if not os.path.exists(p):
+        return [], [f"FAIL-CLOSED: verify_workflow ausente: {path}"]
+    try:
+        txt = read(p)
+    except OSError as exc:
+        return [], [f"FAIL-CLOSED: nao consegui ler verify_workflow {path}: {exc}"]
+    low = txt.lower()
+    if domain.lower() not in low:
+        viol.append(f"[verify] {path}: nao consulta o dominio custom '{domain}'")
+    if "github.sha" not in low:
+        viol.append(f"[verify] {path}: nao compara DINAMICAMENTE com github.sha")
+    if "timeout-minutes" not in low:
+        viol.append(f"[verify] {path}: sem timeout total (timeout-minutes)")
+    if "200" not in txt:
+        viol.append(f"[verify] {path}: nao exige HTTP 200")
+    if not any(m in txt for m in ("json.load", "['sha']", '"sha"')):
+        viol.append(f"[verify] {path}: nao valida JSON (sha)")
+    # rejeita unknown: nenhuma linha pode ACEITAR 'unknown' como sucesso
+    for i, line in enumerate(txt.splitlines(), 1):
+        ll = line.lower()
+        if "unknown" in ll and any(a in ll for a in VERIFY_ACCEPT_TOKENS):
+            viol.append(f"[verify] {path}:{i}: 'unknown' aceito como sucesso (permite unknown)")
+    return viol, err
+
+
 def main():
     cfg = load_config()
     if cfg is None:
         return 1
 
     canon = cfg["canonical"]
-    violations = []
-    errors = []
+    violations, errors = [], []
 
-    # 1) fonte canonica local (fail-closed se faltar/ilegivel)
+    # 1) canonica local (fail-closed se faltar/ilegivel)
     canon_path = os.path.join(REPO_ROOT, canon)
     if not os.path.exists(canon_path):
         print(f"FAIL-CLOSED: fonte canonica ausente: {canon}")
@@ -123,6 +164,10 @@ def main():
         print(f"FAIL-CLOSED: nao consegui ler {canon}: {exc}")
         return 1
     for label, needle in cfg["canon_asserts"]:
+        # guarda-corpo: config NUNCA deve cravar um SHA de deploy como assercao viva
+        if SHA_RE.fullmatch(needle.strip().lower()):
+            violations.append(f"[canon] assert '{label}' exige um SHA fixo ('{needle}') — proibido (status computavel != fonte canonica)")
+            continue
         if needle.lower() not in canon_txt:
             violations.append(f"[canon] {canon}: assercao ausente -> {label} (esperava '{needle}')")
 
@@ -130,13 +175,18 @@ def main():
     for rel in gather_files(cfg):
         try:
             text = read(os.path.join(REPO_ROOT, rel))
-        except OSError as exc:  # fail-closed: fonte configurada ilegivel
+        except OSError as exc:
             errors.append(f"FAIL-CLOSED: nao consegui ler fonte viva {rel}: {exc}")
             continue
         for i, line in enumerate(text.splitlines(), 1):
             for name, rx, allow_neg in FORBIDDEN:
                 if rx.search(line) and not line_allowed(line, allow_neg):
                     violations.append(f"[{name}] {rel}:{i}: {line.strip()[:100]}")
+
+    # 3) verify-workflow (opcional) — valida propriedades, nunca um SHA
+    vviol, verr = check_verify_workflow(cfg)
+    violations += vviol
+    errors += verr
 
     if errors:
         for e in errors:
@@ -146,9 +196,10 @@ def main():
         print(f"CONTRADICOES: {len(violations)}")
         for v in violations:
             print(" -", v)
-        print(f"\nFonte canonica local: {canon}. Corrija as fontes vivas ou marque como historico.")
+        print(f"\nFonte canonica local: {canon}. Corrija as fontes vivas/verify ou marque como historico.")
         return 1
-    print(f"OK: governanca de deploy coerente com {canon} ({len(gather_files(cfg))} fontes vivas; config local).")
+    vw = " + verify-workflow" if cfg.get("verify_workflow") else ""
+    print(f"OK: governanca de deploy coerente com {canon} ({len(gather_files(cfg))} fontes vivas{vw}; config local).")
     return 0
 
 

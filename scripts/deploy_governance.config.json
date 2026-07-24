@@ -11,5 +11,10 @@
     ["webhook citado", "webhook"],
     ["easypanel citado", "easypanel"],
     ["merge na main citado", "merge na main"]
-  ]
+  ],
+  "_nota_verify": "Valida PROPRIEDADES do verify-workflow (dominio custom, 200, JSON, github.sha dinamico, timeout, rejeita unknown). NUNCA um SHA de deploy.",
+  "verify_workflow": {
+    "path": ".github/workflows/verify-deploy.yml",
+    "domain": "painel.americansteakbrasil.com"
+  }
 }
