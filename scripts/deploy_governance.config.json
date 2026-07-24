@@ -1,0 +1,15 @@
+{
+  "_comment": "Config LOCAL do verificador de governanca de deploy (painel-asb-next). Nucleo comum = scripts/asb_audit_deploy_governance.py (identico ao do monorepo). So descreve as fontes vivas DESTE repo; nunca procura repos irmaos. Canonica local = docs/DEPLOY.md.",
+  "canonical": "docs/DEPLOY.md",
+  "live_rule_files": [
+    "CLAUDE.md",
+    "docs/SESSION_BRIEF.md"
+  ],
+  "live_rule_globs": [],
+  "canon_asserts": [
+    ["auto-deploy citado", "auto-deploy"],
+    ["webhook citado", "webhook"],
+    ["easypanel citado", "easypanel"],
+    ["merge na main citado", "merge na main"]
+  ]
+}
