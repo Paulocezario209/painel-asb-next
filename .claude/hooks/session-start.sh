@@ -6,7 +6,21 @@
 #   (2) aponta a fonte única, (3) põe a LEI ÚNICA + 5 perguntas + autonomia na frente do agente.
 # G1 (trava segredo/.env) é UNIVERSAL e vale aqui igual. Idempotente + fail-open.
 set -uo pipefail
-cd "${CLAUDE_PROJECT_DIR:-.}" 2>/dev/null || exit 0
+# ---- Resolucao ROBUSTA da raiz (independe de CLAUDE_PROJECT_DIR e do CWD) ----
+# 1) auto-localizacao pelo proprio caminho do hook ($0) — deterministica: a invocacao
+#    (settings.json) passa o caminho ABSOLUTO ja resolvido pelo asb_resolve_root.sh;
+# 2) fallback CLAUDE_PROJECT_DIR valido; 3) fallback resolver por evidencia (fail-closed).
+# SessionStart e FAIL-OPEN: sem raiz nunca derruba a sessao (exit 0). Sem hardcode.
+_hk_here="$(cd -- "$(dirname -- "$0")" 2>/dev/null && pwd -P || true)"
+_hk_root=""
+if [ -n "${_hk_here}" ] && [ -f "${_hk_here}/../../scripts/asb_render_brief.py" ]; then
+  _hk_root="$(cd -- "${_hk_here}/../.." && pwd -P)"
+elif [ -n "${CLAUDE_PROJECT_DIR:-}" ] && [ -f "${CLAUDE_PROJECT_DIR%/}/scripts/asb_render_brief.py" ]; then
+  _hk_root="$(cd -- "${CLAUDE_PROJECT_DIR}" && pwd -P)"
+elif [ -n "${_hk_here}" ] && [ -x "${_hk_here}/../../scripts/asb_resolve_root.sh" ]; then
+  _hk_root="$("${_hk_here}/../../scripts/asb_resolve_root.sh" 2>/dev/null || true)"
+fi
+cd "${_hk_root:-${CLAUDE_PROJECT_DIR:-.}}" 2>/dev/null || exit 0
 
 _REPO=$(basename "$(git rev-parse --show-toplevel 2>/dev/null || pwd)")
 echo ">>> PROJETO ATIVO: ${_REPO}  (órgão do corpo ASB)  —  confira que é o repo certo antes de agir. <<<"

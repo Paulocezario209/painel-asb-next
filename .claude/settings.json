@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/session-start.sh\"",
+            "command": "bash -c 's=scripts/asb_resolve_root.sh; if [ -n \"${CLAUDE_PROJECT_DIR:-}\" ] && [ -f \"${CLAUDE_PROJECT_DIR%/}/$s\" ]; then R=\"$(cd \"$CLAUDE_PROJECT_DIR\" && pwd -P)\"; else f=; for c in \"$(git rev-parse --show-toplevel 2>/dev/null)\" ./*/ .; do [ -n \"$c\" ] && [ -f \"${c%/}/$s\" ] && { f=\"${c%/}/$s\"; break; }; done; R=\"$([ -n \"$f\" ] && bash \"$f\")\"; fi; [ -n \"$R\" ] && exec bash \"$R/.claude/hooks/session-start.sh\"'",
             "timeout": 120
           }
         ]
