@@ -423,6 +423,7 @@ export const MANUAIS: Record<string, ManualTela> = {
     comoUsar: [
       "Compare o CAC entre canais no mesmo mês — canal caro sustentado pede revisão de criativo ou verba.",
       "Canais: instagram (ctwa) · google · site (lp) · organico · indicacao. Parte dos leads chega sem atribuição (DEBT-119) — o gasto deles aparece na tela Anúncios, bloco 'sem retorno'.",
+      "Total desta tela é MENOR que o do Funil CAC de propósito (DEBT-347): o Funil inclui o bucket 'pré-captura (bridge)' (compra confirmada via ARES sem nenhuma atribuição) — aqui não entra, porque não dá pra calcular CAC de quem não tem canal.",
     ],
   },
   "/marketing/anuncios": {
