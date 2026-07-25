@@ -1,7 +1,7 @@
 "use client";
 
 import { theme } from "@/lib/theme";
-import { RED, GREEN, YELLOW } from "@/lib/marketing/ui";
+import { GREEN, CANAL_COR, MUT } from "@/lib/marketing/ui";
 import { S } from "@/app/dashboard/lib/dashboard-tokens";
 import { SectionHead, KpiCard } from "@/app/dashboard/lib/ui";
 import { Megaphone, Target, TriangleAlert, Route, DollarSign, Users, Store } from "lucide-react";
@@ -35,17 +35,6 @@ const roasFmt = (n: number | null | undefined) => (n == null ? "—" : n.toFixed
 const MES_PT = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
 const mesLabel = (m: string | null) => { if (!m) return "—"; const d = m.split("-"); return `${MES_PT[+d[1] - 1]}/${d[0].slice(2)}`; };
 const diaMes = (s: string | null) => { if (!s) return "—"; const d = s.slice(0, 10).split("-"); return `${d[2]}/${d[1]}`; };
-
-// cores alinhadas à paleta canônica do workspace (CANAL_COR de lib/marketing/ui):
-// Meta = vermelho · Google = navy-light · orgânico = verde · indicação/referral = amarelo.
-// (as chaves seguem os valores reais de v_lead_canal_jornada.channel, em inglês.)
-const CH_COLOR: Record<string, string> = {
-  "Meta Ads": RED,
-  "Google Ads": theme.colors.chartNavyLight,
-  Organic: GREEN,
-  Referral: YELLOW,
-  Direct: "#83879a",
-};
 
 function Th({ children, right }: { children: React.ReactNode; right?: boolean }) {
   return <th style={{ ...S.label, fontSize: 10, textAlign: right ? "right" : "left", padding: "8px 10px", borderBottom: "1px solid var(--asb-border)", whiteSpace: "nowrap" }}>{children}</th>;
@@ -264,8 +253,8 @@ export function AtribuicaoClient({
         <SectionHead Icon={Route} color="#22c55e" title="Canal · Jornada" desc="Como o lead chegou (channel × journey)" />
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
           {canalJornada.map((c) => (
-            <div key={`${c.channel}-${c.journey}`} style={{ ...S.card, padding: "14px 16px", borderTop: `3px solid ${CH_COLOR[c.channel] ?? "#83879a"}` }}>
-              <div style={{ fontSize: 12.5, fontWeight: 700, color: "#fff", fontFamily: theme.font.label }}>{c.channel}</div>
+            <div key={`${c.channel}-${c.journey}`} style={{ ...S.card, padding: "14px 16px", borderTop: `3px solid ${CANAL_COR[c.channel] ?? MUT}` }}>
+              <div style={{ fontSize: 12.5, fontWeight: 700, color: "#fff", fontFamily: theme.font.label, letterSpacing: ".04em", textTransform: "uppercase" }}>{c.channel}</div>
               <div style={{ fontSize: 11.5, color: "#aeb7cc", fontFamily: theme.font.label, marginTop: 1 }}>{c.journey}</div>
               <div style={{ ...S.value, fontSize: 26, marginTop: 8 }}>{num(c.count)}</div>
             </div>

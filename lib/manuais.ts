@@ -458,7 +458,7 @@ export const MANUAIS: Record<string, ManualTela> = {
       "Réguas: CPL=gasto÷leads · CPQL=gasto÷qualificados · CAC=gasto÷convertidos · ROAS=receita÷gasto (receita aprox. do lead, DEBT-256).",
       "Orgânico Direto (vendedor): v_organico_vendedor — cliente cujo 1º faturamento é do mês, SEM lead SDR (não veio pelo bot), que apareceu no inbound da instância WhatsApp do vendedor (vendor_messages) na janela [mês−3, fim do mês]. Régua 'virou cliente' = zero ruído, reconcilia com a carteira. NÃO escreve origem_* nem entra no funil do bot — superfície de leitura paralela (DEBT-329).",
       "Gasto sem retorno (2 baldes SEPARADOS): v_gasto_sem_retorno = anúncio com gasto e 0 lead; v_leads_nao_atribuidos = lead de canal pago sem ad_id. Nunca somar os dois.",
-      "Canal/Jornada: v_lead_canal_jornada — channel (Meta/Google/Organic/Referral/Direct) × journey (CTWA Direct / LP to WhatsApp / Direct). 'Site LP' nunca é canal isolado quando há origem paga.",
+      "Canal/Jornada: v_lead_canal_jornada — channel (instagram (ctwa)/google/site (lp)/organico/indicacao/direto, mesma taxonomia de Origem dos Leads e Funil CAC) × journey (CTWA Direct / LP to WhatsApp / Direct). 'site (lp)' É canal próprio mesmo com origem paga — corrigido DEBT-349/350/351 (campanha Meta objetivo=trafego_site manda o clique pra LP antes do WhatsApp).",
     ],
     comoUsar: [
       "Ache o anúncio de ROAS < 1× (vermelho): gasta mais do que retorna — candidato a pausar ou revisar criativo.",
