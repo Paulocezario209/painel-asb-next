@@ -14,7 +14,9 @@ import { RED, GREEN, YELLOW, MUT, GRID, fmtBRLc, fmtMes, tooltipStyle, axisStyle
 // coorte por mês de atribuição (bridge usa created_at) — soma no cliente conforme a janela
 export type FunilMensalRow = {
   canal: string; mes: string;
-  leads_total: number; qualificados_real: number; agendamentos: number; convertidos: number;
+  leads_total: number; qualificados_real: number; agendamentos: number;
+  agendamentos_pos_qualificacao: number; agendamentos_bypass_humano: number;
+  convertidos: number;
 };
 export type CacMensalRow = {
   canal: string; mes: string; leads: number; convertidos: number; gasto_total: number;
@@ -52,19 +54,23 @@ export function FunilCacClient({ funilMensal, cacMensal }: { funilMensal: FunilM
 
   // Funil por canal na JANELA (soma as coortes dos meses selecionados); pct recomputado sobre a soma
   const funil = useMemo(() => {
-    const m = new Map<string, { leads: number; qualif: number; agend: number; conv: number }>();
+    const m = new Map<string, { leads: number; qualif: number; agend: number; agendPos: number; agendBypass: number; conv: number }>();
     for (const r of funilMensal) {
       if (!janela.has(r.mes)) continue;
-      const cur = m.get(r.canal) ?? { leads: 0, qualif: 0, agend: 0, conv: 0 };
+      const cur = m.get(r.canal) ?? { leads: 0, qualif: 0, agend: 0, agendPos: 0, agendBypass: 0, conv: 0 };
       cur.leads += Number(r.leads_total ?? 0);
       cur.qualif += Number(r.qualificados_real ?? 0);
       cur.agend += Number(r.agendamentos ?? 0);
+      cur.agendPos += Number(r.agendamentos_pos_qualificacao ?? 0);
+      cur.agendBypass += Number(r.agendamentos_bypass_humano ?? 0);
       cur.conv += Number(r.convertidos ?? 0);
       m.set(r.canal, cur);
     }
     return Array.from(m.entries()).map(([canal, v]) => ({
       canal,
-      leads_total: v.leads, qualificados_real: v.qualif, agendamentos: v.agend, convertidos: v.conv,
+      leads_total: v.leads, qualificados_real: v.qualif, agendamentos: v.agend,
+      agendamentos_pos_qualificacao: v.agendPos, agendamentos_bypass_humano: v.agendBypass,
+      convertidos: v.conv,
       pct_qualificacao_real: v.leads > 0 ? v.qualif / v.leads : null,
       pct_handoff: v.leads > 0 ? v.agend / v.leads : null,
       pct_conversao: v.leads > 0 ? v.conv / v.leads : null,
@@ -99,17 +105,23 @@ export function FunilCacClient({ funilMensal, cacMensal }: { funilMensal: FunilM
       leads: a.leads + f.leads_total,
       qualificados: a.qualificados + f.qualificados_real,  // gate real qual_stage>=7
       agendamentos: a.agendamentos + f.agendamentos,
+      agendamentosPosQualificacao: a.agendamentosPosQualificacao + f.agendamentos_pos_qualificacao,
+      agendamentosBypass: a.agendamentosBypass + f.agendamentos_bypass_humano,
       convertidos: a.convertidos + f.convertidos,
     }),
-    { leads: 0, qualificados: 0, agendamentos: 0, convertidos: 0 },
+    { leads: 0, qualificados: 0, agendamentos: 0, agendamentosPosQualificacao: 0, agendamentosBypass: 0, convertidos: 0 },
   ), [funil]);
 
-  // FIX2: estágios do funil p/ FunnelVisual (afunila; pct vs etapa anterior)
+  // FIX2 + DEBT-346 (2026-07-25): o funil visual usa SÓ agendamentos_pos_qualificacao (subconjunto
+  // de Qualificados por construção — qual_stage>=7 AND seller_first_reply_at) — isso garante
+  // afunilamento MONOTÔNICO DE VERDADE, sem depender do truque de funnelWidth fixo. O bypass
+  // (pedido explícito de humano, DEBT-155) não entra no funil mas é mostrado como estatística
+  // separada logo abaixo — nunca escondido, só não empilhado numa etapa que ele não completou.
   const funnelStages: FunnelStage[] = useMemo(() => {
     const base = [
       { label: "Leads", count: agg.leads },
       { label: "Qualificados", count: agg.qualificados },
-      { label: "Agendamentos", count: agg.agendamentos },
+      { label: "Agendamentos", count: agg.agendamentosPosQualificacao },
       { label: "Convertidos", count: agg.convertidos },
     ];
     const N = base.length;
@@ -174,6 +186,13 @@ export function FunilCacClient({ funilMensal, cacMensal }: { funilMensal: FunilM
             <FunnelVisual data={funnelStages} />
           </div>
         )}
+        {agg.agendamentosBypass > 0 && (
+          <div style={{ ...S.card, background: "rgba(212,160,23,.08)", borderLeft: `3px solid ${YELLOW}`, padding: "10px 14px", marginTop: 10 }}>
+            <span style={{ color: YELLOW, fontFamily: theme.font.num, fontWeight: 700 }}>+{agg.agendamentosBypass}</span>
+            <span style={{ color: "#c8d8e8", fontFamily: theme.font.label, fontSize: 11 }}> agendamento{agg.agendamentosBypass > 1 ? "s" : ""} via pedido direto ao vendedor</span>
+            <span style={{ color: MUT, fontFamily: theme.font.label, fontSize: 11 }}> — pularam a escada de qualificação (lead pediu humano explicitamente). Não entram no funil acima porque não completaram Qualificados, mas chegaram ao vendedor de verdade. Total de agendamentos = {agg.agendamentos} ({agg.agendamentosPosQualificacao} pós-qualificação + {agg.agendamentosBypass} bypass).</span>
+          </div>
+        )}
         <p style={{ color: MUT, fontSize: 9, fontFamily: theme.font.label, marginTop: 8 }}>
           Impressões/Cliques não estão em <code>v_funil_por_canal_mensal</code> (vêm das views de ads Meta) — o funil inicia em Leads.
         </p>
@@ -192,6 +211,7 @@ export function FunilCacClient({ funilMensal, cacMensal }: { funilMensal: FunilM
                 <th style={th}>Leads</th>
                 <th style={th}>Qualif.</th>
                 <th style={th}>Agendamento</th>
+                <th style={th} title="Agendamentos que pularam a qualificação — pedido explícito de humano (DEBT-155)">↳ Bypass</th>
                 <th style={th}>Convert.</th>
                 <th style={th}>% Qualif.</th>
                 <th style={th}>% Agendamento</th>
@@ -210,6 +230,7 @@ export function FunilCacClient({ funilMensal, cacMensal }: { funilMensal: FunilM
                   <td style={{ ...td, textAlign: "center" }}>{f.leads_total}</td>
                   <td style={{ ...td, textAlign: "center", color: theme.colors.chartNavyLight }}>{f.qualificados_real}</td>
                   <td style={{ ...td, textAlign: "center", color: YELLOW }}>{f.agendamentos}</td>
+                  <td style={{ ...td, textAlign: "center", color: f.agendamentos_bypass_humano > 0 ? YELLOW : MUT }}>{f.agendamentos_bypass_humano || "—"}</td>
                   <td style={{ ...td, textAlign: "center", color: GREEN }}>{f.convertidos}</td>
                   <td style={{ ...td, textAlign: "center", color: "#c0d0e0" }}>{pctFmt(f.pct_qualificacao_real)}</td>
                   <td style={{ ...td, textAlign: "center", color: "#c0d0e0" }}>{pctFmt(f.pct_handoff)}</td>
@@ -245,7 +266,7 @@ export function FunilCacClient({ funilMensal, cacMensal }: { funilMensal: FunilM
       </div>
 
       <p style={{ color: MUT, fontSize: 9, fontFamily: theme.font.label }}>
-        Fonte: v_funil_por_canal_mensal (coorte por mês de atribuição; qualificado = qual_stage ≥ 7 · agendamento = seller_first_reply_at · convertido = first_order_at) + v_cac_mensal_canal (Gasto/CAC/conversão, mesma janela). % do funil = razão sobre Leads. Inclui fora-de-rota (você pagou por eles) — o funil do Comercial é só EM ROTA, por isso o período de 1 mês aqui ≈ Comercial nos convertidos, com leads a mais. Leads atribuídos desde 02/06.
+        Fonte: v_funil_por_canal_mensal (coorte por mês de atribuição; qualificado = qual_stage ≥ 7 · agendamento = seller_first_reply_at · convertido = first_order_at) + v_cac_mensal_canal (Gasto/CAC/conversão, mesma janela). % do funil = razão sobre Leads. Inclui fora-de-rota (você pagou por eles) — o funil do Comercial é só EM ROTA, por isso o período de 1 mês aqui ≈ Comercial nos convertidos, com leads a mais. Leads atribuídos desde 02/06. O funil visual usa agendamentos pós-qualificação (subconjunto de Qualificados); pedidos diretos ao vendedor que pularam a escada (DEBT-155) aparecem à parte, nunca somados na etapa — ver aviso acima e coluna “↳ Bypass”.
       </p>
     </div>
   );

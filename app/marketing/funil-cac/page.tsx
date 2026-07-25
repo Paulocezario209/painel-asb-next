@@ -18,7 +18,7 @@ export default async function FunilCacPage() {
   const [funilRes, cacRes] = await Promise.all([
     supabase
       .from("v_funil_por_canal_mensal")
-      .select("canal, mes, leads_total, qualificados_real, agendamentos, convertidos")
+      .select("canal, mes, leads_total, qualificados_real, agendamentos, agendamentos_pos_qualificacao, agendamentos_bypass_humano, convertidos")
       .order("mes", { ascending: true })
       .limit(5000),
     supabase
