@@ -35,6 +35,9 @@ export function MarketingSidebar({ isOpen = false, onClose }: { isOpen?: boolean
         </div>
       </Link>
 
+      {/* prefetch=false (DEBT-348): as 7 rotas são force-dynamic/no-store — prefetch
+          simultâneo de todas ao renderizar o sidebar gera rajada de hits reais no Supabase,
+          hipótese pro 503 intermitente visto no prefetch RSC. */}
       <nav className="flex-1 px-2 py-3">
         {navItems.map(({ href, label, icon: Icon }) => {
           const isActive = pathname === href || pathname.startsWith(href);
@@ -42,6 +45,7 @@ export function MarketingSidebar({ isOpen = false, onClose }: { isOpen?: boolean
             <Link
               key={href}
               href={href}
+              prefetch={false}
               onClick={onClose}
               style={{
                 display: "flex", alignItems: "center", gap: 11,
