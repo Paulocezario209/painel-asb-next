@@ -297,7 +297,7 @@ export const MANUAIS: Record<string, ManualTela> = {
     oQueE: "A página inicial: pulso geral do mês — leads, qualificados, agendamentos, convertidos, alertas e onde focar agora.",
     fontes: [
       "KPIs e alertas: base de leads reais do mês (sem testes, sem fora de rota).",
-      "Top 10 clientes do mês: faturado real ARES.",
+      "Top 10 clientes do mês: pedidos FATURADOS no mês (ARES, régua conciliada com o financeiro) + barra de representatividade = Receita Top 10 ÷ faturamento mensal da carteira (mesma régua, view v_top10_share_mes).",
       "Motivos de perda: registros de leads perdidos.",
     ],
     comoUsar: [
