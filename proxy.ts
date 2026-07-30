@@ -108,5 +108,8 @@ export const config = {
   // pdf na exclusão: catálogo público em /catalogo-asb-hamburgueres.pdf é baixado
   // pelo Evolution SEM sessão — sem isso o redirect manda a página de login como "PDF"
   // (bug 2026-07-09: lead recebia HTML de 11 KB que não abria).
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|pdf)$).*)"],
+  // manifest.webmanifest na exclusão: é metadado público (nome, cores, caminho dos ícones,
+  // zero dado de usuário) e o navegador pode buscá-lo sem sessão ao instalar o atalho —
+  // sem isso o fetch volta o HTML do /login e o ícone não resolve.
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp|pdf)$).*)"],
 };
