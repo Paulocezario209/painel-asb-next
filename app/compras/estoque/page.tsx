@@ -4,7 +4,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { AncoraUpload } from "@/components/uploads/ancora-upload";
 import EstoqueClient, { type CoberturaRow } from "./estoque-client";
-import { PageHead, SectionHead, StatTile } from "@/app/dashboard/lib/ui";
+import { PageHead, SectionHead } from "@/app/dashboard/lib/ui";
 import { Boxes } from "lucide-react";
 import { theme } from "@/lib/theme";
 
@@ -19,25 +19,12 @@ export default async function EstoquePage() {
   const rows = (covRes.data ?? []) as CoberturaRow[];
   const totalProdutos = totalRes.count ?? 0;
 
-  // Distribuição por semáforo (para os StatTiles de topo) — mantém cores de sinal de compras.
-  const cnt = { vermelho: 0, amarelo: 0, verde: 0, sem_cmd: 0 } as Record<CoberturaRow["semaforo"], number>;
-  for (const r of rows) cnt[r.semaforo] = (cnt[r.semaforo] ?? 0) + 1;
-
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <PageHead
         title="Estoque Atual"
         desc="Saldo por produto (Σ movimentação ARES espelhada — OPT-B) · cobertura em dias (saldo ÷ consumo/dia) · semáforo de ruptura."
       />
-
-      {/* Resumo — distribuição de cobertura por semáforo (cores de sinal de compras) */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12 }}>
-        <StatTile label="Com Saldo Calculado" value={rows.length} sub={`de ${totalProdutos} produtos totais`} />
-        <StatTile label="Crítico" value={cnt.vermelho} accent="#f85149" num="#f85149" sub="ruptura iminente" />
-        <StatTile label="Alerta" value={cnt.amarelo} accent="#d29922" num="#d29922" sub="cobertura curta" />
-        <StatTile label="Cobertura OK" value={cnt.verde} accent="#2ea043" num="#2ea043" sub="folga de estoque" />
-        <StatTile label="Sem CMD" value={cnt.sem_cmd} sub="sem saída capturada" />
-      </div>
 
       {/* Banner cobertura parcial (sinal de aviso — cor âmbar preservada) */}
       <div style={{ border: "1px solid #d29922", background: "rgba(210,153,34,.08)", borderRadius: 8, padding: "10px 14px" }}>
@@ -55,7 +42,7 @@ export default async function EstoquePage() {
           title="Cobertura por Produto"
           desc="Saldo ÷ consumo/dia · ordenado por menor cobertura · semáforo de ruptura"
         />
-        <EstoqueClient rows={rows} />
+        <EstoqueClient rows={rows} totalProdutos={totalProdutos} />
       </div>
 
       <p style={{ color: "var(--asb-page-ink3)", fontSize: 11, fontFamily: theme.font.label }}>

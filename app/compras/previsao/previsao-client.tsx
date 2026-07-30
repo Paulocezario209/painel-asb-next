@@ -6,6 +6,7 @@ import { norm } from "@/lib/normalize";
 
 import { theme } from "@/lib/theme";
 import { S } from "@/app/dashboard/lib/dashboard-tokens";
+import { StatTile } from "@/app/dashboard/lib/ui";
 
 export type PrevRow = {
   id_produto: string | number; descricao: string | null; grupo_nome: string | null;
@@ -19,6 +20,7 @@ const n3 = (n: number | null) => (n == null ? "—" : n.toLocaleString("pt-BR", 
 
 export default function PrevisaoClient({ rows }: { rows: PrevRow[] }) {
   const [q, setQ] = useState("");
+  const [soRepor, setSoRepor] = useState(false);
 
   // cabeçalho de COLUNA → UPPERCASE SANS pequeno (S.label)
   const th: React.CSSProperties = { ...S.label, fontSize: 10, padding: "10px 10px", textAlign: "right", borderBottom: "1px solid var(--asb-border)" };
@@ -27,13 +29,18 @@ export default function PrevisaoClient({ rows }: { rows: PrevRow[] }) {
   // célula de TEXTO → sans
   const tdText: React.CSSProperties = { ...td, fontFamily: theme.font.label, textAlign: "left" };
 
-  // filtro acento-insensitive: descricao OU id_produto OU skus
-  const qn = norm(q.trim());
-  const filtered = qn
-    ? rows.filter((r) => norm(r.descricao).includes(qn) || norm(r.id_produto).includes(qn) || norm(r.skus).includes(qn))
-    : rows;
+  // "Comprar Agora" (repor_agora) — MESMA base (rows) que o card conta, então card e lista nunca divergem
+  const reporTotal = rows.filter((r) => r.repor_agora).length;
+  const sinal = reporTotal > 0 ? "#C8102E" : "#22c55e";
 
-  // particionar DEPOIS do filtro (blocos refletem a busca)
+  // filtro acento-insensitive: descricao OU id_produto OU skus, combinado com "Comprar Agora" se ativo
+  const qn = norm(q.trim());
+  const porRepor = soRepor ? rows.filter((r) => r.repor_agora) : rows;
+  const filtered = qn
+    ? porRepor.filter((r) => norm(r.descricao).includes(qn) || norm(r.id_produto).includes(qn) || norm(r.skus).includes(qn))
+    : porRepor;
+
+  // particionar DEPOIS do filtro (blocos refletem a busca). Com "Comprar Agora" ativo, ok fica sempre vazio.
   const repor = filtered.filter((r) => r.repor_agora);
   const ok = filtered.filter((r) => !r.repor_agora);
 
@@ -52,23 +59,41 @@ export default function PrevisaoClient({ rows }: { rows: PrevRow[] }) {
   );
 
   return (
-    <div style={{ ...S.card, overflowX: "auto" }}>
-      {/* Barra de busca (lupa), sticky no topo do card */}
-      <div style={{ position: "sticky", top: 0, zIndex: 1, background: "var(--asb-card)", borderBottom: "1px solid var(--asb-border)", padding: "10px 12px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <Search size={14} color="#83879a" style={{ flexShrink: 0 }} />
-          <input
-            autoFocus
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Buscar insumo por nome ou código…"
-            style={{ flex: 1, background: "transparent", border: "none", outline: "none", color: "#e6ebf5", fontFamily: theme.font.label, fontSize: 12.5 }}
-          />
-          {q ? (
-            <>
-              <span style={{ color: "#aeb7cc", fontFamily: theme.font.label, fontSize: 11, whiteSpace: "nowrap" }}>
-                <b style={{ fontFamily: theme.font.num }}>{filtered.length}</b> de <b style={{ fontFamily: theme.font.num }}>{rows.length}</b>
+    <>
+      {/* Semáforo de reposição — sinal (🔴 comprar agora / 🟢 cobertura ok) preservado; clicável = filtro */}
+      <div className="asb-grid-kpi">
+        <StatTile
+          label="Comprar Agora"
+          value={reporTotal}
+          accent={sinal}
+          num={sinal}
+          sub={reporTotal > 0 ? "insumos abaixo do ponto de reposição" : "nenhum insumo abaixo do ponto de reposição"}
+          onClick={() => setSoRepor((v) => !v)}
+          active={soRepor}
+        />
+      </div>
+
+      <div style={{ ...S.card, overflowX: "auto" }}>
+        {/* Barra de busca (lupa) + filtro ativo, sticky no topo do card */}
+        <div style={{ position: "sticky", top: 0, zIndex: 1, background: "var(--asb-card)", borderBottom: "1px solid var(--asb-border)", padding: "10px 12px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Search size={14} color="#83879a" style={{ flexShrink: 0 }} />
+            <input
+              autoFocus
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Buscar insumo por nome ou código…"
+              style={{ flex: 1, background: "transparent", border: "none", outline: "none", color: "#e6ebf5", fontFamily: theme.font.label, fontSize: 12.5 }}
+            />
+            {soRepor ? (
+              <span style={{ color: sinal, fontFamily: theme.font.label, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}>
+                filtro: Comprar Agora
               </span>
+            ) : null}
+            <span style={{ color: "#aeb7cc", fontFamily: theme.font.label, fontSize: 11, whiteSpace: "nowrap" }}>
+              <b style={{ fontFamily: theme.font.num }}>{filtered.length}</b> de <b style={{ fontFamily: theme.font.num }}>{rows.length}</b>
+            </span>
+            {q ? (
               <button
                 onClick={() => setQ("")}
                 aria-label="Limpar busca"
@@ -76,31 +101,42 @@ export default function PrevisaoClient({ rows }: { rows: PrevRow[] }) {
               >
                 <X size={14} color="#83879a" />
               </button>
-            </>
-          ) : null}
+            ) : null}
+            {soRepor ? (
+              <button
+                onClick={() => setSoRepor(false)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 4, background: "var(--asb-card-hi)", border: "1px solid var(--asb-border)",
+                  borderRadius: 6, padding: "4px 9px", color: "#c8d2e6", fontFamily: theme.font.label, fontSize: 11, fontWeight: 650, cursor: "pointer", whiteSpace: "nowrap",
+                }}
+              >
+                <X size={11} /> Limpar filtro / Mostrar todos
+              </button>
+            ) : null}
+          </div>
         </div>
-      </div>
 
-      <table style={{ width: "100%", borderCollapse: "collapse" }}>
-        <thead><tr>
-          <th style={{ ...th, textAlign: "left" }}>Insumo</th><th style={th} title="Consumo médio diário — janela 90 dias corridos (planejamento estável)">CMD-90/dia</th><th style={th}>Saldo</th>
-          <th style={th}>Em pedido</th><th style={th}>Comprar</th><th style={{ ...th, textAlign: "left" }}>Fornecedor (LT)</th>
-        </tr></thead>
-        <tbody>
-          {rows.length === 0 ? (
-            <tr><td colSpan={6} style={{ ...td, textAlign: "center", color: "#83879a", fontFamily: theme.font.label, padding: 20 }}>aguardando dados (aplicar migrations)</td></tr>
-          ) : filtered.length === 0 ? (
-            <tr><td colSpan={6} style={{ ...td, textAlign: "center", color: "#83879a", fontFamily: theme.font.label, padding: 20 }}>Nenhum insumo encontrado para &quot;{q}&quot;</td></tr>
-          ) : (
-            <>
-              {repor.length > 0 && <tr><td colSpan={6} style={{ ...tdText, ...S.label, fontSize: 10.5, color: "#ff5a72", background: "var(--asb-card-hi)" }}>🔴 Repor Agora</td></tr>}
-              {repor.map(linha)}
-              {ok.length > 0 && <tr><td colSpan={6} style={{ ...tdText, ...S.label, fontSize: 10.5, color: "#22c55e", background: "var(--asb-card-hi)" }}>✓ Cobertura Ok</td></tr>}
-              {ok.map(linha)}
-            </>
-          )}
-        </tbody>
-      </table>
-    </div>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead><tr>
+            <th style={{ ...th, textAlign: "left" }}>Insumo</th><th style={th} title="Consumo médio diário — janela 90 dias corridos (planejamento estável)">CMD-90/dia</th><th style={th}>Saldo</th>
+            <th style={th}>Em pedido</th><th style={th}>Comprar</th><th style={{ ...th, textAlign: "left" }}>Fornecedor (LT)</th>
+          </tr></thead>
+          <tbody>
+            {rows.length === 0 ? (
+              <tr><td colSpan={6} style={{ ...td, textAlign: "center", color: "#83879a", fontFamily: theme.font.label, padding: 20 }}>aguardando dados (aplicar migrations)</td></tr>
+            ) : filtered.length === 0 ? (
+              <tr><td colSpan={6} style={{ ...td, textAlign: "center", color: "#83879a", fontFamily: theme.font.label, padding: 20 }}>Nenhum insumo encontrado{q ? ` para "${q}"` : ""}</td></tr>
+            ) : (
+              <>
+                {repor.length > 0 && <tr><td colSpan={6} style={{ ...tdText, ...S.label, fontSize: 10.5, color: "#ff5a72", background: "var(--asb-card-hi)" }}>🔴 Comprar Agora</td></tr>}
+                {repor.map(linha)}
+                {ok.length > 0 && <tr><td colSpan={6} style={{ ...tdText, ...S.label, fontSize: 10.5, color: "#22c55e", background: "var(--asb-card-hi)" }}>✓ Cobertura Ok</td></tr>}
+                {ok.map(linha)}
+              </>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }

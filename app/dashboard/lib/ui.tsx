@@ -75,7 +75,7 @@ export function Eyebrow({ children, style }: { children: React.ReactNode; style?
 // chip de ícone (accent) + label Title Case sans + número mono grande + trend chip + sparkline.
 // NUNCA recrie um KPI na mão — use este. label DEVE ser Title Case ("Total de leads"), nunca "TOTAL DE LEADS".
 export function KpiCard({
-  label, value, Icon, accent = "#8bb4ff", num, href, chip, chipUp = null, note, series,
+  label, value, Icon, accent = "#8bb4ff", num, href, chip, chipUp = null, note, series, onClick, active = false,
 }: {
   label: string;
   value: React.ReactNode;
@@ -87,9 +87,22 @@ export function KpiCard({
   chipUp?: boolean | null;// true=verde↗ false=vermelho↘ null=neutro
   note?: string;          // legenda à direita (ex "vs. período anterior")
   series?: number[];      // sparkline opcional
+  onClick?: () => void;   // torna o card um filtro clicável (client-side)
+  active?: boolean;       // destaca o card quando seu filtro está aplicado
 }) {
   const body = (
-    <div className="asb-kpi-hover" style={{ ...S.card, padding: 22, borderTop: `3px solid ${accent}`, cursor: href ? "pointer" : "default", overflow: "hidden", height: "100%" }}>
+    <div
+      className="asb-kpi-hover"
+      style={{
+        ...S.card,
+        ...(active ? { boxShadow: `0 0 0 2px ${accent}` } : null),
+        padding: 22,
+        borderTop: `3px solid ${accent}`,
+        cursor: href || onClick ? "pointer" : "default",
+        overflow: "hidden",
+        height: "100%",
+      }}
+    >
       <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 16 }}>
         <span style={{ width: 38, height: 38, borderRadius: 11, display: "grid", placeItems: "center", background: accent + "22", color: accent, flexShrink: 0 }}>
           <Icon size={20} />
@@ -116,13 +129,19 @@ export function KpiCard({
       {series ? <Sparkline data={series} color={accent} /> : null}
     </div>
   );
-  return href ? <Link href={href} style={{ textDecoration: "none" }}>{body}</Link> : body;
+  if (href) return <Link href={href} style={{ textDecoration: "none" }}>{body}</Link>;
+  if (onClick) return (
+    <button type="button" onClick={onClick} style={{ all: "unset", cursor: "pointer", display: "block", width: "100%" }}>
+      {body}
+    </button>
+  );
+  return body;
 }
 
 // StatTile — stat compacto CANÔNICO (grids densos: cadências, comercial, etc).
 // label Title Case sans + número mono. Aceita accent (borderTop) e badges opcionais.
 export function StatTile({
-  label, value, accent, num, badges, sub,
+  label, value, accent, num, badges, sub, onClick, active = false,
 }: {
   label: string;
   value: React.ReactNode;
@@ -130,13 +149,33 @@ export function StatTile({
   num?: string;           // cor do número
   badges?: React.ReactNode; // chips abaixo do número (ex "3 atras." "5 hoje")
   sub?: string;           // legenda pequena
+  onClick?: () => void;   // torna o tile um filtro clicável (client-side)
+  active?: boolean;       // destaca o tile quando seu filtro está aplicado
 }) {
-  return (
-    <div style={{ ...S.card, padding: "16px 18px", borderTop: accent ? `3px solid ${accent}` : undefined, height: "100%", display: "flex", flexDirection: "column", gap: 8 }}>
+  const body = (
+    <div
+      style={{
+        ...S.card,
+        ...(active ? { boxShadow: `0 0 0 2px ${accent ?? "#8bb4ff"}` } : null),
+        padding: "16px 18px",
+        borderTop: accent ? `3px solid ${accent}` : undefined,
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        gap: 8,
+        cursor: onClick ? "pointer" : "default",
+      }}
+    >
       <span style={{ fontSize: 12, fontWeight: 650, color: "#aeb7cc", fontFamily: theme.font.label, lineHeight: 1.3 }}>{label}</span>
       <span style={{ fontSize: 28, fontWeight: 850, letterSpacing: "-.02em", lineHeight: 1, color: num ?? "#FFFFFF", fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" }}>{value}</span>
       {badges ? <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 2 }}>{badges}</div> : null}
       {sub ? <span style={{ fontSize: 11, color: "#83879a", fontFamily: theme.font.label }}>{sub}</span> : null}
     </div>
+  );
+  if (!onClick) return body;
+  return (
+    <button type="button" onClick={onClick} style={{ all: "unset", cursor: "pointer", display: "block", width: "100%", height: "100%" }}>
+      {body}
+    </button>
   );
 }
