@@ -3,7 +3,7 @@
 // Move ESCREVE em produção via /api/pipeline/move. Otimista com rollback de card se a RPC falhar.
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { MOVIVEIS, LOST_REASONS, ENCOSTO_SUGERIDO, STAGE_COLORS, vendedorPodeMover } from "@/lib/funnel/stages";
 import { fichaCadastro, fichaOrcamento, pesoTotalKg, type OrcamentoItem } from "@/lib/fichas";
 import { theme } from "@/lib/theme";
@@ -247,8 +247,9 @@ export function PipelineBoard({
                           >📋</button>
                         )}
                         {/* Setor Negociação — agente Deal Desk (Voss): lê a conversa, detecta a
-                            objeção e devolve a virada. Só na Negociação (onde a objeção aparece). */}
-                        {stage === "negociacao" && (
+                            objeção e devolve a virada. Negociação + Proposta Enviada (V4 Fase 7,
+                            2026-07-30 — backend já aceitava as 2 etapas, só o botão estava travado). */}
+                        {(stage === "negociacao" || stage === "proposta_enviada") && (
                           <button
                             onClick={(e) => { e.stopPropagation(); setModal({ tipo: "dealdesk", lead }); }}
                             title="Deal Desk: virada da objeção em tempo real (lê a conversa)"
@@ -521,16 +522,103 @@ function BtnCancel({ onClick }: { onClick: () => void }) {
   );
 }
 
+// V4 Fase 5 (2026-07-30): fecha o ciclo do suggestion_id — registra copiou/marcou-enviada
+// em deal_suggestions via /api/pipeline/deal-suggestion-event. Best-effort (nunca bloqueia
+// a UI do vendedor por causa de um log de auditoria).
+async function registrarEventoSugestao(suggestionId: string | null | undefined, event: "copied" | "sent", mensagemEnviada?: string) {
+  if (!suggestionId) return;
+  try {
+    await fetch("/api/pipeline/deal-suggestion-event", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ suggestion_id: suggestionId, event, mensagem_enviada: mensagemEnviada }),
+    });
+  } catch { /* best-effort */ }
+}
+
+// Badge de status de alçada (V4 Fase 4) — cor com propósito: verde=liberado, âmbar=aprovação,
+// vermelho=proibido. tipo "nenhuma" não renderiza (sem concessão comercial na sugestão).
+const ALCADA_COR: Record<string, string> = { LIBERADO: "#22c55e", REQUER_APROVACAO: "#e3b341", PROIBIDO: "#f85149" };
+const ALCADA_LABEL: Record<string, string> = { LIBERADO: "Liberado", REQUER_APROVACAO: "Requer aprovação", PROIBIDO: "Proibido pela política" };
+function BadgeAlcada({ tipoConcessao, statusAlcada }: { tipoConcessao?: string; statusAlcada?: string }) {
+  if (!tipoConcessao || tipoConcessao === "nenhuma" || !statusAlcada) return null;
+  const cor = ALCADA_COR[statusAlcada] ?? "#c0d0e0";
+  return (
+    <div style={{ display: "inline-block", background: `${cor}1a`, border: `1px solid ${cor}`, borderRadius: 6, padding: "3px 9px", marginBottom: 10 }}>
+      <span style={{ color: cor, fontSize: 10, fontFamily: theme.font.label, fontWeight: 700 }}>
+        {tipoConcessao} · {ALCADA_LABEL[statusAlcada] ?? statusAlcada}
+      </span>
+    </div>
+  );
+}
+
+// Bloco de rótulo+texto compartilhado pelos 2 modais (Diagnóstico/Estratégia/Tática/etc).
+function BlocoTexto({ titulo, texto }: { titulo: string; texto: string }) {
+  if (!texto) return null;
+  return (
+    <div style={{ marginBottom: 10 }}>
+      <p style={{ color: "#e4e9f0", fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".12em", textTransform: "uppercase", marginBottom: 3 }}>{titulo}</p>
+      <p style={{ color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label, lineHeight: 1.5, whiteSpace: "pre-wrap" }}>{texto}</p>
+    </div>
+  );
+}
+
+// Cabeçalho de seção (Diagnóstico/Estratégia/Execução — V4 Fase 8) — só organiza visualmente
+// o que os 2 modais já traziam; nenhum dado novo é inventado aqui.
+function SecaoExecucao({ children }: { children: ReactNode }) {
+  return (
+    <p style={{ color: "#e4e9f0", fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".12em", textTransform: "uppercase", marginTop: 14, marginBottom: 6 }}>
+      {children}
+    </p>
+  );
+}
+
+// Caixa de mensagem editável (V4 Fase 8 — "mensagem sugerida editável"). O valor editado é o
+// que a Fase 5 registra como mensagem_enviada ao marcar como enviada.
+function CaixaMensagem({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return (
+    <div style={{ marginBottom: 10, background: "var(--asb-card)", border: "1px solid #2e2e2e", borderRadius: 6, padding: "10px 12px" }}>
+      <p style={{ color: "#e4e9f0", fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".12em", textTransform: "uppercase", marginBottom: 4 }}>Mensagem sugerida (edite à vontade)</p>
+      <textarea
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        rows={4}
+        style={{ width: "100%", background: "transparent", border: "none", outline: "none", resize: "vertical", color: "#fff", fontSize: 11, fontFamily: theme.font.label, lineHeight: 1.55 }}
+      />
+    </div>
+  );
+}
+
+function BotoesEnvio({ mensagem, suggestionId, copiado, enviada, onCopiar, onMarcarEnviada }: {
+  mensagem: string; suggestionId: string | null | undefined; copiado: boolean; enviada: boolean;
+  onCopiar: () => void; onMarcarEnviada: () => void;
+}) {
+  return (
+    <>
+      <button onClick={onCopiar} disabled={!mensagem}
+        style={{ background: copiado ? "#238636" : "#185FA5", border: "none", borderRadius: 6, padding: "8px 16px", color: "#fff", fontSize: 11, fontFamily: theme.font.label, fontWeight: 700, cursor: mensagem ? "pointer" : "not-allowed", opacity: mensagem ? 1 : 0.5 }}>
+        {copiado ? "✓ Copiado" : "Copiar mensagem"}
+      </button>
+      <button onClick={onMarcarEnviada} disabled={!mensagem || !suggestionId || enviada}
+        title={!suggestionId ? "sugestão ainda não registrada" : undefined}
+        style={{ background: enviada ? "#238636" : "transparent", border: "1px solid #2e2e2e", borderRadius: 6, padding: "8px 16px", color: enviada ? "#fff" : "#c0d0e0", fontSize: 11, fontFamily: theme.font.label, fontWeight: 700, cursor: (!mensagem || !suggestionId || enviada) ? "not-allowed" : "pointer", opacity: (!mensagem || !suggestionId) ? 0.5 : 1 }}>
+        {enviada ? "✓ Marcada como enviada" : "Marcar como enviada"}
+      </button>
+    </>
+  );
+}
+
 // ── Modal Sugestão do Estrategista (asb-deal-strategies, Fase A) ─────────────
 // Gera on-demand via /api/pipeline/suggest (CP /internal/deal/suggest → GPT com
 // as regras da skill: nunca inventa preço, protege margem, mensagem curta).
-// Fase A = COPIAR (o clique do vendedor no WhatsApp é a ação humana).
-type Sugestao = { diagnostico: string; estrategia: string; mensagem_whatsapp: string; proximo_passo: string };
+type Sugestao = { diagnostico: string; estrategia: string; mensagem_whatsapp: string; proximo_passo: string; suggestion_id?: string | null };
 
 function ModalSugestao({ lead, stage, onClose }: { lead: PipelineLead; stage: string; onClose: () => void }) {
   const [data, setData] = useState<Sugestao | null>(null);
   const [erro, setErro] = useState<string | null>(null);
+  const [mensagem, setMensagem] = useState("");
   const [copiado, setCopiado] = useState(false);
+  const [enviada, setEnviada] = useState(false);
 
   useEffect(() => {
     let vivo = true;
@@ -545,6 +633,7 @@ function ModalSugestao({ lead, stage, onClose }: { lead: PipelineLead; stage: st
         if (!vivo) return;
         if (!res.ok) { setErro(j?.error ?? "falha ao gerar sugestão"); return; }
         setData(j as Sugestao);
+        setMensagem((j as Sugestao).mensagem_whatsapp ?? "");
       } catch {
         if (vivo) setErro("falha de conexão");
       }
@@ -553,20 +642,19 @@ function ModalSugestao({ lead, stage, onClose }: { lead: PipelineLead; stage: st
   }, [lead.phone, stage]);
 
   const copiar = async () => {
-    if (!data?.mensagem_whatsapp) return;
+    if (!mensagem) return;
     try {
-      await navigator.clipboard.writeText(data.mensagem_whatsapp);
+      await navigator.clipboard.writeText(mensagem);
       setCopiado(true);
       setTimeout(() => setCopiado(false), 2000);
     } catch { /* clipboard bloqueado — usuário seleciona manualmente */ }
+    registrarEventoSugestao(data?.suggestion_id, "copied");
   };
 
-  const bloco = (titulo: string, texto: string) => (
-    <div style={{ marginBottom: 10 }}>
-      <p style={{ color: "#e4e9f0", fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".12em", textTransform: "uppercase", marginBottom: 3 }}>{titulo}</p>
-      <p style={{ color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label, lineHeight: 1.5, whiteSpace: "pre-wrap" }}>{texto}</p>
-    </div>
-  );
+  const marcarEnviada = () => {
+    setEnviada(true);
+    registrarEventoSugestao(data?.suggestion_id, "sent", mensagem);
+  };
 
   return (
     <Backdrop>
@@ -585,22 +673,20 @@ function ModalSugestao({ lead, stage, onClose }: { lead: PipelineLead; stage: st
       )}
       {data && (
         <div style={{ maxHeight: "50vh", overflowY: "auto", paddingRight: 4 }}>
-          {bloco("Diagnóstico", data.diagnostico)}
-          {bloco("Estratégia", data.estrategia)}
-          <div style={{ marginBottom: 10, background: "var(--asb-card)", border: "1px solid #2e2e2e", borderRadius: 6, padding: "10px 12px" }}>
-            <p style={{ color: "#e4e9f0", fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".12em", textTransform: "uppercase", marginBottom: 4 }}>Mensagem sugerida (edite ao colar)</p>
-            <p style={{ color: "#fff", fontSize: 11, fontFamily: theme.font.label, lineHeight: 1.55, whiteSpace: "pre-wrap" }}>{data.mensagem_whatsapp}</p>
-          </div>
-          {bloco("Próximo passo", data.proximo_passo)}
+          <SecaoExecucao>Diagnóstico</SecaoExecucao>
+          <BlocoTexto titulo="Situação" texto={data.diagnostico} />
+          <SecaoExecucao>Estratégia</SecaoExecucao>
+          <BlocoTexto titulo="Abordagem" texto={data.estrategia} />
+          <SecaoExecucao>Execução</SecaoExecucao>
+          <CaixaMensagem value={mensagem} onChange={setMensagem} />
+          <BlocoTexto titulo="Próximo passo" texto={data.proximo_passo} />
         </div>
       )}
 
       <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 14 }}>
         <BtnCancel onClick={onClose} />
-        <button onClick={copiar} disabled={!data?.mensagem_whatsapp}
-          style={{ background: copiado ? "#238636" : "#185FA5", border: "none", borderRadius: 6, padding: "8px 16px", color: "#fff", fontSize: 11, fontFamily: theme.font.label, fontWeight: 700, cursor: data?.mensagem_whatsapp ? "pointer" : "not-allowed", opacity: data?.mensagem_whatsapp ? 1 : 0.5 }}>
-          {copiado ? "✓ Copiado" : "Copiar mensagem"}
-        </button>
+        <BotoesEnvio mensagem={mensagem} suggestionId={data?.suggestion_id} copiado={copiado} enviada={enviada}
+          onCopiar={copiar} onMarcarEnviada={marcarEnviada} />
       </div>
     </Backdrop>
   );
@@ -609,15 +695,20 @@ function ModalSugestao({ lead, stage, onClose }: { lead: PipelineLead; stage: st
 // ── Modal Deal Desk (agente Voss · Setor Negociação) ────────────────────────
 // Lê a conversa real (vendor_messages + conversas_sdr) via /api/pipeline/deal-desk →
 // CP /internal/deal-desk/assist, detecta a OBJEÇÃO e devolve a virada (tática Voss +
-// mensagem pronta + próximo passo). READ-ONLY: o clique do vendedor no WhatsApp é a ação.
-// Dark launch: fonte="off" enquanto DEAL_DESK_LIVE=false.
-type DealDesk = { objecao: string; leitura: string; tatica: string; mensagem: string; proximo_passo: string; alerta: string; fonte: string };
+// mensagem pronta + próximo passo). Nunca fala com o lead — o clique do vendedor no
+// WhatsApp é a ação. Dark launch: fonte="off" enquanto DEAL_DESK_LIVE=false.
+type DealDesk = {
+  objecao: string; leitura: string; tatica: string; mensagem: string; proximo_passo: string; alerta: string;
+  tipo_concessao?: string; status_alcada?: string; suggestion_id?: string | null; fonte: string;
+};
 const OBJ_LABEL: Record<string, string> = { preco: "Preço", concorrente: "Concorrente", prazo: "Prazo", confianca: "Confiança", nenhuma: "Sem objeção clara" };
 
 function ModalDealDesk({ lead, onClose }: { lead: PipelineLead; onClose: () => void }) {
   const [data, setData] = useState<DealDesk | null>(null);
   const [erro, setErro] = useState<string | null>(null);
+  const [mensagem, setMensagem] = useState("");
   const [copiado, setCopiado] = useState(false);
+  const [enviada, setEnviada] = useState(false);
 
   useEffect(() => {
     let vivo = true;
@@ -632,6 +723,7 @@ function ModalDealDesk({ lead, onClose }: { lead: PipelineLead; onClose: () => v
         if (!vivo) return;
         if (!res.ok) { setErro(j?.error ?? "falha ao consultar o Deal Desk"); return; }
         setData(j as DealDesk);
+        setMensagem((j as DealDesk).mensagem ?? "");
       } catch {
         if (vivo) setErro("falha de conexão");
       }
@@ -640,20 +732,19 @@ function ModalDealDesk({ lead, onClose }: { lead: PipelineLead; onClose: () => v
   }, [lead.id]);
 
   const copiar = async () => {
-    if (!data?.mensagem) return;
+    if (!mensagem) return;
     try {
-      await navigator.clipboard.writeText(data.mensagem);
+      await navigator.clipboard.writeText(mensagem);
       setCopiado(true);
       setTimeout(() => setCopiado(false), 2000);
     } catch { /* clipboard bloqueado — usuário seleciona manualmente */ }
+    registrarEventoSugestao(data?.suggestion_id, "copied");
   };
 
-  const bloco = (titulo: string, texto: string) => (texto ? (
-    <div style={{ marginBottom: 10 }}>
-      <p style={{ color: "#e4e9f0", fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".12em", textTransform: "uppercase", marginBottom: 3 }}>{titulo}</p>
-      <p style={{ color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label, lineHeight: 1.5, whiteSpace: "pre-wrap" }}>{texto}</p>
-    </div>
-  ) : null);
+  const marcarEnviada = () => {
+    setEnviada(true);
+    registrarEventoSugestao(data?.suggestion_id, "sent", mensagem);
+  };
 
   const off = data?.fonte === "off";
   const vazio = data?.fonte === "vazio";
@@ -681,28 +772,31 @@ function ModalDealDesk({ lead, onClose }: { lead: PipelineLead; onClose: () => v
       )}
       {data && data.fonte === "ia" && (
         <div style={{ maxHeight: "50vh", overflowY: "auto", paddingRight: 4 }}>
+          <SecaoExecucao>Diagnóstico</SecaoExecucao>
           <div style={{ display: "inline-block", background: "#1c2a3a", border: "1px solid #2e4258", borderRadius: 6, padding: "3px 9px", marginBottom: 10 }}>
             <span style={{ color: "#e4e9f0", fontSize: 10, fontFamily: theme.font.label, fontWeight: 700 }}>Objeção: {OBJ_LABEL[data.objecao] ?? data.objecao}</span>
           </div>
-          {bloco("Leitura", data.leitura)}
-          {bloco("Tática", data.tatica)}
-          <div style={{ marginBottom: 10, background: "var(--asb-card)", border: "1px solid #2e2e2e", borderRadius: 6, padding: "10px 12px" }}>
-            <p style={{ color: "#e4e9f0", fontSize: 9, fontFamily: theme.font.label, letterSpacing: ".12em", textTransform: "uppercase", marginBottom: 4 }}>Mensagem sugerida (edite ao colar)</p>
-            <p style={{ color: "#fff", fontSize: 11, fontFamily: theme.font.label, lineHeight: 1.55, whiteSpace: "pre-wrap" }}>{data.mensagem}</p>
-          </div>
-          {bloco("Próximo passo", data.proximo_passo)}
+          <BlocoTexto titulo="Leitura" texto={data.leitura} />
+
+          <SecaoExecucao>Estratégia</SecaoExecucao>
+          <BlocoTexto titulo="Tática" texto={data.tatica} />
+          <BadgeAlcada tipoConcessao={data.tipo_concessao} statusAlcada={data.status_alcada} />
           {data.alerta ? (
-            <p style={{ color: "#e3b341", fontSize: 10, fontFamily: theme.font.label, lineHeight: 1.5 }}>⚠︎ {data.alerta}</p>
+            <p style={{ color: "#e3b341", fontSize: 10, fontFamily: theme.font.label, lineHeight: 1.5, marginBottom: 10 }}>⚠︎ {data.alerta}</p>
           ) : null}
+
+          <SecaoExecucao>Execução</SecaoExecucao>
+          <CaixaMensagem value={mensagem} onChange={setMensagem} />
+          <BlocoTexto titulo="Próximo passo" texto={data.proximo_passo} />
         </div>
       )}
 
       <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 14 }}>
         <BtnCancel onClick={onClose} />
-        <button onClick={copiar} disabled={!data?.mensagem}
-          style={{ background: copiado ? "#238636" : "#185FA5", border: "none", borderRadius: 6, padding: "8px 16px", color: "#fff", fontSize: 11, fontFamily: theme.font.label, fontWeight: 700, cursor: data?.mensagem ? "pointer" : "not-allowed", opacity: data?.mensagem ? 1 : 0.5 }}>
-          {copiado ? "✓ Copiado" : "Copiar mensagem"}
-        </button>
+        {data && data.fonte === "ia" && (
+          <BotoesEnvio mensagem={mensagem} suggestionId={data?.suggestion_id} copiado={copiado} enviada={enviada}
+            onCopiar={copiar} onMarcarEnviada={marcarEnviada} />
+        )}
       </div>
     </Backdrop>
   );
