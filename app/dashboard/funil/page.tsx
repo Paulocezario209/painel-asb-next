@@ -2,12 +2,12 @@ import { createClient } from "@/lib/supabase/server";
 import { theme } from "@/lib/theme";
 import { S } from "@/app/dashboard/lib/dashboard-tokens";
 import { PageHead, SectionHead, KpiCard, StatTile } from "@/app/dashboard/lib/ui";
-import { FunnelVisual, type FunnelStage } from "@/components/dashboard/funnel-visual";
 import { DashboardFilters } from "@/components/dashboard/dashboard-filters";
 import { JornadaCliente } from "@/components/dashboard/jornada-cliente";
-import type { JornadaClienteRow } from "@/lib/funnel/jornada";
+import { getJornadaData } from "@/lib/funnel/jornada-data";
+import { buildViewModel } from "@/lib/funnel/jornada-metrics";
 import Link from "next/link";
-import { Users, Filter, Handshake, Percent, CheckCircle2, TrendingDown, Store, XCircle, LayoutGrid, Activity } from "lucide-react";
+import { Users, Filter, Handshake, Percent, CheckCircle2, Store, XCircle, LayoutGrid, Activity } from "lucide-react";
 
 import { redirect } from "next/navigation";
 import { getUserContext, canAccess } from "@/lib/auth/get-user-role";
@@ -39,8 +39,6 @@ const getFunilContagem = unstable_cache(
 );
 
 // Vocabulário de etapas: FONTE ÚNICA em lib/funnel/stages.ts (DEBT-157 fechada).
-// Aqui ficam SÓ as projeções específicas desta tela.
-const FASE_STAGES = new Set([...FASES.flatMap(f => [...f.stages]), "lead_perdido"]);  // lateral incluso
 // Alias canônico de legado (pedido_fechado NÃO é alias — conta via CONVERTIDO_SET).
 const aliasStage = (s: string): string => LEGACY_ALIAS[s] ?? s;
 
@@ -139,12 +137,8 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
     stageCounts[s] = (stageCounts[s] ?? 0) + 1;
   }
 
-  // Cone de 4 FASES — por LEAD (não por stage cru): Convertido vence tudo (faturou no
-  // ARES ou stage de fechamento), Perdido é lateral, o resto cai na fase do stage.
-  const rawCounts: Record<string, number> = {};
-  for (const l of leads) { const s = l.funnel_stage ?? "lead_novo"; rawCounts[s] = (rawCounts[s] ?? 0) + 1; }
-  const orfaos = Object.keys(rawCounts).filter(s => !FASE_STAGES.has(s));  // não silenciar (catcher)
-
+  // Fases por LEAD (não por stage cru): Convertido vence tudo (faturou no ARES ou stage de
+  // fechamento), Perdido é lateral, o resto cai na fase do stage. Alimenta os KPIs de aquisição.
   const isConvertido = (l: FunnelLead) =>
     CONVERTIDO_SET.has(l.funnel_stage ?? "") || (!!l.id && carteiraLeadIds.has(l.id));
   const faseCounts: Record<string, number> = { qualificacao: 0, qualificado: 0, com_vendedor: 0, convertido: 0 };
@@ -163,23 +157,13 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
   const emHandoffPlus  = faseCount(FASES[2]) + faseCount(FASES[3]);
   const taxaHandoff    = total > 0 ? ((emHandoffPlus / total) * 100).toFixed(1) : null;
 
-  // ── Cone: 4 fases · pct = FATIA do pipe ativo (ajuste A), não vs fase anterior ──
-  const totalAtivos = FASES.reduce((a, f) => a + faseCount(f), 0);
-  const N_FASES = FASES.length;
-  const chartData: FunnelStage[] = FASES.map((f, i) => {
-    const count = faseCount(f);
-    const pct = totalAtivos > 0 ? Math.round((count / totalAtivos) * 100) : null;
-    return { label: f.label, count, pct, fill: f.fill, funnelWidth: N_FASES - i };
-  });
-
-  // ── Bloco 2 — "Jornada do Cliente até a Recorrência" (carteira real ARES) ──
-  // Classificação por nº de pedidos faturados (histórico completo); 2 visões no client.
-  const jornadaRows: JornadaClienteRow[] = carteira.map((c) => ({
-    ares_pessoa_id: c.ares_pessoa_id,
-    total_orders: c.total_orders,
-    total_revenue_brl: c.total_revenue_brl,
-    customer_status: c.customer_status,
-  }));
+  // ── Bloco 2 — "Jornada do Cliente até a Recorrência" (V2, carteira real ARES) ──
+  // Fonte: getJornadaData (v_carteira_360 + pedidos_espelho paginado, deduplicado, score V1).
+  // Dois view-models (Carteira Viva | Histórico Geral) computados no server — o cliente só alterna.
+  // O Funil da Jornada (dentro do componente) SUBSTITUI o antigo cone "Onde estão os leads agora".
+  const { clientes: jornadaClientes, hoje: jornadaHoje } = await getJornadaData();
+  const jornadaViva = buildViewModel(jornadaClientes, "viva", jornadaHoje);
+  const jornadaGeral = buildViewModel(jornadaClientes, "geral", jornadaHoje);
 
   // ── Leads por etapa (posição atual) — etapas não-terminais com leads, na ordem da jornada ──
   // Card clicável por etapa (drill → /dashboard/leads?etapa=<stage>); count = stageCounts
@@ -264,36 +248,18 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
         </div>
       )}
 
-      {/* Funnel chart */}
-      <div style={{ ...S.card, padding: "20px 24px" }}>
-        <SectionHead
-          Icon={TrendingDown}
-          color="#C8102E"
-          title="Onde estão os leads agora"
-          desc={`% = fatia do pipe ativo (${totalAtivos})`}
-        />
-        {orfaos.length > 0 && (
-          <p style={{ ...S.muted, color: "#D4A017", fontSize: 10, marginBottom: 8 }}>
-            ⚠ {orfaos.length} funnel_stage órfão (fora das fases): {orfaos.join(", ")}
-          </p>
-        )}
-        <div style={{ height: 460 }}>
-          <FunnelVisual data={chartData} />
-        </div>
-      </div>
-
-      {/* ── Bloco 2 — CAMADA CLIENTE (pós 1ª compra) ─────────────────────────────
-          Fonte = carteira real ARES (v_carteira_360 + v_clientes_recuperados), as
-          MESMAS views das telas Clientes e Carteira Ativa — cada etapa é um atalho
-          para a tela que já trata aquele grupo. Zero lógica nova de cliente aqui. */}
+      {/* ── Bloco 2 — JORNADA DO CLIENTE ATÉ A RECORRÊNCIA (V2) ──────────────────
+          Fonte = carteira real ARES (v_carteira_360 + pedidos_espelho). O Funil da Jornada
+          dentro do componente SUBSTITUI o antigo cone "Onde estão os leads agora" (decisão
+          Paulo: dois processos distintos — aquisição [marcos acima] × evolução do cliente). */}
       <div style={{ ...S.card, padding: "20px 24px", borderTop: "2px solid #22c55e" }}>
         <SectionHead
           Icon={Store}
           color="#22c55e"
           title="Jornada do Cliente até a Recorrência"
-          desc="Acompanhe a carteira ativa e a evolução histórica do primeiro pedido até a recorrência."
+          desc="Evolução dos clientes desde o primeiro pedido faturado até a consolidação como cliente recorrente."
         />
-        <JornadaCliente rows={jornadaRows} />
+        <JornadaCliente viva={jornadaViva} geral={jornadaGeral} />
         {/* Recuperado — entrada LATERAL da camada cliente (voltou a faturar após churn/inativo) */}
         <Link href="/dashboard/clientes" style={{ textDecoration: "none" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 12, background: "rgba(34,197,94,.06)", border: "1px solid rgba(34,197,94,.3)", borderRadius: 6, padding: "10px 14px" }}>
