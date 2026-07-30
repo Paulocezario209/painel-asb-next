@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import PrevisaoClient, { type PrevRow } from "./previsao-client";
 import { theme } from "@/lib/theme";
 import { S } from "@/app/dashboard/lib/dashboard-tokens";
-import { PageHead, StatTile } from "@/app/dashboard/lib/ui";
+import { PageHead } from "@/app/dashboard/lib/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -55,11 +55,6 @@ export default async function PrevisaoPage() {
       ((b.a_comprar ?? 0) - (a.a_comprar ?? 0)),
   );
 
-  // banner conta o TOTAL (não filtrado) — a busca acontece no client
-  const reporTotal = merged.filter((r) => r.repor_agora).length;
-  const alerta = reporTotal > 0;
-  const sinal = alerta ? "#C8102E" : "#22c55e";
-
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <PageHead
@@ -79,17 +74,6 @@ export default async function PrevisaoPage() {
           </p>
         </div>
       )}
-
-      {/* Semáforo de reposição — sinal (🔴 repor agora / 🟢 cobertura ok) preservado */}
-      <div className="asb-grid-kpi">
-        <StatTile
-          label="Repor Agora"
-          value={reporTotal}
-          accent={sinal}
-          num={sinal}
-          sub={alerta ? "insumos abaixo do ponto de reposição" : "nenhum insumo abaixo do ponto de reposição"}
-        />
-      </div>
 
       <p style={{ color: "#aeb7cc", fontSize: 12, fontFamily: theme.font.label }}>
         <b style={{ color: "#c8d2e6" }}>&quot;s/ âncora&quot;</b> = sem saldo calculado (sem movimentação
