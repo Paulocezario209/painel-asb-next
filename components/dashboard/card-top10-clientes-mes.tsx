@@ -3,11 +3,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { theme } from "@/lib/theme";
 import { Star } from "lucide-react";
+import { brl, resolveTop10Share, type Top10ShareRow } from "@/lib/top10-share";
 
 const sans = theme.font.label;
 const num = theme.font.num;
-const brl = (n: number) =>
-  `R$ ${Number(n || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 function fmtTel(raw: string | null): string {
   if (!raw) return "—";
@@ -51,24 +50,37 @@ function rankStyle(i: number): React.CSSProperties {
   return { ...base, background: "var(--asb-card-hi)", color: "#c8d2e6" };
 }
 
-export async function CardTop10ClientesMes({ previewRows }: { previewRows?: Row[] } = {}) {
+export async function CardTop10ClientesMes({
+  previewRows,
+  previewShare,
+}: { previewRows?: Row[]; previewShare?: Top10ShareRow | null } = {}) {
   let rows: Row[];
+  let shareRow: Top10ShareRow | null;
   if (previewRows) {
     rows = previewRows;
+    shareRow = previewShare ?? null;
   } else {
     const supabase = await createClient();
-    const { data } = await supabase
-      .from("v_top10_clientes_mes")
-      .select(
-        "ares_pessoa_id, nome_fantasia, contato, bairro, vendedor_routing_team, vendedor_nome, pedidos_mes, receita_mes, recorrencia_semanal, ticket_medio"
-      )
-      .order("receita_mes", { ascending: false })
-      .limit(10);
+    const [{ data }, { data: shareData }] = await Promise.all([
+      supabase
+        .from("v_top10_clientes_mes")
+        .select(
+          "ares_pessoa_id, nome_fantasia, contato, bairro, vendedor_routing_team, vendedor_nome, pedidos_mes, receita_mes, recorrencia_semanal, ticket_medio"
+        )
+        .order("receita_mes", { ascending: false })
+        .limit(10),
+      supabase
+        .from("v_top10_share_mes")
+        .select("receita_top10, faturamento_mensal_total, percentual_top10, periodo, criterio")
+        .maybeSingle(),
+    ]);
     rows = (data ?? []) as Row[];
+    shareRow = (shareData ?? null) as Top10ShareRow | null;
   }
   if (rows.length === 0) return null;
 
   const total = rows.reduce((s, r) => s + Number(r.receita_mes || 0), 0);
+  const share = resolveTop10Share(total, shareRow);
   const maxRev = Math.max(...rows.map((r) => Number(r.receita_mes || 0)), 1);
   const mesLabel = String(new Date().getMonth() + 1).padStart(2, "0");
 
@@ -95,12 +107,26 @@ export async function CardTop10ClientesMes({ previewRows }: { previewRows?: Row[
             Top {rows.length} clientes do mês
           </div>
           <div style={{ fontSize: 12.5, color: "#aeb7cc", fontFamily: sans, marginTop: 1 }}>
-            Receita acumulada de 01/{mesLabel} até hoje · ordenado por receita
+            Receita faturada de 01/{mesLabel} até hoje · ordenado por receita
           </div>
         </div>
-        <div style={{ marginLeft: "auto", textAlign: "right" }}>
+        <div style={{ marginLeft: "auto", textAlign: "right", minWidth: 224 }}>
           <div style={{ fontSize: 10.5, color: "#83879a", fontFamily: sans, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em" }}>Receita Top {rows.length}</div>
           <div style={{ fontSize: 19, fontWeight: 800, color: "#22C55E", fontFamily: num, fontVariantNumeric: "tabular-nums" }}>{brl(total)}</div>
+          {share.show && (
+            <>
+              <div style={{ height: 6, borderRadius: 999, background: "var(--asb-card-hi)", marginTop: 8, overflow: "hidden" }}>
+                <div style={{ height: "100%", width: `${share.barPct}%`, background: "linear-gradient(90deg,#C8102E,#6E86FF)", borderRadius: 999 }} />
+              </div>
+              <div style={{ fontSize: 11.5, color: "#aeb7cc", fontFamily: sans, marginTop: 5 }}>
+                <span style={{ color: "#fff", fontWeight: 800, fontFamily: num, fontVariantNumeric: "tabular-nums" }}>{share.pctLabel}</span>
+                {" "}do faturamento mensal
+              </div>
+              <div style={{ fontSize: 10.5, color: "#83879a", fontFamily: sans, marginTop: 1 }}>
+                de <span style={{ fontFamily: num, fontVariantNumeric: "tabular-nums" }}>{share.totalLabel}</span> faturados no mês · base: pedidos faturados
+              </div>
+            </>
+          )}
         </div>
       </div>
 
