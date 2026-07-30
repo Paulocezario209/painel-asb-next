@@ -32,6 +32,22 @@ export const VIVA_STATUS = new Set<string>(["ativo", "atencao"]);
 export const isViva = (status: string | null | undefined): boolean =>
   !!status && VIVA_STATUS.has(status);
 
+// v_carteira_360 pode retornar >1 linha por cliente (fan-out do LEFT JOIN vendors quando um
+// routing_team tem >1 vendedor ativo — condição de dado observada em produção, 8 clientes em
+// 2026-07). As linhas duplicadas têm os MESMOS total_orders/revenue/status (só o vendedor
+// difere), então contar cru inflaria count E faturamento. Deduplicamos por ares_pessoa_id
+// ANTES de qualquer agregação. (Não corrige a view — defende o cálculo desta seção.)
+export function dedupeById<T extends { ares_pessoa_id: number }>(rows: T[]): T[] {
+  const seen = new Set<number>();
+  const out: T[] = [];
+  for (const r of rows) {
+    if (seen.has(r.ares_pessoa_id)) continue;
+    seen.add(r.ares_pessoa_id);
+    out.push(r);
+  }
+  return out;
+}
+
 // Ordem visual + rótulos (1º → 2º → 3º → 4º → Recorrente).
 export const JORNADA_STAGES: { key: JornadaStageKey; label: string; min: number; max: number | null; fill: string }[] = [
   { key: "p1",         label: "1º Pedido — Ativação", min: 1, max: 1,    fill: "#D4A017" },
@@ -81,7 +97,7 @@ export interface JornadaResult {
  * (histórico completo). Categorias mutuamente exclusivas — um cliente cai em UM estágio.
  */
 export function computeJornada(rows: JornadaClienteRow[], view: JornadaView): JornadaResult {
-  const scoped = filterByView(rows, view);
+  const scoped = filterByView(dedupeById(rows), view);
   const acc: Record<JornadaStageKey, { count: number; revenue: number; orders: number }> = {
     p1: { count: 0, revenue: 0, orders: 0 },
     p2: { count: 0, revenue: 0, orders: 0 },
@@ -131,7 +147,7 @@ export interface JornadaAvancos {
  */
 export function computeAvancos(rows: JornadaClienteRow[]): JornadaAvancos {
   let r1 = 0, r2 = 0, r3 = 0, r4 = 0, r5 = 0;
-  for (const r of rows) {
+  for (const r of dedupeById(rows)) {
     const n = r.total_orders ?? 0;
     if (n >= 1) r1++;
     if (n >= 2) r2++;

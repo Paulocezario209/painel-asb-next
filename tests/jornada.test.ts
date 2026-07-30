@@ -185,6 +185,24 @@ test("taxas de avanço com base vazia → null, sem divisão por zero", () => {
   assert.equal(a.recorrencia, null);
 });
 
+// ── dedup: v_carteira_360 pode duplicar cliente (fan-out do JOIN vendors) ────────
+test("cliente duplicado na fonte é contado UMA vez (count e faturamento)", () => {
+  // Mesmo cliente (ares_pessoa_id=1) aparece 2× — não pode inflar count nem revenue.
+  const rows: JornadaClienteRow[] = [
+    cli(1, 6, 90000, "ativo"),
+    cli(1, 6, 90000, "ativo"), // duplicata (fan-out)
+    cli(2, 2, 10000, "ativo"),
+  ];
+  const r = computeJornada(rows, "geral");
+  assert.equal(r.base, 2); // não 3
+  const rec = r.stages.find((s) => s.key === "recorrente")!;
+  assert.equal(rec.count, 1);       // contado uma vez
+  assert.equal(rec.revenue, 90000); // faturamento não dobrado
+  // avanços também não inflam
+  const a = computeAvancos(rows);
+  assert.equal(a.reached.r1, 2);
+});
+
 // ── robustez: revenue/orders nulos não viram NaN ─────────────────────────────────
 test("campos nulos (revenue/orders) não produzem NaN", () => {
   const rows: JornadaClienteRow[] = [

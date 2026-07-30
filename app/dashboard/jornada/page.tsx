@@ -21,6 +21,7 @@ import {
   bucketByOrders,
   isViva,
   filterByView,
+  dedupeById,
   type JornadaView,
   type JornadaStageKey,
 } from "@/lib/funnel/jornada";
@@ -88,7 +89,8 @@ export default async function JornadaDrillPage({
     .select(
       "ares_pessoa_id, name, city, uf, vendedor_nome, total_orders, total_revenue_brl, avg_ticket_brl, first_order_at, last_order_at, dias_sem_compra, avg_order_interval_days, customer_status",
     );
-  const carteira = (rawCarteira ?? []) as CarteiraDrillRow[];
+  // Dedup por cliente (v_carteira_360 pode duplicar por fan-out do LEFT JOIN vendors).
+  const carteira = dedupeById((rawCarteira ?? []) as CarteiraDrillRow[]);
 
   // Recorte da visão + estágio (classificação por total_orders, histórico completo).
   const scoped = filterByView(carteira, view).filter((c) => bucketByOrders(c.total_orders) === stage);
