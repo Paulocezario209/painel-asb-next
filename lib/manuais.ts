@@ -38,11 +38,15 @@ export const MANUAIS: Record<string, ManualTela> = {
     fontes: [
       "Cone de 4 fases e KPIs: etapas (funnel_stage) de todos os leads reais (sem testes, sem fora de rota).",
       "Conversão por marcos: função no banco (criados → qualificados → agendamento → assumidos → pedidos) do mês/vendedor filtrado.",
-      "Camada Cliente e Recuperados: carteira real do ARES (v_carteira_360) — mesma base das telas Clientes/Carteira.",
+      "Jornada do Cliente até a Recorrência: carteira real do ARES (v_carteira_360) — mesma base das telas Clientes/Carteira. Classifica cada cliente pelo nº de pedidos FATURADOS no histórico completo (status 4/13): 1 pedido = 1º/Ativação · 2 = 2º · 3 = 3º · 4 = 4º · 5+ = Recorrente. Categorias mutuamente exclusivas (um cliente em UM card só).",
+      "Drill pedido-a-pedido (clique no card): v_carteira_360 (agregados) + pedidos_espelho (data e valor de cada pedido faturado). Identificador = ID ARES (CNPJ não existe no espelho).",
       "Convertido = fechou pedido OU faturou no ARES (mesmo sem o vendedor arrastar o card).",
     ],
     comoUsar: [
       "Clique numa linha da Conversão da Coorte para abrir SÓ os leads daquele marco (mesmo mês/vendedor do filtro) — a tela de Leads mostra a tarja verde COORTE com o recorte ativo e o link 'limpar filtro'.",
+      "Jornada — seletor “Base analisada”: Carteira Viva (só clientes ativos/atenção — quem ainda precisa ser conduzido à recorrência) OU Histórico Geral (toda a carteira faturada, inclusive quem depois virou churn/perdido). A troca atualiza contagem, faturamento, ticket, % e a lista detalhada. Só no Histórico Geral aparecem as taxas de avanço (1º→2º, 2º→3º, 3º→4º, recorrência) sobre a população acumulada.",
+      "Jornada — a classificação é SEMPRE pelo histórico completo de pedidos: o filtro de período da página NÃO afeta esta seção (só a Conversão por Marcos). Um cliente com 7 pedidos é Recorrente, nunca 1º/2º. Churn e perdido não são alterados — seguem nas telas próprias.",
+      "Clique num card da Jornada para abrir a lista detalhada daquele estágio (na visão selecionada): nome, ID ARES, vendedor, sequência pedido-a-pedido (data/valor/intervalo), acumulado, ticket, último pedido, situação e se está na carteira viva.",
       "“Leads por Etapa”: um card por etapa não-terminal (posição atual) — clique para abrir a lista completa daquela etapa na tela de Leads (tarja ETAPA + 'limpar filtro'). O número do card bate com a lista.",
       "A contagem global tem cache de 5 minutos — pode atrasar levemente vs a tela de Leads.",
     ],

@@ -4,6 +4,8 @@ import { S } from "@/app/dashboard/lib/dashboard-tokens";
 import { PageHead, SectionHead, KpiCard, StatTile } from "@/app/dashboard/lib/ui";
 import { FunnelVisual, type FunnelStage } from "@/components/dashboard/funnel-visual";
 import { DashboardFilters } from "@/components/dashboard/dashboard-filters";
+import { JornadaCliente } from "@/components/dashboard/jornada-cliente";
+import type { JornadaClienteRow } from "@/lib/funnel/jornada";
 import Link from "next/link";
 import { Users, Filter, Handshake, Percent, CheckCircle2, TrendingDown, Store, XCircle, LayoutGrid, Activity } from "lucide-react";
 
@@ -48,24 +50,17 @@ interface FunnelLead {
   funnel_stage: string | null;
 }
 
-// ── Camada CLIENTE (Bloco 2 do funil) — fontes = as MESMAS das sidebars ─────────
-// v_carteira_360 (carteira real ARES, régua fn_status_cliente) + v_clientes_recuperados.
-// Buckets mutuamente exclusivos: churn/perdido vencem (régua de dias); entre saudáveis
-// (ativo/atenção), separa por nº de pedidos (decisão Paulo 2026-07-09):
-// 1 pedido = Ativação · 2 = Recompra · 3+ = Recorrente.
+// ── Camada CLIENTE (Bloco 2 do funil) — "Jornada do Cliente até a Recorrência" ───
+// Fonte = v_carteira_360 (carteira real ARES, régua fn_status_cliente). Classificação
+// por nº de pedidos faturados (total_orders, histórico completo), em 2 visões (Carteira
+// Viva x Histórico Geral). Lógica pura em lib/funnel/jornada.ts (testada). Churn/perdido
+// NÃO são alterados — só lidos via customer_status (telas próprias seguem intactas).
 interface CarteiraRow {
   lead_id: string | null;
+  ares_pessoa_id: number;
   customer_status: string | null;
   total_orders: number | null;
-}
-const CHURN_SET = new Set(["risco", "pre_churn", "churn_comercial"]);
-function bucketCliente(c: CarteiraRow): "ativacao" | "recompra" | "recorrente" | "churn" | "perdido" {
-  if (c.customer_status === "inativo_definitivo") return "perdido";
-  if (c.customer_status && CHURN_SET.has(c.customer_status)) return "churn";
-  const n = c.total_orders ?? 1;
-  if (n >= 3) return "recorrente";
-  if (n === 2) return "recompra";
-  return "ativacao";
+  total_revenue_brl: number | null;
 }
 
 interface FunnelEvent {
@@ -96,7 +91,7 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
   // Bounded (~330 < 1000) — mesmas fontes de /clientes e /carteira-ativa (zero view nova).
   const _mesRecup = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}-01`;
   const [{ data: rawCarteira }, { data: rawRecup }] = await Promise.all([
-    supabase.from("v_carteira_360").select("lead_id, customer_status, total_orders"),
+    supabase.from("v_carteira_360").select("lead_id, ares_pessoa_id, customer_status, total_orders, total_revenue_brl"),
     supabase.from("v_clientes_recuperados").select("ares_cliente_id").eq("mes_retorno", _mesRecup),
   ]);
   const carteira = (rawCarteira ?? []) as CarteiraRow[];
@@ -177,16 +172,14 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
     return { label: f.label, count, pct, fill: f.fill, funnelWidth: N_FASES - i };
   });
 
-  // ── Bloco 2 — Camada CLIENTE (carteira real ARES, mesmas fontes das sidebars) ──
-  const clienteCounts = { ativacao: 0, recompra: 0, recorrente: 0, churn: 0, perdido: 0 };
-  for (const c of carteira) clienteCounts[bucketCliente(c)]++;
-  const CLIENTE_ETAPAS = [
-    { key: "ativacao",   label: "1ª compra (Ativação)", count: clienteCounts.ativacao,   cor: "#D4A017", href: "/dashboard/clientes?tab=ativos",   sub: "1 pedido faturado" },
-    { key: "recompra",   label: "Recompra",             count: clienteCounts.recompra,   cor: "#185FA5", href: "/dashboard/carteira-ativa",        sub: "2 pedidos" },
-    { key: "recorrente", label: "Recorrente",           count: clienteCounts.recorrente, cor: "#22c55e", href: "/dashboard/carteira-ativa",        sub: "3+ pedidos · saudável" },
-    { key: "churn",      label: "Churn",                count: clienteCounts.churn,      cor: "#C8102E", href: "/dashboard/clientes?tab=churn",    sub: "risco → churn (15–59d)" },
-    { key: "perdido",    label: "Perdido",              count: clienteCounts.perdido,    cor: "#6b7280", href: "/dashboard/clientes?tab=churn",    sub: "inativo ≥60d" },
-  ];
+  // ── Bloco 2 — "Jornada do Cliente até a Recorrência" (carteira real ARES) ──
+  // Classificação por nº de pedidos faturados (histórico completo); 2 visões no client.
+  const jornadaRows: JornadaClienteRow[] = carteira.map((c) => ({
+    ares_pessoa_id: c.ares_pessoa_id,
+    total_orders: c.total_orders,
+    total_revenue_brl: c.total_revenue_brl,
+    customer_status: c.customer_status,
+  }));
 
   // ── Leads por etapa (posição atual) — etapas não-terminais com leads, na ordem da jornada ──
   // Card clicável por etapa (drill → /dashboard/leads?etapa=<stage>); count = stageCounts
@@ -297,16 +290,10 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
         <SectionHead
           Icon={Store}
           color="#22c55e"
-          title="Camada Cliente · pós 1ª compra"
-          desc={`Carteira real ARES (${carteira.length} clientes) · clique para abrir a tela`}
+          title="Jornada do Cliente até a Recorrência"
+          desc="Acompanhe a carteira ativa e a evolução histórica do primeiro pedido até a recorrência."
         />
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 10 }}>
-          {CLIENTE_ETAPAS.map((e) => (
-            <Link key={e.key} href={e.href} style={{ textDecoration: "none" }}>
-              <StatTile label={e.label} value={e.count} accent={e.cor} num={e.cor} sub={e.sub} />
-            </Link>
-          ))}
-        </div>
+        <JornadaCliente rows={jornadaRows} />
         {/* Recuperado — entrada LATERAL da camada cliente (voltou a faturar após churn/inativo) */}
         <Link href="/dashboard/clientes" style={{ textDecoration: "none" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 12, background: "rgba(34,197,94,.06)", border: "1px solid rgba(34,197,94,.3)", borderRadius: 6, padding: "10px 14px" }}>
