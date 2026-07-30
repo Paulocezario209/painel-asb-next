@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
     const res = await fetch(`${cpUrl}/internal/deal-desk/assist`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-internal-api-key": apiKey },
-      body: JSON.stringify({ lead_id }),
+      body: JSON.stringify({ lead_id, actor_email: ctx.email }),
     });
     if (!res.ok) return NextResponse.json(OFF);
     return NextResponse.json(await res.json());
