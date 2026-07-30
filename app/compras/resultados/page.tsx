@@ -73,7 +73,9 @@ export default async function ResultadosPage({
 
   const [fatRes, compRes, metaRes, calRes, itensRes, fatTipoRes, mensalRes, devolRes, entradaRes] = await Promise.all([
     supabase
-      .from("v_faturado_emissao_diario")  // faturado por EMISSÃO (data_faturamento), não data_meta/entrega
+      // Faturado consolidado ASB+CNB por EMISSÃO/lançamento (data_faturamento ASB · data_venda CNB),
+      // não data_meta/entrega. Reagregação de v_faturamento_unificado_dia (DEBT — inclusão CNB, 2026-07-30).
+      .from("v_faturado_consolidado_diario")
       .select("dia, faturado_brl")
       .gte("dia", iso(inicioMes))
       .lte("dia", iso(fimJanela)),
