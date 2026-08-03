@@ -9,6 +9,7 @@ import { RankingVendedores } from "./ranking-vendedores";
 import { getAlertasComerciais, getRankingVendedores, getEstrategiasComerciais } from "./actions";
 import { VENDOR_ORDER } from "@/lib/vendor-labels";
 import { PageHead, StatTile } from "@/app/dashboard/lib/ui";
+import { DashboardFilters } from "@/components/dashboard/dashboard-filters";
 
 export const dynamic = "force-dynamic";
 
@@ -39,7 +40,11 @@ function fmtBRL(v: number): string {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0, maximumFractionDigits: 0 });
 }
 
-export default async function VendasPage() {
+export default async function VendasPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | undefined>>;
+}) {
   const supabase = await createClient();
   // 069c: instância SSR sem getUser() não hidrata a sessão dos cookies → não anexa o
   // access token → reads RLS (tabela `metas`) saem como anon (auth.uid() null) → 0 linhas.
@@ -48,11 +53,20 @@ export default async function VendasPage() {
   const ctx = await getUserContext();
   if (!ctx) redirect("/dashboard");
 
-  // ── Data boundaries ───────────────────────────────────────────────────────
+  // ── Data boundaries — mês selecionável via ?mes=YYYY-MM (default: mês corrente) ──
+  // Antes desta mudança a tela era cravada em `new Date()`: não dava pra consultar
+  // histórico. O calendário/cards agora vêm das RPCs parametrizadas por mês
+  // (calendario_metas_mes / resumo_mes_vendedor_mes) — no mês corrente elas têm paridade
+  // exata com as views v_calendario_metas / v_resumo_mes_vendedor que rodavam antes.
   const now = new Date();
-  const mesAtual = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const mesCorrente = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const sp = await searchParams;
+  const mesAtual = /^\d{4}-(0[1-9]|1[0-2])$/.test(sp?.mes ?? "") ? (sp!.mes as string) : mesCorrente;
+  const isMesCorrente = mesAtual === mesCorrente;
+  const [anoSel, mesSel] = mesAtual.split("-").map(Number);
   const primeiroDiaMes = `${mesAtual}-01`;
-  const ultimoDiaMes = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10);
+  const ultimoDiaMes = `${mesAtual}-${String(new Date(anoSel, mesSel, 0).getDate()).padStart(2, "0")}`;
+  const mesLabel = new Date(anoSel, mesSel - 1, 1).toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
 
   // ── Query A: painel_dia_vendedor (mes atual) ──────────────────────────────
   let queryDia = supabase
@@ -133,11 +147,16 @@ export default async function VendasPage() {
   const cicloClient = srk
     ? createServiceClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, srk)
     : supabase;
-  let cicloQuery = cicloClient
-    .from("v_emissao_ciclo_vendedor")
-    .select("vendedor_routing_team, window_start, emissao_ciclo_brl, qtd_lancamentos");
-  if (isVendedorRestrito) cicloQuery = cicloQuery.eq("vendedor_routing_team", ctx.routing_team!);
-  const { data: rawCiclo } = await cicloQuery;
+  // O CICLO é um conceito de "agora" (janela da próxima data de meta) — só existe no mês
+  // corrente. Em mês consultado (fechado/futuro) não há ciclo: os cards caem no §5 do mês.
+  let rawCiclo: unknown[] | null = null;
+  if (isMesCorrente) {
+    let cicloQuery = cicloClient
+      .from("v_emissao_ciclo_vendedor")
+      .select("vendedor_routing_team, window_start, emissao_ciclo_brl, qtd_lancamentos");
+    if (isVendedorRestrito) cicloQuery = cicloQuery.eq("vendedor_routing_team", ctx.routing_team!);
+    rawCiclo = (await cicloQuery).data;
+  }
   type CicloRow = { vendedor_routing_team: string; window_start: string; emissao_ciclo_brl: number; qtd_lancamentos: number };
   const emissaoByVendor: Record<string, { realizadoMes: number; realizadoCiclo: number; qtdCiclo: number; windowStart: string }> = {};
   for (const c of (rawCiclo ?? []) as unknown as CicloRow[]) {
@@ -157,40 +176,51 @@ export default async function VendasPage() {
   const pctAtingido = totalMeta > 0 ? ((totalRealizado / totalMeta) * 100) : null;
   const pctAtingidoStr = pctAtingido !== null ? pctAtingido.toFixed(1) : null;
 
-  // ── Alertas + Ranking (substituem detalhamento diário + consolidado) ──────
-  const alertasData = isVendedorRestrito
+  // ── Alertas + Ranking + Missão (substituem detalhamento diário + consolidado) ──────
+  // Todos são leitura de "agora" (alerta aberto, ranking do mês, missão do dia): em mês
+  // consultado ficam fora — o que se consulta lá é o histórico de meta × realizado.
+  const alertasData = isVendedorRestrito || !isMesCorrente
     ? { total: 0, alertas: [], contadores: { vermelho: 0, laranja: 0, amarelo: 0 } }
     : await getAlertasComerciais();
-  const rankingData = isVendedorRestrito ? [] : await getRankingVendedores();
-  const estrategiasData = await getEstrategiasComerciais();
+  const rankingData = isVendedorRestrito || !isMesCorrente ? [] : await getRankingVendedores();
+  const estrategiasData = isMesCorrente ? await getEstrategiasComerciais() : null;
 
-  // ── F4: calendario com meta diaria + resumo mes vendedor (views novas) ────
-  let calQuery = supabase.from("v_calendario_metas").select("*");
-  let resQuery = supabase.from("v_resumo_mes_vendedor").select("*");
-  if (isVendedorRestrito) {
-    calQuery = calQuery.eq("vendedor_routing_team", ctx.routing_team!);
-    resQuery = resQuery.eq("vendedor_routing_team", ctx.routing_team!);
-  }
-  const { data: rawCal } = await calQuery;
-  const { data: rawRes } = await resQuery;
-  const calendarioData = (rawCal ?? []) as never[];
-  const resumosData = (rawRes ?? []) as never[];
+  // ── F4: calendario com meta diaria + resumo mes vendedor (RPCs por mês) ───
+  // As RPCs são SECURITY DEFINER (não passam pela RLS de pedidos_espelho, igual ao que a
+  // remuneração já faz com calendario_metas_mes) → o escopo do vendedor restrito é aplicado
+  // aqui no servidor, com o mesmo critério do .eq() que as views usavam.
+  const [{ data: rawCal }, { data: rawRes }] = await Promise.all([
+    supabase.rpc("calendario_metas_mes", { p_ano: anoSel, p_mes: mesSel }),
+    supabase.rpc("resumo_mes_vendedor_mes", { p_ano: anoSel, p_mes: mesSel }),
+  ]);
+  const scopeTeam = (r: { vendedor_routing_team: string }) =>
+    !isVendedorRestrito || r.vendedor_routing_team === ctx.routing_team;
+  const resumoRows = ((rawRes ?? []) as { vendedor_routing_team: string; realizado_mes_brl: number | null }[])
+    .filter(scopeTeam);
+  const calendarioData = ((rawCal ?? []) as { vendedor_routing_team: string }[]).filter(scopeTeam) as never[];
+  const resumosData = resumoRows as never[];
 
-  // ── Feature 2: parte CNB do realizado §5 por vendedor (mês corrente) ──────
-  // Aditivo: v_cnb_mes_vendedor (rollup de v_cnb_dia_vendedor). O §5 (realizado_mes_brl)
-  // JÁ inclui CNB; aqui só separamos a parcela p/ exibir. ares = §5 − cnb (escalar no card).
-  let cnbQuery = supabase.from("v_cnb_mes_vendedor").select("vendedor_routing_team, cnb_mes_brl");
+  // ── Feature 2: parte CNB do realizado §5 por vendedor (mês selecionado) ───
+  // O §5 (realizado_mes_brl) JÁ inclui CNB; aqui só separamos a parcela p/ exibir.
+  // ares = §5 − cnb (escalar no card). Fonte = v_cnb_dia_vendedor somada na janela do mês
+  // (v_cnb_mes_vendedor só existe pro mês corrente — cravada em fn_hoje_brt()); no mês
+  // corrente a soma é idêntica à view.
+  let cnbQuery = supabase
+    .from("v_cnb_dia_vendedor")
+    .select("vendedor_routing_team, cnb_brl")
+    .gte("dia", primeiroDiaMes)
+    .lte("dia", ultimoDiaMes);
   if (isVendedorRestrito) cnbQuery = cnbQuery.eq("vendedor_routing_team", ctx.routing_team!);
   const { data: rawCnb } = await cnbQuery;
   const cnbByVendor: Record<string, number> = {};
-  for (const c of (rawCnb ?? []) as unknown as { vendedor_routing_team: string; cnb_mes_brl: number }[]) {
-    cnbByVendor[c.vendedor_routing_team] = Number(c.cnb_mes_brl ?? 0);
+  for (const c of (rawCnb ?? []) as unknown as { vendedor_routing_team: string; cnb_brl: number }[]) {
+    cnbByVendor[c.vendedor_routing_team] = (cnbByVendor[c.vendedor_routing_team] ?? 0) + Number(c.cnb_brl ?? 0);
   }
 
   // ── DEBT-103 FASE D: realizado OFICIAL = FATURADO §5 (v_resumo, eixo data_faturamento) ──
   // totalRealizado (acima) = painel_dia_vendedor por data_emissao → vira PRÉVIA rotulada.
-  const realizadoFatOficial = (rawRes ?? []).reduce(
-    (s, r) => s + Number((r as { realizado_mes_brl: number | null }).realizado_mes_brl ?? 0), 0,
+  const realizadoFatOficial = resumoRows.reduce(
+    (s, r) => s + Number(r.realizado_mes_brl ?? 0), 0,
   );
   const pctFat = totalMeta > 0 ? (realizadoFatOficial / totalMeta) * 100 : null;
   const pctFatStr = pctFat !== null ? pctFat.toFixed(1) : null;
@@ -204,11 +234,18 @@ export default async function VendasPage() {
   return (
     <VendasPrivacyShell>
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      {/* Header */}
-      <PageHead
-        title="Vendas"
-        desc={`Faturamento ${mesAtual} · realizado OFICIAL = faturado NF+Recibo por dia de faturamento (§5) · prévia por emissão (tempo real)`}
-      />
+      {/* Header + seletor de mês (consulta de histórico) */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 12 }}>
+        <PageHead
+          title="Vendas"
+          desc={
+            isMesCorrente
+              ? `Faturamento ${mesLabel} · realizado OFICIAL = faturado NF+Recibo por dia de faturamento (§5) · prévia por emissão (tempo real)`
+              : `Faturamento ${mesLabel} · mês consultado — meta × realizado (§5) fechados. Ciclo, alertas e missão do dia só no mês corrente.`
+          }
+        />
+        <DashboardFilters showMonth showVendedor={false} defaultMes={mesCorrente} />
+      </div>
 
       {/* KPI cards topo (5: Meta · Faturado ASB · Faturado CNB · Total §5 · % Atingido) */}
       <div className="asb-grid-kpi-5">
@@ -216,7 +253,7 @@ export default async function VendasPage() {
           { label: "Meta Total", value: totalMeta > 0 ? <span className="priv-brl">{fmtBRL(totalMeta)}</span> : "\u2014", accent: "#f59e0b", sub: undefined as string | undefined, num: undefined as string | undefined },
           { label: "Faturado ASB", value: <span className="priv-brl">{fmtBRL(faturadoAsb)}</span>, accent: "#22c55e", sub: "ARES \u00b7 por dia de faturamento", num: undefined as string | undefined },
           { label: "Faturado CNB", value: <span className="priv-brl">{fmtBRL(totalCnb)}</span>, accent: "#185FA5", sub: "Carnes Nobres Boutique (m\u00eas)", num: undefined as string | undefined },
-          { label: "Total Faturado (\u00a75)", value: <span className="priv-brl">{fmtBRL(realizadoFatOficial)}</span>, accent: "#C8102E", sub: `ASB + CNB \u00b7 pr\u00e9via ciclo ${fmtBRL(totalCiclo)}`, num: undefined as string | undefined },
+          { label: "Total Faturado (\u00a75)", value: <span className="priv-brl">{fmtBRL(realizadoFatOficial)}</span>, accent: "#C8102E", sub: isMesCorrente ? `ASB + CNB \u00b7 pr\u00e9via ciclo ${fmtBRL(totalCiclo)}` : "ASB + CNB \u00b7 m\u00eas fechado", num: undefined as string | undefined },
           { label: "% Atingido", value: pctFatStr ? <span className="priv-pct">{`${pctFatStr}%`}</span> : "\u2014", accent: pctFat !== null ? (pctFat >= 100 ? "#22c55e" : pctFat >= 50 ? "#f59e0b" : "#C8102E") : "#e4e9f0", sub: undefined as string | undefined, num: pctFat !== null ? (pctFat >= 100 ? "#22c55e" : pctFat >= 50 ? "#f59e0b" : "#C8102E") : undefined },
         ].map(({ label, value, accent, sub, num }) => (
           <StatTile key={label} label={label} value={value} accent={accent} num={num} sub={sub} />
@@ -239,6 +276,7 @@ export default async function VendasPage() {
         cnbByVendor={cnbByVendor}
         restrictedToVendor={isVendedorRestrito ? ctx.routing_team! : null}
         estrategias={estrategiasData}
+        mesFechado={!isMesCorrente}
       />
 
     </div>

@@ -91,9 +91,10 @@ export const MANUAIS: Record<string, ManualTela> = {
   },
   "/dashboard/vendas": {
     titulo: "Vendas",
-    oQueE: "Acompanhamento de meta × realizado do mês, por vendedor e no total, com calendário de metas diárias.",
+    oQueE: "Acompanhamento de meta × realizado do mês, por vendedor e no total, com calendário de metas diárias. O seletor MÊS no topo consulta qualquer mês cadastrado (histórico e futuro).",
     fontes: [
       "Meta Total: metas mensais cadastradas (upload de metas) — metas medem a operação ASB.",
+      "Calendário e cards por mês: RPCs calendario_metas_mes / resumo_mes_vendedor_mes — no mês corrente entregam exatamente os mesmos números das views v_calendario_metas / v_resumo_mes_vendedor (paridade validada).",
       "Total Faturado (§5) = realizado OFICIAL: faturado ARES por dia de faturamento + vendas CNB dos vendedores (XLSX) — é a régua que fecha meta e semana.",
       "Faturado ASB e Faturado CNB: decomposição do próprio §5 (a soma SEMPRE fecha com o total).",
       "“Prévia ciclo/emissão”: tempo real por emissão — informativa, NÃO é a régua oficial.",
@@ -103,6 +104,8 @@ export const MANUAIS: Record<string, ManualTela> = {
       "Clique num dia do calendário para ver os pedidos (ARES + CNB) e ausentes daquele dia.",
       "O ✓/✗ do dia considera o fold da semana (regra do fechamento), não o dia isolado.",
       "% Atingido usa o §5 oficial — número diferente do fiscal do /gerente é esperado (réguas distintas).",
+      "Troque o mês no seletor MÊS (ou volte com “mês atual”). Em mês consultado o card mostra Realizado (mês) × Meta do mês e o % é o do mês inteiro.",
+      "Ciclo, alertas comerciais, ranking e missão do dia só aparecem no mês corrente — são leitura de “agora”, não de histórico.",
     ],
   },
   "/dashboard/gerente": {
