@@ -79,6 +79,7 @@ export function CalendarSection({
   cnbByVendor,
   restrictedToVendor,
   estrategias,
+  mesFechado = false,
 }: {
   calendario: DayCell[];
   resumos: ResumoVendor[];
@@ -86,6 +87,9 @@ export function CalendarSection({
   cnbByVendor?: Record<string, number>;
   restrictedToVendor?: string | null;
   estrategias?: EstrategiasResponse | null;
+  /** Mês consultado (≠ corrente): some com o que é conceito de "hoje" — ciclo/meta-do-dia/
+   *  saldo-do-dia e a coluna de missão. Sobra meta × realizado do mês, que é o que se consulta. */
+  mesFechado?: boolean;
 }) {
   const [vendor, setVendor] = useState<string>(restrictedToVendor ?? "all");
   const isRestricted = !!restrictedToVendor;
@@ -295,7 +299,7 @@ export function CalendarSection({
                     fontFamily: theme.font.label,
                   }}
                 >
-                  {pctCiclo !== null ? <span className="priv-pct">{`${pctCiclo}%`}</span> : "—"}
+                  {(() => { const p = mesFechado ? r.pct_atingido_mes : pctCiclo; return p !== null ? <span className="priv-pct">{`${p}%`}</span> : "—"; })()}
                 </span>
               </div>
 
@@ -304,6 +308,9 @@ export function CalendarSection({
                   const saldoDia = realizadoCiclo - metaProx;   // ciclo (janela) − meta próx
                   const saldoDiaPositivo = saldoDia >= 0;
                   return [
+                  // Bloco do DIA (meta da próxima data · ciclo · saldo do dia) só existe no mês
+                  // corrente — em mês consultado não há "próxima meta", e o card mostra o mês.
+                  ...(mesFechado ? [] : [
                   {
                     label: r.proxima_data_meta
                       ? `Meta ${new Date(r.proxima_data_meta + "T00:00:00").toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" }).replace(",", "").toUpperCase()}`
@@ -320,9 +327,9 @@ export function CalendarSection({
                     label: "Saldo dia",
                     value: <span className="priv-brl">{(saldoDiaPositivo ? "+" : "") + fmtBRL(saldoDia)}</span>,
                     c: saldoDiaPositivo ? theme.colors.success : theme.colors.critical
-                  },
-                  { label: "Acumulado",  value: <span className="priv-brl">{fmtBRL(acumuladoEmissao)}</span>, c: "#FFFFFF" },
-                  { label: "Esperado",   value: <span className="priv-brl">{fmtBRL(r.meta_acumulada_brl)}</span>, c: "#c0d0e0" },
+                  }]),
+                  { label: mesFechado ? "Realizado (mês)" : "Acumulado", value: <span className="priv-brl">{fmtBRL(acumuladoEmissao)}</span>, c: "#FFFFFF" },
+                  { label: mesFechado ? "Meta do mês" : "Esperado", value: <span className="priv-brl">{fmtBRL(mesFechado ? r.meta_total_mes_brl : r.meta_acumulada_brl)}</span>, c: "#c0d0e0" },
                   { label: "Saldo mês",  value: <span className="priv-brl">{(saldoPositivo ? "+" : "") + fmtBRL(saldoMes)}</span>, c: saldoPositivo ? theme.colors.success : theme.colors.critical },
                   { label: "Total §5 (ARES+CNB)", value: <span className="priv-brl">{fmtBRL(totalSf)}</span>, c: theme.colors.success },
                   { label: "↳ ARES (fiscal)", value: <span className="priv-brl">{fmtBRL(aresPart)}</span>, c: "#c0d0e0" },
@@ -350,7 +357,7 @@ export function CalendarSection({
       </div>
 
       {/* Calendario + Detalhe lateral */}
-      <div style={{ display: "grid", gridTemplateColumns: "1.6fr 1fr", gap: 16 }}>
+      <div style={{ display: "grid", gridTemplateColumns: mesFechado ? "1fr" : "1.6fr 1fr", gap: 16 }}>
         {/* Calendario (grid extraído p/ MetaCalendarGrid — reuso /vendas + /gerente, DEBT-108) */}
         <MetaCalendarGrid
           days={diasOrdenados}
