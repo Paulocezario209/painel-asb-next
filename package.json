@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --import tsx --experimental-test-module-mocks --test tests/version.test.ts tests/middleware.test.ts tests/middleware-guard.test.ts tests/top10-share.test.ts tests/suggest-route.test.ts tests/deal-desk-route.test.ts tests/deal-suggestion-event-route.test.ts tests/jornada.test.ts tests/jornada-metrics.test.ts"
+    "test": "node --import tsx --experimental-test-module-mocks --test tests/version.test.ts tests/middleware.test.ts tests/middleware-guard.test.ts tests/top10-share.test.ts tests/suggest-route.test.ts tests/deal-desk-route.test.ts tests/deal-suggestion-event-route.test.ts tests/jornada.test.ts tests/jornada-metrics.test.ts tests/datetime-brt.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.104.1",

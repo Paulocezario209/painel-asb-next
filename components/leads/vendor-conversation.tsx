@@ -1,13 +1,10 @@
+import { fmtDateTimeBRT } from "@/lib/datetime-brt";
+
 interface VendorMsg {
   direction: string;
   content: string | null;
   media_type: string | null;
   sent_at: string;
-}
-
-function fmtTime(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
 }
 
 export function VendorConversation({ messages, total }: { messages: VendorMsg[]; total: number }) {
@@ -39,7 +36,7 @@ export function VendorConversation({ messages, total }: { messages: VendorMsg[];
                 {m.content || (m.media_type ? `[${m.media_type}]` : "[sem conteudo]")}
               </p>
               <p style={{ color: "#e4e9f0", fontSize: 8, fontFamily: "var(--font-geist-sans), system-ui, sans-serif", marginTop: 4, textAlign: "right" }}>
-                {isVendor ? "vendedor" : "lead"} · {fmtTime(m.sent_at)}
+                {isVendor ? "vendedor" : "lead"} · {fmtDateTimeBRT(m.sent_at)}
               </p>
             </div>
           </div>

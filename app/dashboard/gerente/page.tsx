@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { getUserContext } from "@/lib/auth/get-user-role";
 import { MetasCalendarioGerente } from "@/components/dashboard/metas-calendario-gerente";
 import { businessDaysInMonth, businessDaysElapsed, dateAfterNBusinessDays } from "@/lib/utils/business-days";
+import { currentYearMonthBRT, brtWallClockAsLocalDate } from "@/lib/datetime-brt";
 import { VENDOR_LABELS as VENDOR_NAMES, VENDOR_ORDER } from "@/lib/vendor-labels";
 import { S } from "@/app/dashboard/lib/dashboard-tokens";
 import { PageHead, SectionHead, KpiCard, StatTile } from "@/app/dashboard/lib/ui";
@@ -58,16 +59,17 @@ export default async function GerentePage() {
   if (!ctx || ctx.role !== "gestor") redirect("/dashboard");
 
   // ── Data boundaries ───────────────────────────────────────────────────────
-  // BRT (America/Sao_Paulo, UTC-3): vira o mês pelo calendário de Brasília, não pela UTC do servidor.
-  const now = new Date(Date.now() - 3 * 3600 * 1000);
-  const year = now.getUTCFullYear();
-  const month = now.getUTCMonth() + 1;
+  // BRT (America/Sao_Paulo): vira o mês pelo calendário de Brasília, não pela UTC do servidor.
+  const { year, month } = currentYearMonthBRT();
   const mesAtual = `${year}-${String(month).padStart(2, "0")}`;
   const primeiroDiaMes = `${mesAtual}-01`;
   const ultimoDiaMes = new Date(year, month, 0).toISOString().slice(0, 10);
 
   // ── Boundaries mês anterior (comparativo) ─────────────────────────────────
-  const diasDecorridos = await businessDaysElapsed(year, month, now);
+  // businessDaysElapsed lê os componentes LOCAIS do Date recebido (getDate/getMonth) —
+  // brtWallClockAsLocalDate entrega um Date cujos componentes UTC já são o dia BRT
+  // correto (equivalente ao local enquanto o processo rodar em UTC, ver lib/datetime-brt.ts).
+  const diasDecorridos = await businessDaysElapsed(year, month, brtWallClockAsLocalDate());
   const mesAnterior = month === 1 ? 12 : month - 1;
   const anoMesAnterior = month === 1 ? year - 1 : year;
   const limiteAnteriorISO = await dateAfterNBusinessDays(anoMesAnterior, mesAnterior, diasDecorridos);

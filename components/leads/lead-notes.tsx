@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { fmtDateTimeBRT } from "@/lib/datetime-brt";
 
 interface NoteEvent {
   payload: { author?: string; content?: string };
@@ -68,7 +69,7 @@ export function LeadNotes({ leadId, notes }: { leadId: string; notes: NoteEvent[
                 {String(n.payload?.content ?? "")}
               </p>
               <p style={{ color: "#e4e9f0", fontSize: 8, fontFamily: "var(--font-geist-sans), system-ui, sans-serif", marginTop: 4 }}>
-                {n.payload?.author ?? "?"} · {new Date(n.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                {n.payload?.author ?? "?"} · {fmtDateTimeBRT(n.created_at)}
               </p>
             </div>
           ))}

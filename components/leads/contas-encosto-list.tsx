@@ -2,6 +2,7 @@ import { KpiCard, SectionHead } from "@/app/dashboard/lib/ui";
 import { S } from "@/app/dashboard/lib/dashboard-tokens";
 import { theme } from "@/lib/theme";
 import { PRECO_KG } from "@/lib/pricing";
+import { fmtDateBRT } from "@/lib/datetime-brt";
 import { Anchor, CalendarClock, Wallet } from "lucide-react";
 
 // DEBT-318 (SDR): Contas de ENCOSTO (perdido-quente / backup ativo).
@@ -98,9 +99,7 @@ export function ContasEncostoList({ contas }: { contas: ContaEncosto[] }) {
               const dAte = diasAte(c.next_followup_at);
               const venceu = dAte !== null && dAte <= 0;
               const proximo = dAte !== null && dAte > 0 && dAte <= 15;
-              const reengaja = c.next_followup_at
-                ? new Date(c.next_followup_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })
-                : "—";
+              const reengaja = fmtDateBRT(c.next_followup_at);
               const waText = encodeURIComponent("Olá! Aqui é da American Steak 🥩");
               const fase = faseInfo(c.fase_teste);
               return (

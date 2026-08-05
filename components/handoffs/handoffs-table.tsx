@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { computeLeadScore, tierOf } from "@/lib/lead-score";
 import { VENDOR_LABELS } from "@/lib/vendor-labels";
 import { handoffSituacao } from "@/lib/handoff-status";
+import { fmtScheduledBRT, startOfTodayBRT } from "@/lib/datetime-brt";
 
 export interface Handoff {
   phone: string;
@@ -31,19 +32,10 @@ const SEG_LABELS: Record<string, string> = {
   food_truck: "Food Truck", dark_kitchen: "Dark Kitchen", acougue: "Açougue",
 };
 
-const DIAS_PT = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
-
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function formatScheduled(iso: string | null): string {
-  if (!iso) return "—";
-  // DEBT-308 item 2: "qui, 16/07 às 13h" em BRT fixo (UTC-3, sem DST desde 2019) — desloca e lê
-  // as partes UTC p/ a hora/dia baterem independente do fuso do browser. Mostra min só se ≠ 0 (13h30).
-  const d = new Date(new Date(iso).getTime() - 3 * 3600 * 1000);
-  const dd = String(d.getUTCDate()).padStart(2, "0");
-  const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
-  const hh = String(d.getUTCHours()).padStart(2, "0");
-  const min = d.getUTCMinutes();
-  return `${DIAS_PT[d.getUTCDay()]}, ${dd}/${mm} às ${hh}h${min ? String(min).padStart(2, "0") : ""}`;
+  // DEBT-308 item 2: "qui, 16/07 às 13h" em BRT — Mostra min só se ≠ 0 (13h30).
+  return fmtScheduledBRT(iso);
 }
 
 // SITUAÇÃO ancorada no horário agendado (helper único). Agendado pro futuro = azul
@@ -132,12 +124,10 @@ export function HandoffsTable({ initial, initialFilter }: { initial: Handoff[]; 
   }, []);
 
   const filtered = useMemo(() => {
-    // Item 7/DEBT-275 + Item 11: janela do dia comercial BRT (UTC-3) em UTC + faixas de
-    // agendamento por dia-índice (d=0 hoje · 1-6 semana · 7-13 quinzenal · 14-29 mensal).
-    const BRT_OFFSET_MS = 3 * 60 * 60 * 1000;
+    // Item 7/DEBT-275 + Item 11: janela do dia comercial BRT + faixas de agendamento
+    // por dia-índice (d=0 hoje · 1-6 semana · 7-13 quinzenal · 14-29 mensal).
     const DAY = 24 * 60 * 60 * 1000;
-    const nowBrt = new Date(Date.now() - BRT_OFFSET_MS);
-    const startBrt = Date.UTC(nowBrt.getUTCFullYear(), nowBrt.getUTCMonth(), nowBrt.getUTCDate(), 0, 0, 0) + BRT_OFFSET_MS;
+    const startBrt = startOfTodayBRT();
     return rows.filter(r => {
       if (vendorFilter !== "todos" && r.routing_team !== vendorFilter) return false;
       if (urgentOnly && !handoffSituacao(r.scheduled_at, r.handoff_at).overdue) return false;

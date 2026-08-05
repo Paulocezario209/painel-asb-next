@@ -6,6 +6,7 @@ import { DashboardFilters } from "@/components/dashboard/dashboard-filters";
 import { JornadaCliente } from "@/components/dashboard/jornada-cliente";
 import { getJornadaData } from "@/lib/funnel/jornada-data";
 import { buildViewModel } from "@/lib/funnel/jornada-metrics";
+import { fmtDateTimeCompactBRT } from "@/lib/datetime-brt";
 import Link from "next/link";
 import { Users, Filter, Handshake, Percent, CheckCircle2, Store, XCircle, LayoutGrid, Activity } from "lucide-react";
 
@@ -327,14 +328,12 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
               const lead = e.ai_sdr_leads;
               const phone = lead?.phone ? `...${lead.phone.slice(-4)}` : "?";
               const nome  = lead?.restaurant_name || lead?.city || phone;
-              const dt    = new Date(e.created_at);
-              const hora  = `${String(dt.getUTCHours() - 3).padStart(2, "0")}:${String(dt.getUTCMinutes()).padStart(2, "0")}`;
-              const dia   = `${String(dt.getUTCDate()).padStart(2, "0")}/${String(dt.getUTCMonth() + 1).padStart(2, "0")}`;
+              const dataHora = fmtDateTimeCompactBRT(e.created_at);
 
               return (
                 <div key={e.created_at + i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "4px 0", borderTop: i > 0 ? "1px solid rgba(27,42,107,.2)" : "none" }}>
                   <span style={{ color: "#e4e9f0", fontSize: 10, fontFamily: theme.font.label, minWidth: 80 }}>
-                    {dia} {hora}
+                    {dataHora}
                   </span>
                   {lead?.phone ? (
                     <Link href={`/dashboard/leads/${encodeURIComponent(lead.phone)}`} style={{ color: "#c8d8e8", fontSize: 11, fontFamily: theme.font.label, minWidth: 100, textDecoration: "none" }}>

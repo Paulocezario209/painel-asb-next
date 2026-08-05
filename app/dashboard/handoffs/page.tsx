@@ -7,6 +7,7 @@ import { theme } from "@/lib/theme";
 import { PageHead, SectionHead, KpiCard } from "@/app/dashboard/lib/ui";
 import { handoffSituacao } from "@/lib/handoff-status";
 import { VENDOR_LABELS } from "@/lib/vendor-labels";
+import { startOfTodayBRT, endOfTodayBRT } from "@/lib/datetime-brt";
 import { PhoneCall, AlertTriangle, CalendarClock, Inbox, Gauge } from "lucide-react";
 
 // Onda 4 — formata minutos em h/d p/ o "tempo médio até confirmar"
@@ -30,13 +31,11 @@ export default async function HandoffsPage({ searchParams }: { searchParams?: Pr
   const filtroKpi = sp?.f === "criticos" || sp?.f === "hoje" ? sp.f : undefined;
   const supabase = await createClient();
 
-  // Item 7/DEBT-275: janela do dia comercial BRT (UTC-3) convertida p/ UTC. Antes o card
-  // usava toISOString().slice(0,10) (dia UTC) → fronteira errada até 3h perto da meia-noite.
+  // Item 7/DEBT-275: janela do dia comercial BRT convertida p/ UTC. Antes o card usava
+  // toISOString().slice(0,10) (dia UTC) → fronteira errada até 3h perto da meia-noite.
   const nowMs = Date.now();
-  const BRT_OFFSET_MS = 3 * 60 * 60 * 1000;
-  const nowBrt = new Date(nowMs - BRT_OFFSET_MS);
-  const startBrtUtc = new Date(Date.UTC(nowBrt.getUTCFullYear(), nowBrt.getUTCMonth(), nowBrt.getUTCDate(), 0, 0, 0) + BRT_OFFSET_MS);
-  const endBrtUtc   = new Date(startBrtUtc.getTime() + 24 * 60 * 60 * 1000);
+  const startBrtUtc = new Date(startOfTodayBRT());
+  const endBrtUtc   = new Date(endOfTodayBRT());
 
   const [{ data: raw, error }, scoreMap, { count: agendadosHoje }, { data: eficRaw }] = await Promise.all([
     // DEBT-208: fila lê a definição CANÔNICA (v_handoff_pendentes, security_invoker

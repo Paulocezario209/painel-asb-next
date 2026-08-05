@@ -15,6 +15,7 @@ import { getUserContext, canAccess } from "@/lib/auth/get-user-role";
 import { DashboardFilters } from "@/components/dashboard/dashboard-filters";
 import { unstable_cache } from "next/cache";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
+import { fmtDateTimeFullBRT } from "@/lib/datetime-brt";
 
 export const dynamic = "force-dynamic";
 
@@ -115,14 +116,8 @@ type AcaoRow = { phone: string | null; proxima_acao: string | null; proximo_angu
 type CtxRow = { contexto_resumo: string | null; contexto_objecao: string | null; contexto_produto: string | null; contexto_gramatura: string | null; contexto_recompra_dias: number | null; contexto_extraido_em: string | null };
 type TLItem = { at: string; kind: "lead" | "bot" | "vendor" | "stage"; text: string };
 
-// Data BR fixa -03:00 (São Paulo, sem DST desde 2019) — evita dependência de ICU/locale.
 function fmtBR(iso: string | null): string {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return "—";
-  const sp = new Date(d.getTime() - 3 * 3600 * 1000);
-  const p = (n: number) => String(n).padStart(2, "0");
-  return `${p(sp.getUTCDate())}/${p(sp.getUTCMonth() + 1)}/${sp.getUTCFullYear()} ${p(sp.getUTCHours())}:${p(sp.getUTCMinutes())}`;
+  return fmtDateTimeFullBRT(iso);
 }
 
 // ── Caches (padrão do funil) ─────────────────────────────────────────────────

@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { theme } from "@/lib/theme";
 import { statusColor, statusLabel } from "@/lib/customer-status";
+import { fmtDateTimeVerboseBRT, fmtDateFullBRT } from "@/lib/datetime-brt";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CustomerActions } from "./customer-actions";
@@ -169,7 +170,7 @@ export default async function ClientePage({
             <dt className="text-slate-200 text-xs uppercase tracking-wide">Volume</dt>
             <dd className="text-white">{lead.weekly_volume_kg ? `${lead.weekly_volume_kg}kg/sem` : "—"}</dd>
             <dt className="text-slate-200 text-xs uppercase tracking-wide">First order</dt>
-            <dd className="text-white">{lead.first_order_at ? new Date(lead.first_order_at).toLocaleDateString("pt-BR") : "—"}</dd>
+            <dd className="text-white">{fmtDateFullBRT(lead.first_order_at)}</dd>
             <dt className="text-slate-200 text-xs uppercase tracking-wide">Owner</dt>
             <dd className="text-white">{lead.owner_seller_id ? vendorMap.get(lead.owner_seller_id) ?? "—" : "—"}</dd>
             <dt className="text-slate-200 text-xs uppercase tracking-wide">Team</dt>
@@ -210,7 +211,7 @@ export default async function ClientePage({
             Icon={BarChart3}
             color="#22c55e"
             title="Métricas da Carteira"
-            desc={`Worker diário 6h BRT · calculado ${lifecycleState.last_computed_at ? new Date(lifecycleState.last_computed_at).toLocaleString("pt-BR") : "—"}`}
+            desc={`Worker diário 6h BRT · calculado ${lifecycleState.last_computed_at ? fmtDateTimeVerboseBRT(lifecycleState.last_computed_at) : "—"}`}
           />
           <div className="grid grid-cols-4 gap-3">
             <StatTile label="Pedidos" value={lifecycleState.total_orders ?? 0} />
@@ -233,11 +234,11 @@ export default async function ClientePage({
             />
             <StatTile
               label="1º Pedido"
-              value={lifecycleState.first_order_at ? new Date(lifecycleState.first_order_at).toLocaleDateString("pt-BR") : "—"}
+              value={fmtDateFullBRT(lifecycleState.first_order_at)}
             />
             <StatTile
               label="Último Pedido"
-              value={lifecycleState.last_order_at ? new Date(lifecycleState.last_order_at).toLocaleDateString("pt-BR") : "—"}
+              value={fmtDateFullBRT(lifecycleState.last_order_at)}
             />
             <StatTile
               label="Dias Sem Comprar"
@@ -250,7 +251,7 @@ export default async function ClientePage({
             />
             <StatTile
               label="Próxima Esperada"
-              value={lifecycleState.next_expected_order_at ? new Date(lifecycleState.next_expected_order_at).toLocaleDateString("pt-BR") : "—"}
+              value={fmtDateFullBRT(lifecycleState.next_expected_order_at)}
               sub={lifecycleState.avg_order_interval_days ? `média ${Number(lifecycleState.avg_order_interval_days).toFixed(1)}d` : undefined}
             />
           </div>
@@ -403,7 +404,7 @@ export default async function ClientePage({
           {(events ?? []).map((ev, i: number) => (
             <div key={i} className="flex items-start gap-3 text-xs border-l-2 border-[#185FA5] pl-3 py-1">
               <span className="text-slate-200 shrink-0 w-32 font-mono">
-                {new Date(ev.created_at).toLocaleString("pt-BR")}
+                {fmtDateTimeVerboseBRT(ev.created_at)}
               </span>
               <span className="text-white">
                 <span className="text-slate-200">{ev.from_stage}</span>
@@ -427,7 +428,7 @@ export default async function ClientePage({
             {overrides.map((o, i: number) => (
               <div key={i} className="text-xs flex items-start gap-3 border-l-2 border-[#BA7517] pl-3 py-1">
                 <span className="text-slate-200 shrink-0 w-32 font-mono">
-                  {new Date(o.created_at).toLocaleString("pt-BR")}
+                  {fmtDateTimeVerboseBRT(o.created_at)}
                 </span>
                 <span className="text-white">
                   <span className="text-slate-200">{o.from_owner_seller_id ? vendorMap.get(o.from_owner_seller_id) ?? "—" : "—"}</span>

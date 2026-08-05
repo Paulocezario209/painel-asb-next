@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { theme } from "@/lib/theme";
+import { fmtDateTimeBRT } from "@/lib/datetime-brt";
 
 // ETAPA A / FIX4 — timeline de cadência de follow-up por lead.
 export type FollowupRow = {
@@ -33,9 +34,7 @@ const PHASE_LABEL: Record<string, string> = {
 
 function fmt(iso: string | null): string {
   if (!iso) return "—";
-  return new Date(iso).toLocaleString("pt-BR", {
-    day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit",
-  });
+  return fmtDateTimeBRT(iso, { withYear: true });
 }
 
 export function FollowupCadence({ rows }: { rows: FollowupRow[] }) {

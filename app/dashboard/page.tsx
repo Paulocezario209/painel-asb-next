@@ -11,6 +11,7 @@ import { MotivosPerdaChart, type MotivoPerda } from "@/components/dashboard/moti
 import { DashboardFilters } from "@/components/dashboard/dashboard-filters";
 import { theme } from "@/lib/theme";
 import { VENDOR_LABELS } from "@/lib/vendor-labels";
+import { currentYearMonthBRT } from "@/lib/datetime-brt";
 import { S } from "./lib/dashboard-tokens";
 import { PageHead, SectionHead, KpiCard } from "./lib/ui";
 import { Users, BadgeCheck, PhoneCall, Trophy, XCircle, Target, Filter as FilterIcon, TrendingUp, BarChart3 } from "lucide-react";
@@ -66,10 +67,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   // P2 — filtros: ?vendedor=SETOR_* (afeta tudo) + ?mes=YYYY-MM (afeta só KPIs de volume; alertas ficam "agora")
   const sp = await searchParams;
   const vend = sp?.vendedor && /^SETOR_[A-Z_]+$/.test(sp.vendedor) ? sp.vendedor : null;
-  // Default = mês corrente pelo calendário BRT (America/Sao_Paulo = UTC-3): vira o mês
-  // pela meia-noite de Brasília, não pela UTC (senão adianta o mês ~3h antes na virada).
-  const _hojeBRT = new Date(Date.now() - 3 * 3600 * 1000);
-  const mesCorrente = `${_hojeBRT.getUTCFullYear()}-${String(_hojeBRT.getUTCMonth() + 1).padStart(2, "0")}`;
+  // Default = mês corrente pelo calendário BRT (America/Sao_Paulo): vira o mês pela
+  // meia-noite de Brasília, não pela UTC (senão adianta o mês ~3h antes na virada).
+  const { year: _anoBRT, month: _mesBRT } = currentYearMonthBRT();
+  const mesCorrente = `${_anoBRT}-${String(_mesBRT).padStart(2, "0")}`;
   const mesParam = sp?.mes && /^\d{4}-(0[1-9]|1[0-2])$/.test(sp.mes) ? sp.mes : mesCorrente;
   const [_my, _mm] = mesParam.split("-").map(Number);
   const mesIni = `${mesParam}-01`;

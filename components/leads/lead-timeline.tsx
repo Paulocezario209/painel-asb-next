@@ -1,5 +1,7 @@
 "use client";
 
+import { fmtDateTimeBRT } from "@/lib/datetime-brt";
+
 const ACTOR_COLORS: Record<string, { color: string; bg: string; border: string }> = {
   system:   { color: "#6390f5", bg: "rgba(99,144,245,.08)",  border: "rgba(99,144,245,.3)" },
   sdr:      { color: "#f59e0b", bg: "rgba(245,158,11,.08)",  border: "rgba(245,158,11,.3)" },
@@ -47,8 +49,7 @@ function fmtRelative(iso: string): string {
 }
 
 function fmtDate(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+  return fmtDateTimeBRT(iso);
 }
 
 export function LeadTimeline({

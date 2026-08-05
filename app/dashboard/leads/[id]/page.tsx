@@ -19,6 +19,7 @@ import { ReactivateAiButton } from "@/components/leads/reactivate-ai-button";
 import { MarkProposalSentButton } from "@/components/leads/mark-proposal-sent-button";
 import { FollowupCadence, type FollowupRow } from "@/components/leads/followup-cadence";
 import { getUserContext } from "@/lib/auth/get-user-role";
+import { fmtDateTimeCompactBRT } from "@/lib/datetime-brt";
 import { S } from "@/app/dashboard/lib/dashboard-tokens";
 import { PageHead, SectionHead } from "@/app/dashboard/lib/ui";
 
@@ -210,11 +211,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
         const sil = sh == null ? "—" : sh >= 24 ? `${Math.floor(sh / 24)}d` : `${sh}h`;
         const sitCor = orqRow.atrasado ? "#e0435c" : orqRow.eh_hoje ? "#e0a92a" : "#2fbf6b";
         const sitTxt = orqRow.atrasado ? "Atrasado" : orqRow.eh_hoje ? "Ação hoje" : "No prazo";
-        let prox = "—";
-        if (orqRow.next_followup_at) {
-          const d = new Date(orqRow.next_followup_at);
-          prox = `${String(d.getUTCDate()).padStart(2, "0")}/${String(d.getUTCMonth() + 1).padStart(2, "0")} ${String((d.getUTCHours() + 21) % 24).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`;
-        }
+        const prox = orqRow.next_followup_at ? fmtDateTimeCompactBRT(orqRow.next_followup_at) : "—";
         const cell = (k: string, v: string, cor?: string) => (
           <div style={{ minWidth: 0 }}>
             <p style={{ fontSize: 9, letterSpacing: ".12em", textTransform: "uppercase", color: "#8b949e", fontFamily: theme.font.label }}>{k}</p>

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Search, ChevronDown, ChevronUp } from "lucide-react";
 import { theme } from "@/lib/theme";
 import { VENDOR_LABELS } from "@/lib/vendor-labels";
+import { fmtDateTimeBRT } from "@/lib/datetime-brt";
 
 type Row = {
   phone: string;
@@ -50,10 +51,7 @@ const LABEL: React.CSSProperties = {
 
 function fmt(iso: string | null) {
   if (!iso) return "—";
-  return new Date(iso).toLocaleString("pt-BR", {
-    day: "2-digit", month: "2-digit", year: "2-digit",
-    hour: "2-digit", minute: "2-digit",
-  });
+  return fmtDateTimeBRT(iso, { withYear: true });
 }
 
 function NativeSelect({ value, onChange, children }: { value: string; onChange: (v: string) => void; children: React.ReactNode }) {
