@@ -17,14 +17,23 @@ const brl = (n: number) => n.toLocaleString("pt-BR", { style: "currency", curren
 const pct1 = (n: number) => `${n.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`;
 const dias = (n: number | null) => (n == null ? "—" : `${Math.round(n)}d`);
 
-export function JornadaCliente({ viva, geral }: { viva: JornadaViewModel; geral: JornadaViewModel }) {
-  const [view, setView] = useState<JornadaView>("viva");
-  const vm = view === "viva" ? viva : geral;
+/** "2026-07" → "julho de 2026" */
+const mesExtenso = (m: string | null): string => {
+  if (!m) return "—";
+  const [a, mm] = m.split("-");
+  const nomes = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
+  return `${nomes[Number(mm) - 1] ?? m} de ${a}`;
+};
+
+export function JornadaCliente({ mes, geral, mesParam }: { mes: JornadaViewModel; geral: JornadaViewModel; mesParam: string }) {
+  const [view, setView] = useState<JornadaView>("mes");
+  const vm = view === "mes" ? mes : geral;
   const maxFunil = Math.max(...vm.funil.map((f) => f.clientesAcumulado), 1);
+  const competencia = mesExtenso(mes.mes ?? mesParam);
 
   return (
     <div>
-      {/* Seletor de visão */}
+      {/* Seletor de visão — "Carteira Viva" foi aposentado (colidia com a tela Carteira Ativa) */}
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
         <span style={{ ...S.label, marginBottom: 0 }}>Base analisada</span>
         <select
@@ -32,20 +41,25 @@ export function JornadaCliente({ viva, geral }: { viva: JornadaViewModel; geral:
           onChange={(e) => setView(e.target.value as JornadaView)}
           style={{ background: "var(--asb-card-hi)", border: "1px solid rgba(255,255,255,.18)", borderRadius: 6, color: "#e4e9f0", fontSize: 12.5, fontFamily: theme.font.label, padding: "6px 10px", outline: "none", cursor: "pointer" }}
         >
-          <option value="viva">Carteira Viva</option>
-          <option value="geral">Histórico Geral</option>
+          <option value="mes">Conversão do mês</option>
+          <option value="geral">Histórico geral</option>
         </select>
+        {view === "mes" ? (
+          <span style={{ fontSize: 11.5, color: "#c8d8e8", fontFamily: theme.font.label, background: "rgba(34,197,94,.12)", border: "1px solid rgba(34,197,94,.35)", borderRadius: 999, padding: "2px 10px" }}>
+            Competência analisada: <b>{competencia}</b>
+          </span>
+        ) : null}
         <span style={{ fontSize: 11.5, color: "#83879a", fontFamily: theme.font.label }}>
-          {view === "viva"
-            ? "Só clientes comercialmente vivos (ativo/atenção) — churn e perdido ficam nas telas próprias."
-            : "Toda a carteira faturada, inclusive clientes que depois entraram em churn/perdido."}
+          {view === "mes"
+            ? "Clientes cujo 1º pedido faturado ocorreu no mês analisado. A jornada considera apenas os pedidos faturados dentro da mesma competência."
+            : "Histórico completo de pedidos faturados de toda a carteira — o seletor de mês do topo NÃO afeta esta visão."}
         </span>
       </div>
 
       {/* 5 cards enriquecidos — clicáveis (drill) */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 10 }}>
         {vm.cards.map((c) => (
-          <Link key={c.key} href={`/dashboard/jornada?view=${view}&stage=${c.key}`} style={{ textDecoration: "none" }}>
+          <Link key={c.key} href={`/dashboard/jornada?view=${view}&stage=${c.key}${view === "mes" ? `&mes=${mes.mes ?? mesParam}` : ""}`} style={{ textDecoration: "none" }}>
             <div style={{ ...S.card, padding: "14px 16px", borderTop: `3px solid ${c.fill}`, height: "100%", display: "flex", flexDirection: "column", gap: 6 }}>
               <span style={{ fontSize: 12, fontWeight: 650, color: "#aeb7cc", fontFamily: theme.font.label, lineHeight: 1.3 }}>{c.label}</span>
               <span style={{ fontSize: 26, fontWeight: 850, letterSpacing: "-.02em", lineHeight: 1, color: c.fill, fontFamily: theme.font.num, fontVariantNumeric: "tabular-nums" }}>{c.count}</span>
@@ -65,17 +79,34 @@ export function JornadaCliente({ viva, geral }: { viva: JornadaViewModel; geral:
       </div>
 
       <p style={{ fontSize: 10.5, color: "#83879a", fontFamily: theme.font.label, marginTop: 10, lineHeight: 1.5 }}>
-        Classificação: <b style={{ color: "#aeb7cc" }}>histórico completo</b> de pedidos faturados (status 4/13) · Valores:{" "}
-        <b style={{ color: "#aeb7cc" }}>histórico completo</b> · % do faturamento = sobre a base <b style={{ color: "#aeb7cc" }}>{view === "viva" ? "Carteira Viva" : "Histórico Geral"}</b> ({brl(vm.totalRevenue)}) ·
-        intervalos: <b style={{ color: "#aeb7cc" }}>mediana</b> (principal) + <b style={{ color: "#aeb7cc" }}>média</b> (secundária). O filtro de período <b style={{ color: "#aeb7cc" }}>não</b> afeta esta seção.
+        {view === "mes" ? (
+          <>
+            Estágio atual dos clientes <b style={{ color: "#aeb7cc" }}>dentro do mês analisado</b> ({competencia}) — cada cliente aparece em um único card.
+            Coorte: 1º pedido faturado (status 4/13) na competência; contam só os pedidos <b style={{ color: "#aeb7cc" }}>do mesmo mês</b>.
+            Origem do cliente não interfere — <b style={{ color: "#aeb7cc" }}>não exige lead do SDR</b>. % do faturamento = sobre a coorte ({brl(vm.totalRevenue)}) ·
+            intervalos: <b style={{ color: "#aeb7cc" }}>mediana</b> (principal) + <b style={{ color: "#aeb7cc" }}>média</b> (secundária).
+          </>
+        ) : (
+          <>
+            Classificação: <b style={{ color: "#aeb7cc" }}>histórico completo</b> de pedidos faturados (status 4/13) · Valores:{" "}
+            <b style={{ color: "#aeb7cc" }}>histórico completo</b> · % do faturamento = sobre a base <b style={{ color: "#aeb7cc" }}>Histórico geral</b> ({brl(vm.totalRevenue)}) ·
+            intervalos: <b style={{ color: "#aeb7cc" }}>mediana</b> (principal) + <b style={{ color: "#aeb7cc" }}>média</b> (secundária). O seletor de mês do topo <b style={{ color: "#aeb7cc" }}>não</b> afeta esta visão.
+          </>
+        )}
       </p>
+
+      {view === "mes" && vm.base === 0 ? (
+        <p style={{ fontSize: 11.5, color: "#e0b341", fontFamily: theme.font.label, marginTop: 8, background: "rgba(212,160,23,.10)", border: "1px solid rgba(212,160,23,.3)", borderRadius: 6, padding: "8px 12px" }}>
+          Nenhum cliente ativou em {competencia} até agora. A coorte cresce ao longo do mês — no início da competência é normal estar vazia.
+        </p>
+      ) : null}
 
       {/* Funil da Jornada — população ACUMULADA (substitui o cone de leads) */}
       <div style={{ marginTop: 20 }}>
         <p style={{ ...S.label, marginBottom: 10 }}>Funil da Jornada · 1º pedido → recorrência (população acumulada)</p>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           {vm.funil.map((f) => {
-            const stageFill = viva.cards.find((c) => c.key === f.key)?.fill ?? "#185FA5";
+            const stageFill = vm.cards.find((c) => c.key === f.key)?.fill ?? "#185FA5";
             const w = (f.clientesAcumulado / maxFunil) * 100;
             return (
               <div key={f.key} style={{ display: "flex", alignItems: "center", gap: 10 }}>

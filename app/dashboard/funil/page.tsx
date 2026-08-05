@@ -161,8 +161,10 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
   // Fonte: getJornadaData (v_carteira_360 + pedidos_espelho paginado, deduplicado, score V1).
   // Dois view-models (Carteira Viva | Histórico Geral) computados no server — o cliente só alterna.
   // O Funil da Jornada (dentro do componente) SUBSTITUI o antigo cone "Onde estão os leads agora".
+  // O seletor de mês do TOPO é a fonte única de competência da página: alimenta tanto a
+  // "Conversão da coorte" (RPC get_funil_marcos) quanto a coorte mensal da Jornada.
   const { clientes: jornadaClientes, hoje: jornadaHoje } = await getJornadaData();
-  const jornadaViva = buildViewModel(jornadaClientes, "viva", jornadaHoje);
+  const jornadaMes = buildViewModel(jornadaClientes, "mes", jornadaHoje, mesParam);
   const jornadaGeral = buildViewModel(jornadaClientes, "geral", jornadaHoje);
 
   // ── Leads por etapa (posição atual) — etapas não-terminais com leads, na ordem da jornada ──
@@ -259,7 +261,7 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
           title="Jornada do Cliente até a Recorrência"
           desc="Evolução dos clientes desde o primeiro pedido faturado até a consolidação como cliente recorrente."
         />
-        <JornadaCliente viva={jornadaViva} geral={jornadaGeral} />
+        <JornadaCliente mes={jornadaMes} geral={jornadaGeral} mesParam={mesParam} />
         {/* Recuperado — entrada LATERAL da camada cliente (voltou a faturar após churn/inativo) */}
         <Link href="/dashboard/clientes" style={{ textDecoration: "none" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 12, background: "rgba(34,197,94,.06)", border: "1px solid rgba(34,197,94,.3)", borderRadius: 6, padding: "10px 14px" }}>
