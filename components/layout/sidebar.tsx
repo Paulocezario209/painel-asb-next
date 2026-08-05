@@ -49,6 +49,13 @@ const NAV_GROUPS = [
 
 const VENDOR_BLOCKED = new Set(["/dashboard/vendedores", "/dashboard/gerente", "/dashboard/insights", "/dashboard/simulator", "/dashboard/uploads", "/dashboard/churn", "/dashboard/up-sell", "/dashboard/remuneracao"]);
 const MANAGER_BLOCKED = new Set(["/dashboard/gerente", "/dashboard/simulator", "/dashboard/uploads", "/dashboard/minha-comissao"]);
+// gerente_comercial: mesma visao do Diretor, exceto ferramentas administrativas (simulador/uploads).
+// Ve /dashboard/gerente (visao executiva comercial) — diferente do MANAGER_BLOCKED acima.
+// Lista duplicada de proposito (nao importada de get-user-role.ts): aquele arquivo tambem exporta
+// getUserContext(), que importa lib/supabase/server.ts (next/headers, server-only) — Client Component
+// nao pode importar NADA de um modulo que toca isso, mesmo so a constante (quebra o build do Turbopack).
+// Mesmo motivo pelo qual MANAGER_BLOCKED/VENDOR_BLOCKED acima ja eram duplicados, nao importados.
+const GERENTE_COMERCIAL_BLOCKED_SET = new Set(["/dashboard/simulator", "/dashboard/uploads"]);
 
 // Paleta grafite (caixa escura, mesmo padrão dos cards do painel)
 const SB = {
@@ -73,6 +80,7 @@ export function Sidebar({
 
   const canSee = (href: string) => {
     if (role === "gestor") return href !== "/dashboard/minha-comissao";
+    if (role === "gerente_comercial") return !GERENTE_COMERCIAL_BLOCKED_SET.has(href);
     if (role === "manager") return !MANAGER_BLOCKED.has(href);
     return !VENDOR_BLOCKED.has(href);
   };

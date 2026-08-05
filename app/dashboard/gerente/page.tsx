@@ -55,7 +55,7 @@ export default async function GerentePage() {
   await supabase.auth.getUser();
 
   const ctx = await getUserContext();
-  if (!ctx || ctx.role !== "gestor") redirect("/dashboard");
+  if (!ctx || !(ctx.role === "gestor" || ctx.isGerenteComercial)) redirect("/dashboard");
 
   // ── Data boundaries ───────────────────────────────────────────────────────
   // BRT (America/Sao_Paulo, UTC-3): vira o mês pelo calendário de Brasília, não pela UTC do servidor.

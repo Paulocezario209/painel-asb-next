@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 
-export type UserRole = "gestor" | "manager" | "vendedor" | "tecnico_compras" | "financeiro";
+export type UserRole = "gestor" | "manager" | "gerente_comercial" | "vendedor" | "tecnico_compras" | "financeiro";
 
 export interface UserContext {
   email: string;
@@ -9,11 +9,12 @@ export interface UserContext {
   comissaoPerfil: string | null;   // 'diretor' | 'gerente' | null (gate das telas de remuneracao)
   isGestor: boolean;
   isManager: boolean;
+  isGerenteComercial: boolean;     // role='gerente_comercial' — papel, nao nome (RLS ja usa este literal em 9 tabelas)
   isVendedor: boolean;
   isTecnicoCompras: boolean;
   isFinanceiro: boolean;          // consultor externo DRE: ve tudo, READ-ONLY (escrita barrada no middleware)
   isDiretor: boolean;              // gestor + comissao_perfil='diretor' (so Paulo ve a tela do time)
-  isGerente: boolean;              // comissao_perfil='gerente' (Fernando): usa a tela do time (Remuneracao), nao a Minha Comissao
+  isGerente: boolean;              // comissao_perfil='gerente': usa a tela do time (Remuneracao), nao a Minha Comissao
 }
 
 const VENDOR_BLOCKED: string[] = [
@@ -33,15 +34,24 @@ const MANAGER_BLOCKED: string[] = [
   "/dashboard/uploads",
 ];
 
+// gerente_comercial: mesma visao operacional/comercial do Diretor (leads, funil, cadencias, vendas,
+// remuneracao do time, /dashboard/gerente); NAO leva simulador/uploads (ferramentas administrativas
+// de mutacao em massa, fora do escopo "visualizacao" pedido). Exportado p/ sidebar.tsx nao duplicar a lista.
+export const GERENTE_COMERCIAL_BLOCKED: string[] = [
+  "/dashboard/simulator",
+  "/dashboard/uploads",
+];
+
 export function canAccess(role: UserRole, route: string): boolean {
-  // /marketing (gasto/CAC/ROAS/receita = informação de gestão): gestor, manager e
-  // financeiro. Vendedor e tecnico_compras FORA (auditoria 2026-07-10 — antes era
+  // /marketing (gasto/CAC/ROAS/receita = informação de gestão): gestor, manager,
+  // gerente_comercial e financeiro. Vendedor e tecnico_compras FORA (auditoria 2026-07-10 — antes era
   // rota sem trava e qualquer sessão via o gasto de mídia).
   if (route.startsWith("/marketing")) {
-    return role === "gestor" || role === "manager" || role === "financeiro";
+    return role === "gestor" || role === "manager" || role === "gerente_comercial" || role === "financeiro";
   }
   // financeiro (consultor externo DRE): vê TUDO (read-only — escrita barrada no middleware)
   if (role === "gestor" || role === "financeiro") return true;
+  if (role === "gerente_comercial") return !GERENTE_COMERCIAL_BLOCKED.includes(route);
   if (role === "manager") return !MANAGER_BLOCKED.includes(route);
   if (role === "vendedor") return !VENDOR_BLOCKED.includes(route);
   // tecnico_compras: acesso exclusivo a /compras — bloqueado em todo /dashboard
@@ -71,6 +81,7 @@ export async function getUserContext(): Promise<UserContext | null> {
     comissaoPerfil,
     isGestor: role === "gestor",
     isManager: role === "manager",
+    isGerenteComercial: role === "gerente_comercial",
     isVendedor: role === "vendedor",
     isTecnicoCompras: role === "tecnico_compras",
     isFinanceiro: role === "financeiro",

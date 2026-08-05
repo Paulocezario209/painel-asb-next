@@ -11,7 +11,7 @@ import { PageHead, StatTile } from "@/app/dashboard/lib/ui";
 export const dynamic = "force-dynamic";
 
 const VENDOR_LABELS: Record<string, { name: string; region: string }> = {
-  SETOR_CUIT:               { name: "Fernando Carvalho", region: "Gerente Comercial - meta total do time" },
+  SETOR_CUIT:               { name: "Thiago Lara",       region: "Gerente Comercial - meta total do time" },
   SETOR_SOROCABA_SAO_PAULO: { name: "Ana Paula",         region: "Sorocaba / Grande SP" },
   SETOR_CAMPINAS_JUNDIAI:   { name: "Alan",              region: "Campinas / Jundiai" },
 };
@@ -96,8 +96,8 @@ export default async function RemuneracaoPage({
   const supabase = await createClient();
   await supabase.auth.getUser();
   const ctx = await getUserContext();
-  // Diretor (Paulo) + Financeiro (consultor DRE) + Gerente (Fernando, is_manager) veem a tela do time.
-  if (!ctx || !(ctx.isDiretor || ctx.isFinanceiro || ctx.isManager || ctx.isGerente)) redirect("/dashboard");
+  // Diretor (Paulo) + Financeiro (consultor DRE) + Gerente Comercial (role ou comissao_perfil) veem a tela do time.
+  if (!ctx || !(ctx.isDiretor || ctx.isFinanceiro || ctx.isManager || ctx.isGerente || ctx.isGerenteComercial)) redirect("/dashboard");
 
   // ── Mes selecionavel (default = mes corrente) ──────────────────────────────
   const sp = await searchParams;
