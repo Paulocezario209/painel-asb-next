@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, Users, BarChart2, PhoneCall, Upload, Flame, Filter, UserCheck, DollarSign, Target, Briefcase, Columns3, Wallet, Banknote, Coins, LayoutGrid, Network, Anchor } from "lucide-react";
+import { GERENTE_COMERCIAL_BLOCKED } from "@/lib/auth/get-user-role";
 
 const SANS = "var(--font-geist-sans), system-ui, sans-serif";
 
@@ -49,6 +50,9 @@ const NAV_GROUPS = [
 
 const VENDOR_BLOCKED = new Set(["/dashboard/vendedores", "/dashboard/gerente", "/dashboard/insights", "/dashboard/simulator", "/dashboard/uploads", "/dashboard/churn", "/dashboard/up-sell", "/dashboard/remuneracao"]);
 const MANAGER_BLOCKED = new Set(["/dashboard/gerente", "/dashboard/simulator", "/dashboard/uploads", "/dashboard/minha-comissao"]);
+// gerente_comercial: mesma visao do Diretor, exceto ferramentas administrativas (simulador/uploads).
+// Ve /dashboard/gerente (visao executiva comercial) — diferente do MANAGER_BLOCKED acima.
+const GERENTE_COMERCIAL_BLOCKED_SET = new Set(GERENTE_COMERCIAL_BLOCKED);
 
 // Paleta grafite (caixa escura, mesmo padrão dos cards do painel)
 const SB = {
@@ -73,6 +77,7 @@ export function Sidebar({
 
   const canSee = (href: string) => {
     if (role === "gestor") return href !== "/dashboard/minha-comissao";
+    if (role === "gerente_comercial") return !GERENTE_COMERCIAL_BLOCKED_SET.has(href);
     if (role === "manager") return !MANAGER_BLOCKED.has(href);
     return !VENDOR_BLOCKED.has(href);
   };

@@ -37,7 +37,7 @@ const LIVE_STATUS: readonly string[] = ["ativo", "atencao"];
 const RT_NOME: Record<string, string> = {
   SETOR_SOROCABA_SAO_PAULO: "Ana Paula",
   SETOR_CAMPINAS_JUNDIAI: "Alan",
-  SETOR_CUIT: "Fernando",
+  SETOR_CUIT: "Thiago",
 };
 
 const brl = (n: number | null) =>
