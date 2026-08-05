@@ -15,8 +15,22 @@
 // Régua de status: reusa a convenção oficial (lib/customer-status.ts / fn_status_cliente).
 // NÃO redefine churn/perdido — apenas LÊ o customer_status já calculado pela view.
 
-export type JornadaView = "viva" | "geral";
+// "mes"   → COORTE MENSAL: só clientes cujo 1º pedido faturado caiu no mês selecionado,
+//           contando APENAS os pedidos daquele mesmo mês (competência fechada).
+// "geral" → histórico completo, sem recorte de período (comportamento original).
+// "viva"  → LEGADO. Continua exportado para não quebrar imports/testes antigos, mas a UI
+//           não oferece mais essa opção (renomeada — ver components/dashboard/jornada-cliente).
+export type JornadaView = "mes" | "geral" | "viva";
 export type JornadaStageKey = "p1" | "p2" | "p3" | "p4" | "recorrente";
+
+/** Competência no formato YYYY-MM. */
+export type Competencia = string;
+
+/** Mês de uma data ISO (YYYY-MM-DD...). Fatia string — imune a fuso, pois data_faturamento é DATE. */
+export const mesDe = (isoDate: string): Competencia => String(isoDate).slice(0, 7);
+
+export const isCompetenciaValida = (m: unknown): m is Competencia =>
+  typeof m === "string" && /^\d{4}-(0[1-9]|1[0-2])$/.test(m);
 
 // Linha mínima de cliente (subconjunto de v_carteira_360) que a classificação consome.
 export interface JornadaClienteRow {
@@ -68,12 +82,58 @@ export function bucketByOrders(totalOrders: number | null | undefined): JornadaS
   return "recorrente"; // ≥5
 }
 
-/** Aplica a régua da VISÃO (viva = só ativo/atenção; geral = todos). */
+/** Aplica a régua da VISÃO (viva = só ativo/atenção; geral/mes = todos os status). */
 export function filterByView<T extends { customer_status: string | null }>(
   rows: T[],
   view: JornadaView,
 ): T[] {
   return view === "viva" ? rows.filter((r) => isViva(r.customer_status)) : rows;
+}
+
+// ── COORTE MENSAL ─────────────────────────────────────────────────────────────
+// Regra (Paulo, 2026-08-05): entra na coorte de M todo cliente cujo PRIMEIRO pedido
+// faturado válido ocorreu em M — independente de origem (não exige lead do SDR, não
+// exige vínculo com ai_sdr_leads). Dentro da coorte, contam SÓ os pedidos de M:
+// pedido de agosto não faz a jornada de julho avançar.
+//
+// Por que a origem não entra: apenas ~10% da carteira tem lead vinculado (a ponte
+// ares_pessoa_id nasceu em jun/2026, a carteira começa em mai/2022). Exigir SDR
+// esvaziaria a tela — medido: coorte completa daria 0 clientes em ago/2026.
+//
+// Fuso: data_faturamento é DATE (sem hora) no espelho; o recorte é feito por
+// comparação de string YYYY-MM, então não há conversão de timezone envolvida e um
+// pedido do último dia do mês não migra de competência.
+export interface ComPedidos {
+  // ares_pedido_id é opcional: dado legado do espelho pode não ter a chave do pedido.
+  pedidos: { data: string; valor: number; ares_pedido_id?: number | null }[];
+}
+
+/**
+ * Recorta a coorte de uma competência.
+ * Devolve só os clientes que ATIVARAM no mês, com os pedidos limitados ao mês.
+ */
+export function cohortDoMes<T extends ComPedidos>(rows: T[], mes: Competencia): T[] {
+  const out: T[] = [];
+  for (const r of rows) {
+    const ped = r.pedidos;
+    if (ped.length === 0) continue;
+    // pedidos vêm ordenados asc por data_faturamento → ped[0] é o 1º pedido da vida do cliente
+    if (mesDe(ped[0].data) !== mes) continue; // não ativou neste mês → fora da coorte
+    out.push({ ...r, pedidos: ped.filter((p) => mesDe(p.data) === mes) });
+  }
+  return out;
+}
+
+/** Remove pedidos repetidos pelo mesmo ares_pedido_id, preservando a ordem. */
+export function dedupePedidos<T extends ComPedidos>(row: T): T {
+  const seen = new Set<number>();
+  const pedidos = row.pedidos.filter((p) => {
+    if (p.ares_pedido_id == null) return true; // legado sem id: não dá para deduplicar, mantém
+    if (seen.has(p.ares_pedido_id)) return false;
+    seen.add(p.ares_pedido_id);
+    return true;
+  });
+  return { ...row, pedidos };
 }
 
 export interface JornadaStageResult {

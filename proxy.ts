@@ -11,11 +11,34 @@ export function isPublicVersionRoute(pathname: string): boolean {
   return pathname === "/api/version";
 }
 
+/**
+ * Rota de JOB INTERNO (`/api/cron/*`), chamada por agendador externo (n8n) — nunca
+ * por navegador, logo nunca tem cookie de sessao. NAO e publica: so passa pelo guard
+ * quando o header `x-internal-key` bate com INTERNAL_API_KEY. Sem a env configurada,
+ * ou com header errado/ausente, cai no 401 normal do guard (fail-closed).
+ *
+ * A comparacao e de tamanho fixo para nao vazar o segredo por tempo de resposta.
+ */
+export function isAuthorizedCronRoute(pathname: string, headerKey: string | null): boolean {
+  if (!pathname.startsWith("/api/cron/")) return false;
+  const expected = process.env.INTERNAL_API_KEY;
+  if (!expected || !headerKey) return false;
+  if (headerKey.length !== expected.length) return false;
+  let diff = 0;
+  for (let i = 0; i < expected.length; i++) diff |= headerKey.charCodeAt(i) ^ expected.charCodeAt(i);
+  return diff === 0;
+}
+
 export async function proxy(request: NextRequest) {
   // /api/version: PUBLICO (so o SHA), resolvido ANTES de qualquer init/consulta Supabase —
   // essa rota nao usa sessao, nao acessa banco, nao le cookie e nao expoe usuario. Mesma
   // classe de excecao publica que /privacidade (LGPD) e o PDF de catalogo no matcher abaixo.
   if (isPublicVersionRoute(request.nextUrl.pathname)) {
+    return NextResponse.next({ request });
+  }
+
+  // /api/cron/*: job interno autenticado por chave — o agendador nao tem sessao.
+  if (isAuthorizedCronRoute(request.nextUrl.pathname, request.headers.get("x-internal-key"))) {
     return NextResponse.next({ request });
   }
 
