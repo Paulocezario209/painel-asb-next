@@ -129,6 +129,23 @@ export const MANUAIS: Record<string, ManualTela> = {
       "Acesso restrito a gestor/manager/financeiro (mesma régua de /marketing).",
     ],
   },
+  "/dashboard/funil/origens": {
+    titulo: "Origens",
+    oQueE: "Jornada financeira e operacional do lead por origem: recebido → qualificado → abandonado → convertido → recompra → recorrência → faturamento → custo → selo. NÃO repete CAC/ROAS/atribuição de Marketing (/marketing/origem, /marketing/atribuicao, /marketing/funil-cac, /marketing/overview cobrem canal/campanha/anúncio até 1º pedido) — cobre o gap exclusivo do CRI: trilha fina de 8 etapas + pós-venda, por origem, no Motor de Período.",
+    fontes: [
+      "RPC fn_cri_origens_kpis(data_inicio, data_fim) — 9 baldes SEMPRE presentes (mesmo com 0 no período), 22 métricas + selo. Leads/qualificação/abandono via ai_sdr_leads + v_cri_etapa_transicoes (mesmas réguas de Visão Geral/Custo por Etapa); pedidos/recompra/faturamento via v_cri_conversion_sequencia_pedidos (F4) com o MESMO bridge ares_cliente_id↔ares_pessoa_id de Conversão/Revenue Window; custo via fn_cri_custo_por_periodo (F2, Motor de Custo).",
+      "Mapeamento origem_canal→balde: fn_cri_origem_bucket (classificador puro) — 'instagram'/'google'→Mídia Paga, 'ig_bio'→Bio do Instagram, 'lp'→Landing Page, 'organico'→Orgânico, 'indicacao'→Indicação, NULL/valor não reconhecido→Origem Desconhecida (NUNCA Orgânico — regra explícita do Paulo). Pedidos de clientes ARES sem lead SDR correspondente também caem em Origem Desconhecida.",
+      "Custo de mídia: o Motor de Custo do CRI (F2) só desce a canal google/meta — não à granularidade de objetivo de campanha que existe em v_cac_por_canal (Marketing). Por isso 100% do custo de mídia conhecido cai em Mídia Paga; as demais origens mostram custo de mídia 0 (limitação de granularidade, não custo real zero) e selo 'não informado'.",
+      "'Clientes Recorrentes'/'Taxa de Recorrência' são FOTO DO AGORA (funnel_stage='cliente_recorrente', rótulo atual do lead) — diferente de 'Recompra' (evento no período, numero_sequencia≥2). Mesma dualidade estado-atual×evento-no-período já documentada em Jornada dos Leads.",
+      "'Retorno sobre Faturamento' usa faturamento real ARES (F4) ÷ custo do Motor de Custo (F2) — mesma forma de ROAS, fontes diferentes das de Marketing (que usa ai_sdr_leads.total_revenue_brl, aproximação documentada em DEBT-256). Não substitui o ROAS de /marketing/origem.",
+    ],
+    comoUsar: [
+      "Período: 2 campos de data no topo (Motor de Período). Evolução vs período anterior (▲/▼) nas colunas Leads Recebidos e Faturamento.",
+      "Leia a nota amarela antes de comparar Orgânico com Origem Desconhecida — a maior parte do faturamento histórico está em Origem Desconhecida (clientes antigos sem lead SDR), não em Orgânico.",
+      "Linhas esmaecidas (WhatsApp Direto, Site, Prospecção Ativa hoje): balde existe e será preenchido sozinho quando a origem passar a distinguir esses casos — não é erro, é 0 real.",
+      "Acesso restrito a gestor/manager/financeiro (mesma régua de /marketing).",
+    ],
+  },
   "/dashboard/cadencias": {
     titulo: "Central de Orquestração de Cadências",
     oQueE: "O centro de comando das cadências em 5 seções (00 três visões · 01 Mapa · 02 Fila · 03 Dossiê · 04 Contrato de dados · 05 Plano por fases): onde cada lead está AGORA, em qual degrau (CURTA até 30d / LONGA nutrição), e — já com o motor F3 — qual é a PRÓXIMA AÇÃO e o próximo ângulo de cada lead, sem repetir os já usados.",
