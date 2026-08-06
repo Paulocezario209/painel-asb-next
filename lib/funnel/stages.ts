@@ -35,6 +35,9 @@ export const STAGE_ORDER = [
   "pedido_4",
   "cliente_recorrente",
 ] as const;
+// Nota: "perda_solicitada" (Passo 11, §12.7) e "perdido" NÃO entram em STAGE_ORDER de
+// propósito — são saídas/governança, não jornada de avanço (mesmo padrão de "perdido",
+// que também nunca esteve aqui). Rótulo/cor/exclusão via STAGE_LABELS/STAGE_COLORS/NAO_ATIVO_STAGES.
 
 export type Stage = (typeof STAGE_ORDER)[number];
 
@@ -82,7 +85,10 @@ export const CONVERTIDO_SET = new Set<string>(CONVERTIDO_STAGES);
 // A aba/card "Ativos" (tela Leads) = leads AINDA no funil. Exclui os dois destinos
 // terminais: CONVERTIDO (virou cliente → vive na Carteira, v_carteira_360) e
 // lead_perdido/perdido (→ aba Perdidos). Sem isso, perdido conta em Ativos E em Perdidos.
-export const NAO_ATIVO_STAGES = [...CONVERTIDO_STAGES, "lead_perdido", "perdido"] as const;
+// perda_solicitada (Passo 11): nem "ativo" no sentido de trabalho comercial normal (está
+// congelado, aguardando decisão do gerente), nem "convertido"/"perdido" ainda — mesmo
+// bucket de exclusão por ora (não conta como lead ativo trabalhável pelo vendedor).
+export const NAO_ATIVO_STAGES = [...CONVERTIDO_STAGES, "lead_perdido", "perdido", "perda_solicitada"] as const;
 
 // ── Rótulos de exibição (canônicos V3 + legados p/ timeline histórica) ──────
 export const STAGE_LABELS: Record<string, string> = {
@@ -115,6 +121,7 @@ export const STAGE_LABELS: Record<string, string> = {
   cliente_ativo:          "Recorrente (legado)",   // legacy → aliased (só timeline)
   lead_perdido:           "Perdidos",              // LATERAL
   perdido:                "Perdidos",              // LATERAL — Pipeline V3, mesmo destino
+  perda_solicitada:       "Aguardando Aprovação",  // Passo 11 — fila do gerente, §12.7
 };
 
 export const stageLabel = (s: string | null | undefined): string =>
@@ -151,6 +158,7 @@ export const STAGE_COLORS: Record<string, string> = {
   cliente_ativo:         "#22c55e",
   lead_perdido:          "#C8102E",
   perdido:               "#C8102E",
+  perda_solicitada:      "#f59e0b",  // amarelo — pendente, distinto do vermelho de perdido confirmado
 };
 
 // ── Pipeline (board Kanban do vendedor) ──────────────────────────────────────

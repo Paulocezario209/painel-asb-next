@@ -5,6 +5,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getUserContext } from "@/lib/auth/get-user-role";
 import { MetasCalendarioGerente } from "@/components/dashboard/metas-calendario-gerente";
+import { PerdasPendentesGerente } from "@/components/dashboard/perdas-pendentes-gerente";
 import { businessDaysInMonth, businessDaysElapsed, dateAfterNBusinessDays } from "@/lib/utils/business-days";
 import { currentYearMonthBRT, brtWallClockAsLocalDate } from "@/lib/datetime-brt";
 import { VENDOR_LABELS as VENDOR_NAMES, VENDOR_ORDER } from "@/lib/vendor-labels";
@@ -56,7 +57,9 @@ export default async function GerentePage() {
   await supabase.auth.getUser();
 
   const ctx = await getUserContext();
-  if (!ctx || ctx.role !== "gestor") redirect("/dashboard");
+  // Pipeline V3 Passo 11: gerente_comercial ganha acesso (fila de aprovacao de perda,
+  // §12.7) — docs/GERENTE_COMERCIAL_ONBOARDING.md: role sem routing_team, ve tudo agregado.
+  if (!ctx || !["gestor", "gerente_comercial"].includes(ctx.role)) redirect("/dashboard");
 
   // ── Data boundaries ───────────────────────────────────────────────────────
   // BRT (America/Sao_Paulo): vira o mês pelo calendário de Brasília, não pela UTC do servidor.
@@ -266,6 +269,9 @@ export default async function GerentePage() {
           </>
         )}
       </div>
+
+      {/* ── Perdas Pendentes de Aprovação (Pipeline V3 Passo 11, §12.7) ─────── */}
+      <PerdasPendentesGerente />
 
       {/* ── Retention Carteira (Funil v2 Fase 3 — atualizado pelo worker daily) ── */}
       {retention && (
