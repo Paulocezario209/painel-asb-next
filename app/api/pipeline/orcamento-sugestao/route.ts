@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
     .single();
   if (error || !lead) return NextResponse.json({ error: "lead nao encontrado" }, { status: 404 });
   if (lead.is_test) return NextResponse.json({ itens: [], fonte: "vazio" });
-  if (lead.funnel_stage !== "proposta_enviada") return NextResponse.json({ itens: [], fonte: "vazio" });
+  if (lead.funnel_stage !== "proposta" && lead.funnel_stage !== "proposta_enviada") return NextResponse.json({ itens: [], fonte: "vazio" });
   if (!ctx.isGestor && ctx.routing_team !== lead.routing_team) {
     return NextResponse.json({ error: "sem permissao para este lead" }, { status: 403 });
   }

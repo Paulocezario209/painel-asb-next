@@ -3,8 +3,6 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
-  markClienteAtivoAction,
-  markClienteRecorrenteAction,
   setCustomerHealthAction,
   markCustomerLostAction,
   reassignCustomerVendorAction,
@@ -21,7 +19,6 @@ const HEALTH_BTNS = [
 
 export function CustomerActions({
   leadId,
-  stage,
   currentHealth,
   currentOwner,
   vendors,
@@ -57,25 +54,10 @@ export function CustomerActions({
 
   return (
     <div className="space-y-3">
-      {/* Avançar stage */}
-      {stage === "cliente_em_ativacao" && (
-        <button
-          disabled={pending}
-          onClick={() => runAction(() => markClienteAtivoAction(leadId), "Marcado cliente ativo ✓")}
-          className="w-full text-xs font-semibold uppercase tracking-wider bg-[#0F6E56] hover:bg-[#22C55E] text-white py-2 rounded-md transition disabled:opacity-50"
-        >
-          Marcar Cliente Ativo
-        </button>
-      )}
-      {stage === "cliente_ativo" && (
-        <button
-          disabled={pending}
-          onClick={() => runAction(() => markClienteRecorrenteAction(leadId), "Marcado recorrente ✓")}
-          className="w-full text-xs font-semibold uppercase tracking-wider bg-[#064E3B] hover:bg-[#0F6E56] text-white py-2 rounded-md transition disabled:opacity-50"
-        >
-          Marcar Recorrente
-        </button>
-      )}
+      {/* Avançar stage manual REMOVIDO (Passo 10 Pipeline V3, Paulo 2026-08-06):
+          pedido_1..4/cliente_recorrente são 100% automáticos via ARES — vendedor/gestor
+          não move mais manualmente daqui. `stage` segue recebido pelo componente (outros
+          usos possíveis no futuro), mas não dispara mais nenhum botão de avanço aqui. */}
 
       {/* Health */}
       <div>

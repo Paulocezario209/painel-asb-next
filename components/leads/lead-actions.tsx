@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, TrendingUp } from "lucide-react";
+import { CheckCircle } from "lucide-react";
 
 type Lead = {
   phone: string;
@@ -23,7 +23,6 @@ export function LeadActions({ lead: initial }: { lead: Lead }) {
 
   // Botão visível apenas quando vendedor está ativo e agendamento ainda não foi confirmado
   const showConfirm = lead.human_active === true && lead.handoff_confirmed === false;
-  const showConvert = (lead.qual_stage ?? 0) >= 7 && !lead.first_order_at;
 
   async function confirmHandoff() {
     setLoading("confirm");
@@ -46,28 +45,7 @@ export function LeadActions({ lead: initial }: { lead: Lead }) {
     }
   }
 
-  async function convertLead() {
-    setLoading("convert");
-    try {
-      const res = await fetch("/api/lead/mark-converted", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: lead.phone }),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: "Erro desconhecido" }));
-        setConfirmError(err.error ?? "Falha ao converter");
-        return;
-      }
-      const data = await res.json();
-      setLead((l) => ({ ...l, first_order_at: data.first_order_at }));
-      router.refresh();
-    } finally {
-      setLoading(null);
-    }
-  }
-
-  if (!showConfirm && !showConvert) {
+  if (!showConfirm) {
     return <p className="text-sm text-slate-200">Nenhuma ação disponível.</p>;
   }
 
@@ -101,17 +79,6 @@ export function LeadActions({ lead: initial }: { lead: Lead }) {
         }}>
           <CheckCircle size={12} /> Contato Confirmado
         </div>
-      )}
-      {showConvert && (
-        <Button
-          className="w-full gap-2 justify-start"
-          variant="outline"
-          disabled={loading === "convert"}
-          onClick={convertLead}
-        >
-          <TrendingUp className="w-4 h-4 text-yellow-600" />
-          {loading === "convert" ? "Marcando..." : "Marcar como convertido"}
-        </Button>
       )}
     </div>
   );

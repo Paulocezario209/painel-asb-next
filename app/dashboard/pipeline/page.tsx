@@ -16,40 +16,30 @@ import { PageHead } from "@/app/dashboard/lib/ui";
 export const dynamic = "force-dynamic";
 
 // Vocabulário: FONTE ÚNICA em lib/funnel/stages.ts (DEBT-157 fechada).
-// Projeção desta tela: board TERMINA na conversão — stages de cliente (legado em
-// ai_sdr_leads) colapsam na coluna "Convertido" (pedido_fechado). Redesenho 2026-07-09.
+// Pipeline V3 (Passo 10, Paulo 2026-08-06): board TERMINA em "Aguardando 1º Pedido" — a
+// última transição MANUAL do vendedor. Leads já convertidos (pedido_1+/cliente_recorrente,
+// incl. legado pedido_fechado/cliente_*) não aparecem MAIS no board — "graduam" direto pra
+// Carteira (v_carteira_360) assim que o ARES confirma, sem passar por uma coluna própria
+// (substitui a antiga coluna "Convertido"/pedido_fechado do redesenho 2026-07-09).
 const LEGACY_STAGES = [
-  ...Object.keys(LEGACY_ALIAS),
-  ...CONVERTIDO_STAGES.filter(s => s !== "pedido_fechado"),
+  ...Object.keys(LEGACY_ALIAS).filter(s => !CONVERTIDO_STAGES.includes(s as (typeof CONVERTIDO_STAGES)[number])),
   "pedido_teste", // Funil v3: etapa deprecada (substituída por cadastro_cliente). Mantida no
-                  // fetch p/ um lead legado eventual aterrissar em "Convertido" via BOARD_ALIAS.
+                  // fetch p/ um lead legado eventual aterrissar em "Cadastro" via BOARD_ALIAS.
 ] as const;
 const BOARD_ALIAS: Record<string, string> = {
-  ...LEGACY_ALIAS,
+  ...Object.fromEntries(Object.entries(LEGACY_ALIAS).filter(([, v]) => !CONVERTIDO_STAGES.includes(v as (typeof CONVERTIDO_STAGES)[number]))),
   // Funil v3 (2026-07-16): "pedido_teste" era conversão manual imediata (→ cliente_em_ativacao).
-  // Deprecada. Qualquer lead legado ainda nela = já converteu → coluna "Convertido".
-  pedido_teste: "pedido_fechado",
+  // Deprecada. Qualquer lead legado ainda nela vira "Cadastro do Cliente" no board.
+  pedido_teste: "cadastro_cliente",
   // Item 5 / MODELO OPERACIONAL (Paulo 2026-07-13): lead 'vendedor_assumiu' aterrissa
-  // na coluna HANDOFF (não "Em Andamento"). Override board-specific — NÃO mexe no
-  // LEGACY_ALIAS global (funil/timeline seguem vendo vendedor_assumiu→lead_em_andamento).
-  // Daí o vendedor arrasta Handoff→Em Andamento (mark_lead_em_andamento, que aceita
+  // na coluna AGENDAMENTO (não "Em Andamento"). Override board-specific — NÃO mexe no
+  // LEGACY_ALIAS global (funil/timeline seguem vendo vendedor_assumiu→agendamento, que já
+  // é o mesmo destino aqui — mantido explícito por clareza histórica do Item 5).
+  // Daí o vendedor arrasta Agendamento→Em Andamento (mark_lead_em_andamento, que aceita
   // from='vendedor_assumiu' desde a migration 2026-07-14 / DEBT-272 1b). Destrava os 55.
-  vendedor_assumiu: "handoff",
-  ...Object.fromEntries(CONVERTIDO_STAGES.filter(s => s !== "pedido_fechado").map(s => [s, "pedido_fechado"])),
+  vendedor_assumiu: "agendamento",
 };
-const aliasStage = (s: string | null) => (s && BOARD_ALIAS[s]) || s || "handoff";
-
-// Início do mês corrente em BRT (São Paulo) — régua da GRADUAÇÃO (DEBT-325):
-// "Convertido" no board = convertidos DO MÊS (evento), NÃO recorrência (estado).
-// Cliente que faturou 1ª vez em mês ANTERIOR já é conta madura da carteira real
-// (v_carteira_360) — gradua pra Carteira e SOME do Pipeline. Fonte única = carteira;
-// o board só BEBE dela, não re-decide (LEI ÚNICA / ANATOMIA_ASB).
-function monthStartBRT(): string {
-  const p = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit" }).formatToParts(new Date());
-  const y = p.find((x) => x.type === "year")!.value;
-  const m = p.find((x) => x.type === "month")!.value;
-  return `${y}-${m}-01`;
-}
+const aliasStage = (s: string | null) => (s && BOARD_ALIAS[s]) || s || "agendamento";
 
 // Ativos = em aberto (exclui fechado/perdido). Base dos KPIs.
 const ATIVOS = PIPELINE_ATIVOS;
@@ -105,16 +95,18 @@ export default async function PipelinePage({ searchParams }: { searchParams: Pro
   ]);
   const ponte = (rawPonte ?? []) as { lead_id: string; first_order_at: string | null }[];
   const aresLeadIds = new Set(ponte.map((r) => r.lead_id));
-  // GRADUAÇÃO (DEBT-325): quem faturou 1ª vez ANTES do mês corrente é conta madura →
-  // sai do Pipeline (vive na Carteira). Convertido do mês permanece na coluna "Convertido".
-  const mesStart = monthStartBRT();
-  const graduados = new Set(ponte.filter((r) => r.first_order_at && r.first_order_at < mesStart).map((r) => r.lead_id));
+  // GRADUAÇÃO (Passo 10, Paulo 2026-08-06 — substitui a régua por mês do DEBT-325): quem já
+  // tem funnel_stage pós-1º-pedido (pedido_1+/cliente_recorrente, legado pedido_fechado/
+  // cliente_*) SOME do Pipeline direto — a própria query acima já exclui (LEGACY_STAGES não
+  // inclui esses valores, ver lib/funnel/stages.ts). Não existe mais coluna "Convertido" pra
+  // aguardar o fim do mês. ares_confirmado (ponte v_carteira_360) fica só como BADGE
+  // informativo "✓ ARES" pro caso de a cascata automática (Passo 4, cron 15min) ainda não
+  // ter promovido o funnel_stage — o lead segue visível na coluna real até a promoção.
   const leads = ((rawLeads ?? []) as PipelineLead[])
-    .filter((l) => !graduados.has(l.id))
     .map((l) => ({ ...l, ares_confirmado: aresLeadIds.has(l.id) }));
 
-  // Etapa efetiva: ARES vence o funnel_stage manual (badge ✓ ARES no card).
-  const stageEfetiva = (l: PipelineLead) => (l.ares_confirmado ? "pedido_fechado" : aliasStage(l.funnel_stage));
+  // Etapa efetiva: alias de legado + override do board (agendamento origem etc.).
+  const stageEfetiva = (l: PipelineLead) => aliasStage(l.funnel_stage);
 
   // Agrupa por etapa (server-side, sobre a lista já filtrada; alias colapsa legados)
   const byStage: Record<string, PipelineLead[]> = {};

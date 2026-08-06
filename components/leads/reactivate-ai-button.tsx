@@ -20,8 +20,13 @@ export function ReactivateAiButton({
   const router = useRouter();
 
   // Visivel apenas se IA esta desligada (lead em agendamento humano)
-  // e nao esta em estado terminal
-  const TERMINAL = ["pedido_fechado", "cliente_ativo", "cliente_recorrente", "lead_perdido"];
+  // e nao esta em estado terminal. Pipeline V3 (Passo 10): pedido_1..4 sao os novos
+  // estados pos-conversao automaticos via ARES — tao terminais quanto cliente_recorrente.
+  const TERMINAL = [
+    "pedido_fechado", "cliente_ativo", "cliente_em_ativacao", "cliente_recorrente",
+    "pedido_1", "pedido_2", "pedido_3", "pedido_4",
+    "lead_perdido", "perdido",
+  ];
   const visible =
     aiActive === false &&
     humanActive === true &&

@@ -20,13 +20,20 @@ const EVENT_LABELS: Record<string, string> = {
   first_order_placed: "Primeiro pedido",
 };
 
+// Pipeline V3 (Passo 10, 2026-08-06): handoff→agendamento, diagnostico_comercial→em_andamento,
+// proposta_enviada→proposta, + aguardando_primeiro_pedido/pedido_1..4/cliente_recorrente/perdido.
+// Legado mantido (timeline histórica precisa exibir eventos antigos corretamente).
 const STAGE_LABELS: Record<string, string> = {
   lead_novo: "Lead Novo", atendido_sdr: "Atendido SDR",
   qualificacao_inicial: "Qualif. Inicial", lead_qualificado: "Qualificado",
-  handoff: "Agendamento", vendedor_assumiu: "Vendedor Assumiu",
-  diagnostico_comercial: "Diag. Comercial", proposta_enviada: "Proposta",
-  negociacao: "Negociacao", pedido_fechado: "Pedido Fechado",
-  lead_perdido: "Perdido",
+  agendamento: "Agendamento", handoff: "Agendamento", vendedor_assumiu: "Vendedor Assumiu",
+  diagnostico_comercial: "Diag. Comercial", em_andamento: "Em Andamento",
+  proposta: "Proposta", proposta_enviada: "Proposta",
+  negociacao: "Negociacao", cadastro_cliente: "Cadastro do Cliente",
+  aguardando_primeiro_pedido: "Aguardando 1º Pedido",
+  pedido_1: "1º Pedido", pedido_2: "2º Pedido", pedido_3: "3º Pedido", pedido_4: "4º Pedido",
+  cliente_recorrente: "Cliente Recorrente", pedido_fechado: "Pedido Fechado (legado)",
+  lead_perdido: "Perdido", perdido: "Perdido",
 };
 
 interface TimelineEvent {

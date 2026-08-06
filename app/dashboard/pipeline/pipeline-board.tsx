@@ -58,12 +58,15 @@ function parseFromNome(nome: string): { gramatura: number | null; unidades: numb
 
 
 // Cores semânticas por etapa (asb-dashboard-elite — cor com propósito, não decorativa).
-// Rótulos de COLUNA (view do board — "Convertido" é projeção, ver lib/funnel/stages).
-// Cores: fonte única STAGE_COLORS (DEBT-157).
+// Rótulos de COLUNA (view do board). Cores: fonte única STAGE_COLORS (DEBT-157).
+// Pipeline V3 (Passo 10, Paulo 2026-08-06): board TERMINA em "Aguardando 1º Pedido" —
+// a última transição MANUAL do vendedor. Dali em diante (pedido_1..4/cliente_recorrente)
+// é 100% automático via ARES (recompute_customer_stage) — sem coluna própria no board,
+// o lead sai do pipeline (graduação, ver pipeline/page.tsx) assim que ares_confirmado=true.
 const COL_LABEL: Record<string, string> = {
-  handoff: "Agendamento", lead_em_andamento: "Em Andamento", negociacao: "Negociação",
-  proposta_enviada: "Proposta", cadastro_cliente: "Cadastro do Cliente",
-  pedido_fechado: "Convertido", lead_perdido: "Perdido",
+  agendamento: "Agendamento", em_andamento: "Em Andamento", negociacao: "Negociação",
+  proposta: "Proposta", cadastro_cliente: "Cadastro do Cliente",
+  aguardando_primeiro_pedido: "Aguardando 1º Pedido", lead_perdido: "Perdido",
 };
 const STAGE_COL: Record<string, { label: string; cor: string }> = Object.fromEntries(
   Object.entries(COL_LABEL).map(([k, label]) => [k, { label, cor: STAGE_COLORS[k] ?? "#c0d0e0" }]),
@@ -77,7 +80,6 @@ function diasDesde(iso: string | null): number | null {
 
 type ModalState =
   | { tipo: "perdido"; lead: PipelineLead; from: string }
-  | { tipo: "fechar"; lead: PipelineLead; from: string }
   | { tipo: "lista"; stage: string }
   | { tipo: "sugestao"; lead: PipelineLead; stage: string }
   | { tipo: "ficha"; lead: PipelineLead }
@@ -145,8 +147,10 @@ export function PipelineBoard({
     // Transições com input → modal; demais → direto.
     // Proposta v3 (Paulo 2026-07-17): mover pra Proposta é DIRETO (sem "Registrar Proposta") —
     // a proposta é o formulário 🧾 (orçamento) dentro da coluna.
+    // Pipeline V3 (Passo 10): "Aguardando 1º Pedido" também é DIRETO — é a última transição
+    // manual do vendedor, sem confirmação (o "Confirmar Conversão"/pedido_fechado foi removido;
+    // pedido_1+ é 100% automático via ARES, nunca mais um botão do painel).
     if (to === "lead_perdido") { setModal({ tipo: "perdido", lead, from }); return; }
-    if (to === "pedido_fechado") { setModal({ tipo: "fechar", lead, from }); return; } // confirma (seta first_order_at)
     persistir(lead, from, to, {});
   }
 
@@ -205,9 +209,9 @@ export function PipelineBoard({
                   //  · Agendamento + vendedor já respondeu → sugere Em Andamento
                   //  · Proposta + CNPJ/cadastro ARES capturado → sugere Cadastro do Cliente
                   const sugestao =
-                    stage === "handoff" && lead.seller_first_reply_at
+                    stage === "agendamento" && lead.seller_first_reply_at
                       ? { txt: "respondeu → Em Andamento", cor: "#eab308" }
-                      : stage === "proposta_enviada" && (lead.cnpj || lead.ares_pessoa_id)
+                      : stage === "proposta" && (lead.cnpj || lead.ares_pessoa_id)
                       ? { txt: "cadastro captado → Cadastro", cor: "#3b82f6" }
                       : null;
                   return (
@@ -249,7 +253,7 @@ export function PipelineBoard({
                         {/* Setor Negociação — agente Deal Desk (Voss): lê a conversa, detecta a
                             objeção e devolve a virada. Negociação + Proposta Enviada (V4 Fase 7,
                             2026-07-30 — backend já aceitava as 2 etapas, só o botão estava travado). */}
-                        {(stage === "negociacao" || stage === "proposta_enviada") && (
+                        {(stage === "negociacao" || stage === "proposta") && (
                           <button
                             onClick={(e) => { e.stopPropagation(); setModal({ tipo: "dealdesk", lead }); }}
                             title="Deal Desk: virada da objeção em tempo real (lê a conversa)"
@@ -258,7 +262,7 @@ export function PipelineBoard({
                         )}
                         {/* Onda 4b — botão "Orçamento" só na etapa Proposta (Negociação = absorve
                             info; Proposta = envia a proposta/orçamento ao lead) */}
-                        {stage === "proposta_enviada" && (
+                        {stage === "proposta" && (
                           <button
                             onClick={(e) => { e.stopPropagation(); setModal({ tipo: "orcamento", lead }); }}
                             title="Montar e enviar o orçamento ao lead (pelo seu WhatsApp)"
@@ -316,11 +320,6 @@ export function PipelineBoard({
       {modal?.tipo === "perdido" && (
         <ModalPerdido lead={modal.lead} onCancel={() => setModal(null)}
           onConfirm={(reason, detail, isEncosto) => persistir(modal.lead, modal.from, "lead_perdido", { reason, detail, is_encosto: isEncosto })} />
-      )}
-      {/* Modal fechar (confirmação simples — seta first_order_at) */}
-      {modal?.tipo === "fechar" && (
-        <ModalFechar lead={modal.lead} onCancel={() => setModal(null)}
-          onConfirm={() => persistir(modal.lead, modal.from, "pedido_fechado", {})} />
       )}
       {/* Modal sugestão do estrategista (Fase A: gerar + copiar) */}
       {modal?.tipo === "sugestao" && (
@@ -416,25 +415,6 @@ function ModalPerdido({ lead, onConfirm, onCancel }: { lead: PipelineLead; onCon
         <button disabled={!reason} onClick={() => onConfirm(reason, detail.trim() || null, isEncosto)}
           style={{ background: reason ? "#C8102E" : "#2e2e2e", border: "none", borderRadius: 6, padding: "8px 16px", color: "#fff", fontSize: 11, fontFamily: theme.font.label, fontWeight: 700, cursor: reason ? "pointer" : "default" }}>
           {isEncosto ? "Encerrar · Encosto" : "Encerrar"}
-        </button>
-      </div>
-    </Backdrop>
-  );
-}
-
-function ModalFechar({ lead, onConfirm, onCancel }: { lead: PipelineLead; onConfirm: () => void; onCancel: () => void }) {
-  return (
-    <Backdrop>
-      <p style={{ color: "#22c55e", fontSize: 14, fontFamily: theme.font.label, fontWeight: 750, letterSpacing: "-.01em", marginBottom: 4 }}>Confirmar Conversão</p>
-      <p style={{ color: "#c0d0e0", fontSize: 11, fontFamily: theme.font.label, marginBottom: 14 }}>{lead.restaurant_name || "Lead"} → Convertido (1ª compra) · o ARES confirma quando faturar</p>
-      <p style={{ color: "#c8d8e8", fontSize: 11, fontFamily: theme.font.label, marginBottom: 18, lineHeight: 1.5 }}>
-        Marca o lead como convertido (grava <span style={{ color: "#22c55e" }}>first_order_at</span>). Confirma o fechamento do pedido?
-      </p>
-      <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
-        <BtnCancel onClick={onCancel} />
-        <button onClick={onConfirm}
-          style={{ background: "#22c55e", border: "none", borderRadius: 6, padding: "8px 16px", color: "#04210f", fontSize: 11, fontFamily: theme.font.label, fontWeight: 700, cursor: "pointer" }}>
-          Confirmar fechamento
         </button>
       </div>
     </Backdrop>

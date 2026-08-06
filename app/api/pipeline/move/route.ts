@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
   let rpcName: string;
   let params: Record<string, unknown>;
   switch (to_stage) {
-    case "lead_em_andamento":
+    case "em_andamento":
       rpcName = "mark_lead_em_andamento"; params = { p_lead_id: lead_id, p_actor: ctx.email }; break;
     case "negociacao":
       rpcName = "mark_negociacao"; params = { p_lead_id: lead_id, p_actor: ctx.email }; break;
@@ -85,9 +85,13 @@ export async function POST(req: NextRequest) {
       // fica 100% no ARES (trigger set_converted_on_first_order). Substitui a antiga
       // "pedido_teste" (mark_lead_pedido_teste, que convertia na hora — deprecada).
       rpcName = "mark_cadastro_cliente"; params = { p_lead_id: lead_id, p_actor: ctx.email }; break;
-    case "pedido_fechado":
-      rpcName = "mark_lead_converted"; params = { p_lead_id: lead_id, p_actor: ctx.email }; break;
-    case "proposta_enviada":
+    case "aguardando_primeiro_pedido":
+      // Pipeline V3 (Passo 10, Paulo 2026-08-06): ÚLTIMA transição manual do vendedor.
+      // Dali em diante (pedido_1..4/cliente_recorrente) é 100% automático via ARES —
+      // nenhum RPC deste switch escreve esses valores; não existe mais o antigo
+      // "pedido_fechado"/mark_lead_converted (removido, conversão manual descontinuada).
+      rpcName = "mark_lead_aguardando_pedido"; params = { p_lead_id: lead_id, p_actor: ctx.email }; break;
+    case "proposta":
       // Funil v3 (2026-07-17, Paulo): mover pra Proposta NÃO exige mais valor — a proposta é o
       // formulário 🧾 (orçamento) dentro da coluna. O RPC aceita valor null (DEFAULT NULL).
       rpcName = "mark_proposal_sent";

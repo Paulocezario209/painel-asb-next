@@ -4,7 +4,7 @@ import { useState, useTransition, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { MessageCircle, CheckCircle, TrendingUp, AlertTriangle } from "lucide-react";
+import { MessageCircle, CheckCircle, AlertTriangle } from "lucide-react";
 import { LeadScoreBadge } from "@/components/dashboard/lead-score-badge";
 import { resolveOrigem, origemDetalhe, ORIGEM_FILTER_OPTIONS } from "@/lib/origem-canal";
 import { VENDOR_LABELS } from "@/lib/vendor-labels";
@@ -239,17 +239,6 @@ export function LeadsTable({ leads: initialLeads, userEmail, initialStatus = "al
     setLeads(prev => prev.map(l => l.phone === phone ? { ...l, handoff_confirmed: true, handoff_confirmed_at: now } : l));
   }
 
-  async function convertLead(phone: string) {
-    const res = await fetch("/api/lead/mark-converted", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone }),
-    });
-    if (!res.ok) return;
-    const data = await res.json();
-    setLeads(prev => prev.map(l => l.phone === phone ? { ...l, first_order_at: data.first_order_at } : l));
-  }
-
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       {/* Filters — horizontal scroll on mobile */}
@@ -274,7 +263,7 @@ export function LeadsTable({ leads: initialLeads, userEmail, initialStatus = "al
           <option value="qualified">qualificado</option>
           <option value="handoff">handoff</option>
           <option value="vendedor_assumiu">vendedor assumiu</option>
-          <option value="pedido_fechado">pedido fechado</option>
+          <option value="pedido_fechado">1º pedido feito</option>
           <option value="optout">opt-out</option>
         </Select>
         <Select value={vendorFilter} onChange={setVendorFilter}>
@@ -326,7 +315,6 @@ export function LeadsTable({ leads: initialLeads, userEmail, initialStatus = "al
           const status = derivedStatus(lead);
           const abc    = abcCurve(lead.weekly_volume_kg);
           const showConfirm = !!lead.handoff_at && lead.handoff_confirmed === false;
-          const showConvert = (lead.qual_stage ?? 0) >= 7 && !lead.first_order_at;
           const _now = new Date();
           const alertLevel =
             lead.scheduled_at && !lead.handoff_confirmed && new Date(lead.scheduled_at) < _now ? 'red' :
@@ -369,11 +357,6 @@ export function LeadsTable({ leads: initialLeads, userEmail, initialStatus = "al
                   {showConfirm && (
                     <button onClick={() => confirmHandoff(lead.phone)} style={{ background: "transparent", border: "none", color: C.amber, cursor: "pointer", padding: 4 }} title="Confirmar agendamento">
                       <CheckCircle size={16} />
-                    </button>
-                  )}
-                  {showConvert && (
-                    <button onClick={() => convertLead(lead.phone)} style={{ background: "transparent", border: "none", color: C.gold, cursor: "pointer", padding: 4 }} title="Marcar convertido">
-                      <TrendingUp size={16} />
                     </button>
                   )}
                 </div>

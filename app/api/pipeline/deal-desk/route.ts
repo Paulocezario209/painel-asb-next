@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
   if (error || !lead) return NextResponse.json({ error: "lead nao encontrado" }, { status: 404 });
   if (lead.is_test) return NextResponse.json(OFF);
   // Deal Desk atua na negociação (e vale também na proposta, onde a objeção reaparece)
-  if (lead.funnel_stage !== "negociacao" && lead.funnel_stage !== "proposta_enviada") return NextResponse.json(OFF);
+  if (!["negociacao", "proposta", "proposta_enviada"].includes(lead.funnel_stage ?? "")) return NextResponse.json(OFF);
   if (!ctx.isGestor && ctx.routing_team !== lead.routing_team) {
     return NextResponse.json({ error: "sem permissao para este lead" }, { status: 403 });
   }

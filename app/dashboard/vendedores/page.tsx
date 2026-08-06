@@ -26,9 +26,13 @@ const VENDOR_LABELS: Record<string, { name: string; region: string }> = {
   SETOR_CUIT:               { name: VENDOR_NAMES.SETOR_CUIT, region: "CUIT — key accounts" },
 };
 
+// Pipeline V3 (Passo 10, 2026-08-06): handoff→agendamento, lead_em_andamento/
+// diagnostico_comercial/vendedor_assumiu→em_andamento, proposta_enviada→proposta.
+// Legado mantido (nenhum fluxo vivo escreve mais os valores antigos, mas leads
+// históricos ainda podem tê-los).
 const PIPELINE_STAGES = new Set([
-  "handoff", "vendedor_assumiu", "diagnostico_comercial",
-  "proposta_enviada", "negociacao",
+  "agendamento", "handoff", "vendedor_assumiu", "em_andamento", "lead_em_andamento",
+  "diagnostico_comercial", "proposta", "proposta_enviada", "negociacao",
 ]);
 
 // ── Interfaces ────────────────────────────────────────────────────────────────
@@ -127,7 +131,9 @@ export default async function VendedoresPage() {
         });
       }
     }
-    if (l.funnel_stage === "pedido_fechado") m.converted++;
+    // Pipeline V3 (Passo 10): pedido_fechado retirado — first_order_at é o sinal robusto de
+    // conversão (cobre pedido_1..4/cliente_recorrente automáticos via ARES + legado).
+    if (l.first_order_at != null) m.converted++;
 
     // ETAPA9B: win rate (handoff → first_order), sem filtro de data
     if (l.handoff_at) {
@@ -149,7 +155,7 @@ export default async function VendedoresPage() {
           const delta = (new Date(l.seller_first_reply_at).getTime() - new Date(l.handoff_at).getTime()) / 3600000;
           if (delta > 0) m.hoursArr.push(delta);
         }
-      } else if (l.funnel_stage !== "lead_perdido") {
+      } else if (l.funnel_stage !== "lead_perdido" && l.funnel_stage !== "perdido") {
         const hrs = (now - new Date(l.handoff_at).getTime()) / 3600000;
         waiting.push({
           phone: l.phone,

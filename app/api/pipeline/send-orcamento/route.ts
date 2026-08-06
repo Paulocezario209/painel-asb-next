@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
 
   // Trava de etapa: orçamento só na etapa Proposta (igual à visibilidade do botão).
   // Negociação = vendedor absorve as infos; Proposta = envia a proposta/orçamento ao lead.
-  if (lead.funnel_stage !== "proposta_enviada") {
+  if (lead.funnel_stage !== "proposta" && lead.funnel_stage !== "proposta_enviada") {
     return NextResponse.json({ error: "orçamento só na etapa Proposta" }, { status: 400 });
   }
   // AUTH: gestor envia qualquer; vendedor só os do seu routing_team.

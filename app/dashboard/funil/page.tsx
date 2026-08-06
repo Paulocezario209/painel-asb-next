@@ -127,7 +127,7 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
     { label: "Qualificados",     count: _m.qualificados, marco: "qualificados" },
     { label: "Agendamento",          count: _m.handoff,      marco: "handoff" },
     { label: "Vendedor assumiu", count: _m.assumidos,    marco: "vendedor_assumiu" },
-    { label: "Pedido fechado",   count: _m.pedidos,      marco: "pedido_fechado" },
+    { label: "1º Pedido",        count: _m.pedidos,      marco: "pedido_fechado" },
   ] : [];
 
   // ── KPIs ──────────────────────────────────────────────────────────────────────
@@ -146,7 +146,7 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
   let perdidos = 0;
   for (const l of leads) {
     if (isConvertido(l)) { faseCounts.convertido++; continue; }   // ARES vence, inclusive sobre perdido
-    if (l.funnel_stage === "lead_perdido") { perdidos++; continue; }
+    if (l.funnel_stage === "lead_perdido" || l.funnel_stage === "perdido") { perdidos++; continue; }
     const s = l.funnel_stage ?? "lead_novo";
     const fase = FASES.find(f => (f.stages as readonly string[]).includes(s));
     if (fase) faseCounts[fase.key]++;
