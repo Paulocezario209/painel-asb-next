@@ -71,7 +71,15 @@ export default async function CustoPorEtapaPage({
 
   const totalChegou = etapas.reduce((s, e) => s + (e.etapa_numero !== 99 ? e.chegou : 0), 0);
   const totalFaturamento = etapas.reduce((s, e) => s + (e.faturamento_atribuido_brl ?? 0), 0);
-  const totalAbandonou = etapas.reduce((s, e) => s + e.abandonou, 0);
+  // Régua oficial do KPI "Abandonos": entradas na etapa 99 (Abandono/Saída) dentro do
+  // período — não a soma de `abandonou` das etapas 1-8. `abandonou` é filtrado por
+  // `entrou_em` da etapa DE ORIGEM; um lead que entrou na etapa anterior antes da janela
+  // mas abandonou dentro dela não apareceria em nenhum `abandonou` (a linha de origem cai
+  // fora do filtro), mas conta certo aqui via `chegou` da própria etapa 99 (data efetiva
+  // de entrada em Abandono/Saída). A soma de `abandonou` por etapa continua na tabela,
+  // como breakdown analítico de qual etapa de origem o lead saiu.
+  const etapaAbandono = etapas.find((e) => e.etapa_numero === 99);
+  const totalAbandonou = etapaAbandono?.chegou ?? 0;
   const etapaFinal = etapas.find((e) => e.etapa_numero === 8);
 
   return (
@@ -105,7 +113,7 @@ export default async function CustoPorEtapaPage({
                 "Leads Chegaram" é que induzia a ler como contagem de leads. */}
             <KpiCard label="Passagens por Etapa (1-8)" value={String(totalChegou)} Icon={Users} accent="#185FA5" num="#FFFFFF" note="soma das etapas 1 a 8, sem Abandono/Saída" />
             <KpiCard label="Faturamento Atribuído" value={fmtBRL(totalFaturamento)} Icon={DollarSign} accent="#22c55e" num="#22c55e" note="via customer_state, fonte única (F4)" />
-            <KpiCard label="Abandonos no Período" value={String(totalAbandonou)} Icon={XCircle} accent="#C8102E" num="#C8102E" note="foram para lead_perdido/fora_de_rota/fornecedor" />
+            <KpiCard label="Abandonos no Período" value={String(totalAbandonou)} Icon={XCircle} accent="#C8102E" num="#C8102E" note="entraram em Abandono/Saída no período — ver breakdown por etapa de origem na tabela" />
             <KpiCard
               label="Recorrência (Etapa 8)"
               value={String(etapaFinal?.chegou ?? 0)}
