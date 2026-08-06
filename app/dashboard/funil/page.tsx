@@ -181,15 +181,24 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
         desc={`Bloco 1: aquisição (lead → 1ª compra) · Bloco 2: camada cliente (carteira real ARES) · ${total} leads · atualizado agora`}
       />
 
-      {/* CRI F5/F9 — Custo Acumulado por Etapa (KPI central, so gestor/manager/financeiro) */}
+      {/* CRI (F2-F9) — telas de Customer Revenue Intelligence, so gestor/manager/financeiro */}
       {(ctx.role === "gestor" || ctx.role === "manager" || ctx.isFinanceiro) && (
-        <Link href="/dashboard/funil/custo-por-etapa" style={{ textDecoration: "none" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, background: "rgba(34,197,94,.06)", border: "1px solid rgba(34,197,94,.3)", borderRadius: 6, padding: "10px 14px" }}>
-            <DollarSign size={16} color="#22c55e" />
-            <span style={{ ...S.label, color: "#22c55e" }}>Novo — Custo Acumulado por Etapa</span>
-            <span style={{ ...S.muted, fontSize: 10 }}>KPI central do Customer Revenue Intelligence — quantidade, tempo e faturamento por etapa da trilha, período configurável</span>
-          </div>
-        </Link>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <Link href="/dashboard/funil/visao-geral" style={{ textDecoration: "none" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, background: "rgba(34,197,94,.06)", border: "1px solid rgba(34,197,94,.3)", borderRadius: 6, padding: "10px 14px" }}>
+              <DollarSign size={16} color="#22c55e" />
+              <span style={{ ...S.label, color: "#22c55e" }}>Novo — Visão Geral do CRI</span>
+              <span style={{ ...S.muted, fontSize: 10 }}>resumo executivo do período — leads, qualificação, abandono, conversão, recompra, faturamento, custo, CAC e origens</span>
+            </div>
+          </Link>
+          <Link href="/dashboard/funil/custo-por-etapa" style={{ textDecoration: "none" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, background: "rgba(34,197,94,.06)", border: "1px solid rgba(34,197,94,.3)", borderRadius: 6, padding: "10px 14px" }}>
+              <DollarSign size={16} color="#22c55e" />
+              <span style={{ ...S.label, color: "#22c55e" }}>Custo Acumulado por Etapa</span>
+              <span style={{ ...S.muted, fontSize: 10 }}>KPI central do Customer Revenue Intelligence — quantidade, tempo e faturamento por etapa da trilha, período configurável</span>
+            </div>
+          </Link>
+        </div>
       )}
 
       {/* P2 — filtro mês+vendedor (afeta SÓ a seção "Conversão por Marcos") */}

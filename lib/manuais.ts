@@ -50,6 +50,21 @@ export const MANUAIS: Record<string, ManualTela> = {
       "“Leads por Etapa”: um card por etapa não-terminal (posição atual) — clique abre a lista daquela etapa na tela de Leads. A contagem global tem cache de 5 minutos.",
     ],
   },
+  "/dashboard/funil/visao-geral": {
+    titulo: "Visão Geral do CRI",
+    oQueE: "Resumo executivo do Customer Revenue Intelligence (CRI) no período: leads recebidos, qualificados, abandonos, 1os pedidos, clientes com recompra, faturamento atribuído, custo (mídia/operacional/total), CAC parcial, taxa de conversão, taxa de recorrência e distribuição por origem. Motor de Período configurável, sem janela fixa.",
+    fontes: [
+      "RPC fn_cri_visao_geral(data_inicio, data_fim) — leads recebidos/qualificados de ai_sdr_leads (created_at no período; qualificado = qual_stage≥7, mesma régua de v_cac_campanha_full/v_cac_anuncio_full). Abandonos via v_cri_etapa_transicoes (mesma régua da tela Custo por Etapa). 1os pedidos/recompra via v_cri_conversion_sequencia_pedidos (F4, numero_sequencia=1 / ≥2). Custo via fn_cri_custo_por_periodo (F2).",
+      "RPC fn_cri_distribuicao_origem(data_inicio, data_fim) — leads por origem_canal (SDR único escritor) + 1os pedidos/faturamento vinculados via ares_pessoa_id.",
+      "CAC = custo total conhecido ÷ 1os pedidos — sempre 'parcial' hoje porque custo operacional (cri_custo_operacional) está vazio. Taxa de Conversão = 1os pedidos ÷ leads recebidos NO MESMO período — lead recebido no fim da janela pode não ter tido tempo de converter ainda (limite de qualquer taxa por período civil, não erro).",
+      "'Evolução vs período anterior' chama a mesma RPC 2x (período atual + anterior de mesma duração) — nunca recalcula métrica no frontend.",
+    ],
+    comoUsar: [
+      "Período: 2 campos de data no topo (Motor de Período) — qualquer intervalo, sem seleção abre no mês corrente até hoje.",
+      "Selo geral (canto superior direito do filtro): o peor selo entre os componentes financeiros — hoje sempre 'parcial' até custo operacional ser alimentado.",
+      "Acesso restrito a gestor/manager/financeiro — envolve faturamento e custo, informação de gestão.",
+    ],
+  },
   "/dashboard/funil/custo-por-etapa": {
     titulo: "Custo Acumulado por Etapa",
     oQueE: "O KPI central do Customer Revenue Intelligence (CRI): quantidade, tempo e faturamento por etapa da trilha de aquisição (00 Campanha/origem → 08+ Recorrência), no período configurável escolhido — sem janela fixa embutida no código.",
