@@ -8,7 +8,7 @@ import { getJornadaData } from "@/lib/funnel/jornada-data";
 import { buildViewModel } from "@/lib/funnel/jornada-metrics";
 import { fmtDateTimeCompactBRT } from "@/lib/datetime-brt";
 import Link from "next/link";
-import { Users, Filter, Handshake, Percent, CheckCircle2, Store, XCircle, LayoutGrid, Activity } from "lucide-react";
+import { Users, Filter, Handshake, Percent, CheckCircle2, Store, XCircle, LayoutGrid, Activity, DollarSign } from "lucide-react";
 
 import { redirect } from "next/navigation";
 import { getUserContext, canAccess } from "@/lib/auth/get-user-role";
@@ -180,6 +180,17 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
         title="Funil de Vendas"
         desc={`Bloco 1: aquisição (lead → 1ª compra) · Bloco 2: camada cliente (carteira real ARES) · ${total} leads · atualizado agora`}
       />
+
+      {/* CRI F5/F9 — Custo Acumulado por Etapa (KPI central, so gestor/manager/financeiro) */}
+      {(ctx.role === "gestor" || ctx.role === "manager" || ctx.isFinanceiro) && (
+        <Link href="/dashboard/funil/custo-por-etapa" style={{ textDecoration: "none" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, background: "rgba(34,197,94,.06)", border: "1px solid rgba(34,197,94,.3)", borderRadius: 6, padding: "10px 14px" }}>
+            <DollarSign size={16} color="#22c55e" />
+            <span style={{ ...S.label, color: "#22c55e" }}>Novo — Custo Acumulado por Etapa</span>
+            <span style={{ ...S.muted, fontSize: 10 }}>KPI central do Customer Revenue Intelligence — quantidade, tempo e faturamento por etapa da trilha, período configurável</span>
+          </div>
+        </Link>
+      )}
 
       {/* P2 — filtro mês+vendedor (afeta SÓ a seção "Conversão por Marcos") */}
       <div style={{ ...S.card, padding: "12px 16px" }}>

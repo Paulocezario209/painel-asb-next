@@ -50,6 +50,20 @@ export const MANUAIS: Record<string, ManualTela> = {
       "“Leads por Etapa”: um card por etapa não-terminal (posição atual) — clique abre a lista daquela etapa na tela de Leads. A contagem global tem cache de 5 minutos.",
     ],
   },
+  "/dashboard/funil/custo-por-etapa": {
+    titulo: "Custo Acumulado por Etapa",
+    oQueE: "O KPI central do Customer Revenue Intelligence (CRI): quantidade, tempo e faturamento por etapa da trilha de aquisição (00 Campanha/origem → 08+ Recorrência), no período configurável escolhido — sem janela fixa embutida no código.",
+    fontes: [
+      "RPC fn_cri_custo_acumulado_por_etapa(data_inicio, data_fim) — cruza Identity Ledger (F1) + Motor de Custo/Período (F2) + Journey Layer (F3) + Conversion Layer (F4). Mapeamento das 22 etapas reais de funnel_stage_whitelist para a trilha de 9 etapas + Abandono/Saída em fn_cri_mapear_etapa_trilha.",
+      "Chegou/Avançou/Abandonou/Parou vêm de funnel_stage_events (v_cri_etapa_transicoes) — desfecho real por transição, não só 'saiu para algum lugar'. Faturamento Atribuído vem de customer_state (fonte única de receita do CRI, decisão que resolve DEBT-122/256).",
+      "Custo incremental/acumulado por etapa e Margem/Retorno aparecem sempre com selo 'parcial' — não existe hoje fonte de custo POR ETAPA (o Motor de Custo aloca só por canal/mês) nem margem confirmada/estimada. Regra: ausência desses 2 campos nunca bloqueia os demais 9, que são sempre calculados de verdade.",
+    ],
+    comoUsar: [
+      "Período: 2 campos de data no topo (Motor de Período) — qualquer intervalo é válido, não só 60 dias. Sem seleção, abre no mês corrente até hoje.",
+      "Linha 'Abandono/Saída' (com ⚠) não é uma etapa numerada da trilha — é o total de leads que saíram para lead_perdido/fora_de_rota/fornecedor/pedido_teste no período, mostrado à parte.",
+      "Acesso restrito a gestor/manager/financeiro (mesma régua de /marketing) — envolve faturamento por etapa, informação de gestão.",
+    ],
+  },
   "/dashboard/cadencias": {
     titulo: "Central de Orquestração de Cadências",
     oQueE: "O centro de comando das cadências em 5 seções (00 três visões · 01 Mapa · 02 Fila · 03 Dossiê · 04 Contrato de dados · 05 Plano por fases): onde cada lead está AGORA, em qual degrau (CURTA até 30d / LONGA nutrição), e — já com o motor F3 — qual é a PRÓXIMA AÇÃO e o próximo ângulo de cada lead, sem repetir os já usados.",
