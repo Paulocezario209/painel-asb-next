@@ -212,6 +212,13 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
               <span style={{ ...S.muted, fontSize: 10 }}>taxa, velocidade, ticket e funil de recompra por posição do pedido — margem sempre exposta com o selo real</span>
             </div>
           </Link>
+          <Link href="/dashboard/funil/revenue-window" style={{ textDecoration: "none" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, background: "rgba(34,197,94,.06)", border: "1px solid rgba(34,197,94,.3)", borderRadius: 6, padding: "10px 14px" }}>
+              <DollarSign size={16} color="#22c55e" />
+              <span style={{ ...S.label, color: "#22c55e" }}>Revenue Window</span>
+              <span style={{ ...S.muted, fontSize: 10 }}>comportamento pós-1º pedido em janela configurável (7 a 365 dias ou custom) — sem limite de pedidos</span>
+            </div>
+          </Link>
         </div>
       )}
 

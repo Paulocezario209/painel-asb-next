@@ -111,6 +111,24 @@ export const MANUAIS: Record<string, ManualTela> = {
       "Acesso restrito a gestor/manager/financeiro (mesma régua de /marketing).",
     ],
   },
+  "/dashboard/funil/revenue-window": {
+    titulo: "Revenue Window",
+    oQueE: "Comportamento pós-1º pedido de cada cliente dentro de uma janela configurável (7/15/30/60/90/180/365 dias ou personalizada) — sem limite de quantidade de pedidos. Separa período de aquisição (quando o cliente fez o 1º pedido), janela de observação (N dias a partir daí) e data de fechamento, e sinaliza se a coorte consultada já maturou por completo, está parcialmente madura, ou ainda em observação.",
+    fontes: [
+      "RPC fn_cri_revenue_window_cliente/_kpis/_lista(p_janela_dias, data_inicio, data_fim) — reusam integralmente F4 (v_cri_conversion_sequencia_pedidos) e F6 (fn_cri_revenue_window, fn_cri_faixa_por_dias, v_cri_retention_status_com_recuperacao, fn_hoje_brt). Nenhuma tabela nova.",
+      "60 dias é só o default desta TELA (prop de UI) — as 3 RPCs exigem p_janela_dias explícito, sem default no SQL. Qualquer valor digitado no campo 'Janela' funciona (Regra 1/2 do Paulo).",
+      "Bucket de pedidos (1/2/3/4/5+): a contagem real nunca tem teto — '5+' é só rótulo de leitura, o 4º pedido é marco analítico, não limite técnico.",
+      "'% de Recompra' usa TODA a coorte (madura + em observação); '% de Recorrência' usa SÓ a coorte madura (janela já concluída) — não cruza coorte imatura com concluída sem sinalizar (selo de maturidade no topo da tela).",
+      "'Inativos na Janela' é fn_cri_faixa_por_dias aplicada aos dias sem comprar DENTRO da janela (congela no fechamento para coortes maduras) — diferente de 'Recuperados', que usa o histórico ALL-TIME do cliente (v_cri_retention_status_com_recuperacao/F6).",
+      "Margem aparece sempre com o selo real (hoje 'não informado' em toda a base) — nunca % fixo.",
+    ],
+    comoUsar: [
+      "2 controles de período: 'Período de aquisição' (Motor de Período — só entram clientes cujo 1º pedido all-time caiu nessa janela) e 'Janela' (dias de observação pós-1º-pedido, com atalhos 7/15/30/60/90/180/365 ou valor customizado).",
+      "Selo no topo do filtro mostra se a coorte consultada é madura, parcial ou ainda em observação — leia a nota amarela quando for 'parcial' antes de comparar recompra entre períodos.",
+      "Lista investigativa: 5 filtros (bucket de pedidos, origem, responsável, só recuperados, só inativos na janela). Maioria dos clientes antigos não tem lead SDR correspondente.",
+      "Acesso restrito a gestor/manager/financeiro (mesma régua de /marketing).",
+    ],
+  },
   "/dashboard/cadencias": {
     titulo: "Central de Orquestração de Cadências",
     oQueE: "O centro de comando das cadências em 5 seções (00 três visões · 01 Mapa · 02 Fila · 03 Dossiê · 04 Contrato de dados · 05 Plano por fases): onde cada lead está AGORA, em qual degrau (CURTA até 30d / LONGA nutrição), e — já com o motor F3 — qual é a PRÓXIMA AÇÃO e o próximo ângulo de cada lead, sem repetir os já usados.",
