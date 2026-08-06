@@ -198,6 +198,13 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
               <span style={{ ...S.muted, fontSize: 10 }}>KPI central do Customer Revenue Intelligence — quantidade, tempo e faturamento por etapa da trilha, período configurável</span>
             </div>
           </Link>
+          <Link href="/dashboard/funil/jornada-dos-leads" style={{ textDecoration: "none" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, background: "rgba(34,197,94,.06)", border: "1px solid rgba(34,197,94,.3)", borderRadius: 6, padding: "10px 14px" }}>
+              <DollarSign size={16} color="#22c55e" />
+              <span style={{ ...S.label, color: "#22c55e" }}>Jornada dos Leads</span>
+              <span style={{ ...S.muted, fontSize: 10 }}>onde cada lead está, por quais etapas passou, tempo por etapa e onde travou ou avançou — 8 filtros, lista investigativa</span>
+            </div>
+          </Link>
         </div>
       )}
 

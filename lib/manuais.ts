@@ -79,6 +79,21 @@ export const MANUAIS: Record<string, ManualTela> = {
       "Acesso restrito a gestor/manager/financeiro (mesma régua de /marketing) — envolve faturamento por etapa, informação de gestão.",
     ],
   },
+  "/dashboard/funil/jornada-dos-leads": {
+    titulo: "Jornada dos Leads",
+    oQueE: "Funil de LEADS pré-venda: onde cada lead está agora, por quais etapas passou, quanto tempo permaneceu em cada uma e onde travou (parado) ou avançou, no período configurável. Não é a mesma coisa que 'Jornada do Cliente até a Recorrência' (Bloco 2 desta mesma página /dashboard/funil) — aquela é 100% pós-1ª-compra (carteira real ARES); esta é pré-venda (trilha do CRI, funnel_stage_events).",
+    fontes: [
+      "RPC fn_cri_jornada_kpis(data_inicio, data_fim) — 8 KPIs. Reusa v_cri_etapa_transicoes (F5) para etapa atual/tempo por etapa, v_cri_conversion_cliente (F4) para tempo até 1º pedido. 'Em Qualificação' é a ÚNICA foto do agora (não muda com o período); os outros 7 são eventos escopados ao período (created_at/entrou_em/first_order_at dentro de [início,fim]).",
+      "RPC fn_cri_jornada_distribuicao_etapa(data_inicio, data_fim) — estende fn_cri_custo_acumulado_por_etapa (F5) com % do total. Avançou/Parou/Abandonou são um recorte por COORTE: contam só entre quem ENTROU naquela etapa dentro do período (mesma régua já usada em Custo Acumulado por Etapa) — um lead que entrou na etapa antes da janela e só avançou dentro dela não entra nesse breakdown específico, mas aparece corretamente na lista investigativa, na etapa atual dele.",
+      "RPC fn_cri_jornada_lista(...8 parâmetros) — lista investigativa, 1 linha por lead. Status (convertido/abandonado/parado/ativo) é 100% Motor de Período: convertido = first_order_at no período; abandonado = entrou na etapa 99 no período; parado = entrou na etapa atual no período e ainda não saiu; ativo = nenhum evento do período (inclui leads convertidos/abandonados HÁ MAIS TEMPO, fora da janela consultada — a etapa atual continua mostrada, só o rótulo de status respeita o período). Responsável mostrado via vendorLabel() (lib/vendor-labels.ts) — mesmo padrão de todo o painel, sem JOIN em vendors.",
+    ],
+    comoUsar: [
+      "Período: 2 campos de data no topo (Motor de Período). 8 filtros: início, fim, etapa, responsável, status, origem, campanha e 'parado há ≥ N dias' — todos combináveis via URL, sem JS.",
+      "Card 'Em Qualificação' não se move com o período (é a foto de agora) — os demais 7 KPIs e o status de cada linha da lista, sim.",
+      "Clique no nome/telefone do lead na Lista Investigativa abre a ficha (/dashboard/leads/{telefone}). Lista limitada a 1000 linhas — refine os filtros se atingir o limite.",
+      "Acesso restrito a gestor/manager/financeiro (mesma régua de /marketing).",
+    ],
+  },
   "/dashboard/cadencias": {
     titulo: "Central de Orquestração de Cadências",
     oQueE: "O centro de comando das cadências em 5 seções (00 três visões · 01 Mapa · 02 Fila · 03 Dossiê · 04 Contrato de dados · 05 Plano por fases): onde cada lead está AGORA, em qual degrau (CURTA até 30d / LONGA nutrição), e — já com o motor F3 — qual é a PRÓXIMA AÇÃO e o próximo ângulo de cada lead, sem repetir os já usados.",
