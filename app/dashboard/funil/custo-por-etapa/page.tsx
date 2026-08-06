@@ -100,7 +100,10 @@ export default async function CustoPorEtapaPage({
       ) : (
         <>
           <div className="asb-grid-kpi">
-            <KpiCard label="Leads Chegaram (Etapas 1-8)" value={String(totalChegou)} Icon={Users} accent="#185FA5" num="#FFFFFF" note="soma das 9 etapas, sem Abandono/Saída" />
+            {/* Passagens, não leads únicos: o mesmo lead que cruza 1 → 5 → 6 conta 3x.
+                O cálculo (soma de `chegou` das etapas 1-8) está correto — o rótulo antigo
+                "Leads Chegaram" é que induzia a ler como contagem de leads. */}
+            <KpiCard label="Passagens por Etapa (1-8)" value={String(totalChegou)} Icon={Users} accent="#185FA5" num="#FFFFFF" note="soma das etapas 1 a 8, sem Abandono/Saída" />
             <KpiCard label="Faturamento Atribuído" value={fmtBRL(totalFaturamento)} Icon={DollarSign} accent="#22c55e" num="#22c55e" note="via customer_state, fonte única (F4)" />
             <KpiCard label="Abandonos no Período" value={String(totalAbandonou)} Icon={XCircle} accent="#C8102E" num="#C8102E" note="foram para lead_perdido/fora_de_rota/fornecedor" />
             <KpiCard
