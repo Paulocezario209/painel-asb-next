@@ -94,6 +94,23 @@ export const MANUAIS: Record<string, ManualTela> = {
       "Acesso restrito a gestor/manager/financeiro (mesma régua de /marketing).",
     ],
   },
+  "/dashboard/funil/conversao": {
+    titulo: "Conversão",
+    oQueE: "Drill dedicado no evento de conversão: taxa, velocidade, ticket médio, funil de recompra por posição do pedido (1º..4º, 5º+ agrupado) e margem (contrato F4 — hoje sempre 'não informada', nunca inventada), no período configurável.",
+    fontes: [
+      "RPC fn_cri_conversao_kpis(data_inicio, data_fim) — 13 campos. Taxa de Conversão e Tempo Médio reusam exatamente as réguas de fn_cri_visao_geral/fn_cri_jornada_kpis (mesma fórmula, não segunda definição). Margem é agregação dinâmica sobre v_cri_margem_pedido.confiabilidade — nunca hardcoded.",
+      "RPC fn_cri_conversao_por_sequencia(data_inicio, data_fim) — funil de recompra por posição do pedido (v_cri_conversion_sequencia_pedidos/F4, numero_sequencia).",
+      "RPC fn_cri_conversao_distribuicao_tempo(data_inicio, data_fim) — leads convertidos no período em faixas de dias até o 1º pedido (v_cri_conversion_cliente/F4, exclui tempo negativo — cliente ARES pré-existente reconciliado depois com lead, não é conversão real).",
+      "RPC fn_cri_conversao_lista(data_inicio, data_fim, origem, responsável, sequência_min) — pedidos do período com o lead de origem, quando existe (bridge ares_cliente_id↔ares_pessoa_id).",
+      "3 números diferentes de 'conversão' coexistem de propósito (não é bug): Taxa de Conversão usa ai_sdr_leads.first_order_at (mesma régua de Jornada dos Leads); 1os Pedidos usa data_faturamento em v_cri_conversion_sequencia_pedidos (mesma régua de Visão Geral); Tempo Médio/Distribuição usam v_cri_conversion_cliente (customer_state, fonte única de receita do F4). Cada um mede um ângulo diferente do mesmo evento.",
+    ],
+    comoUsar: [
+      "Período: 2 campos de data no topo (Motor de Período). Sem seleção, abre no mês corrente até hoje.",
+      "'Pedidos do Período' mostra os 50 mais recentes — a maioria dos pedidos de clientes antigos não tem lead SDR correspondente (cliente ARES pré-existente à ferramenta), o card informa quantos de quantos.",
+      "Margem aparece sempre com o selo real (hoje 'não informado' em toda a base) — nunca um número inventado ou % fixo.",
+      "Acesso restrito a gestor/manager/financeiro (mesma régua de /marketing).",
+    ],
+  },
   "/dashboard/cadencias": {
     titulo: "Central de Orquestração de Cadências",
     oQueE: "O centro de comando das cadências em 5 seções (00 três visões · 01 Mapa · 02 Fila · 03 Dossiê · 04 Contrato de dados · 05 Plano por fases): onde cada lead está AGORA, em qual degrau (CURTA até 30d / LONGA nutrição), e — já com o motor F3 — qual é a PRÓXIMA AÇÃO e o próximo ângulo de cada lead, sem repetir os já usados.",

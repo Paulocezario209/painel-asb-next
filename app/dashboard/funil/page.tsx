@@ -205,6 +205,13 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
               <span style={{ ...S.muted, fontSize: 10 }}>onde cada lead está, por quais etapas passou, tempo por etapa e onde travou ou avançou — 8 filtros, lista investigativa</span>
             </div>
           </Link>
+          <Link href="/dashboard/funil/conversao" style={{ textDecoration: "none" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, background: "rgba(34,197,94,.06)", border: "1px solid rgba(34,197,94,.3)", borderRadius: 6, padding: "10px 14px" }}>
+              <DollarSign size={16} color="#22c55e" />
+              <span style={{ ...S.label, color: "#22c55e" }}>Conversão</span>
+              <span style={{ ...S.muted, fontSize: 10 }}>taxa, velocidade, ticket e funil de recompra por posição do pedido — margem sempre exposta com o selo real</span>
+            </div>
+          </Link>
         </div>
       )}
 
