@@ -155,7 +155,11 @@ export default async function VendedoresPage() {
           const delta = (new Date(l.seller_first_reply_at).getTime() - new Date(l.handoff_at).getTime()) / 3600000;
           if (delta > 0) m.hoursArr.push(delta);
         }
-      } else if (l.funnel_stage !== "lead_perdido" && l.funnel_stage !== "perdido") {
+      } else if (
+        l.funnel_stage !== "lead_perdido" &&
+        l.funnel_stage !== "perdido" &&
+        l.funnel_stage !== "perda_solicitada"
+      ) {
         const hrs = (now - new Date(l.handoff_at).getTime()) / 3600000;
         waiting.push({
           phone: l.phone,

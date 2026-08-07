@@ -168,12 +168,12 @@ export const MANUAIS: Record<string, ManualTela> = {
   },
   "/dashboard/pipeline": {
     titulo: "Pipeline",
-    oQueE: "O quadro Kanban do vendedor pós-handoff: arraste o lead pelas colunas conforme a negociação avança. Termina na conversão (1ª compra).",
+    oQueE: "O quadro Kanban do vendedor pós-handoff: arraste o lead pelas colunas conforme a negociação avança. Termina em Aguardando 1º Pedido — a última ação manual do vendedor (Pipeline Canônica V3, Passo 10, 2026-08-06).",
     fontes: [
-      "Cards: leads reais com etapa de pipeline (agendamento → em andamento → negociação → proposta → cadastro do cliente → convertido/perdido).",
-      "Cadastro do Cliente: etapa PRÉ-pedido — o lead topou a proposta e vai fazer o 1º pedido; aqui o vendedor coleta a documentação padrão ASB (CNPJ ou CPF). NÃO é a conversão: a conversão vem sozinha do ARES quando o 1º pedido é faturado (o card ganha o selo ✓ ARES e vai pra Convertido).",
+      "Cards: leads reais com etapa de pipeline (agendamento → em andamento → negociação → proposta → cadastro do cliente → aguardando 1º pedido). Marcar perdido move pra fila de aprovação do gerente (perda_solicitada) — ver manual do /dashboard/gerente.",
+      "Cadastro do Cliente: etapa PRÉ-pedido — o lead topou a proposta e vai fazer o 1º pedido; aqui o vendedor coleta a documentação padrão ASB (CNPJ ou CPF).",
+      "Aguardando 1º Pedido: última coluna do board — a partir daqui a evolução é 100% automática via ARES (v_carteira_360.total_orders), sem nenhuma ação manual: pedido_1 → pedido_2 → pedido_3 → pedido_4 → cliente recorrente. O vendedor NÃO move mais o card depois disso — ele some do Pipeline e passa a viver em Clientes/Carteira.",
       "Selo ✓ ARES: o lead já faturou na carteira real (v_carteira_360).",
-      "Coluna Convertido = convertidos DO MÊS (evento), não recorrência (estado): o cliente que faturou pela 1ª vez em MÊS ANTERIOR já é conta madura → GRADUA pra Carteira e some do Pipeline (não polui o board com recorrentes antigos). O de-onde-vem: v_carteira_360.first_order_at decide (mês corrente fica · anterior sai). Ex.: uma conta com 60+ pedidos desde janeiro vive em Clientes/Carteira, não no Pipeline.",
       "💡 Nudge de sugestão (a IA sinaliza, NUNCA move): no Agendamento, se o vendedor já respondeu o lead (seller_first_reply_at) → sugere Em Andamento; na Proposta, se o CNPJ/cadastro ARES foi captado → sugere Cadastro. É só um lembrete no card — quem move é sempre o vendedor.",
       "Valor estimado: volume semanal (kg) × R$/kg médio definido pela gestão.",
     ],
@@ -212,11 +212,13 @@ export const MANUAIS: Record<string, ManualTela> = {
       "“Não atribuído”: diferença entre o fiscal e a soma por vendedor (§5) — faturamento sem vendedor atribuído.",
       "Ranking/Prioridades: realizado §5 por vendedor (mesma régua do /vendas).",
       "Up-sell/Risco/Retention: views da carteira real ARES.",
+      "Perdas Pendentes (Pipeline Canônica V3, Passo 11, 2026-08-06): fila de aprovação — toda perda (marcada pelo vendedor OU automática do cron) passa por aqui (estágio perda_solicitada) antes de virar perdido definitivo. Cada card mostra etapa de origem, quem solicitou, motivo, contexto da conversa e previsão de cadência; botão Estrategista avalia se vale resgatar. Só o gerente/gestor aprova ou rejeita (rejeitar exige etapa de retorno + motivo).",
     ],
     comoUsar: [
       "Prioridades do Dia ordena o pior primeiro — é a lista de cobrança da manhã.",
       "Projeção = ritmo atual (run-rate §5) projetado até o fim do mês.",
       "Órfãos de atendimento: leads com agendamento sem resposta do vendedor — clique para abrir.",
+      "Perdas Pendentes: aprovar manda pra perdido definitivo; rejeitar exige escolher a etapa de retorno e o motivo — o lead volta pra pipeline ativo nessa etapa.",
     ],
   },
   "/dashboard/minha-comissao": {

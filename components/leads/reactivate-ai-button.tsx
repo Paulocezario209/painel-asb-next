@@ -25,7 +25,7 @@ export function ReactivateAiButton({
   const TERMINAL = [
     "pedido_fechado", "cliente_ativo", "cliente_em_ativacao", "cliente_recorrente",
     "pedido_1", "pedido_2", "pedido_3", "pedido_4",
-    "lead_perdido", "perdido",
+    "lead_perdido", "perdido", "perda_solicitada",
   ];
   const visible =
     aiActive === false &&
