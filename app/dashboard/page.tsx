@@ -7,6 +7,8 @@ import {
 } from "@/components/dashboard/charts";
 import { CardTop10ClientesMes } from "@/components/dashboard/card-top10-clientes-mes";
 import { CardReconciliarAres } from "@/components/dashboard/card-reconciliar-ares";
+import { CardsJornadaAlertas, getAlertasAbertos } from "@/components/dashboard/card-jornada-alertas";
+import { getUserContext } from "@/lib/auth/get-user-role";
 import { MotivosPerdaChart, type MotivoPerda } from "@/components/dashboard/motivos-perda-chart";
 import { DashboardFilters } from "@/components/dashboard/dashboard-filters";
 import { theme } from "@/lib/theme";
@@ -63,6 +65,11 @@ function trendPct(s: number[]): number | null {
 }
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const supabase = await createClient();
+
+  // Alertas da Jornada: carregados com o filtro de permissão do próprio usuário.
+  // Falha aqui não pode derrubar a Visão Geral inteira → null esconde os cards.
+  const _ctxAlertas = await getUserContext();
+  const alertasJornada = _ctxAlertas ? await getAlertasAbertos(_ctxAlertas).catch(() => null) : null;
 
   // P2 — filtros: ?vendedor=SETOR_* (afeta tudo) + ?mes=YYYY-MM (afeta só KPIs de volume; alertas ficam "agora")
   const sp = await searchParams;
@@ -358,6 +365,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           <KpiCard key={k.label} {...k} />
         ))}
       </div>
+
+      {/* Alertas da Jornada — 48h sem próximo pedido (vencido) e +24h sem ação (crítico).
+          Permissão aplicada no servidor dentro de getAlertasAbertos (vendedor vê só o setor). */}
+      {alertasJornada !== null && <CardsJornadaAlertas alertas={alertasJornada} agora={new Date()} />}
 
       {/* TOP 10 clientes do mês por receita (substitui card reconciliar) */}
       <CardTop10ClientesMes />

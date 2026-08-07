@@ -2,7 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 
 // gerente_comercial (Pipeline V3 Passo 11, 2026-08-06): role real de user_profiles, fila de
 // aprovacao de perda (§12.7) — cadastro existia no banco mas nao era reconhecido aqui
-// (premissa desatualizada do DEBT-273, corrigida na mesma migration deste rename).
+// (premissa desatualizada do DEBT-273, corrigida na mesma migration deste rename). Papel, nao
+// nome — RLS ja usa este literal em 9 tabelas (PR #63, transição Fernando Carvalho → Thiago Lara).
 export type UserRole = "gestor" | "manager" | "gerente_comercial" | "vendedor" | "tecnico_compras" | "financeiro";
 
 export interface UserContext {
@@ -17,7 +18,7 @@ export interface UserContext {
   isTecnicoCompras: boolean;
   isFinanceiro: boolean;          // consultor externo DRE: ve tudo, READ-ONLY (escrita barrada no middleware)
   isDiretor: boolean;              // gestor + comissao_perfil='diretor' (so Paulo ve a tela do time)
-  isGerente: boolean;              // comissao_perfil='gerente' (Fernando): usa a tela do time (Remuneracao), nao a Minha Comissao
+  isGerente: boolean;              // comissao_perfil='gerente': usa a tela do time (Remuneracao), nao a Minha Comissao
 }
 
 const VENDOR_BLOCKED: string[] = [
@@ -37,18 +38,29 @@ const MANAGER_BLOCKED: string[] = [
   "/dashboard/uploads",
 ];
 
+// gerente_comercial: mesma visao operacional/comercial do Diretor (leads, funil, cadencias, vendas,
+// remuneracao do time, /dashboard/gerente); NAO leva simulador/uploads (ferramentas administrativas
+// de mutacao em massa, fora do escopo "visualizacao" pedido). Exportado p/ sidebar.tsx nao duplicar a lista.
+export const GERENTE_COMERCIAL_BLOCKED: string[] = [
+  "/dashboard/simulator",
+  "/dashboard/uploads",
+];
+
 export function canAccess(role: UserRole, route: string): boolean {
-  // /marketing (gasto/CAC/ROAS/receita = informação de gestão): gestor, manager e
-  // financeiro. Vendedor e tecnico_compras FORA (auditoria 2026-07-10 — antes era
+  // /marketing (gasto/CAC/ROAS/receita = informação de gestão): gestor, manager,
+  // gerente_comercial e financeiro. Vendedor e tecnico_compras FORA (auditoria 2026-07-10 — antes era
   // rota sem trava e qualquer sessão via o gasto de mídia).
   if (route.startsWith("/marketing")) {
-    return role === "gestor" || role === "manager" || role === "financeiro";
+    return role === "gestor" || role === "manager" || role === "gerente_comercial" || role === "financeiro";
   }
   // financeiro (consultor externo DRE): vê TUDO (read-only — escrita barrada no middleware)
   if (role === "gestor" || role === "financeiro") return true;
   // gerente_comercial (Passo 11): mesma amplitude de manager — acesso a /dashboard/gerente
-  // (fila de aprovacao de perda) e demais telas nao-sensiveis, mesmas exclusoes.
-  if (role === "manager" || role === "gerente_comercial") return !MANAGER_BLOCKED.includes(route);
+  // (fila de aprovacao de perda) e demais telas nao-sensiveis. Bloqueios idênticos aos de
+  // manager, mas em constante própria (GERENTE_COMERCIAL_BLOCKED) porque sidebar.tsx
+  // ("use client") não pode importar nada deste arquivo sem puxar next/headers pro bundle.
+  if (role === "gerente_comercial") return !GERENTE_COMERCIAL_BLOCKED.includes(route);
+  if (role === "manager") return !MANAGER_BLOCKED.includes(route);
   if (role === "vendedor") return !VENDOR_BLOCKED.includes(route);
   // tecnico_compras: acesso exclusivo a /compras — bloqueado em todo /dashboard
   if (role === "tecnico_compras") return route.startsWith("/compras");

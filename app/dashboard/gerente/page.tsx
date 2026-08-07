@@ -58,8 +58,8 @@ export default async function GerentePage() {
 
   const ctx = await getUserContext();
   // Pipeline V3 Passo 11: gerente_comercial ganha acesso (fila de aprovacao de perda,
-  // §12.7) — docs/GERENTE_COMERCIAL_ONBOARDING.md: role sem routing_team, ve tudo agregado.
-  if (!ctx || !["gestor", "gerente_comercial"].includes(ctx.role)) redirect("/dashboard");
+  // §12.7) — role sem routing_team, ve tudo agregado.
+  if (!ctx || !(ctx.role === "gestor" || ctx.isGerenteComercial)) redirect("/dashboard");
 
   // ── Data boundaries ───────────────────────────────────────────────────────
   // BRT (America/Sao_Paulo): vira o mês pelo calendário de Brasília, não pela UTC do servidor.

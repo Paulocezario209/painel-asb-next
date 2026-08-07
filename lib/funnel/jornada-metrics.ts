@@ -7,13 +7,18 @@
 //
 // PURO (sem React/Supabase) → testável isolado (tests/jornada-metrics.test.ts).
 
-import { JORNADA_STAGES, bucketByOrders, filterByView, dedupeById, type JornadaStageKey, type JornadaView } from "./jornada";
+import {
+  JORNADA_STAGES, bucketByOrders, filterByView, dedupeById,
+  cohortDoMes, dedupePedidos, isCompetenciaValida,
+  type JornadaStageKey, type JornadaView, type Competencia,
+} from "./jornada";
 
 // Histórico de pedidos de UM cliente (já ordenado por data asc; datas em ISO/yyyy-mm-dd).
 export interface ClienteHistorico {
   ares_pessoa_id: number;
   customer_status: string | null;
-  pedidos: { data: string; valor: number }[]; // asc por data
+  // ares_pedido_id é a chave canônica do pedido — usada para deduplicar.
+  pedidos: { data: string; valor: number; ares_pedido_id?: number | null }[]; // asc por data
 }
 
 // ── estatística ──────────────────────────────────────────────────────────────
@@ -219,8 +224,19 @@ export interface JornadaCardVM {
 }
 export interface JornadaViewModel {
   view: JornadaView; base: number; totalRevenue: number;
+  mes: Competencia | null;   // competência analisada (só na visão "mes"); null no histórico geral
   cards: JornadaCardVM[];
   funil: FunilJornadaStep[];
+}
+
+/** Cards zerados — usado quando a coorte é vazia (evita quebrar a UI). */
+function emptyCards(): JornadaCardVM[] {
+  return JORNADA_STAGES.map((s) => ({
+    key: s.key, label: s.label, fill: s.fill,
+    count: 0, pct: 0, revenue: 0, pctRevenue: 0, ticket: 0,
+    medianaDias: null, mediaDias: null,
+    extraLabel: STAGE_META[s.key].extraLabel, extraDias: null,
+  }));
 }
 
 const STAGE_META: Record<JornadaStageKey, { extraLabel: string }> = {
@@ -231,8 +247,43 @@ const STAGE_META: Record<JornadaStageKey, { extraLabel: string }> = {
   recorrente: { extraLabel: "1º pedido → recorrência" },
 };
 
-export function buildViewModel(rows: JornadaClienteAgg[], view: JornadaView, hoje: string): JornadaViewModel {
-  const scoped = filterByView(dedupeById(rows), view).filter((r) => bucketByOrders(r.total_orders));
+/**
+ * Monta o view-model de uma visão.
+ *
+ * view="mes"  → COORTE MENSAL da competência `mes` (obrigatória): só clientes que
+ *               ativaram no mês, contando apenas os pedidos daquele mês. Os agregados
+ *               (nº de pedidos, faturamento, ticket) são RECALCULADOS sobre os pedidos
+ *               recortados — não usam total_orders/total_revenue_brl da view, que são
+ *               do histórico completo e contaminariam a competência.
+ * view="geral"→ histórico completo (comportamento original, sem recorte de período).
+ *
+ * Cards, funil e taxas saem SEMPRE da mesma população `scoped` — não há como divergirem.
+ */
+export function buildViewModel(
+  rows: JornadaClienteAgg[],
+  view: JornadaView,
+  hoje: string,
+  mes?: Competencia,
+): JornadaViewModel {
+  const deduped = dedupeById(rows).map(dedupePedidos);
+
+  let scoped: JornadaClienteAgg[];
+  if (view === "mes") {
+    if (!isCompetenciaValida(mes)) {
+      // Sem competência válida não existe coorte — devolve vazio em vez de inventar recorte.
+      return { view, base: 0, totalRevenue: 0, mes: mes ?? null, cards: emptyCards(), funil: computeFunilJornada([]) };
+    }
+    // Recorta a coorte e RECALCULA os agregados sobre os pedidos do mês.
+    scoped = cohortDoMes(deduped, mes).map((r) => ({
+      ...r,
+      total_orders: r.pedidos.length,
+      total_revenue_brl: r.pedidos.reduce((a, p) => a + p.valor, 0),
+      avg_ticket_brl: r.pedidos.length > 0 ? r.pedidos.reduce((a, p) => a + p.valor, 0) / r.pedidos.length : 0,
+    }));
+  } else {
+    scoped = filterByView(deduped, view).filter((r) => bucketByOrders(r.total_orders));
+  }
+
   const base = scoped.length;
   const totalRevenue = scoped.reduce((a, r) => a + (r.total_revenue_brl ?? 0), 0);
   const intervalos = computeIntervalos(scoped);
@@ -270,5 +321,10 @@ export function buildViewModel(rows: JornadaClienteAgg[], view: JornadaView, hoj
     };
   });
 
-  return { view, base, totalRevenue, cards, funil: computeFunilJornada(scoped) };
+  return {
+    view, base, totalRevenue,
+    mes: view === "mes" ? (mes ?? null) : null,
+    cards,
+    funil: computeFunilJornada(scoped),
+  };
 }
