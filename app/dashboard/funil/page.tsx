@@ -228,6 +228,13 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
               <span style={{ ...S.muted, fontSize: 10 }}>jornada financeira e operacional por origem — 9 baldes, 22 métricas, não repete CAC/ROAS de Marketing</span>
             </div>
           </Link>
+          <Link href="/dashboard/funil/pedidos-recorrencia" style={{ textDecoration: "none" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, background: "rgba(34,197,94,.06)", border: "1px solid rgba(34,197,94,.3)", borderRadius: 6, padding: "10px 14px" }}>
+              <DollarSign size={16} color="#22c55e" />
+              <span style={{ ...S.label, color: "#22c55e" }}>Pedidos e Recorrência</span>
+              <span style={{ ...S.muted, fontSize: 10 }}>ritmo de recompra por cliente — resumo agregado + drill-down pedido-a-pedido, status de cadência</span>
+            </div>
+          </Link>
         </div>
       )}
 

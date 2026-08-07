@@ -146,6 +146,22 @@ export const MANUAIS: Record<string, ManualTela> = {
       "Acesso restrito a gestor/manager/financeiro (mesma régua de /marketing).",
     ],
   },
+  "/dashboard/funil/pedidos-recorrencia": {
+    titulo: "Pedidos e Recorrência",
+    oQueE: "Ritmo de recompra por cliente com pelo menos 1 pedido faturado: resumo agregado (estágio real no pipeline, ticket médio, intervalo médio entre pedidos, status de cadência) e, ao clicar num cliente, o drill-down pedido-a-pedido completo (sequência, faturamento acumulado, dias desde o pedido anterior). Estava PAUSADA aguardando a Pipeline Canônica V3 — reusa 100% os building blocks do F4 (LEI ÚNICA: estágio nunca é recalculado aqui, vem de customer_state via v_cri_conversion_cliente).",
+    fontes: [
+      "v_cri_recorrencia_resumo — 1 linha por cliente. total_orders/total_revenue_brl/avg_ticket_brl/avg_order_interval_days vêm de v_cri_conversion_cliente (customer_state, backfill híbrido direto do ARES — agregado confiável). status_cadencia compara days_since_last_order contra o avg_order_interval_days do PRÓPRIO cliente: >2x=atrasado, >1,3x=atenção, senão no ritmo (NULL no 1º pedido, sem intervalo histórico ainda).",
+      "v_cri_pedidos_sequencia — 1 linha por pedido faturado em pedidos_espelho, com numero_sequencia (1º/2º/3º...), faturamento_acumulado_brl (running total) e dias_desde_pedido_anterior (LAG). É o drill-down por trás do botão de cada cliente.",
+      "pedidos_no_espelho (DEBT-093, aberto 2026-05-29, quantificado 2026-08-07: 239/357 clientes divergem, 11.581 pedidos de diferença): pedidos_espelho é um espelho incompleto do histórico ARES pra clientes antigos — total_orders é o número confiável, pedidos_no_espelho é quantos aparecem no drill-down. A tela divulga o gap (nota amarela + coluna com parênteses) em vez de esconder.",
+    ],
+    comoUsar: [
+      "3 filtros combináveis via URL: busca por nome, responsável (routing_team) e status de cadência.",
+      "4 KPIs no topo contam sobre os clientes filtrados: total com pedido, no ritmo, em atenção, atrasados.",
+      "Clique no nome do cliente na tabela \"Recorrência por Cliente\" abre a seção \"Sequência de Pedidos\" abaixo, com o histórico completo pedido-a-pedido daquele cliente.",
+      "Quando o número de pedidos no resumo diverge do número no drill-down, a tela avisa explicitamente (DEBT-093) — não é erro de contagem, é limite do espelho pra histórico antigo.",
+      "Acesso restrito a gestor/manager/financeiro (mesma régua de /marketing).",
+    ],
+  },
   "/dashboard/cadencias": {
     titulo: "Central de Orquestração de Cadências",
     oQueE: "O centro de comando das cadências em 5 seções (00 três visões · 01 Mapa · 02 Fila · 03 Dossiê · 04 Contrato de dados · 05 Plano por fases): onde cada lead está AGORA, em qual degrau (CURTA até 30d / LONGA nutrição), e — já com o motor F3 — qual é a PRÓXIMA AÇÃO e o próximo ângulo de cada lead, sem repetir os já usados.",
