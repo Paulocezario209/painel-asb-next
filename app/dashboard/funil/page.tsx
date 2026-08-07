@@ -235,6 +235,13 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
               <span style={{ ...S.muted, fontSize: 10 }}>ritmo de recompra por cliente — resumo agregado + drill-down pedido-a-pedido, status de cadência</span>
             </div>
           </Link>
+          <Link href="/dashboard/funil/comparacao-periodos" style={{ textDecoration: "none" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, background: "rgba(34,197,94,.06)", border: "1px solid rgba(34,197,94,.3)", borderRadius: 6, padding: "10px 14px" }}>
+              <DollarSign size={16} color="#22c55e" />
+              <span style={{ ...S.label, color: "#22c55e" }}>Comparação de Períodos</span>
+              <span style={{ ...S.muted, fontSize: 10 }}>os 13 KPIs da Visão Geral, lado a lado entre 2 períodos — zero SQL novo, delta absoluto e %</span>
+            </div>
+          </Link>
         </div>
       )}
 

@@ -162,6 +162,21 @@ export const MANUAIS: Record<string, ManualTela> = {
       "Acesso restrito a gestor/manager/financeiro (mesma régua de /marketing).",
     ],
   },
+  "/dashboard/funil/comparacao-periodos": {
+    titulo: "Comparação de Períodos",
+    oQueE: "Os mesmos 13 KPIs centrais da Visão Geral do CRI, lado a lado entre 2 períodos (A e B) escolhidos livremente, com delta absoluto e percentual — sem nenhuma métrica nova ou recalculada. Zero SQL novo: só chama fn_cri_visao_geral e fn_cri_distribuicao_origem 2x cada (uma vez por período), exatamente como o próprio comentário dessas functions já prescrevia desde a Visão Geral.",
+    fontes: [
+      "fn_cri_visao_geral(data_inicio, data_fim) — chamada 1x por período. Os 13 KPIs (leads, qualificação, abandono, conversão, recompra, faturamento, custo, CAC, taxas) são idênticos aos de /dashboard/funil/visao-geral — mesma régua, mesma fonte, sem segunda definição.",
+      "fn_cri_distribuicao_origem(data_inicio, data_fim) — idem, comparação por origem_canal entre os 2 períodos.",
+      "Delta e % são calculados no frontend (Período A − Período B) — nunca no banco. 'Menor é melhor' inverte a cor em Abandonos/Custo/CAC (subir é ruim); nas demais métricas, subir é verde.",
+    ],
+    comoUsar: [
+      "2 pares de data (Período A e Período B). Default: A = mês corrente até hoje; B = período imediatamente anterior, com a MESMA duração de A (não é 'mês anterior inteiro').",
+      "Quando as durações de A e B divergem (você mudou as datas manualmente), a tela avisa: comparar totais absolutos (leads, faturamento) entre períodos de tamanhos diferentes é enganoso — prefira as taxas (Conversão, Recorrência) nesse caso.",
+      "Selo de confiabilidade de cada período mostrado ao lado do KPI central — reflete o mesmo selo_geral da Visão Geral (pior selo entre os componentes financeiros do período).",
+      "Acesso restrito a gestor/manager/financeiro (mesma régua de /marketing).",
+    ],
+  },
   "/dashboard/cadencias": {
     titulo: "Central de Orquestração de Cadências",
     oQueE: "O centro de comando das cadências em 5 seções (00 três visões · 01 Mapa · 02 Fila · 03 Dossiê · 04 Contrato de dados · 05 Plano por fases): onde cada lead está AGORA, em qual degrau (CURTA até 30d / LONGA nutrição), e — já com o motor F3 — qual é a PRÓXIMA AÇÃO e o próximo ângulo de cada lead, sem repetir os já usados.",
