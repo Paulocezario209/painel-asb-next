@@ -177,6 +177,21 @@ export const MANUAIS: Record<string, ManualTela> = {
       "Acesso restrito a gestor/manager/financeiro (mesma régua de /marketing).",
     ],
   },
+  "/dashboard/funil/qualidade-dados": {
+    titulo: "Qualidade dos Dados",
+    oQueE: "Última tela do CRI (F9, 9/9) — consolida os selos e gaps de completude que as outras 8 telas já expõem isoladamente, num só lugar: origem conhecida, vínculo lead↔cliente ARES, margem informada e selo de custo (escopados ao período), mais o gap do espelho de pedidos (DEBT-093, foto de agora). Não é métrica nova — é auditoria.",
+    fontes: [
+      "fn_cri_qualidade_dados(data_inicio, data_fim) — leads no período com origem_canal conhecida (ai_sdr_leads); leads com vínculo a cliente ARES (ares_pessoa_id preenchido — normal ser baixo em período recente, só vincula após 1º pedido); pedidos com margem informada (v_cri_margem_pedido, F4 — hoje sempre 0%, contrato explícito de nunca inventar custo); selo de custo do período (fn_cri_custo_por_periodo, F2, mesma régua de pior-selo da Visão Geral).",
+      "fn_cri_qualidade_espelho_snapshot() — SEM Motor de Período (foto de agora, mesmo padrão de 'Em Qualificação' na Jornada dos Leads): reusa v_cri_recorrencia_resumo (Passo 14a) para expor cobertura de pedidos_espelho vs customer_state.total_orders — DEBT-093, gap estrutural do histórico antigo, não um evento datado.",
+      "Nenhum objeto novo de dado — as 2 functions só agregam o que v_cri_margem_pedido, fn_cri_custo_por_periodo e v_cri_recorrencia_resumo já calculavam.",
+    ],
+    comoUsar: [
+      "Período (Motor de Período) afeta só os 4 KPIs do topo — leads/pedidos/custo. O bloco 'Espelho de Pedidos' abaixo é sempre foto de agora, independente do período escolhido.",
+      "Cores seguem a mesma leitura em toda a tela: verde ≥90% de completude, âmbar ≥60%, vermelho abaixo — exceto Vínculo ARES e Margem, onde baixo % é esperado (não é alarme, é a nota azul explica o porquê).",
+      "Link direto para Pedidos e Recorrência para investigar o gap do espelho cliente a cliente.",
+      "Acesso restrito a gestor/manager/financeiro (mesma régua de /marketing).",
+    ],
+  },
   "/dashboard/cadencias": {
     titulo: "Central de Orquestração de Cadências",
     oQueE: "O centro de comando das cadências em 5 seções (00 três visões · 01 Mapa · 02 Fila · 03 Dossiê · 04 Contrato de dados · 05 Plano por fases): onde cada lead está AGORA, em qual degrau (CURTA até 30d / LONGA nutrição), e — já com o motor F3 — qual é a PRÓXIMA AÇÃO e o próximo ângulo de cada lead, sem repetir os já usados.",
