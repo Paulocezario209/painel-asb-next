@@ -371,8 +371,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           Permissão aplicada no servidor dentro de getAlertasAbertos (vendedor vê só o setor). */}
       {alertasJornada !== null && <CardsJornadaAlertas alertas={alertasJornada} agora={new Date()} />}
 
-      {/* TOP 10 clientes do mês por receita (substitui card reconciliar) */}
-      <CardTop10ClientesMes />
+      {/* TOP 10 clientes do mês por receita (redes consolidadas por grupo econômico);
+          respeita os filtros ?mes/?vendedor da home — filtro aplica ANTES de consolidar (RPC) */}
+      <CardTop10ClientesMes mes={mesParam} vendedor={vend} />
 
       {/* MOV.2b — worklist reconciliar lead↔ARES por telefone (só gestor) */}
       <CardReconciliarAres />
