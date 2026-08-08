@@ -2,11 +2,18 @@ import { createClient } from "@/lib/supabase/server";
 import { theme } from "@/lib/theme";
 import { PageHead, SectionHead } from "@/app/dashboard/lib/ui";
 import { Flame } from "lucide-react";
+import { redirect } from "next/navigation";
+import { getUserContext, canAccess } from "@/lib/auth/get-user-role";
 import { HotLeadsTable } from "@/components/hot-leads/hot-leads-table";
 
 export const dynamic = "force-dynamic";
 
 export default async function HotLeadsPage() {
+  // Guard oficial (mesmo padrao de /dashboard/insights): tela desativada em
+  // lib/modulos-desativados.ts → canAccess() nega para todos → volta ao dashboard.
+  const ctx = await getUserContext();
+  if (!ctx || !canAccess(ctx.role, "/dashboard/hot-leads")) redirect("/dashboard");
+
   const supabase = await createClient();
 
   const { data: leads, error } = await supabase

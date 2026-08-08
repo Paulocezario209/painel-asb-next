@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, Users, BarChart2, PhoneCall, Upload, Flame, Filter, UserCheck, DollarSign, Target, Briefcase, Columns3, Wallet, Banknote, Coins, LayoutGrid, Network, Anchor } from "lucide-react";
+// Modulo puro (sem next/headers) — seguro para Client Component. Mesma lista que
+// canAccess() usa no servidor: ocultar aqui e bloquear la leem a MESMA fonte.
+import { MODULOS_DESATIVADOS } from "@/lib/modulos-desativados";
 
 const SANS = "var(--font-geist-sans), system-ui, sans-serif";
 
@@ -79,6 +82,8 @@ export function Sidebar({
   const pathname = usePathname();
 
   const canSee = (href: string) => {
+    // Telas desativadas por produto somem para TODOS os perfis (desktop e drawer mobile)
+    if (MODULOS_DESATIVADOS.includes(href)) return false;
     if (role === "gestor") return href !== "/dashboard/minha-comissao";
     if (role === "gerente_comercial") return !GERENTE_COMERCIAL_BLOCKED_SET.has(href);
     if (role === "manager") return !MANAGER_BLOCKED.has(href);
