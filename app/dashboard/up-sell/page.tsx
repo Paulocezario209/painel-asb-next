@@ -1,4 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
+import { getUserContext, canAccess } from "@/lib/auth/get-user-role";
 import Link from "next/link";
 import { S } from "@/app/dashboard/lib/dashboard-tokens";
 import { PageHead, SectionHead, KpiCard } from "@/app/dashboard/lib/ui";
@@ -78,6 +80,11 @@ const fmtBRL = (n: number) =>
 const vend = (n: string | null) => n?.split(" ")[0] ?? "—";
 
 export default async function UpSellPage() {
+  // Guard oficial (padrao de /dashboard/insights): a tela mostra a carteira INTEIRA,
+  // sem escopo por setor — vendedor e negado em canAccess() e volta ao dashboard.
+  const ctx = await getUserContext();
+  if (!ctx || !canAccess(ctx.role, "/dashboard/up-sell")) redirect("/dashboard");
+
   const supabase = await createClient();
   const { data: upsell } = await supabase.from("v_upsell_oportunidades").select("*");
   const { data: downsell } = await supabase.from("v_downsell_risco_queda").select("*");
