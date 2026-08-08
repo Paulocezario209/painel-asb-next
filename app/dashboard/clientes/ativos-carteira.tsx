@@ -34,10 +34,12 @@ export type RecuperadoDetalhe = {
 const LIVE_STATUS: readonly string[] = ["ativo", "atencao"];
 
 // routing_team → nome do vendedor (agrupa a lista de recuperados).
+// SETOR_CUIT = PAULO desde a reversão de 2026-07-11 (asb-decisoes-imutaveis §ROUTING-TEAMS);
+// "Thiago" aqui exibia o dono errado da carteira (gate 7 da decisão executiva 2026-08-08).
 const RT_NOME: Record<string, string> = {
   SETOR_SOROCABA_SAO_PAULO: "Ana Paula",
   SETOR_CAMPINAS_JUNDIAI: "Alan",
-  SETOR_CUIT: "Thiago",
+  SETOR_CUIT: "Paulo",
 };
 
 const brl = (n: number | null) =>
