@@ -32,11 +32,21 @@ const VENDOR_BLOCKED: string[] = [
   "/dashboard/simulator",
   "/dashboard/uploads",
   "/dashboard/remuneracao",
+  // Alinhamento com a regra efetiva da sidebar (2026-08-08, micro-lote 2): a sidebar já
+  // ocultava estas 3 do vendedor, mas o servidor não negava — URL direta mostrava a
+  // carteira INTEIRA (churn/up-sell não escopam por setor). Agora sidebar e canAccess batem.
+  "/dashboard/gerente",
+  "/dashboard/churn",
+  "/dashboard/up-sell",
 ];
 
 const MANAGER_BLOCKED: string[] = [
   "/dashboard/simulator",
   "/dashboard/uploads",
+  // Alinhamento com a sidebar (2026-08-08): ela já ocultava estas 2 de manager (papel
+  // legado, sem usuário real). Regra efetiva = a mais restritiva das duas listas.
+  "/dashboard/gerente",
+  "/dashboard/minha-comissao",
 ];
 
 // gerente_comercial: mesma visao operacional/comercial do Diretor (leads, funil, cadencias, vendas,

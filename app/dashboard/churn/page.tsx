@@ -1,5 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { getUserContext, canAccess } from "@/lib/auth/get-user-role";
 import { CUSTOMER_STATUS, CHURN_STATES } from "@/lib/customer-status";
 import { theme } from "@/lib/theme";
 import { S } from "@/app/dashboard/lib/dashboard-tokens";
@@ -50,6 +52,11 @@ type Customer = {
 };
 
 export default async function ChurnPage() {
+  // Guard oficial (padrao de /dashboard/insights): a tela mostra a carteira INTEIRA,
+  // sem escopo por setor — vendedor e negado em canAccess() e volta ao dashboard.
+  const ctx = await getUserContext();
+  if (!ctx || !canAccess(ctx.role, "/dashboard/churn")) redirect("/dashboard");
+
   const supabase = await createClient();
 
   // Fonte: v_carteira_360 — carteira REAL ARES (clientes faturados), não só os leads SDR.
@@ -172,7 +179,7 @@ export default async function ChurnPage() {
 
       <p style={{ ...S.muted, fontSize: 10, textAlign: "center", marginTop: 4 }}>
         Régua absoluta (dias sem comprar): risco 15–21 · pré-churn 22–30 · churn comercial 31–59 · inativo ≥60.
-        Carteira real ARES (faturados); "recuperado" volta na Fase A.2.
+        Carteira real ARES (faturados); &quot;recuperado&quot; volta na Fase A.2.
       </p>
     </div>
   );
