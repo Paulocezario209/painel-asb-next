@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { moduloDesativado } from "@/lib/modulos-desativados";
 
 // gerente_comercial (Pipeline V3 Passo 11, 2026-08-06): role real de user_profiles, fila de
 // aprovacao de perda (§12.7) — cadastro existia no banco mas nao era reconhecido aqui
@@ -47,6 +48,10 @@ export const GERENTE_COMERCIAL_BLOCKED: string[] = [
 ];
 
 export function canAccess(role: UserRole, route: string): boolean {
+  // Modulos desativados por decisao de produto (lib/modulos-desativados.ts):
+  // bloqueados para TODOS os perfis, inclusive gestor/financeiro. A sidebar le a
+  // mesma lista — regra efetiva unica para essas rotas.
+  if (moduloDesativado(route)) return false;
   // /marketing (gasto/CAC/ROAS/receita = informação de gestão): gestor, manager,
   // gerente_comercial e financeiro. Vendedor e tecnico_compras FORA (auditoria 2026-07-10 — antes era
   // rota sem trava e qualquer sessão via o gasto de mídia).

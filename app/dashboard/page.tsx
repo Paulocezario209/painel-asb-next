@@ -232,7 +232,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const kpis = [
     { label: "Total de leads", value: totalLeads ?? 0, num: "#FFFFFF", accent: "#8bb4ff", Icon: Users, href: "/dashboard/leads",
       chip: trTotal === null ? "no período" : `${trTotal >= 0 ? "+" : ""}${trTotal}%`, chipUp: trTotal === null ? null : trTotal >= 0, note: `criados em ${mesNomeCurto}`, series: sTotal },
-    { label: "Qualificados", value: qualifiedLeads ?? 0, num: "#5B8DEF", accent: "#5B8DEF", Icon: BadgeCheck, href: "/dashboard/hot-leads",
+    // href apontava para /dashboard/hot-leads (tela desativada — lib/modulos-desativados.ts)
+    { label: "Qualificados", value: qualifiedLeads ?? 0, num: "#5B8DEF", accent: "#5B8DEF", Icon: BadgeCheck, href: "/dashboard/leads",
       chip: `${qualPct}%`, chipUp: true, note: `do total de ${mesNomeCurto}`, series: sQual },
     { label: "Agendamentos pendentes", value: handoffPending ?? 0, num: "#f59e0b", accent: "#f59e0b", Icon: PhoneCall, href: "/dashboard/handoffs",
       chip: "a distribuir", chipUp: null as boolean | null, note: "agora · SLA < 2h", series: sHandoff },
