@@ -462,12 +462,14 @@ export const MANUAIS: Record<string, ManualTela> = {
     oQueE: "A página inicial: pulso geral do mês — leads, qualificados, agendamentos, convertidos, alertas e onde focar agora.",
     fontes: [
       "KPIs e alertas: base de leads reais do mês (sem testes, sem fora de rota).",
-      "Top 10 clientes do mês: pedidos FATURADOS no mês (ARES, régua conciliada com o financeiro) + barra de representatividade = Receita Top 10 ÷ faturamento mensal da carteira (mesma régua, view v_top10_share_mes).",
+      "Compras & Recorrência: (a) estado atual do funil — clientes em compra 1/2/3/4 e recorrentes 5+ (funnel_stage da Pipeline V3, promovido automaticamente pelo cascade ARES a cada 15min); (b) faturamento do período por Nº da compra do cliente (fn_visao_geral_compras sobre v_cri_pedidos_sequencia — 1ª compra = cliente novo, 2ª+ = recompra).",
+      "Top 10 clientes do mês: pedidos FATURADOS no mês (ARES, régua conciliada com o financeiro), com redes consolidadas por grupo econômico (ex.: Grupo Alemão = 3 lojas numa entrada única, composição por unidade no detalhe) + barra de representatividade = Receita Top 10 ÷ faturamento do período.",
       "Motivos de perda: registros de leads perdidos.",
     ],
     comoUsar: [
       "“Atenção Agora” é a lista de incêndios — comece por ela.",
       "Cada KPI clica para a tela correspondente.",
+      "Os filtros de mês e vendedor do topo valem também para Compras & Recorrência e Top 10 (o estado atual do funil ignora o mês — é snapshot).",
     ],
   },
 

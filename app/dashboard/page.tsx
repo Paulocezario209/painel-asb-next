@@ -6,6 +6,7 @@ import {
   VendorPerformance,
 } from "@/components/dashboard/charts";
 import { CardTop10ClientesMes } from "@/components/dashboard/card-top10-clientes-mes";
+import { CardComprasRecorrencia } from "@/components/dashboard/card-compras-recorrencia";
 import { CardReconciliarAres } from "@/components/dashboard/card-reconciliar-ares";
 import { CardsJornadaAlertas, getAlertasAbertos } from "@/components/dashboard/card-jornada-alertas";
 import { getUserContext } from "@/lib/auth/get-user-role";
@@ -370,6 +371,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       {/* Alertas da Jornada — 48h sem próximo pedido (vencido) e +24h sem ação (crítico).
           Permissão aplicada no servidor dentro de getAlertasAbertos (vendedor vê só o setor). */}
       {alertasJornada !== null && <CardsJornadaAlertas alertas={alertasJornada} agora={new Date()} />}
+
+      {/* Compras & Recorrência (consultoria item 1): clientes por compra 1-4/recorrente
+          + faturamento do período por Nº da compra — régua Pipeline V3 §12.3 */}
+      <CardComprasRecorrencia mes={mesParam} vendedor={vend} />
 
       {/* TOP 10 clientes do mês por receita (redes consolidadas por grupo econômico);
           respeita os filtros ?mes/?vendedor da home — filtro aplica ANTES de consolidar (RPC) */}
