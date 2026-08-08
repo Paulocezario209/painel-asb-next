@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getUserContext, canAccess } from "@/lib/auth/get-user-role";
+import { DashboardFilters } from "@/components/dashboard/dashboard-filters";
 import { CUSTOMER_STATUS, CHURN_STATES } from "@/lib/customer-status";
 import { theme } from "@/lib/theme";
 import { S } from "@/app/dashboard/lib/dashboard-tokens";
@@ -51,29 +52,40 @@ type Customer = {
   vendedor_nome: string | null;
 };
 
-export default async function ChurnPage() {
+// searchParams opcional: a tela também é embutida como aba em /dashboard/clientes (sem params).
+export default async function ChurnPage({ searchParams }: { searchParams?: Promise<Record<string, string | undefined>> } = {}) {
   // Guard oficial (padrao de /dashboard/insights): a tela mostra a carteira INTEIRA,
   // sem escopo por setor — vendedor e negado em canAccess() e volta ao dashboard.
   const ctx = await getUserContext();
   if (!ctx || !canAccess(ctx.role, "/dashboard/churn")) redirect("/dashboard");
 
+  // Filtro por vendedor/setor (consultoria item 9): ?vendedor=SETOR_* — aplica em TODAS
+  // as queries da tela (cards, listas E denominador do %), então os totais dos cards
+  // correspondem exatamente aos registros listados, filtrados ou não.
+  const sp = searchParams ? await searchParams : undefined;
+  const rawVend = sp?.vendedor ?? "";
+  const vendSel = /^SETOR_[A-Z_]+$/.test(rawVend) ? rawVend : null;
+
   const supabase = await createClient();
 
   // Fonte: v_carteira_360 — carteira REAL ARES (clientes faturados), não só os leads SDR.
-  // RBAC: a tela hoje não escopa por vendedor logado (mostra a carteira inteira); owner_seller_id/
-  // vendedor_nome vêm da view se vier a escopar.
-  const { data: customers } = await supabase
+  let churnQ = supabase
     .from("v_carteira_360")
     .select("ares_pessoa_id, lead_id, name, city, customer_status, customer_tier, total_orders, dias_sem_compra, total_revenue_brl, vendedor_nome")
     .in("customer_status", ["risco", "pre_churn", "churn_comercial", "inativo_definitivo"])
     .order("total_revenue_brl", { ascending: false, nullsFirst: false });
+  if (vendSel) churnQ = churnQ.eq("routing_team", vendSel);
+  const { data: customers } = await churnQ;
 
   // Denominador do % = carteira TOTAL (v_carteira_360, todos os status), nao so os 4 churn.
   // Query escopada (id/status/receita) — NAO contamina `customers` (consumido por byStatus + total).
   // Bounded (~327 < 1000), entao soma client-side e segura (sem o truncamento do DEBT-P2).
-  const { data: carteiraTotal } = await supabase
+  // Com filtro de vendedor, o denominador tambem filtra (% = representatividade DENTRO do setor).
+  let totalQ = supabase
     .from("v_carteira_360")
     .select("ares_pessoa_id, customer_status, total_revenue_brl");
+  if (vendSel) totalQ = totalQ.eq("routing_team", vendSel);
+  const { data: carteiraTotal } = await totalQ;
   const totCli = (carteiraTotal ?? []).length;
   const totRec = (carteiraTotal ?? []).reduce(
     (s: number, c: { total_revenue_brl: number | null }) => s + (Number(c.total_revenue_brl) || 0),
@@ -91,8 +103,9 @@ export default async function ChurnPage() {
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <PageHead
         title="Churn — Carteira de Clientes"
-        desc={`${total} clientes em risco/pré-churn/churn/inativo · carteira real ARES (v_carteira_360) · maiores no topo`}
+        desc={`${total} clientes em risco/pré-churn/churn/inativo · carteira real ARES (v_carteira_360) · maiores no topo${vendSel ? " · filtrado por setor" : ""}`}
       />
+      <DashboardFilters showMonth={false} showVendedor />
 
       {/* KPIs por estado de churn */}
       <div className="asb-grid-kpi">
