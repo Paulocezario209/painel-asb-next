@@ -13,6 +13,7 @@ import { PageHead, SectionHead } from "@/app/dashboard/lib/ui";
 import { Layers, Map as MapIcon, ListOrdered, FileText, Hourglass } from "lucide-react";
 import { getUserContext, canAccess } from "@/lib/auth/get-user-role";
 import { DashboardFilters } from "@/components/dashboard/dashboard-filters";
+import { CollapsibleSection } from "@/components/cadencias/collapsible-section";
 import { unstable_cache } from "next/cache";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { fmtDateTimeFullBRT } from "@/lib/datetime-brt";
@@ -72,6 +73,7 @@ function situacaoEstado(state: string, atrasados: number, hoje: number): Situ {
   if (NEGOCIA_ST.includes(state)) return "negocia";
   if (HUMANO_ST.includes(state)) return "humano";
   if (state === "PERDIDO_NURTURE") return "pausado";
+  if (state === "PERDA_PENDENTE") return "pausado"; // aguardando decisão do gerente — cadência congelada
   if (state === "GANHO") return "noPrazo";
   return atrasados > 0 ? "atrasado" : hoje > 0 ? "hoje" : "noPrazo";
 }
@@ -79,6 +81,7 @@ function situacaoLead(l: { journey_state: string; atrasado: boolean; eh_hoje: bo
   if (NEGOCIA_ST.includes(l.journey_state)) return "negocia";
   if (HUMANO_ST.includes(l.journey_state)) return "humano";
   if (l.journey_state === "PERDIDO_NURTURE") return "pausado";
+  if (l.journey_state === "PERDA_PENDENTE") return "pausado";
   if (l.atrasado) return "atrasado";
   if (l.eh_hoje) return "hoje";
   return "noPrazo";
@@ -96,12 +99,21 @@ const ESTADOS: Estado[] = [
   { key: "PROPOSTA", label: "Proposta enviada", band: "curta" },
   { key: "CADASTRO", label: "Cadastro do cliente", band: "curta" },
   { key: "PEDIDO_TESTE", label: "Pedido teste", band: "curta" },
+  // PERDA_PENDENTE (Pipeline V3 Passo 11): perda solicitada aguardando decisão do Gerente
+  // Comercial. Antes era invisível aqui (2 leads sumiam do Mapa e o card "Todos" divergia
+  // da Fila). Band "curta" = entra em curtaTot, então Todos == Fila por construção.
+  { key: "PERDA_PENDENTE", label: "Perda aguard. aprovação", band: "curta" },
   { key: "GANHO", label: "Ganho (convertido)", band: "ganho" },
   { key: "PERDIDO_NURTURE", label: "Perdido · nutrição", band: "longa" },
 ];
 const LABEL: Record<string, string> = Object.fromEntries(ESTADOS.map(e => [e.key, e.label]));
 
-const QS_LABEL: Record<number, string> = { 1: "Nome/empresa", 2: "Cidade", 3: "Operação", 4: "Segmento", 5: "Volume", 6: "Volume/tempo" };
+// Rótulo = a pergunta EM ABERTO no degrau (guard N→N+1 da escada, rag_service.py
+// _STAGE_GUARD): qual_stage=1 espera nome/cidade (abertura), 2 espera operação
+// (operando × pré), 3 espera segmento, 4 espera volume/prazo. Os antigos rótulos
+// sugeriam dado JÁ coletado (deslocados em 1); 5/6 não existem na escada vigente
+// (salto 4→7) — barras sempre zero, removidos do gráfico.
+const QS_LABEL: Record<number, string> = { 1: "Início — nome/cidade", 2: "Operação (operando × pré)", 3: "Segmento", 4: "Volume/prazo" };
 const TEMPO_BUCKETS = ["D+30", "D+60", "D+90", "D+180", "D+360"];
 
 // ── Tipos ────────────────────────────────────────────────────────────────────
@@ -149,12 +161,15 @@ function SituDot({ s, title }: { s: Situ; title?: string }) {
 }
 // Título de SEÇÃO = <SectionHead> canônico (chip de ícone + sans Title Case).
 // Sem marcador "00"/"01", sem título mono uppercase.
+// Bloco colapsável (consultoria item 13): botão ocultar/exibir ao lado do título,
+// preferência por bloco persistida em localStorage (CollapsibleSection). O header é
+// renderizado AQUI (server) e cruza como ReactNode — Icon não pode ir como prop.
 function Section({ Icon, color, title, sub, id, children }: { Icon: React.ComponentType<{ size?: number }>; color?: string; title: string; sub?: string; id?: string; children: React.ReactNode }) {
+  const key = (id ?? title).toLowerCase().replace(/[^a-z0-9]+/g, "-");
   return (
-    <section id={id} style={{ scrollMarginTop: 16 }}>
-      <SectionHead Icon={Icon} color={color} title={title} desc={sub} />
-      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>{children}</div>
-    </section>
+    <CollapsibleSection storageKey={key} id={id} header={<SectionHead Icon={Icon} color={color} title={title} desc={sub} />}>
+      {children}
+    </CollapsibleSection>
   );
 }
 function Bar({ frac, w = 34, value }: { frac: number; w?: number; value: number | string }) {
@@ -453,6 +468,20 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
         )}
       </div>
 
+      {/* Filtros ativos (consultoria item 13): sempre visíveis + limpar tudo num clique.
+          Setor NÃO entra no "limpar" do vendedor (é travado no servidor). */}
+      {(estadoSel || degrauSel || filtroSel !== "todos" || qSafe || (canPickSector && (isSetor || isNone))) && (
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginTop: -14 }}>
+          <span style={{ ...mono(9, { letterSpacing: ".14em" }), color: TOK.fgDim }}>Filtros ativos:</span>
+          {estadoSel && <span style={{ ...mono(9), color: TOK.f1, border: `1px solid ${TOK.f1}55`, background: `${TOK.f1}14`, borderRadius: 4, padding: "2px 8px" }}>estado: {LABEL[estadoSel]}</span>}
+          {degrauSel && <span style={{ ...mono(9), color: TOK.pausado, border: `1px solid ${TOK.pausado}55`, background: `${TOK.pausado}14`, borderRadius: 4, padding: "2px 8px" }}>degrau: {degrauSel}</span>}
+          {filtroSel !== "todos" && <span style={{ ...mono(9), color: TOK.hoje, border: `1px solid ${TOK.hoje}55`, background: `${TOK.hoje}14`, borderRadius: 4, padding: "2px 8px" }}>situação: {filtroSel === "negociacao" ? "negociação" : filtroSel}</span>}
+          {qSafe && <span style={{ ...mono(9), color: TOK.respondeu, border: `1px solid ${TOK.respondeu}55`, background: `${TOK.respondeu}14`, borderRadius: 4, padding: "2px 8px" }}>busca: {qSafe}</span>}
+          {canPickSector && (isSetor || isNone) && <span style={{ ...mono(9), color: TOK.negocia, border: `1px solid ${TOK.negocia}55`, background: `${TOK.negocia}14`, borderRadius: 4, padding: "2px 8px" }}>setor: {isNone ? "sem time" : (VENDOR_LABELS[effVend] ?? effVend)}</span>}
+          <Link href="/dashboard/cadencias" style={{ ...mono(9, { letterSpacing: ".1em" }), color: TOK.fgMuted, textDecoration: "none", border: `1px solid ${TOK.border}`, borderRadius: 4, padding: "2px 8px" }}>× limpar filtros</Link>
+        </div>
+      )}
+
       {/* Resultados da busca — clicar abre o Dossiê direto */}
       {qSafe && (
         <div style={{ ...cardStyle(TOK.respondeu) }}>
@@ -531,9 +560,9 @@ export default async function CadenciasPage({ searchParams }: { searchParams: Pr
           <div style={{ ...cardStyle() }}>
             <p style={{ ...mono(9, { letterSpacing: ".15em" }), color: TOK.fgDim, marginBottom: 10 }}>Em qual pergunta a qualificação quebra</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-              {[1, 2, 3, 4, 5, 6].filter(q => quebra[q]).map(q => (
+              {[1, 2, 3, 4].filter(q => quebra[q]).map(q => (
                 <div key={q} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 12 }}>
-                  <span style={{ width: 130, color: TOK.fgMuted, fontFamily: SANS, fontSize: 11, flexShrink: 0 }}>{q} · {QS_LABEL[q]}</span>
+                  <span style={{ width: 170, color: TOK.fgMuted, fontFamily: SANS, fontSize: 11, flexShrink: 0 }}>{q} · {QS_LABEL[q]}</span>
                   <Bar frac={quebra[q] / quebraMax} w={26} value={quebra[q]} />
                 </div>
               ))}
