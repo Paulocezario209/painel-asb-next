@@ -429,6 +429,21 @@ export const MANUAIS: Record<string, ManualTela> = {
       "CP baixo × ORG alto no card de Novos = a maioria dos clientes novos veio orgânica (indicação/boca-a-boca/prospecção do vendedor), não da mídia paga.",
     ],
   },
+  "/dashboard/churn": {
+    titulo: "Churn — Carteira de Clientes",
+    oQueE: "Os clientes da carteira real ARES que pararam de comprar, organizados pelas 4 faixas de risco da régua oficial (fn_status_cliente): risco 15–21 dias sem comprar · pré-churn 22–30 · churn comercial 31–59 · inativo definitivo 60+.",
+    fontes: [
+      "v_carteira_360 (carteira real ARES — clientes com pedido FATURADO, não leads SDR). customer_status vem da régua absoluta fn_status_cliente, a MESMA usada em Clientes, Carteira Ativa e alertas de jornada.",
+      "Cards por faixa: contagem + receita histórica em risco + % da receita e % da carteira. O denominador dos % é a carteira TOTAL (todos os status) — filtrado junto quando há filtro de setor.",
+      "Listas por faixa: os MESMOS registros que compõem os cards (uma única query) — o total do card sempre bate com a listagem.",
+    ],
+    comoUsar: [
+      "Filtro por vendedor/setor no topo (?vendedor=): aplica em cards, listas e denominadores ao mesmo tempo.",
+      "Maiores receitas no topo de cada faixa — priorize o resgate por valor, não por ordem alfabética.",
+      "Clique num cliente (quando tem vínculo com lead) para abrir o dossiê em /dashboard/cliente.",
+      "Régua dos 8/9 dias: a faixa \"ativo\" da régua oficial é ≤9 dias sem comprar — clientes ativos/atenção NÃO aparecem aqui (veja Carteira Ativa).",
+    ],
+  },
   "/dashboard/carteira-ativa": {
     titulo: "Carteira Ativa",
     oQueE: "A máquina de recompra: clientes saudáveis com compra recorrente (3+ pedidos), a cesta deles e a projeção contra a meta do dia.",
