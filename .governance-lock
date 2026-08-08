@@ -1,0 +1,33 @@
+{
+  "lock_version": 1,
+  "core_name": "asb-governance-core",
+  "core_version": "0.7.0",
+  "source_commit": "8837e7537da6cd27dafbc85d70e3cea6aad12593",
+  "content_hash": "ca8dc9a4ce00f99eb4917ce12247c71d8fcd73984061156aa674e52fb2a95453",
+  "files": {
+    "MANIFEST.json": "21b9db33d3f2b3db2450696b0bc5f9fef2fde6beb035b8164004700737dc4584",
+    "VERSION": "967d9afb101346667166f2e76e81910bc190488d7d41d50ca0072e9d92f00e32",
+    "adapters/claude/handoff.py": "12ac25a2653c47d40344e637793f0c0642268763b2dc5044ee26a3c960badac3",
+    "adapters/claude/security_review.py": "8781e5b174095bda8eb5cf674d9883a09ab2e0eee8f20fd07f33e92ae3f2ba9c",
+    "bin/asb_render_brief.py": "d9d328047ed37a1aaa2c6acc620a8b2041bed65fb6b2d5902ffb234541eb6ecc",
+    "bin/asb_resolve_root.sh": "54e7e4ac1006a0180304390af9c80097960f5f19488ef038d9d3481291918b72",
+    "bin/asb_security_classify.py": "16cb12bcf67175621ba91defc7a9d56d590bf1fedf5ab68f7fe021ee3881613b",
+    "bin/asb_security_gate.py": "1fcfa6b573514a353727d1a0ebcade3e2437d02560ece3419402ff1765b40da7",
+    "bin/asb_validate_state.py": "66142d295d9b332d055db9402752a0fee1c1b3758967d0c3e3d83bd8cc2ffd49",
+    "bin/govcore.py": "454cafbecb1fe22f74c142041eae65831b368dbb530080cc9a0e139f43cd5d46",
+    "contracts/agent-orchestration-contract.md": "03b09fb60e320ffcaeb94e0820811e7397791ca4aa4319aca1ff29e069f14cc7",
+    "contracts/remote-executor-contract.md": "caa3b92553e8fb0f4cebd54cd548566e99641c322c9a0c449e8da19b129bd6a6",
+    "contracts/security-governance-contract.md": "eb269ef164557c1225d34679950c398263e1b37b0105e2cbbb3bf0d718afd43d",
+    "contracts/security-tools-policy.md": "81973de0587571899d7ac7514c1e540a4e29839d3c7f2578140b32782dd45daa",
+    "hooks/graphify-auto.sh": "8b5a0041668e0830fefa39074d60da55425b1c94142ea8841ce85018a491f87e",
+    "hooks/master-sync.sh": "c3e465976d76027e9eee0b291bddefffdb1f78eabb7289520d0b0daf57104de3",
+    "hooks/pre-compact.sh": "aa84195ceef8cb9bd8da31cb4d91165d2a267151b9168d38cfc40b3913069a34",
+    "hooks/preflight-gate.sh": "32178d4490fdd27746632a453fdd7395ab2cb37ee82b9ec0ddd6baca98189813",
+    "hooks/session-end.sh": "8d09d10864718edf89544ca90eb8b35391f8abd173f8e0e943b573c14678392d",
+    "schema/project.schema.json": "c07b49aa7abd030d0748efe6b7bbbb896413ba40a94204758683f77ac2257266",
+    "schema/security-finding.schema.json": "5c94b086b9ed5b69ccd275f7cfdbb2cf5212dfad9e1988e34ed79f1abbcd47a3",
+    "schema/security-profile.schema.json": "f160dfb5d6fb7d5f63cd2bfd4f1155730e3435f3e35c223079a6179bd21c1a74",
+    "schema/workstream.schema.json": "9316fcf7dd62582034d4c598297925942979bac357f6a408b2eb0248d886c50b"
+  },
+  "warning": "VENDORIZADO — gerado por govcore. NAO editar aqui; edite a fonte unica e reinstale."
+}

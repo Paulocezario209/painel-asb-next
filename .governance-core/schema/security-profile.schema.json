@@ -1,0 +1,68 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "security-profile",
+  "description": "Configuracao minima de seguranca de UM repositorio governado. Declara superficie e exigencias — NUNCA politica. A politica vive inteira em contracts/security-governance-contract.md. Ausencia deste arquivo NAO libera: vale o perfil mais restritivo.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "repo", "profile", "threat_model_required", "security_review_required", "autonomous_security_pipeline_allowed", "automatic_patch_allowed", "external_pr_ai_review", "updated_at"],
+  "properties": {
+    "version": {
+      "const": "1.0"
+    },
+    "repo": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]*$",
+      "maxLength": 80,
+      "description": "Identificador canonico do repositorio, igual ao usado na allowlist do Executor."
+    },
+    "profile": {
+      "enum": ["low", "medium", "high", "critical"],
+      "description": "Superficie predominante do repositorio. Piso do risco de qualquer unidade nele — o classificador nunca desce abaixo disto."
+    },
+    "surface": {
+      "type": "array",
+      "maxItems": 20,
+      "description": "Superficies sensiveis que EXISTEM neste repo. Nao e o mesmo que o profile: o profile e o piso (o quao ruim e um erro em qualquer arquivo daqui), enquanto o classificador eleva o risco quando o caminho TOCADO e sensivel. Repo com integracao externa nao precisa ser HIGH por inteiro — precisa ser HIGH quando a unidade mexe nela. Exigir piso alto por qualquer superficie tornaria todo repo HIGH, e gate que sempre bloqueia ensina a ignorar gate. So fronteira de confianca (auth, authz, secrets, rls, remote_execution, sandbox, crypto, infrastructure) forca piso alto.",
+      "items": {
+        "enum": ["auth", "authz", "secrets", "database", "migrations", "rls", "mcp", "webhooks",
+                 "external_integration", "remote_execution", "ci_cd", "infrastructure", "docker",
+                 "sandbox", "file_upload", "crypto", "public_endpoint", "business_logic",
+                 "internal_api", "static_content"]
+      }
+    },
+    "threat_model_required": {
+      "type": "boolean",
+      "description": "Exige threat model quando nasce/muda fronteira de confianca (contrato secao 4)."
+    },
+    "security_review_required": {
+      "type": "boolean",
+      "description": "Exige revisao de seguranca antes de REVIEW/MERGE em unidade HIGH ou CRITICAL."
+    },
+    "periodic_scan": {
+      "type": "boolean",
+      "description": "Varredura completa periodica, alem da revisao por diff."
+    },
+    "autonomous_security_pipeline_allowed": {
+      "const": false,
+      "description": "Pipeline que EXECUTA o codigo alvo. Desligado em toda a ASB (contrato secao 5). Ligar exige design proprio, sandbox dedicada e aprovacao humana — nao se faz editando este arquivo."
+    },
+    "automatic_patch_allowed": {
+      "const": false,
+      "description": "Aplicacao automatica de patch de seguranca. Sempre false: patch e sugestao em arquivo, aplicar e decisao humana (contrato secao 7)."
+    },
+    "external_pr_ai_review": {
+      "const": "human_approval_required",
+      "description": "PR externo nao confiavel nunca dispara revisao automatica de IA (contrato secao 9)."
+    },
+    "notes": {
+      "type": "string",
+      "maxLength": 400
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "minLength": 20,
+      "maxLength": 40
+    }
+  }
+}
