@@ -1,0 +1,86 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "asb-workstream-state",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "id", "branch", "task_id", "status", "mission", "current_phase", "next_step", "execution_gate", "updated_at"],
+  "properties": {
+    "schema_version": { "type": "integer", "enum": [1] },
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*-[0-9a-f]{8}$", "maxLength": 72 },
+    "task_id": { "type": "string", "minLength": 1, "pattern": "^[A-Za-z0-9._-]{1,40}$" },
+    "branch": { "type": "string", "minLength": 1, "maxLength": 120, "pattern": "^[A-Za-z0-9._/-]{1,120}$" },
+    "status": { "enum": ["active", "blocked", "merged", "abandoned"] },
+    "mission": { "type": "string", "minLength": 10, "maxLength": 280 },
+    "origin": { "type": "string", "maxLength": 500 },
+    "approved_scope": { "type": "array", "maxItems": 40, "items": { "type": "string", "minLength": 3, "maxLength": 160 } },
+    "prohibited_scope": { "type": "array", "maxItems": 30, "items": { "type": "string", "minLength": 3, "maxLength": 160 } },
+    "current_phase": { "type": "string", "minLength": 3, "maxLength": 80 },
+    "last_completed_step": { "type": "string", "maxLength": 300 },
+    "next_step": { "type": "string", "minLength": 3, "maxLength": 300 },
+    "completion_criteria": { "type": "array", "maxItems": 20, "items": { "type": "string", "minLength": 3, "maxLength": 200 } },
+    "decisions": {
+      "type": "array", "maxItems": 50,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "timestamp", "decision", "authority"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^D[0-9]{1,4}$" },
+          "timestamp": { "type": "string", "format": "date-time", "minLength": 20, "maxLength": 40 },
+          "decision": { "type": "string", "minLength": 3, "maxLength": 300 },
+          "rationale": { "type": "string", "maxLength": 500 },
+          "authority": { "enum": ["paulo", "claude", "governance"] },
+          "evidence_refs": { "type": "array", "maxItems": 10, "items": { "type": "string", "minLength": 3, "maxLength": 140 } }
+        }
+      }
+    },
+    "execution_gate": {
+      "type": "object", "additionalProperties": false,
+      "required": ["mode", "reason", "approved_scope_only"],
+      "properties": {
+        "mode": { "enum": ["autonomous_within_scope", "execute_and_report", "requires_genesis", "requires_paulo", "blocked"] },
+        "reason": { "type": "string", "minLength": 1, "maxLength": 300 },
+        "approved_scope_only": { "const": true }
+      }
+    },
+    "blockers": {
+      "type": "array", "maxItems": 20,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "description"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^B[0-9]{1,4}$" },
+          "description": { "type": "string", "minLength": 3, "maxLength": 300 },
+          "severity": { "enum": ["low", "medium", "high", "critical"] }
+        }
+      }
+    },
+    "debts": { "type": "array", "maxItems": 50, "items": { "type": "string", "pattern": "^DEBT-[0-9]{1,4}$" } },
+    "evidence": {
+      "type": "array", "maxItems": 50,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["type", "ref"],
+        "properties": {
+          "type": { "enum": ["commit", "doc", "pr", "test_receipt", "migration", "artifact"] },
+          "ref": { "type": "string", "minLength": 3, "maxLength": 200 },
+          "note": { "type": "string", "maxLength": 160 }
+        }
+      }
+    },
+    "updated_at": { "type": "string", "format": "date-time", "minLength": 20, "maxLength": 40 }
+  },
+  "allOf": [
+    {
+      "if": {
+        "required": ["execution_gate"],
+        "properties": { "execution_gate": { "required": ["mode"], "properties": { "mode": { "const": "autonomous_within_scope" } } } }
+      },
+      "then": {
+        "required": ["approved_scope"],
+        "properties": {
+          "approved_scope": { "minItems": 1 }
+        }
+      }
+    }
+  ]
+}

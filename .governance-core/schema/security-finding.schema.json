@@ -1,0 +1,109 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "security-finding",
+  "description": "UM achado de seguranca como registro de governanca: sobrevive a sessao, tem dono e tem estado. NENHUM segredo entra aqui — evidencia e arquivo:linha mais descricao do caminho, nunca o valor da credencial.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "finding_id", "repository", "severity", "confidence", "source",
+               "affected_component", "evidence", "threat_scenario", "remediation", "status", "created_at"],
+  "properties": {
+    "schema_version": {
+      "enum": [1]
+    },
+    "finding_id": {
+      "type": "string",
+      "pattern": "^SEC-[0-9]{4}-[0-9a-f]{8}$",
+      "description": "SEC-<ano>-<hash8>. Estavel: o mesmo achado reaberto conserva o id."
+    },
+    "repository": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]*$",
+      "maxLength": 80
+    },
+    "workstream_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*-[0-9a-f]{8}$",
+      "maxLength": 72,
+      "description": "Unidade de trabalho que introduziu ou que remedia o achado."
+    },
+    "severity": {
+      "enum": ["low", "medium", "high", "critical"],
+      "description": "IMPACTO, nao confianca. CRITICAL e atribuido na triagem pela governanca (contrato secao 1)."
+    },
+    "confidence": {
+      "enum": ["low", "medium", "high"],
+      "description": "Quao certo se esta de que e real. Verificacao nao unanime nao pode reivindicar high."
+    },
+    "source": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 80,
+      "description": "Quem detectou, em texto livre e neutro (scanner, revisao humana, incidente). O contrato nao se acopla a fornecedor."
+    },
+    "category": {
+      "type": "string",
+      "maxLength": 60,
+      "description": "Classe da falha, ex.: authz-bypass, secret-exposure, injection, ssrf, path-traversal."
+    },
+    "affected_component": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 200
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 20,
+      "description": "Ponteiros verificaveis. NUNCA valor de credencial.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["ref"],
+        "properties": {
+          "ref": {"type": "string", "minLength": 3, "maxLength": 200, "description": "arquivo:linha, endpoint, ou identificador de artefato"},
+          "note": {"type": "string", "maxLength": 300}
+        }
+      }
+    },
+    "threat_scenario": {
+      "type": "string",
+      "minLength": 10,
+      "maxLength": 800,
+      "description": "O que um atacante consegue, concretamente. Nao 'pode haver risco'."
+    },
+    "remediation": {
+      "type": "string",
+      "minLength": 5,
+      "maxLength": 800,
+      "description": "O que mudar, em termos de resultado — a causa-raiz no sink, nao o sintoma."
+    },
+    "status": {
+      "enum": ["detected", "verified", "triaged", "remediation_planned", "fix_in_progress",
+               "fix_verified", "closed", "false_positive", "accepted_risk", "deferred"]
+    },
+    "owner": {
+      "type": "string",
+      "maxLength": 80
+    },
+    "human_approval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["approver", "decision", "reason", "timestamp"],
+      "description": "OBRIGATORIO para accepted_risk em severity high/critical (contrato secao 3). Sem isto o gate continua bloqueando.",
+      "properties": {
+        "approver": {"type": "string", "minLength": 2, "maxLength": 80},
+        "decision": {"enum": ["accepted_risk", "deferred", "gate_override"]},
+        "reason": {"type": "string", "minLength": 10, "maxLength": 500},
+        "timestamp": {"type": "string", "format": "date-time", "minLength": 20, "maxLength": 40}
+      }
+    },
+    "remediation_workstream_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*-[0-9a-f]{8}$",
+      "maxLength": 72
+    },
+    "created_at": {"type": "string", "format": "date-time", "minLength": 20, "maxLength": 40},
+    "verified_at": {"type": "string", "format": "date-time", "minLength": 20, "maxLength": 40},
+    "closed_at": {"type": "string", "format": "date-time", "minLength": 20, "maxLength": 40}
+  }
+}

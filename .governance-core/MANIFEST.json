@@ -1,0 +1,272 @@
+{
+  "manifest_version": 1,
+  "name": "asb-governance-core",
+  "core_version": "0.7.0",
+  "purpose": "Nucleo generico e agnostico de agente da governanca ASB: contrato de orquestracao, schemas de estado, validadores e hooks de mecanismo. Distribuivel para qualquer repositorio; consumido por qualquer runtime (Claude Code local, Claude Code Web, Codex).",
+  "authority": "CLAUDE.md + docs/arquitetura/ANATOMIA_ASB.md do repositorio consumidor sao SUPREMOS. O core NUNCA os sobrepoe e nunca decide regra de negocio.",
+  "extracted_from": "cursor-agentesdr-mcp",
+  "extracted_at": "2026-08-07",
+  "core": {
+    "contracts": [
+      {
+        "path": "contracts/agent-orchestration-contract.md",
+        "classification": "core",
+        "generic_because": "define papeis Planner/Executor/Reviewer sem citar produto, tabela, endpoint ou ocupante fixo"
+      },
+      {
+        "path": "contracts/remote-executor-contract.md",
+        "classification": "core",
+        "generic_because": "descreve TRANSPORTE do Executor remoto (2 ferramentas, invariantes, persistencia de thread); nao define escopo nem gate e nao repete o formato de retorno"
+      },
+      {
+        "path": "contracts/security-governance-contract.md",
+        "classification": "core",
+        "generic_because": "descreve o PAPEL de um detector no fluxo, sem nomear fornecedor, comando ou modelo; trocar de scanner custa um adapter, nao uma linha do contrato"
+      },
+      {
+        "path": "contracts/security-tools-policy.md",
+        "classification": "core",
+        "generic_because": "camada de VINCULACAO: diz qual ferramenta ocupa qual papel e ate onde ela vai. Nomeia fornecedor de proposito e e a unica que pode — por isso o acoplamento esta em declared_soft_couplings, declarado em vez de escondido. E core porque as tres camadas sao as mesmas em todo repo governado, e porque so RESTRINGE o que o contrato neutro ja permitiu; nunca amplia."
+      }
+    ],
+    "schema": [
+      {
+        "path": "schema/workstream.schema.json",
+        "classification": "core",
+        "generic_because": "forma do estado por frente; nenhum campo de dominio"
+      },
+      {
+        "path": "schema/project.schema.json",
+        "classification": "core",
+        "generic_because": "forma da identidade do projeto; conteudo e preenchido pelo repo"
+      },
+      {
+        "path": "schema/security-profile.schema.json",
+        "classification": "core",
+        "generic_because": "configuracao de superficie por repositorio; a politica fica no contrato, nunca no arquivo local"
+      },
+      {
+        "path": "schema/security-finding.schema.json",
+        "classification": "core",
+        "generic_because": "achado como registro de governanca com dono e estado; sem campo de produto e sem campo para valor de credencial"
+      }
+    ],
+    "bin": [
+      {
+        "path": "bin/asb_validate_state.py",
+        "classification": "core",
+        "generic_because": "valida estado contra schema + anti-segredo; zero conhecimento de dominio"
+      },
+      {
+        "path": "bin/asb_render_brief.py",
+        "classification": "core",
+        "generic_because": "renderiza estado+realidade e calcula autonomia efetiva; agnostico de produto"
+      },
+      {
+        "path": "bin/asb_resolve_root.sh",
+        "classification": "core",
+        "generic_because": "resolucao fail-closed da raiz por sentinela; ignora a propria localizacao"
+      },
+      {
+        "path": "bin/govcore.py",
+        "classification": "core",
+        "generic_because": "empacota, instala, gera lock e verifica drift do proprio core; stdlib, sem rede, sem conhecimento de dominio"
+      },
+      {
+        "path": "bin/asb_security_classify.py",
+        "classification": "core",
+        "generic_because": "classifica por superficie tocada usando padroes de caminho universais (auth, migrations, ci, docker), sem caminho de repo especifico"
+      },
+      {
+        "path": "bin/asb_security_gate.py",
+        "classification": "core",
+        "generic_because": "decide liberado/bloqueado lendo perfil e findings do proprio repositorio consumidor"
+      }
+    ],
+    "adapters": [
+      {
+        "path": "adapters/claude/handoff.py",
+        "classification": "core",
+        "generic_because": "le contrato e estado em tempo de execucao; nenhuma regra, repo, dominio, ID ou endpoint embutido; agnostico de transporte"
+      },
+      {
+        "path": "adapters/claude/security_review.py",
+        "classification": "core",
+        "generic_because": "traduz relatorio de scanner para o schema de finding; nao escaneia, nao decide severidade e nao invoca fornecedor"
+      }
+    ],
+    "hooks": [
+      {
+        "path": "hooks/preflight-gate.sh",
+        "classification": "core",
+        "generic_because": "bloqueia segredo/credencial por padrao universal; nenhum ID ou endpoint"
+      },
+      {
+        "path": "hooks/graphify-auto.sh",
+        "classification": "core",
+        "generic_because": "mantem o grafo do codigo atualizado; so git e graphify"
+      },
+      {
+        "path": "hooks/master-sync.sh",
+        "classification": "core",
+        "generic_because": "integracao FF-only com gates; detecta a branch default, nao hardcoda"
+      },
+      {
+        "path": "hooks/pre-compact.sh",
+        "classification": "core",
+        "generic_because": "injeta o briefing vivo antes da compactacao; delega ao renderer"
+      },
+      {
+        "path": "hooks/session-end.sh",
+        "classification": "core",
+        "generic_because": "tripwire efemero de pendencias Git locais; zero dominio"
+      }
+    ]
+  },
+  "repo_local": [
+    {
+      "path": ".claude/hooks/session-start.sh",
+      "reason": "ALMA EMBUTIDA: injeta o bloco de governanca do ASB (GENESIS, LEI UNICA), le docs/DEBT_LOG.md e cita docs/arquitetura/ANATOMIA_ASB.md. Separar mecanismo de conteudo e REDESENHO, fora do escopo desta etapa."
+    },
+    {
+      "path": "scripts/asb_probe.sh",
+      "reason": "ALMA: endpoints de PRODUCAO hardcoded (control-plane e painel) + leitura de docs/DEBT_LOG.md e docs/SESSION_BRIEF.md."
+    },
+    {
+      "path": "scripts/asb_audit_deploy_governance.py",
+      "reason": "ALMA: regras FORBIDDEN citam nome de pessoa e o vocabulario de deploy do ASB; config local em scripts/deploy_governance.config.json."
+    },
+    {
+      "path": "scripts/deploy_governance.config.json",
+      "reason": "Config local que descreve as fontes vivas deste repo."
+    },
+    {
+      "path": ".asb/project.json",
+      "reason": "Identidade, missao e proibicoes globais do repo."
+    },
+    {
+      "path": ".asb/workstreams/*.json",
+      "reason": "Estado operacional por frente: approved_scope, prohibited_scope, completion_criteria, execution_gate, current_phase, next_step, evidence, decisions."
+    },
+    {
+      "path": "CLAUDE.md",
+      "reason": "Teto normativo e alma do repo: stack, IDs de producao, regras de negocio."
+    },
+    {
+      "path": ".claude/settings.json",
+      "reason": "Wiring do adapter Claude Code (quais hooks em quais eventos)."
+    },
+    {
+      "path": ".claude/commands/*",
+      "reason": "Rituais de sessao especificos do repo."
+    },
+    {
+      "path": ".claude/skills/*",
+      "reason": "Cerebros de dominio do repo."
+    },
+    {
+      "path": ".mcp.json",
+      "reason": "Quais executores e servidores o repo oferece."
+    }
+  ],
+  "pending_classification": [
+    {
+      "path": "scripts/asb_boot_chain_test.sh",
+      "note": "Testa mecanismo do core mas monta fixtures com caminhos legados; classificar ao definir o mecanismo de distribuicao."
+    },
+    {
+      "path": "scripts/asb_resolve_root_test.sh",
+      "note": "Idem."
+    }
+  ],
+  "declared_soft_couplings": [
+    {
+      "path": "bin/asb_render_brief.py",
+      "coupling": "cita 'docs/DEBT_LOG.md' como dica de texto na saida e 'CLAUDE.md' como nome do teto; invoca 'scripts/asb_probe.sh' por caminho convencional",
+      "verdict": "aceito como convencao do ecossistema — nao e endpoint, ID, segredo nem tabela. Declarado em vez de escondido."
+    },
+    {
+      "path": "hooks/preflight-gate.sh",
+      "coupling": "mensagens de bloqueio citam nomes de variavel (SUPABASE_SERVICE_KEY, INTERNAL_API_KEY) e um comentario de proveniencia (DEBT-239)",
+      "verdict": "aceito — nomes de variavel e comentario, nunca valores nem endpoints."
+    },
+    {
+      "path": "contracts/security-tools-policy.md",
+      "coupling": "nomeia as tres ferramentas de seguranca (/security-review nativo, plugin claude-security, defending-code-reference-harness), seus subcomandos e o caminho local do harness fora do repo",
+      "verdict": "aceito e INTENCIONAL — e a razao de o documento existir. O contrato neutro (security-governance-contract.md) proibe nomear fornecedor; alguem precisa dizer qual ferramenta ocupa qual papel, e essa e a unica peca autorizada a fazer isso. Nomes de comando e caminho de ferramenta, nunca endpoint de producao, ID de repo, tabela ou segredo. Trocar de ferramenta muda esta policy e mais nada."
+    }
+  ],
+  "compatibility": {
+    "requires": [
+      "git",
+      "bash",
+      "python3"
+    ],
+    "min_python": "3.8",
+    "optional": [
+      "jq",
+      "curl",
+      "graphify"
+    ],
+    "consumer_must_provide": [
+      "CLAUDE.md (ou equivalente) como teto normativo",
+      ".asb/project.json e .asb/workstreams/*.json",
+      "wiring do adapter do runtime (ex.: .claude/settings.json)",
+      "sentinela de raiz alcancavel pelo resolvedor"
+    ],
+    "compat_shims": [
+      {
+        "from": ".claude/hooks/<hook>.sh",
+        "to": "governance-core/hooks/<hook>.sh",
+        "why": "mantem .claude/settings.json byte-identico durante a extracao",
+        "temporary": true
+      },
+      {
+        "from": "scripts/asb_validate_state.py",
+        "to": "governance-core/bin/asb_validate_state.py",
+        "why": "preserva referencias existentes",
+        "temporary": true
+      },
+      {
+        "from": "scripts/asb_render_brief.py",
+        "to": "governance-core/bin/asb_render_brief.py",
+        "why": "preserva o SENTINELA de resolucao de raiz",
+        "temporary": true
+      },
+      {
+        "from": "scripts/asb_resolve_root.sh",
+        "to": "governance-core/bin/asb_resolve_root.sh",
+        "why": "preserva referencias existentes",
+        "temporary": true
+      }
+    ],
+    "shim_rule": "Shim e ponteiro de exec, nunca copia de implementacao. Existe UMA implementacao, no core."
+  },
+  "invariants": {
+    "no_secrets": true,
+    "no_production_endpoints": true,
+    "no_repo_specific_ids": true,
+    "no_business_rules": true,
+    "no_network_at_boot": true,
+    "fail_open_hooks": "hooks nunca derrubam a sessao",
+    "fail_closed_validators": "validador e resolvedor recusam em vez de chutar",
+    "security_never_writes": "seguranca detecta e classifica; governanca autoriza; Executor corrige; Review valida — nenhum componente de seguranca recebe autorizacao de escrita irrestrita",
+    "no_execution_based_scan": "pipeline que EXECUTA o codigo alvo permanece desligado em toda a ASB; ligar exige sandbox dedicada e aprovacao humana, nunca no host de trabalho"
+  },
+  "distribution": {
+    "mechanism": "vendorizacao versionada — NUNCA submodule, NUNCA curl obrigatorio",
+    "tool": "bin/govcore.py (pack | install | verify)",
+    "satellite_layout": {
+      "vendored": ".governance-core/",
+      "lock": ".governance-lock"
+    },
+    "offline": "instala a partir de qualquer checkout ja disponivel via --source; stdlib apenas, sem rede",
+    "integrity": "sha256 por arquivo + hash de arvore deterministico; edicao manual do vendorizado = verify falha",
+    "upgrade": "explicito (--upgrade); versao diferente sem a flag e recusada",
+    "read_only_check": "verify nunca altera nada; install --dry-run mostra sem escrever"
+  },
+  "not_yet_implemented": [
+    "repo gerado asb-governance-core (subtree split)",
+    "implementacao do transporte remoto (bloqueada em credencial de servico do Executor)"
+  ]
+}
