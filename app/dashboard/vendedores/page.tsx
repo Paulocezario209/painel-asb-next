@@ -196,6 +196,13 @@ export default async function VendedoresPage() {
           title="Vendedores"
           desc="Metricas desde segunda 11/05 (8h BRT) — periodo de retomada operacional"
         />
+        {/* Visão mensal comparativa (consultoria item 7): evidências p/ o feedback do líder */}
+        <Link
+          href="/dashboard/vendedores/mensal"
+          style={{ display: "inline-block", marginTop: 6, fontSize: 12, fontWeight: 700, color: "#5B8DEF", textDecoration: "none" }}
+        >
+          → Visão Mensal (meta × faturado, novos, recompra, carteira — mês a mês)
+        </Link>
         <p style={{ ...S.muted, fontSize: 11, marginTop: 8 }}>
           Periodo de medicao: 11/05 {"\u2192"} hoje. Janela 7 dias completa comeca 18/05. Dados anteriores excluidos: bug painel 08/05 + folga 09-10/05.
         </p>

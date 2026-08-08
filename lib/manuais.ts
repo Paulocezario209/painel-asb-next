@@ -429,6 +429,21 @@ export const MANUAIS: Record<string, ManualTela> = {
       "CP baixo × ORG alto no card de Novos = a maioria dos clientes novos veio orgânica (indicação/boca-a-boca/prospecção do vendedor), não da mídia paga.",
     ],
   },
+  "/dashboard/vendedores/mensal": {
+    titulo: "Vendedores — Visão Mensal",
+    oQueE: "Comparativo mês selecionado × mês anterior, por setor, para o líder comercial conduzir o feedback mensal com evidências — sem avaliações automáticas.",
+    fontes: [
+      "Meta × Faturado × % × dias batidos: RPC resumo_mes_vendedor_mes (regra oficial data_meta + CNB, a mesma de /dashboard/vendas).",
+      "Clientes novos (1ª compra) e recompra (2ª+): fn_visao_geral_compras sobre a sequência de pedidos faturados do CRI (v_cri_pedidos_sequencia).",
+      "Carteira ativa/churn: v_carteira_360 com a régua oficial fn_status_cliente — fotografia de AGORA (não retroage ao mês).",
+      "Perdidos no mês: ai_sdr_leads.lost_at dentro do mês; parados: v_leads_parados (agora).",
+    ],
+    comoUsar: [
+      "Selecione o mês no filtro — cada setor mostra o mês escolhido com o delta contra o mês anterior.",
+      "Use na reunião mensal: meta batida? novos entrando? recompra crescendo? perdidos subindo? — os números são evidência, a leitura é do líder.",
+      "Atenção às fotografias de agora (carteira/parados): elas não mudam com o filtro de mês.",
+    ],
+  },
   "/dashboard/churn": {
     titulo: "Churn — Carteira de Clientes",
     oQueE: "Os clientes da carteira real ARES que pararam de comprar, organizados pelas 4 faixas de risco da régua oficial (fn_status_cliente): risco 15–21 dias sem comprar · pré-churn 22–30 · churn comercial 31–59 · inativo definitivo 60+.",
