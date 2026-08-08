@@ -1,0 +1,14 @@
+{
+  "version": "1.0",
+  "repo": "painel-asb-next",
+  "profile": "high",
+  "surface": ["auth", "authz", "database", "rls", "file_upload", "internal_api", "public_endpoint", "ci_cd"],
+  "threat_model_required": true,
+  "security_review_required": true,
+  "periodic_scan": true,
+  "autonomous_security_pipeline_allowed": false,
+  "automatic_patch_allowed": false,
+  "external_pr_ai_review": "human_approval_required",
+  "notes": "Painel do gestor: sessao/autorizacao por papel, leitura direta do Supabase com RLS, upload de XLSX e rotas API server-side com chave interna.",
+  "updated_at": "2026-08-08T10:00:00Z"
+}
